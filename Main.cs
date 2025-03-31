@@ -174,7 +174,7 @@ namespace NBAdbToolbox
 
             //To set font, i'll need the name, ideal size or pt, and its Style.
             //In addition, i also need the parent element and the child or the element we're working with
-            lblStatus.Height = (int)(pnlWelcome.Height * .0666666666666667);
+            lblStatus.Height = (int)(pnlWelcome.Height * .1);
             float fontSize = ((float)(lblStatus.Height) / (96 / 12)) * (72 / 12); //Formula is picking the correct Pt, as determined by the height of the label
             lblStatus.Font = SetFontSize("Segoe UI",fontSize, FontStyle.Bold, pnlWelcome, lblStatus);
             //Auto-size and center
@@ -184,28 +184,34 @@ namespace NBAdbToolbox
             //Server label properties
             lblServer.Left = 5;
             lblServer.Top = lblStatus.Bottom + 10;
+            lblServer.Height = (int)(pnlWelcome.Height * .067);
+            fontSize = ((float)((pnlWelcome.Height * .05)) / (96 / 12)) * (72 / 12);
             lblServer.AutoSize = true;
-            fontSize = ((float)(lblServer.Height) / (96 / 12)) * (72 / 12);
-            lblServer.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, pnlWelcome, lblServer);
+            //lblServer.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, pnlWelcome, lblServer);
+
+            lblServer.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
             lblServerName.Left = lblServer.Right - 10;
+            lblServerName.Height = (int)(pnlWelcome.Height * .067);
             lblServerName.Top = lblStatus.Bottom + 10;
-            lblServerName.AutoSize = true;
-            lblServerName.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, pnlWelcome, lblServerName);
+            lblServerName.Height = lblServer.Height;
+            lblServerName.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
 
             //Database label Properties
             lblDB.Left = 5;
-            lblDB.Top = lblServer.Bottom + 10;
+            lblDB.Top = lblServer.Bottom;
+            lblDB.Height = (int)(pnlWelcome.Height * .067);
             lblDB.AutoSize = true;
             fontSize = ((float)(lblDB.Height) / (96 / 12)) * (72 / 12);
             lblDB.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, pnlWelcome, lblDB);
             lblDBName.Left = lblDB.Right - 10;
-            lblDBName.Top = lblServer.Bottom + 10;
+            lblDBName.Top = lblServer.Bottom;
             lblDBName.AutoSize = true;
             lblDBName.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, pnlWelcome, lblDB);
             
 
             lblDbStat.Left = 5;
-            lblDbStat.Top = lblDB.Bottom + 10;
+            lblDbStat.Top = lblDB.Bottom;
+            lblDbStat.Height = (int)(pnlWelcome.Height * .067);
             lblDbStat.AutoSize = true;
             lblDbStat.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, pnlWelcome, lblDbStat);
 
@@ -245,21 +251,20 @@ namespace NBAdbToolbox
             //lblCStatus.AutoSize = true;
             //SQL Connection status Image and label
 
-            fontSize = ((float)(lblStatus.Height) / (96 / 12)) * (72 / 12)/2;
+            fontSize = ((float)(lblServer.Height) / (96 / 12)) * (72 / 12)/2;
             lblCStatus.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, pnlWelcome, lblCStatus);
-            picStatus.Width = lblStatus.Height / 2;
-            picStatus.Height = lblStatus.Height / 2;
-            picStatus.SizeMode = PictureBoxSizeMode.Zoom;
-            int totalWidth = picStatus.Width + lblCStatus.Width; //Measure combined width            
-            int startX = (pnlWelcome.ClientSize.Width - totalWidth) / 2; //Starting X position to center them together            
+            picStatus.Width = lblServer.Height;
+            picStatus.Height = lblServer.Height / 2;
+            picStatus.SizeMode = PictureBoxSizeMode.Zoom;    
+            //int startX = (pnlWelcome.ClientSize.Width - totalWidth) / 2; //Starting X position to center them together            
             int topY = lblDB.Bottom + 20; //Vertical position            
-            picStatus.Left = pnlWelcome.Width-totalWidth + (pnlWelcome.Width/25); //Position image on the left
             picStatus.Top = lblStatus.Top+3;
-            lblCStatus.Left = picStatus.Right -3; //Position label on the right
             lblCStatus.Top = lblStatus.Top;
             lblCStatus.AutoSize = true;
+            int totalWidth = picStatus.Width + lblCStatus.Width; //Measure combined width  
+            picStatus.Left = pnlWelcome.Width - totalWidth; //Position image on the left      
+            lblCStatus.Left = picStatus.Right - 2; //Position label on the right
             pnlWelcome.Controls.SetChildIndex(picStatus, 1);
-
 
             //Build Database Button
             btnBuild.Text = "Build Database";
