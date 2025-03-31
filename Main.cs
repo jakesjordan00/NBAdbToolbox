@@ -194,6 +194,7 @@ namespace NBAdbToolbox
             lblServerName.Height = (int)(pnlWelcome.Height * .067);
             lblServerName.Top = lblStatus.Bottom + 10;
             lblServerName.Height = lblServer.Height;
+            lblServerName.AutoSize = true;
             lblServerName.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
 
             //Database label Properties
