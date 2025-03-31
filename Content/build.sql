@@ -1,0 +1,147 @@
+
+create table Season(
+SeasonID			int,
+ChampionID			int,
+Games				int,
+PlayoffGames		int,
+Primary Key(SeasonID))
+
+create table Team(
+SeasonID			int,
+TeamID				int,
+City				varchar(255),
+Name				varchar(255),
+Tricode				varchar(255),
+Wins				int,
+Losses				int,
+FullName			varchar(255),
+Primary Key(SeasonID, TeamID),
+Foreign Key (SeasonID) references Season(SeasonID))
+
+create table Arena(
+SeasonID			int,
+ArenaID				int,
+TeamID				int,
+City				varchar(255),
+Country				varchar(255),
+Name				varchar(255),
+PostalCode			varchar(255),
+State				varchar(255),
+StreetAddress		varchar(255),
+Timezone			varchar(255),
+Primary Key (SeasonID, ArenaID),
+Foreign Key (SeasonID) references Season(SeasonID),
+Foreign Key (SeasonID, TeamID) references Team(SeasonID, TeamID))
+
+create table Official(
+SeasonID			int,
+OfficialID			int,
+Name				varchar(255),
+Number				varchar(3)
+Primary Key(SeasonID, OfficialID),
+Foreign Key (SeasonID) references Season(SeasonID))
+
+
+create table Player(
+SeasonID			int,
+PlayerID			int,
+Name				varchar(255),
+Number				varchar(3),
+Position			varchar(100),
+Primary Key(SeasonID, PlayerID),
+Foreign Key (SeasonID) references Season(SeasonID))
+
+create table Game(
+SeasonID			int,
+GameID				int,
+Date				date,
+GameType			varchar(10),
+HomeID				int,
+HScore				int,
+AwayID				int,
+AScore				int,
+WinnerID			int,
+WScore				int,
+LoserID				int,
+LScore				int,
+SeriesID			varchar(20),
+Primary Key(SeasonID, GameID),
+Foreign Key (SeasonID) references Season(SeasonID),
+Foreign Key (SeasonID, HomeID) references Team(SeasonID, TeamID),
+Foreign Key (SeasonID, AwayID) references Team(SeasonID, TeamID),
+Foreign Key (SeasonID, WinnerID) references Team(SeasonID, TeamID),
+Foreign Key (SeasonID, LoserID) references Team(SeasonID, TeamID))
+
+
+
+create table TeamBox(
+SeasonID					int,
+GameID						int,
+TeamID						int,
+MatchupID					int,
+--Points
+Points int,
+PointsAgainst int,
+--Field Goals
+TwoPointersAttempted int,				
+TwoPointersMade int,
+TwoPointersPercentage float,
+ThreePointersAttempted int,
+ThreePointersMade int,
+ThreePointersPercentage float,
+FieldGoalsAttempted int,
+FieldGoalsMade int,
+FieldGoalsPercentage float,
+FreeThrowsAttempted int,
+FieldGoalsEffectiveAdjusted float,
+FreeThrowsMade int,
+FreeThrowsPercentage float,
+SecondChancePointsAttempted int,
+SecondChancePointsMade int,
+SecondChancePointsPercentage float,
+TrueShootingAttempts float,
+TrueShootingPercentage float,
+PointsFromTurnovers int,
+PointsSecondChance int,
+PointsInThePaint int,
+PointsInThePaintAttempted int,
+PointsInThePaintMade int,
+PointsInThePaintPercentage float,
+PointsFastBreak int,
+FastBreakPointsAttempted int,
+FastBreakPointsMade int,
+FastBreakPointsPercentage float,
+BenchPoints int,
+--Rebounds
+ReboundsDefensive int,
+ReboundsOffensive int,
+ReboundsPersonal int,
+ReboundsTeam int,
+ReboundsTeamDefensive int,
+ReboundsTeamOffensive int,
+ReboundsTotal int,
+Assists int,
+AssistsTurnoverRatio float,
+BiggestLead int,
+BiggestLeadScore varchar(30),
+BiggestScoringRun int,
+BiggestScoringRunScore varchar(30),
+TimeLeading varchar(30),				--replace(replace(replace(timeLeading, 'PT', ''), 'M', ':'), 'S', '')
+TimesTied int,
+LeadChanges int,
+Steals int,
+--Turnovers
+Turnovers int,
+TurnoversTeam int,
+TurnoversTotal int,
+Blocks int,
+BlocksReceived int,
+FoulsDrawn int,
+FoulsOffensive int,
+FoulsPersonal int,
+FoulsTeam int,
+FoulsTeamTechnical int,
+FoulsTechnical int,
+Primary Key (SeasonID, GameID, TeamID, MatchupID),
+Foreign Key (SeasonID, GameID) references Game(SeasonID, GameID)
+)
