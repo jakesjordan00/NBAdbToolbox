@@ -493,6 +493,7 @@ namespace NBAdbToolbox
                     }
                     conn.Close();
                 }
+                CheckServer(connectionString);
                 imagePath = Path.Combine(projectRoot, "Content", "X.png");
                 string build = File.ReadAllText(Path.Combine(projectRoot, "Content", "build.sql"));
                 using (SqlCommand InsertData = new SqlCommand("use " + config.Database + build))
