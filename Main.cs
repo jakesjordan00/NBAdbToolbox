@@ -40,6 +40,12 @@ namespace NBAdbToolbox
         private SqlConnectionStringBuilder builder;
 
 
+        public Panel DatabaseUtilities = new Panel();
+        public Label lblDbUtil = new Label { 
+        Text = "Database Utilities",
+        };
+
+
         private Panel navBar;
         private Panel mainContentPanel;
         private Label lblUtilities = new Label();
@@ -144,11 +150,21 @@ namespace NBAdbToolbox
             }
 
 
+            //    Dock = DockStyle.Left,
+            //    ,
+            //    BackColor = Color.FromArgb(30, 30, 30) // Dark gray/black style
+            //};
 
 
+            DatabaseUtilities.Height = this.Height;
+            DatabaseUtilities.BorderStyle = BorderStyle.Fixed3D;
+            DatabaseUtilities.Dock = DockStyle.Left;
+            DatabaseUtilities.Width = pnlWelcome.Left;
+            DatabaseUtilities.BackColor = Color.Transparent;
 
             //This should be second to last i believe.
             //Children elements should go above the parents, background image should be last added.
+            AddPanelElement(DatabaseUtilities, lblDbUtil);
             AddPanelElement(pnlWelcome, lblDbStat);
             AddPanelElement(pnlWelcome, btnBuild);
             AddPanelElement(pnlWelcome, lblCStatus);
@@ -160,13 +176,12 @@ namespace NBAdbToolbox
             AddPanelElement(pnlWelcome, btnEdit);
             AddPanelElement(pnlWelcome, lblStatus);
             AddMainElement(this, pnlWelcome);   //Adding Welcome panel
+            AddMainElement(this, DatabaseUtilities);   //Adding Welcome panel
             AddMainElement(this, courtPreview); //Ading background image
 
 
 
 
-
-            //After the Element is added, set its properties
 
 
             pnlWelcome.Parent = courtPreview; //Set Panel parent as the image
@@ -179,6 +194,17 @@ namespace NBAdbToolbox
             lblStatus.Font = SetFontSize("Segoe UI",fontSize, FontStyle.Bold, pnlWelcome, lblStatus);
             //Auto-size and center
             CenterElement(pnlWelcome, lblStatus);
+
+
+
+            //After the Element is added, set its properties
+            DatabaseUtilities.Parent = courtPreview;
+            lblDbUtil.Height = (int)(pnlWelcome.Height * .1);
+            fontSize = ((float)(pnlWelcome.Height * .08) / (96 / 12)) * (72 / 12); //Formula is picking the correct Pt, as determined by the height of the label
+            lblDbUtil.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, DatabaseUtilities, lblDbUtil);
+            //Auto-size and center
+            lblDbUtil.AutoSize = true;
+            CenterElement(DatabaseUtilities, lblDbUtil);
 
 
             //Server label properties
@@ -200,15 +226,15 @@ namespace NBAdbToolbox
             //Database label Properties
             lblDB.Left = 5;
             lblDB.Top = lblServer.Bottom;
-            lblDB.Height = (int)(pnlWelcome.Height * .067);
+            lblDB.Height = (int)(pnlWelcome.Height * .06);
             lblDB.AutoSize = true;
-            fontSize = ((float)(lblDB.Height) / (96 / 12)) * (72 / 12);
-            lblDB.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, pnlWelcome, lblDB);
+            fontSize = ((float)((pnlWelcome.Height * .04)) / (96 / 12)) * (72 / 12);
+            lblDB.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
             lblDBName.Left = lblDB.Right - 10;
             lblDBName.Top = lblServer.Bottom;
             lblDBName.AutoSize = true;
-            lblDBName.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, pnlWelcome, lblDB);
-            
+            lblDBName.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
+
 
             lblDbStat.Left = 5;
             lblDbStat.Top = lblDB.Bottom;
@@ -237,29 +263,14 @@ namespace NBAdbToolbox
 
 
 
-            ////SQL Connection status Image and label
-            //lblCStatus.Font = SetFontSize("Segoe UI", 16F, FontStyle.Bold, pnlWelcome, lblCStatus);
-            //picStatus.Width = 30;
-            //picStatus.Height = 30;
-            //picStatus.SizeMode = PictureBoxSizeMode.Zoom;            
-            //int totalWidth = picStatus.Width + lblCStatus.Width; //Measure combined width            
-            //int startX = (pnlWelcome.ClientSize.Width - totalWidth) / 2; //Starting X position to center them together            
-            //int topY = lblDB.Bottom + 20; //Vertical position            
-            //picStatus.Left = startX - 7; //Position image on the left
-            //picStatus.Top = (int)(pnlWelcome.Height - (pnlWelcome.Height * .2));            
-            //lblCStatus.Left = picStatus.Right - 2; //Position label on the right
-            //lblCStatus.Top = (int)(pnlWelcome.Height - (pnlWelcome.Height * .2));
-            //lblCStatus.AutoSize = true;
-            //SQL Connection status Image and label
-
             fontSize = ((float)(lblServer.Height) / (96 / 12)) * (72 / 12)/2;
             lblCStatus.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, pnlWelcome, lblCStatus);
-            picStatus.Width = lblServer.Height;
+            picStatus.Width = lblServer.Height / 2;
             picStatus.Height = lblServer.Height / 2;
             picStatus.SizeMode = PictureBoxSizeMode.Zoom;    
             //int startX = (pnlWelcome.ClientSize.Width - totalWidth) / 2; //Starting X position to center them together            
             int topY = lblDB.Bottom + 20; //Vertical position            
-            picStatus.Top = lblStatus.Top+3;
+            picStatus.Top = lblStatus.Top+4;
             lblCStatus.Top = lblStatus.Top;
             lblCStatus.AutoSize = true;
             int totalWidth = picStatus.Width + lblCStatus.Width; //Measure combined width  
