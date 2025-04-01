@@ -6,7 +6,9 @@ using System.Data.SqlClient;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -176,6 +178,8 @@ namespace NBAdbToolbox
             AddPanelElement(pnlWelcome, btnEdit);
             AddPanelElement(pnlWelcome, lblStatus);
             AddMainElement(this, pnlWelcome);   //Adding Welcome panel
+            AddMainElement(this, pnlScoreboard);   //Adding Database Utilities panel
+            AddMainElement(this, pnlNav);   //Adding Database Utilities panel
             AddMainElement(this, pnlDbUtil);   //Adding Database Utilities panel
             AddMainElement(this, bgCourt); //Ading background image
 
@@ -183,35 +187,64 @@ namespace NBAdbToolbox
 
 
 
-            //Set Panel Properties ***************************************************************************
-                //DbUtil
-                pnlDbUtil.Height = this.Height;
-                pnlDbUtil.Dock = DockStyle.Left;
-                pnlDbUtil.Width = pnlWelcome.Left;
-
-                pnlDbUtil.BorderStyle = BorderStyle.None; //Draws border without messing up the background image alignment
-                pnlDbUtil.Paint += (s, e) =>
+        //Set Panel Properties ***************************************************************************
+            //DbUtil
+            pnlDbUtil.Height = this.Height;
+            pnlDbUtil.Dock = DockStyle.Left;
+            pnlDbUtil.Width = pnlWelcome.Left;
+            //Draws border without messing up the background image alignment
+            pnlDbUtil.BorderStyle = BorderStyle.None;
+            pnlDbUtil.Paint += (s, e) =>
+            {
+                Control p = (Control)s;
+                using (Pen pen = new Pen(Color.White, 1))
                 {
-                    Control p = (Control)s;
-                    using (Pen pen = new Pen(Color.White, 1))
-                    {
-                        e.Graphics.DrawRectangle(pen, 0, 0, p.Width - 1, p.Height - 1);
-                    }
-                }; //End Border drawing section
-                pnlDbUtil.Parent = bgCourt;
-                lblDbUtil.Height = (int)(pnlWelcome.Height * .1);
-                float fontSize = ((float)(pnlWelcome.Height * .08) / (96 / 12)) * (72 / 12);
-                lblDbUtil.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, pnlDbUtil, lblDbUtil);
-                //Auto-size and center
-                lblDbUtil.AutoSize = true;
-                CenterElement(pnlDbUtil, lblDbUtil);
+                    e.Graphics.DrawLine(pen, p.Width - 1, 0, p.Width - 1, p.Height);
+                }
+            };
+            //End Border drawing section
+            pnlDbUtil.Parent = bgCourt;
+            lblDbUtil.Height = (int)(pnlWelcome.Height * .1);
+            float fontSize = ((float)(pnlWelcome.Height * .08) / (96 / 12)) * (72 / 12);
+            lblDbUtil.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, pnlDbUtil, lblDbUtil);
+            //Auto-size and center
+            lblDbUtil.AutoSize = true;
+            CenterElement(pnlDbUtil, lblDbUtil);
+
+            //Navbar
+            pnlNav.Height = this.Height/20;
+            pnlNav.Dock = DockStyle.Top;
+            pnlNav.Parent = bgCourt;
+            pnlNav.Width = this.Width;
+            pnlNav.BorderStyle = BorderStyle.None;
+            pnlNav.Paint += (s, e) =>
+            {
+                Control p = (Control)s;
+                using (Pen pen = new Pen(Color.Black, 3))
+                {
+                    e.Graphics.DrawLine(pen, 0, p.Height - 1, p.Width, p.Height - 1);
+                }
+            };
 
             //Welcome
             pnlWelcome.Parent = bgCourt; //Set Panel parent as the image
 
 
-
-                pnlNav.Parent = bgCourt;
+            //Scoreboard
+            pnlScoreboard.Height = this.Height / 18;
+            pnlScoreboard.Width = this.Width - pnlDbUtil.Width;
+            pnlScoreboard.Parent = bgCourt;
+            pnlScoreboard.Top = pnlNav.Bottom;
+            pnlScoreboard.Left = pnlDbUtil.Right;
+            //GetScoreboardGames();
+            //pnlScoreboard.Paint += (s, e) =>
+            //{
+            //    Control p = (Control)s;
+            //    using (Pen pen = new Pen(Color.Black, 3))
+            //    {
+            //        e.Graphics.DrawLine(pen, 0, p.Height - 1, p.Width, p.Height - 1);
+            //    }
+            //};
 
 
 
@@ -554,6 +587,177 @@ namespace NBAdbToolbox
                     conn.Close();
                 }
             }
-        }            
+        }
+
+
+
+
+
+
+
+        //Scoreboard
+
+        public class Meta
+        {
+            public int Version { get; set; }
+            public string Request { get; set; }
+            public DateTime Time { get; set; }
+            public int Code { get; set; }
+        }
+
+        public class Period
+        {
+            public int PeriodNumber { get; set; }
+            public string PeriodType { get; set; }
+            public int Score { get; set; }
+        }
+
+        public class Team
+        {
+            public int TeamId { get; set; }
+            public string TeamName { get; set; }
+            public string TeamCity { get; set; }
+            public string TeamTricode { get; set; }
+            public int Wins { get; set; }
+            public int Losses { get; set; }
+            public int Score { get; set; }
+            public int? Seed { get; set; }
+            public int TimeoutsRemaining { get; set; }
+            public List<Period> Periods { get; set; }
+        }
+
+        public class Leaders
+        {
+            public int PersonId { get; set; }
+            public string Name { get; set; }
+            public string JerseyNum { get; set; }
+            public string Position { get; set; }
+            public string TeamTricode { get; set; }
+            public string PlayerSlug { get; set; }
+            public int Points { get; set; }
+            public int Rebounds { get; set; }
+            public int Assists { get; set; }
+        }
+
+        public class GameLeaders
+        {
+            public Leaders HomeLeaders { get; set; }
+            public Leaders AwayLeaders { get; set; }
+        }
+
+        public class PbOdds
+        {
+            public object Team { get; set; }
+            public double Odds { get; set; }
+            public int Suspended { get; set; }
+        }
+
+        public class Game
+        {
+            public string GameId { get; set; }
+            public string GameCode { get; set; }
+            public int GameStatus { get; set; }
+            public string GameStatusText { get; set; }
+            public int Period { get; set; }
+            public string GameClock { get; set; }
+            public DateTime GameTimeUTC { get; set; }
+            public DateTime GameEt { get; set; }
+            public int RegulationPeriods { get; set; }
+            public bool IfNecessary { get; set; }
+            public string SeriesGameNumber { get; set; }
+            public string GameLabel { get; set; }
+            public string GameSubLabel { get; set; }
+            public string SeriesText { get; set; }
+            public string SeriesConference { get; set; }
+            public string PoRoundDesc { get; set; }
+            public string GameSubtype { get; set; }
+            public Team HomeTeam { get; set; }
+            public Team AwayTeam { get; set; }
+            public GameLeaders GameLeaders { get; set; }
+            public PbOdds PbOdds { get; set; }
+        }
+
+        public class Scoreboard
+        {
+            public string GameDate { get; set; }
+            public string LeagueId { get; set; }
+            public string LeagueName { get; set; }
+            public List<Game> Games { get; set; }
+        }
+
+        public class Root
+        {
+            public Meta Meta { get; set; }
+            public Scoreboard Scoreboard { get; set; }
+        }
+
+        public static int postback = 0;
+        public static int games = 0;
+        public int tomorrowGames = 0;
+        public static List<string> gameID = new List<string>();
+        public static List<int> gameStatus = new List<int>();
+        public static List<string> gameStatusText = new List<string>();
+        public static List<string> gameStart = new List<string>();
+        public static List<int> homeID = new List<int>();
+        public static List<string> homeTri = new List<string>();
+        public static List<string> homeCity = new List<string>();
+        public static List<string> homeName = new List<string>();
+        public static List<int> homeScore = new List<int>();
+        public static List<int> awayID = new List<int>();
+        public static List<string> awayTri = new List<string>();
+        public static List<string> awayCity = new List<string>();
+        public static List<string> awayName = new List<string>();
+        public static List<int> awayScore = new List<int>();
+        public static List<DateTime> gameDate = new List<DateTime>();
+        public static List<string> broadcasts = new List<string>();
+
+        public void PopulateScoreboard(string gameId, int i)
+        {
+            Label lbl = new Label();
+
+            lbl.Text = gameID[i];
+            
+            pnlScoreboard.Controls.Add(lbl);
+            lbl.Left = i * 10;
+
+        }
+        public void GetScoreboardGames()
+        {
+            var sbClient = new WebClient { Encoding = System.Text.Encoding.UTF8 };
+            string sbEndpoint = "https://cdn.nba.com/static/json/liveData/scoreboard/todaysScoreboard_00.json";
+            try
+            {
+                WebRequest sbReq = WebRequest.Create(sbEndpoint);
+                WebResponse sbResp = sbReq.GetResponse();
+                string sbJson = sbClient.DownloadString(sbEndpoint);
+                Root JSON = JsonConvert.DeserializeObject<Root>(sbJson);
+                games = JSON.Scoreboard.Games.Count;
+                for (int i = 0; i < JSON.Scoreboard.Games.Count; i++)
+                {
+                    gameID.Add(JSON.Scoreboard.Games[i].GameId);
+                    gameStatus.Add(JSON.Scoreboard.Games[i].GameStatus);
+                    gameStatusText.Add(JSON.Scoreboard.Games[i].GameStatusText);
+                    gameStart.Add(JSON.Scoreboard.Games[i].GameEt.ToShortTimeString());
+                    homeID.Add(JSON.Scoreboard.Games[i].HomeTeam.TeamId);
+                    homeTri.Add(JSON.Scoreboard.Games[i].HomeTeam.TeamTricode);
+                    homeCity.Add(JSON.Scoreboard.Games[i].HomeTeam.TeamCity);
+                    homeName.Add(JSON.Scoreboard.Games[i].HomeTeam.TeamName);
+                    homeScore.Add(JSON.Scoreboard.Games[i].HomeTeam.Score);
+                    awayID.Add(JSON.Scoreboard.Games[i].AwayTeam.TeamId);
+                    awayTri.Add(JSON.Scoreboard.Games[i].AwayTeam.TeamTricode);
+                    awayCity.Add(JSON.Scoreboard.Games[i].AwayTeam.TeamCity);
+                    awayName.Add(JSON.Scoreboard.Games[i].AwayTeam.TeamName);
+                    awayScore.Add(JSON.Scoreboard.Games[i].AwayTeam.Score);
+                    broadcasts.Add(string.Empty);
+                    gameDate.Add(DateTime.MinValue);
+                    PopulateScoreboard(gameID[i], i);
+
+                }
+            }
+            catch
+            {
+
+            }
+        }
     }
 }
