@@ -40,13 +40,17 @@ namespace NBAdbToolbox
         private SqlConnectionStringBuilder builder;
 
 
-        public Panel DatabaseUtilities = new Panel();
+        public Panel pnlDbUtil = new Panel();
         public Label lblDbUtil = new Label { 
         Text = "Database Utilities",
         };
 
+        public Panel pnlNav = new Panel();
 
-        private Panel navBar;
+        public Panel pnlScoreboard = new Panel();
+
+
+
         private Panel mainContentPanel;
         private Label lblUtilities = new Label();
         private Panel UtilPanel;
@@ -68,14 +72,14 @@ namespace NBAdbToolbox
             //Server Connection status variable
             bool isConnected = false;
             // Create Background image
-            PictureBox courtPreview = new PictureBox
+            PictureBox bgCourt = new PictureBox
             {
                 Image = Image.FromFile(Path.Combine(projectRoot, "Content", "Court.png")),
                 SizeMode = PictureBoxSizeMode.StretchImage,
                 Width= this.Width, 
-                Height= this.Height
+                Height= this.Height,
+                Dock = DockStyle.Fill
             };
-
 
 
             pnlWelcome.BorderStyle = BorderStyle.FixedSingle;
@@ -83,6 +87,7 @@ namespace NBAdbToolbox
             pnlWelcome.Height = (int)(this.ClientSize.Height / 2.5);
             pnlWelcome.Left = (this.ClientSize.Width - pnlWelcome.Width) / 2;
             pnlWelcome.Top = (this.ClientSize.Height - pnlWelcome.Height) / 2;
+            pnlWelcome.BackColor = Color.Transparent;
 
             lblServer.Text = "Server: ";
             lblDB.Text = "Database: ";
@@ -110,7 +115,7 @@ namespace NBAdbToolbox
                 config = JsonConvert.DeserializeObject<DbConfig>(json);
                 //Set label text
                 //lblServer.Text += config.Server;
-                lblServerName.Text = config.Server;
+                lblServerName.Text = "placeholder";//config.Server;
                 lblDBName.Text = config.Database;
 
                 //Build connection string
@@ -150,21 +155,16 @@ namespace NBAdbToolbox
             }
 
 
-            //    Dock = DockStyle.Left,
-            //    ,
-            //    BackColor = Color.FromArgb(30, 30, 30) // Dark gray/black style
-            //};
 
 
-            DatabaseUtilities.Height = this.Height;
-            DatabaseUtilities.BorderStyle = BorderStyle.Fixed3D;
-            DatabaseUtilities.Dock = DockStyle.Left;
-            DatabaseUtilities.Width = pnlWelcome.Left;
-            DatabaseUtilities.BackColor = Color.Transparent;
+
+
+
+
 
             //This should be second to last i believe.
             //Children elements should go above the parents, background image should be last added.
-            AddPanelElement(DatabaseUtilities, lblDbUtil);
+            AddPanelElement(pnlDbUtil, lblDbUtil);
             AddPanelElement(pnlWelcome, lblDbStat);
             AddPanelElement(pnlWelcome, btnBuild);
             AddPanelElement(pnlWelcome, lblCStatus);
@@ -176,35 +176,65 @@ namespace NBAdbToolbox
             AddPanelElement(pnlWelcome, btnEdit);
             AddPanelElement(pnlWelcome, lblStatus);
             AddMainElement(this, pnlWelcome);   //Adding Welcome panel
-            AddMainElement(this, DatabaseUtilities);   //Adding Welcome panel
-            AddMainElement(this, courtPreview); //Ading background image
+            AddMainElement(this, pnlDbUtil);   //Adding Database Utilities panel
+            AddMainElement(this, bgCourt); //Ading background image
+
+
+
+
+
+            //Set Panel Properties ***************************************************************************
+                //DbUtil
+                pnlDbUtil.Height = this.Height;
+                pnlDbUtil.Dock = DockStyle.Left;
+                pnlDbUtil.Width = pnlWelcome.Left;
+
+                pnlDbUtil.BorderStyle = BorderStyle.None; //Draws border without messing up the background image alignment
+                pnlDbUtil.Paint += (s, e) =>
+                {
+                    Control p = (Control)s;
+                    using (Pen pen = new Pen(Color.White, 1))
+                    {
+                        e.Graphics.DrawRectangle(pen, 0, 0, p.Width - 1, p.Height - 1);
+                    }
+                }; //End Border drawing section
+                pnlDbUtil.Parent = bgCourt;
+                lblDbUtil.Height = (int)(pnlWelcome.Height * .1);
+                float fontSize = ((float)(pnlWelcome.Height * .08) / (96 / 12)) * (72 / 12);
+                lblDbUtil.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, pnlDbUtil, lblDbUtil);
+                //Auto-size and center
+                lblDbUtil.AutoSize = true;
+                CenterElement(pnlDbUtil, lblDbUtil);
+
+            //Welcome
+            pnlWelcome.Parent = bgCourt; //Set Panel parent as the image
+
+
+
+                pnlNav.Parent = bgCourt;
 
 
 
 
 
 
-            pnlWelcome.Parent = courtPreview; //Set Panel parent as the image
-            pnlWelcome.BackColor = Color.Transparent; //Set Panel to transparent
+
+
+
+            //Set Label Properties ***************************************************************************
+
+
 
             //To set font, i'll need the name, ideal size or pt, and its Style.
             //In addition, i also need the parent element and the child or the element we're working with
             lblStatus.Height = (int)(pnlWelcome.Height * .1);
-            float fontSize = ((float)(lblStatus.Height) / (96 / 12)) * (72 / 12); //Formula is picking the correct Pt, as determined by the height of the label
+            fontSize = ((float)(lblStatus.Height) / (96 / 12)) * (72 / 12); //Formula is picking the correct Pt, as determined by the height of the label
             lblStatus.Font = SetFontSize("Segoe UI",fontSize, FontStyle.Bold, pnlWelcome, lblStatus);
             //Auto-size and center
             CenterElement(pnlWelcome, lblStatus);
 
 
 
-            //After the Element is added, set its properties
-            DatabaseUtilities.Parent = courtPreview;
-            lblDbUtil.Height = (int)(pnlWelcome.Height * .1);
-            fontSize = ((float)(pnlWelcome.Height * .08) / (96 / 12)) * (72 / 12); //Formula is picking the correct Pt, as determined by the height of the label
-            lblDbUtil.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, DatabaseUtilities, lblDbUtil);
-            //Auto-size and center
-            lblDbUtil.AutoSize = true;
-            CenterElement(DatabaseUtilities, lblDbUtil);
 
 
             //Server label properties
@@ -371,11 +401,12 @@ namespace NBAdbToolbox
         {
             this.Controls.Add(control);
             control.Parent = main;
+            control.BackColor = Color.Transparent;
         }
 
         public void CenterElement(Panel panel, Control control)
         {
-            lblStatus.AutoSize = true;
+            control.AutoSize = true;
             control.Left = (panel.ClientSize.Width - control.Width) / 2;
         }
 
