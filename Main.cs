@@ -573,7 +573,6 @@ namespace NBAdbToolbox
         public void GetTables(string connectionString)
         {
             int tables = 0;
-            Tables.Height = lblDbUtil.Height / 2;
             using (SqlCommand GetTables = new SqlCommand("select t.Name from sys.tables t where type_desc = 'USER_TABLE'"))
             {
                 SqlConnection conn = new SqlConnection(bob.ToString());
@@ -595,10 +594,14 @@ namespace NBAdbToolbox
                 {
                     float fontSize = ((float)(Tables.Width / 4) / (96 / 12)) * (72 / 12) / 2;
                     Tables.Items[i].Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, Tables, Tables);
+                    Tables.Items[i].SubItems.Add("test");
                 }
             }
+            Tables.Height = lblDbUtil.Height / 2;
+            Tables.Alignment = ListViewAlignment.Top;
             Tables.Scrollable = false;
-            Tables.TileSize = new Size((pnlDbUtil.Width / 3) - 1, 50);
+            int pnlWidth = pnlDbUtil.Width + (pnlDbUtil.Width / 20);
+            Tables.TileSize = new Size((int)((pnlWidth / 4) + (.20 * (pnlWidth / 3))), 50);
             AddPanelElement(pnlDbUtil, Tables);
             Tables.View = View.Tile;
         }
