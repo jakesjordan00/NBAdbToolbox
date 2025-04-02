@@ -91,6 +91,11 @@ namespace NBAdbToolbox
             pnlWelcome.Top = (this.ClientSize.Height - pnlWelcome.Height) / 2;
             pnlWelcome.BackColor = Color.Transparent;
 
+
+            pnlDbUtil.Height = this.Height;
+            pnlDbUtil.Dock = DockStyle.Left;
+            pnlDbUtil.Width = pnlWelcome.Left;
+
             lblServer.Text = "Server: ";
             lblDB.Text = "Database: ";
             if (!File.Exists(configPath)) //If our file doesnt exist
@@ -189,9 +194,6 @@ namespace NBAdbToolbox
 
         //Set Panel Properties ***************************************************************************
             //DbUtil
-            pnlDbUtil.Height = this.Height;
-            pnlDbUtil.Dock = DockStyle.Left;
-            pnlDbUtil.Width = pnlWelcome.Left;
             //Draws border without messing up the background image alignment
             pnlDbUtil.BorderStyle = BorderStyle.None;
             pnlDbUtil.Paint += (s, e) =>
@@ -567,9 +569,11 @@ namespace NBAdbToolbox
         }
         //public List<string> Tables  = new List<string>();
         public ListView Tables = new ListView();
+
         public void GetTables(string connectionString)
         {
             int tables = 0;
+            Tables.Height = lblDbUtil.Height / 2;
             using (SqlCommand GetTables = new SqlCommand("select t.Name from sys.tables t where type_desc = 'USER_TABLE'"))
             {
                 SqlConnection conn = new SqlConnection(bob.ToString());
@@ -587,7 +591,16 @@ namespace NBAdbToolbox
             }
             if(tables > 0)
             {
+                for(int i = 0; i < tables; i++)
+                {
+                    float fontSize = ((float)(Tables.Width / 4) / (96 / 12)) * (72 / 12) / 2;
+                    Tables.Items[i].Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, Tables, Tables);
+                }
             }
+            Tables.Scrollable = false;
+            Tables.TileSize = new Size((pnlDbUtil.Width / 3) - 1, 50);
+            AddPanelElement(pnlDbUtil, Tables);
+            Tables.View = View.Tile;
         }
 
         public void CreateDB(string connectionString)
