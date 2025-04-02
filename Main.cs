@@ -39,7 +39,7 @@ namespace NBAdbToolbox
         private string imagePath = "";
         private Button btnBuild = new Button();
         public string cString = "";
-        private SqlConnectionStringBuilder builder;
+        public SqlConnectionStringBuilder bob = new SqlConnectionStringBuilder();  //This builder connection string
 
 
         public Panel pnlDbUtil = new Panel();
@@ -109,7 +109,6 @@ namespace NBAdbToolbox
             }
             else if (File.Exists(configPath)) //If our file does exist
             {
-                SqlConnectionStringBuilder bob = new SqlConnectionStringBuilder();  //This builder connection string
                 lblStatus.Text = "Welcome Back!";
                 btnEdit.Text = "Edit Server connection";
                 btnEdit.Width = (int)(lblStatus.Width / 1.5);
@@ -152,7 +151,7 @@ namespace NBAdbToolbox
                     picStatus.Image = Image.FromFile(imagePath);
                     btnBuild.Enabled = false;
                 }
-                CheckServer(cString);
+                CheckServer(cString, "main");
                 btnBuild.Enabled = true;
             }
 
@@ -166,6 +165,7 @@ namespace NBAdbToolbox
 
             //This should be second to last i believe.
             //Children elements should go above the parents, background image should be last added.
+            AddPanelElement(pnlDbUtil, Tables);
             AddPanelElement(pnlDbUtil, lblDbUtil);
             AddPanelElement(pnlWelcome, lblDbStat);
             AddPanelElement(pnlWelcome, btnBuild);
@@ -210,6 +210,14 @@ namespace NBAdbToolbox
             //Auto-size and center
             lblDbUtil.AutoSize = true;
             CenterElement(pnlDbUtil, lblDbUtil);
+            Tables.Width = pnlDbUtil.Width;
+            Tables.Height = pnlDbUtil.Height / 4;
+            Tables.Top = lblDbUtil.Bottom;
+
+
+
+
+
 
             //Navbar
             pnlNav.Height = this.Height/20;
@@ -389,7 +397,9 @@ namespace NBAdbToolbox
             {
                 if(config.Create == true)
                 {
-                    CreateDB(cString);   
+                    CreateDB(cString);
+                    bob.InitialCatalog = config.Database;
+                    cString = bob.ToString();
                 }
             };
 
@@ -397,28 +407,6 @@ namespace NBAdbToolbox
         }
 
 
-        public void CheckServer(string connectionString)
-        {
-            using (SqlConnection conn = new SqlConnection(connectionString))
-            {
-                using (SqlCommand dbCheck = new SqlCommand("select Name from sys.databases where Name = '" + config.Database + "'"))
-                {
-                    dbCheck.Connection = conn;
-                    dbCheck.CommandType = CommandType.Text;
-                    conn.Open();
-                    SqlDataReader reader = dbCheck.ExecuteReader();
-                    if(reader.Read())
-                    {
-                        lblDbStat.Text = "Database created";
-                    }
-                    else
-                    {
-                        lblDbStat.Text = "Need to create Database";
-                    }
-                }
-            }
-
-        }
 
 
 
@@ -548,11 +536,65 @@ namespace NBAdbToolbox
             }
         }
 
+
+        public void CheckServer(string connectionString, string sender)
+        {
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                using (SqlCommand dbCheck = new SqlCommand("use master select Name from sys.databases where Name = '" + config.Database + "'"))
+                {
+                    dbCheck.Connection = conn;
+                    dbCheck.CommandType = CommandType.Text;
+                    conn.Open();
+                    SqlDataReader reader = dbCheck.ExecuteReader();
+                    if (reader.Read())
+                    {
+                        lblDbStat.Text = "Database created";
+                        conn.Close();
+                        bob.InitialCatalog = config.Database;
+                        if (sender == "main")
+                        {
+                            GetTables(bob.ToString());
+                        }
+                    }
+                    else
+                    {
+                        lblDbStat.Text = "Need to create Database";
+                    }
+                }
+            }
+
+        }
+        //public List<string> Tables  = new List<string>();
+        public ListView Tables = new ListView();
+        public void GetTables(string connectionString)
+        {
+            int tables = 0;
+            using (SqlCommand GetTables = new SqlCommand("select t.Name from sys.tables t where type_desc = 'USER_TABLE'"))
+            {
+                SqlConnection conn = new SqlConnection(bob.ToString());
+                GetTables.Connection = conn;
+                GetTables.CommandType = CommandType.Text;
+                conn.Open();
+                using (SqlDataReader sdr = GetTables.ExecuteReader())
+                {
+                    while (sdr.Read())
+                    {
+                        Tables.Items.Add(sdr.GetString(0));
+                        tables++;
+                    }
+                }
+            }
+            if(tables > 0)
+            {
+            }
+        }
+
         public void CreateDB(string connectionString)
         {
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
-                using (SqlCommand InsertData = new SqlCommand("use master create database " + config.Database))
+                using (SqlCommand InsertData = new SqlCommand("use master create database " + config.Database))     //Create database
                 {
                     InsertData.Connection = conn;
                     InsertData.CommandType = CommandType.Text;
@@ -561,6 +603,7 @@ namespace NBAdbToolbox
                     {
                         InsertData.ExecuteScalar();
                         config.Create = false;
+                        bob.InitialCatalog = config.Database;
                     }
                     catch (SqlException ex)
                     {
@@ -568,10 +611,13 @@ namespace NBAdbToolbox
                     }
                     conn.Close();
                 }
-                CheckServer(connectionString);
-                imagePath = Path.Combine(projectRoot, "Content", "X.png");
+                connectionString = bob.ToString();
+            }
+            CheckServer(connectionString, "create");
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
                 string build = File.ReadAllText(Path.Combine(projectRoot, "Content", "build.sql"));
-                using (SqlCommand InsertData = new SqlCommand("use " + config.Database + build))
+                using (SqlCommand InsertData = new SqlCommand(build))
                 {
                     InsertData.Connection = conn;
                     InsertData.CommandType = CommandType.Text;
@@ -585,8 +631,9 @@ namespace NBAdbToolbox
 
                     }
                     conn.Close();
+                    GetTables(connectionString);
                 }
-            }
+            }            
         }
 
 
