@@ -47,11 +47,11 @@ namespace NBAdbToolbox
         Text = "Database Utilities",
         };
         public Panel pnlSeason = new Panel();
-        //public Panel pnlSeason = new Panel();
-        //public Panel pnlSeason = new Panel();
-        //public Panel pnlSeason = new Panel();
-        //public Panel pnlSeason = new Panel();
-        //public Panel pnlSeason = new Panel();
+        public Panel pnlTeam = new Panel();
+        public Panel pnlGame = new Panel();
+        public Panel pnlPlayerBox = new Panel();
+        public Panel pnlTeamBox = new Panel();
+        public Panel pnlPbp = new Panel();
 
 
 
