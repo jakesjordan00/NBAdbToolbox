@@ -20,6 +20,7 @@ namespace NBAdbToolbox
 {
     public partial class Main: Form
     {
+        public bool dbConnection = false; 
         //public static Utlilities Utilities = new Utlilities();
         static string projectRoot = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\.."));
         string configPath = Path.Combine(projectRoot, "Content", "dbconfig.json");
@@ -178,7 +179,6 @@ namespace NBAdbToolbox
 
             //This should be second to last i believe.
             //Children elements should go above the parents, background image should be last added.
-            AddPanelElement(pnlDbUtil, Tables);
             AddPanelElement(pnlDbUtil, lblDbUtil);
             AddPanelElement(pnlWelcome, lblDbStat);
             AddPanelElement(pnlWelcome, btnBuild);
@@ -195,7 +195,6 @@ namespace NBAdbToolbox
             AddMainElement(this, pnlNav);   //Adding Database Utilities panel
             AddMainElement(this, pnlDbUtil);   //Adding Database Utilities panel
             AddMainElement(this, bgCourt); //Ading background image
-
 
 
 
@@ -220,9 +219,9 @@ namespace NBAdbToolbox
             //Auto-size and center
             lblDbUtil.AutoSize = true;
             CenterElement(pnlDbUtil, lblDbUtil);
-            Tables.Width = pnlDbUtil.Width;
-            Tables.Height = pnlDbUtil.Height / 4;
-            Tables.Top = lblDbUtil.Bottom;
+            //Tables.Width = pnlDbUtil.Width;
+            //Tables.Height = pnlDbUtil.Height / 4;
+            //Tables.Top = lblDbUtil.Bottom;
 
 
 
@@ -413,6 +412,10 @@ namespace NBAdbToolbox
                 }
             };
 
+            if (dbConnection)
+            {
+                GetTablePanelInfo(bob.ToString());
+            }
 
         }
 
@@ -495,7 +498,6 @@ namespace NBAdbToolbox
             lblDB.Text = "Database: ";
             lblDBName.Text = config.Database;
 
-            SqlConnectionStringBuilder bob = new SqlConnectionStringBuilder();  //This builder connection string
                                                                                 //Build connection string
             bob.DataSource = config.Server;
             if (config.Create == false)
@@ -547,7 +549,7 @@ namespace NBAdbToolbox
         }
 
 
-        public void CheckServer(string connectionString, string sender)
+        public void CheckServer( string connectionString, string sender)
         {
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
@@ -561,14 +563,19 @@ namespace NBAdbToolbox
                     {
                         lblDbStat.Text = "Database created";
                         conn.Close();
+                        dbConnection = true;
                         bob.InitialCatalog = config.Database;
-                        if (sender == "main")
-                        {
-                            GetTables(bob.ToString());
-                        }
+                        btnBuild.Enabled = false;
+                        config.Create = false;
+                        File.WriteAllText(configPath, JsonConvert.SerializeObject(config, Formatting.Indented));
                     }
                     else
                     {
+                        dbConnection = false;
+                        btnBuild.Enabled = true;
+                        config.Create = true;
+                        File.WriteAllText(configPath, JsonConvert.SerializeObject(config, Formatting.Indented));
+
                         lblDbStat.Text = "Need to create Database";
                     }
                 }
@@ -576,18 +583,89 @@ namespace NBAdbToolbox
 
         }
         //public List<string> Tables  = new List<string>();
-        public ListView Tables = new ListView();
+        //public ListView Tables = new ListView();
 
-        public void GetTables(string connectionString)
+        //public void GetTables (string connectionString)
+        //{
+        //    int tables = 0;
+        //    Tables.Height = lblDbUtil.Height / 2;
+        //    Tables.Alignment = ListViewAlignment.Top;
+        //    Tables.Scrollable = false;
+        //    int pnlWidth = pnlDbUtil.Width + (pnlDbUtil.Width / 20);
+        //    Tables.TileSize = new Size((int)((pnlWidth / 4) + (.15 * (pnlWidth / 3))), 50);
+        //    AddPanelElement(pnlDbUtil, Tables);
+        //    Tables.View = View.Tile;
+        //    using (SqlCommand GetTables = new SqlCommand("select t.Name from sys.tables t where type_desc = 'USER_TABLE'"))
+        //    {
+        //        SqlConnection conn = new SqlConnection(bob.ToString());
+        //        GetTables.Connection = conn;
+        //        GetTables.CommandType = CommandType.Text;
+        //        conn.Open();
+        //        using (SqlDataReader sdr = GetTables.ExecuteReader())
+        //        {
+        //            while (sdr.Read())
+        //            {
+        //                Tables.Items.Add(sdr.GetString(0));
+        //                tables++;
+        //            }
+        //        }
+        //    }
+        //    if(tables > 0)
+        //    {
+        //        for(int i = 0; i < tables; i++)
+        //        {
+        //            float fontSize = ((float)(Tables.Width / 4) / (96 / 12)) * (72 / 12) / 2;
+        //            Tables.Items[i].Font = SetListFontSize("Segoe UI", fontSize, FontStyle.Bold, Tables, Tables.Items[i]);
+
+        //        }
+        //    }
+        //}
+
+        public void GetTablePanelInfo(string connectionString)
         {
-            int tables = 0;
-            Tables.Height = lblDbUtil.Height / 2;
-            Tables.Alignment = ListViewAlignment.Top;
-            Tables.Scrollable = false;
-            int pnlWidth = pnlDbUtil.Width + (pnlDbUtil.Width / 20);
-            Tables.TileSize = new Size((int)((pnlWidth / 4) + (.15 * (pnlWidth / 3))), 50);
-            AddPanelElement(pnlDbUtil, Tables);
-            Tables.View = View.Tile;
+            List<Panel> panels = new List<Panel> { pnlSeason, pnlTeam, pnlGame, pnlPlayerBox, pnlTeamBox, pnlPbp};
+            int incrementer = pnlDbUtil.Width/3;
+            for (int i = 0; i < panels.Count; i++)
+            {
+                panels[i].Height = incrementer;
+                panels[i].Width = incrementer;
+                if (i == 0)
+                {
+                    pnlScoreboard.Height = this.Height / 18;
+                    panels[i].Top =(int)(pnlScoreboard.Top + (pnlScoreboard.Height * .1));
+                    panels[i].Left = pnlDbUtil.Left;
+                }
+                else if (i == 1 || i == 2)
+                {
+                    panels[i].Top = panels[0].Top;
+                    panels[i].Left = panels[i - 1].Right;
+                }
+                else if (i == 3)
+                {
+                    panels[i].Top = panels[0].Bottom;
+                    panels[i].Left = panels[0].Left;
+                }
+                else if (i == 4 || i == 5)
+                {
+                    panels[i].Top = panels[0].Bottom;
+                    panels[i].Left = panels[i - 1].Right;
+                }
+
+
+
+                //else if (i == 2 || i == 4)
+                //{
+                //    panels[i].Top = panels[i - 1].Bottom;
+                //    panels[i].Left = panels[i - 2].Left;
+                //}
+                //else if (i == 1 || i == 3 || i == 5)
+                //{
+                //    panels[i].Top = panels[i - 1].Top;
+                //    panels[i].Left = panels[i - 1].Right;
+                //}
+                AddPanelElement(pnlDbUtil, panels[i]);
+                panels[i].BorderStyle = BorderStyle.FixedSingle;
+            }
             using (SqlCommand GetTables = new SqlCommand("select t.Name from sys.tables t where type_desc = 'USER_TABLE'"))
             {
                 SqlConnection conn = new SqlConnection(bob.ToString());
@@ -598,52 +676,66 @@ namespace NBAdbToolbox
                 {
                     while (sdr.Read())
                     {
-                        Tables.Items.Add(sdr.GetString(0));
-                        tables++;
+                        if (sdr.GetString(0) == "Season")   //Season Panel
+                        {
+                            Label title = new Label();
+                            title.Text = sdr.GetString(0);
+                            float fontSize = ((float)((panels[0].Height * .15)) / (96 / 12)) * (72 / 12);
+                            title.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
+                            AddPanelElement(pnlSeason, title);
+                            CenterElement(pnlSeason, title);
+                        }
+                        if (sdr.GetString(0) == "Team")   //Team Panel
+                        {
+                            Label title = new Label();
+                            title.Text = sdr.GetString(0);
+                            float fontSize = ((float)((panels[0].Height * .15)) / (96 / 12)) * (72 / 12);
+                            title.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
+                            AddPanelElement(pnlTeam, title);
+                            CenterElement(pnlTeam, title);
+                        }
+                        if (sdr.GetString(0) == "Game")   //Game Panel
+                        {
+                            Label title = new Label();
+                            title.Text = sdr.GetString(0);
+                            float fontSize = ((float)((panels[0].Height * .15)) / (96 / 12)) * (72 / 12);
+                            title.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
+                            AddPanelElement(pnlGame, title);
+                            CenterElement(pnlGame, title);
+                        }
+                        if (sdr.GetString(0) == "PlayerBox")   //PlayerBox Panel
+                        {
+                            Label title = new Label();
+                            title.Text = sdr.GetString(0);
+                            float fontSize = ((float)((panels[0].Height * .15)) / (96 / 12)) * (72 / 12);
+                            title.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
+                            AddPanelElement(pnlPlayerBox, title);
+                            CenterElement(pnlPlayerBox, title);
+                        }
+                        if (sdr.GetString(0) == "TeamBox")   //TeamBox Panel
+                        {
+                            Label title = new Label();
+                            title.Text = sdr.GetString(0);
+                            float fontSize = ((float)((panels[0].Height * .15)) / (96 / 12)) * (72 / 12);
+                            title.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
+                            AddPanelElement(pnlTeamBox, title);
+                            CenterElement(pnlTeamBox, title);
+                        }
+                        if (sdr.GetString(0) == "PlayByPlay")   //PlayByPlay Panel
+                        {
+                            Label title = new Label();
+                            title.Text = sdr.GetString(0);
+                            float fontSize = ((float)((panels[0].Height * .15)) / (96 / 12)) * (72 / 12);
+                            title.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
+                            AddPanelElement(pnlPbp, title);
+                            CenterElement(pnlPbp, title);
+                        }
                     }
                 }
             }
-            if(tables > 0)
-            {
-                for(int i = 0; i < tables; i++)
-                {
-                    float fontSize = ((float)(Tables.Width / 4) / (96 / 12)) * (72 / 12) / 2;
-                    Tables.Items[i].Font = SetListFontSize("Segoe UI", fontSize, FontStyle.Bold, Tables, Tables.Items[i]);
 
-                }
-            }
         }
 
-        public Font SetListFontSize(string font, Single size, FontStyle style, ListView parent, ListViewItem child)
-        {
-            Font newFont = new Font(font, size, style);
-            int targetWidth = (int)(parent.Width * 0.7);
-            float bestSize = GetListBestFitFontSize(parent, child, child.Text, newFont, targetWidth);
-            return new Font(newFont.FontFamily, bestSize, newFont.Style);
-        }
-
-
-
-        private float GetListBestFitFontSize(ListView parent, ListViewItem control, string text, Font baseFont, int targetWidth)
-        {
-            using (Graphics g = parent.CreateGraphics())
-            {
-                float fontSize = baseFont.Size;
-
-                while (fontSize > 1)
-                {
-                    Font testFont = new Font(baseFont.FontFamily, fontSize, baseFont.Style);
-                    SizeF size = g.MeasureString(text, testFont);
-
-                    if (size.Width <= targetWidth)
-                        return fontSize;
-
-                    fontSize -= 0.5f;
-                }
-
-                return baseFont.Size; // fallback
-            }
-        }
 
         public void CreateDB(string connectionString)
         {
@@ -680,13 +772,16 @@ namespace NBAdbToolbox
                     try
                     {
                         InsertData.ExecuteScalar();
+                        config.Create = false;
+                        File.WriteAllText(configPath, JsonConvert.SerializeObject(config, Formatting.Indented));
+                        btnBuild.Enabled = false;
                     }
                     catch (SqlException ex)
                     {
 
                     }
                     conn.Close();
-                    GetTables(connectionString);
+                    GetTablePanelInfo(connectionString);
                 }
             }            
         }
