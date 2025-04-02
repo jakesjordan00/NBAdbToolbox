@@ -39,13 +39,21 @@ namespace NBAdbToolbox
         private string imagePath = "";
         private Button btnBuild = new Button();
         public string cString = "";
-        public SqlConnectionStringBuilder bob = new SqlConnectionStringBuilder();  //This builder connection string
+        public SqlConnectionStringBuilder bob = new SqlConnectionStringBuilder();  //This builds connection string
 
 
         public Panel pnlDbUtil = new Panel();
         public Label lblDbUtil = new Label { 
         Text = "Database Utilities",
         };
+        public Panel pnlSeason = new Panel();
+        //public Panel pnlSeason = new Panel();
+        //public Panel pnlSeason = new Panel();
+        //public Panel pnlSeason = new Panel();
+        //public Panel pnlSeason = new Panel();
+        //public Panel pnlSeason = new Panel();
+
+
 
         public Panel pnlNav = new Panel();
 
@@ -600,9 +608,40 @@ namespace NBAdbToolbox
                 for(int i = 0; i < tables; i++)
                 {
                     float fontSize = ((float)(Tables.Width / 4) / (96 / 12)) * (72 / 12) / 2;
-                    Tables.Items[i].Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, Tables, Tables);
-                    
+                    Tables.Items[i].Font = SetListFontSize("Segoe UI", fontSize, FontStyle.Bold, Tables, Tables.Items[i]);
+
                 }
+            }
+        }
+
+        public Font SetListFontSize(string font, Single size, FontStyle style, ListView parent, ListViewItem child)
+        {
+            Font newFont = new Font(font, size, style);
+            int targetWidth = (int)(parent.Width * 0.7);
+            float bestSize = GetListBestFitFontSize(parent, child, child.Text, newFont, targetWidth);
+            return new Font(newFont.FontFamily, bestSize, newFont.Style);
+        }
+
+
+
+        private float GetListBestFitFontSize(ListView parent, ListViewItem control, string text, Font baseFont, int targetWidth)
+        {
+            using (Graphics g = parent.CreateGraphics())
+            {
+                float fontSize = baseFont.Size;
+
+                while (fontSize > 1)
+                {
+                    Font testFont = new Font(baseFont.FontFamily, fontSize, baseFont.Style);
+                    SizeF size = g.MeasureString(text, testFont);
+
+                    if (size.Width <= targetWidth)
+                        return fontSize;
+
+                    fontSize -= 0.5f;
+                }
+
+                return baseFont.Size; // fallback
             }
         }
 
