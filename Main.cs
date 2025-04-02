@@ -577,7 +577,7 @@ namespace NBAdbToolbox
             Tables.Alignment = ListViewAlignment.Top;
             Tables.Scrollable = false;
             int pnlWidth = pnlDbUtil.Width + (pnlDbUtil.Width / 20);
-            Tables.TileSize = new Size((int)((pnlWidth / 4) + (.20 * (pnlWidth / 3))), 50);
+            Tables.TileSize = new Size((int)((pnlWidth / 4) + (.15 * (pnlWidth / 3))), 50);
             AddPanelElement(pnlDbUtil, Tables);
             Tables.View = View.Tile;
             using (SqlCommand GetTables = new SqlCommand("select t.Name from sys.tables t where type_desc = 'USER_TABLE'"))
