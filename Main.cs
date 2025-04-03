@@ -463,6 +463,7 @@ namespace NBAdbToolbox
 
                 }
             };
+
             pnlTeam.Click += (s, e) =>
             {
                 if (pnlTeam.Focused)
