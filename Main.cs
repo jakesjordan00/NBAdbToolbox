@@ -52,7 +52,10 @@ namespace NBAdbToolbox
         public Panel pnlGame = new Panel();
         public Panel pnlPlayerBox = new Panel();
         public Panel pnlTeamBox = new Panel();
+        public Panel pnlPlayer = new Panel();
+
         public Panel pnlPbp = new Panel();
+        public Panel pnlTeamBoxLineups = new Panel();
 
 
 
@@ -623,16 +626,24 @@ namespace NBAdbToolbox
 
         public void GetTablePanelInfo(string connectionString)
         {
-            List<Panel> panels = new List<Panel> { pnlSeason, pnlTeam, pnlGame, pnlPlayerBox, pnlTeamBox, pnlPbp};
-            int incrementer = pnlDbUtil.Width/3;
+            List<Panel> panels = new List<Panel> { pnlSeason, pnlTeam, pnlPlayer, pnlGame, pnlPlayerBox, pnlTeamBox, pnlPbp, pnlTeamBoxLineups};
+            int dims = pnlDbUtil.Width/3;
             for (int i = 0; i < panels.Count; i++)
             {
-                panels[i].Height = incrementer;
-                panels[i].Width = incrementer;
+                if(i <= 5)
+                {
+                    panels[i].Height = dims;
+                    panels[i].Width = dims;
+                }
+                else
+                {
+                    panels[i].Height = pnlDbUtil.Width / 2;
+                    panels[i].Width = pnlDbUtil.Width / 2;
+                }
                 if (i == 0)
                 {
                     pnlScoreboard.Height = this.Height / 18;
-                    panels[i].Top =(int)(pnlScoreboard.Top + (pnlScoreboard.Height * .1));
+                    panels[i].Top = (int)(pnlScoreboard.Top + (pnlScoreboard.Height * .1));
                     panels[i].Left = pnlDbUtil.Left;
                 }
                 else if (i == 1 || i == 2)
@@ -640,14 +651,19 @@ namespace NBAdbToolbox
                     panels[i].Top = panels[0].Top;
                     panels[i].Left = panels[i - 1].Right;
                 }
-                else if (i == 3)
+                else if (i == 3 || i == 6)
                 {
-                    panels[i].Top = panels[0].Bottom;
-                    panels[i].Left = panels[0].Left;
+                    panels[i].Top = panels[i - 3].Bottom;
+                    panels[i].Left = panels[i - 3].Left;
                 }
                 else if (i == 4 || i == 5)
                 {
                     panels[i].Top = panels[0].Bottom;
+                    panels[i].Left = panels[i - 1].Right;
+                }
+                else if (i == 7)
+                {
+                    panels[i].Top = panels[i - 1].Top;
                     panels[i].Left = panels[i - 1].Right;
                 }
 
@@ -694,6 +710,15 @@ namespace NBAdbToolbox
                             AddPanelElement(pnlTeam, title);
                             CenterElement(pnlTeam, title);
                         }
+                        if (sdr.GetString(0) == "Player")   //PlayerBox Panel
+                        {
+                            Label title = new Label();
+                            title.Text = sdr.GetString(0);
+                            float fontSize = ((float)((panels[0].Height * .15)) / (96 / 12)) * (72 / 12);
+                            title.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
+                            AddPanelElement(pnlPlayer, title);
+                            CenterElement(pnlPlayer, title);
+                        }
                         if (sdr.GetString(0) == "Game")   //Game Panel
                         {
                             Label title = new Label();
@@ -702,15 +727,6 @@ namespace NBAdbToolbox
                             title.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
                             AddPanelElement(pnlGame, title);
                             CenterElement(pnlGame, title);
-                        }
-                        if (sdr.GetString(0) == "PlayerBox")   //PlayerBox Panel
-                        {
-                            Label title = new Label();
-                            title.Text = sdr.GetString(0);
-                            float fontSize = ((float)((panels[0].Height * .15)) / (96 / 12)) * (72 / 12);
-                            title.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
-                            AddPanelElement(pnlPlayerBox, title);
-                            CenterElement(pnlPlayerBox, title);
                         }
                         if (sdr.GetString(0) == "TeamBox")   //TeamBox Panel
                         {
@@ -721,6 +737,15 @@ namespace NBAdbToolbox
                             AddPanelElement(pnlTeamBox, title);
                             CenterElement(pnlTeamBox, title);
                         }
+                        if (sdr.GetString(0) == "PlayerBox")   //PlayerBox Panel
+                        {
+                            Label title = new Label();
+                            title.Text = sdr.GetString(0);
+                            float fontSize = ((float)((panels[0].Height * .15)) / (96 / 12)) * (72 / 12);
+                            title.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
+                            AddPanelElement(pnlPlayerBox, title);
+                            CenterElement(pnlPlayerBox, title);
+                        }
                         if (sdr.GetString(0) == "PlayByPlay")   //PlayByPlay Panel
                         {
                             Label title = new Label();
@@ -729,6 +754,15 @@ namespace NBAdbToolbox
                             title.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
                             AddPanelElement(pnlPbp, title);
                             CenterElement(pnlPbp, title);
+                        }
+                        if (sdr.GetString(0) == "TeamBoxLineups")   //PlayByPlay Panel
+                        {
+                            Label title = new Label();
+                            title.Text = sdr.GetString(0);
+                            float fontSize = ((float)((panels[0].Height * .15)) / (96 / 12)) * (72 / 12);
+                            title.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
+                            AddPanelElement(pnlTeamBoxLineups, title);
+                            CenterElement(pnlTeamBoxLineups, title);
                         }
                     }
                 }
