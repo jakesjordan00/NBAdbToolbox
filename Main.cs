@@ -47,15 +47,14 @@ namespace NBAdbToolbox
         public Label lblDbUtil = new Label { 
         Text = "Database Utilities",
         };
-        public Panel pnlSeason = new Panel();
-        public Panel pnlTeam = new Panel();
-        public Panel pnlGame = new Panel();
-        public Panel pnlPlayerBox = new Panel();
-        public Panel pnlTeamBox = new Panel();
-        public Panel pnlPlayer = new Panel();
-
-        public Panel pnlPbp = new Panel();
-        public Panel pnlTeamBoxLineups = new Panel();
+        public Panel pnlSeason = new Panel();           public Label lblSeason = new Label();
+        public Panel pnlTeam = new Panel();             public Label lblTeam = new Label();
+        public Panel pnlGame = new Panel();             public Label lblGame = new Label();
+        public Panel pnlPlayerBox = new Panel();        public Label lblPlayerBox = new Label();
+        public Panel pnlTeamBox = new Panel();          public Label lblTeamBox = new Label();
+        public Panel pnlPlayer = new Panel();           public Label lblPlayer = new Label();
+        public Panel pnlPbp = new Panel();              public Label lblPbp = new Label();
+        public Panel pnlTeamBoxLineups = new Panel();   public Label lblTeamBoxLineups = new Label();
 
 
 
@@ -150,7 +149,7 @@ namespace NBAdbToolbox
                 {
                     isConnected = TestDbConnection(cString);
                 }
-                if (isConnected == true)
+                if (isConnected)
                 {
                     lblCStatus.Text = "Connected";
                     lblCStatus.ForeColor = Color.Green;
@@ -169,7 +168,6 @@ namespace NBAdbToolbox
                     btnBuild.Enabled = false;
                 }
                 CheckServer(cString, "main");
-                btnBuild.Enabled = true;
             }
 
 
@@ -419,6 +417,99 @@ namespace NBAdbToolbox
             {
                 GetTablePanelInfo(bob.ToString());
             }
+            List<Panel> panels = new List<Panel> { pnlSeason, pnlTeam, pnlPlayer, pnlGame, pnlPlayerBox, pnlTeamBox, pnlPbp, pnlTeamBoxLineups };
+
+            int dims = pnlDbUtil.Width / 3;
+            int fullHeight = (dims * 2) + (pnlDbUtil.Width / 2);
+            pnlSeason.Click += (s, e) =>
+            {
+                if (pnlSeason.Focused)
+                {
+                    this.ActiveControl = null;
+                    pnlSeason.Width = dims;
+                    pnlSeason.Height = dims;
+                    fontSize = ((float)((pnlSeason.Height * .15)) / (96 / 12)) * (72 / 12);
+                    TableLabels(pnlSeason, lblSeason, lblSeason.Text, fontSize);
+                }
+                else
+                {
+                    pnlSeason.Focus();
+                    pnlDbUtil.Controls.SetChildIndex(pnlSeason, 1);
+                    pnlSeason.Width = pnlDbUtil.Width;
+                    pnlSeason.Height = fullHeight;
+                    fontSize = ((float)((pnlSeason.Height * .15)) / (96 / 12)) * (72 / 12);
+                    TableLabels(pnlSeason, lblSeason, lblSeason.Text, fontSize);
+
+                }
+            };
+            lblSeason.Click += (s, e) =>
+            {
+                if (pnlSeason.Focused)
+                {
+                    this.ActiveControl = null;
+                    pnlSeason.Width = dims;
+                    pnlSeason.Height = dims;
+                    fontSize = ((float)((pnlSeason.Height * .15)) / (96 / 12)) * (72 / 12);
+                    TableLabels(pnlSeason, lblSeason, lblSeason.Text, fontSize);
+                }
+                else
+                {
+                    pnlSeason.Focus();
+                    pnlDbUtil.Controls.SetChildIndex(pnlSeason, 1);
+                    pnlSeason.Width = pnlDbUtil.Width;
+                    pnlSeason.Height = fullHeight;
+                    fontSize = ((float)((pnlSeason.Height * .15)) / (96 / 12)) * (72 / 12);
+                    TableLabels(pnlSeason, lblSeason, lblSeason.Text, fontSize);
+
+                }
+            };
+            pnlTeam.Click += (s, e) =>
+            {
+                if (pnlTeam.Focused)
+                {
+                    this.ActiveControl = null;
+                    pnlTeam.Left = pnlSeason.Right;
+                    pnlTeam.Width = dims;
+                    pnlTeam.Height = dims;
+                    fontSize = ((float)((pnlTeam.Height * .15)) / (96 / 12)) * (72 / 12);
+                    TableLabels(pnlTeam, lblTeam, lblTeam.Text, fontSize);
+                }
+                else
+                {
+                    pnlTeam.Focus();
+                    pnlDbUtil.Controls.SetChildIndex(pnlTeam, 1);
+                    pnlTeam.Left = pnlDbUtil.Left;
+                    pnlTeam.Width = pnlDbUtil.Width;
+                    pnlTeam.Height = fullHeight;
+                    fontSize = ((float)((pnlTeam.Height * .15)) / (96 / 12)) * (72 / 12);
+                    TableLabels(pnlTeam, lblTeam, lblTeam.Text, fontSize);
+
+                }
+            };
+            lblTeam.Click += (s, e) =>
+            {
+                if (pnlTeam.Focused)
+                {
+                    this.ActiveControl = null;
+                    pnlTeam.Left = pnlSeason.Right;
+                    pnlTeam.Width = dims;
+                    pnlTeam.Height = dims;
+                    fontSize = ((float)((pnlTeam.Height * .15)) / (96 / 12)) * (72 / 12);
+                    TableLabels(pnlTeam, lblTeam, lblTeam.Text, fontSize);
+                }
+                else
+                {
+                    pnlTeam.Focus();
+                    pnlDbUtil.Controls.SetChildIndex(pnlTeam, 1);
+                    pnlTeam.Left = pnlDbUtil.Left;
+                    pnlTeam.Width = pnlDbUtil.Width;
+                    pnlTeam.Height = fullHeight;
+                    fontSize = ((float)((pnlTeam.Height * .15)) / (96 / 12)) * (72 / 12);
+                    TableLabels(pnlTeam, lblTeam, lblTeam.Text, fontSize);
+
+                }
+            };
+
 
         }
 
@@ -628,6 +719,7 @@ namespace NBAdbToolbox
         {
             List<Panel> panels = new List<Panel> { pnlSeason, pnlTeam, pnlPlayer, pnlGame, pnlPlayerBox, pnlTeamBox, pnlPbp, pnlTeamBoxLineups};
             int dims = pnlDbUtil.Width/3;
+            int fullHeight = (dims * 6) + pnlDbUtil.Width;
             for (int i = 0; i < panels.Count; i++)
             {
                 if(i <= 5)
@@ -666,19 +758,6 @@ namespace NBAdbToolbox
                     panels[i].Top = panels[i - 1].Top;
                     panels[i].Left = panels[i - 1].Right;
                 }
-
-
-
-                //else if (i == 2 || i == 4)
-                //{
-                //    panels[i].Top = panels[i - 1].Bottom;
-                //    panels[i].Left = panels[i - 2].Left;
-                //}
-                //else if (i == 1 || i == 3 || i == 5)
-                //{
-                //    panels[i].Top = panels[i - 1].Top;
-                //    panels[i].Left = panels[i - 1].Right;
-                //}
                 AddPanelElement(pnlDbUtil, panels[i]);
                 panels[i].BorderStyle = BorderStyle.FixedSingle;
             }
@@ -690,34 +769,42 @@ namespace NBAdbToolbox
                 conn.Open();
                 using (SqlDataReader sdr = GetTables.ExecuteReader())
                 {
+                    lblPlayerBox = new Label();
+                    lblTeamBox = new Label();
+                    lblPlayer = new Label();
+                    lblPbp = new Label();
+                    lblTeamBoxLineups = new Label();
+
+
+
+
+
+
                     while (sdr.Read())
                     {
                         if (sdr.GetString(0) == "Season")   //Season Panel
                         {
-                            Label title = new Label();
-                            title.Text = sdr.GetString(0);
+                            lblSeason.Text = sdr.GetString(0);
                             float fontSize = ((float)((panels[0].Height * .15)) / (96 / 12)) * (72 / 12);
-                            title.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
-                            AddPanelElement(pnlSeason, title);
-                            CenterElement(pnlSeason, title);
+                            lblSeason.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
+                            AddPanelElement(pnlSeason, lblSeason);
+                            CenterElement(pnlSeason, lblSeason);
                         }
                         if (sdr.GetString(0) == "Team")   //Team Panel
                         {
-                            Label title = new Label();
-                            title.Text = sdr.GetString(0);
+                            lblTeam.Text = sdr.GetString(0);
                             float fontSize = ((float)((panels[0].Height * .15)) / (96 / 12)) * (72 / 12);
-                            title.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
-                            AddPanelElement(pnlTeam, title);
-                            CenterElement(pnlTeam, title);
+                            lblTeam.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
+                            AddPanelElement(pnlTeam, lblTeam);
+                            CenterElement(pnlTeam, lblTeam);
                         }
                         if (sdr.GetString(0) == "Player")   //PlayerBox Panel
                         {
-                            Label title = new Label();
-                            title.Text = sdr.GetString(0);
+                            lblGame.Text = sdr.GetString(0);
                             float fontSize = ((float)((panels[0].Height * .15)) / (96 / 12)) * (72 / 12);
-                            title.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
-                            AddPanelElement(pnlPlayer, title);
-                            CenterElement(pnlPlayer, title);
+                            lblGame.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
+                            AddPanelElement(pnlPlayer, lblGame);
+                            CenterElement(pnlPlayer, lblGame);
                         }
                         if (sdr.GetString(0) == "Game")   //Game Panel
                         {
@@ -757,19 +844,22 @@ namespace NBAdbToolbox
                         }
                         if (sdr.GetString(0) == "TeamBoxLineups")   //PlayByPlay Panel
                         {
-                            Label title = new Label();
-                            title.Text = sdr.GetString(0);
                             float fontSize = ((float)((panels[0].Height * .15)) / (96 / 12)) * (72 / 12);
-                            title.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
-                            AddPanelElement(pnlTeamBoxLineups, title);
-                            CenterElement(pnlTeamBoxLineups, title);
+                            TableLabels(pnlTeamBoxLineups, lblTeamBoxLineups, sdr.GetString(0), fontSize);
                         }
                     }
                 }
             }
-
         }
 
+        public void TableLabels(Panel pnl, Label lbl, String text, float fontSize)
+        {
+            lbl.Text = text;
+            lbl.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
+            AddPanelElement(pnl, lbl);
+            CenterElement(pnl, lbl);
+
+        }
 
         public void CreateDB(string connectionString)
         {
