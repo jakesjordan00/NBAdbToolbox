@@ -20,29 +20,42 @@ namespace NBAdbToolbox
 {
     public partial class Main: Form
     {
-        public bool dbConnection = false; 
-        //public static Utlilities Utilities = new Utlilities();
+        //Determine whether or not we have a connection to the Database in dbconfig file
+        public bool dbConnection = false;
+        //File path for project
         static string projectRoot = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\.."));
+        //dbconfig file
         string configPath = Path.Combine(projectRoot, "Content", "dbconfig.json");
-        public Panel pnlWelcome = new Panel();
-        private Button btnEdit = new Button();
         private DbConfig config;
-        private Label lblStatus = new Label();
-        private Label lblServer = new Label();
-        private Label lblServerName = new Label();
 
-        private Label lblDB = new Label();
-        private Label lblDBName = new Label();
-        private Label lblCStatus = new Label();
-        private Label lblDbStat = new Label();
-        private PictureBox picStatus = new PictureBox();
-        private string iconFile = "";
-        private string imagePath = "";
-        private Button btnBuild = new Button();
+        //Connection String items
         public string cString = "";
         public SqlConnectionStringBuilder bob = new SqlConnectionStringBuilder();  //This builds connection string
 
+        //SQL building items
+        public static string buildFile = File.ReadAllText(Path.Combine(projectRoot, "Content", "build.sql"));   //Creates tables
+        //Splits procedures off from table creation. For some reason, it won't let me do them at once, even if the formatting I have works straight in SQL.
+        public static string procedures = buildFile.Substring(buildFile.IndexOf("~") + 1).Replace("*/", "");
+        public static List<string> procs = new List<string>();
 
+        //pnlWelcome items
+        public Panel pnlWelcome = new Panel();
+        private Label lblStatus = new Label();      //Header label
+        private Label lblServer = new Label();      //Server
+        private Label lblServerName = new Label();  //Server name
+        private Label lblCStatus = new Label();     //Connection string status
+        private PictureBox picStatus =              //Connection string icon
+            new PictureBox();
+        private string iconFile = "";               //Icon file name
+        private string imagePath = "";              //Icon file path
+        private Label lblDB = new Label();          //Database
+        private Label lblDBName = new Label();      //Database name
+        private Label lblDbStat = new Label();      //Need to create database/Database created label
+        private Button btnEdit = new Button();      //Edit config file
+        private Button btnBuild = new Button();     //Build Database
+
+
+        //pnlDbUtil items
         public Panel pnlDbUtil = new Panel();
         public Label lblDbUtil = new Label { 
         Text = "Database Utilities",
@@ -57,16 +70,11 @@ namespace NBAdbToolbox
         public Panel pnlTeamBoxLineups = new Panel();   public Label lblTeamBoxLineups = new Label();
 
 
-
+        //Header Panels
         public Panel pnlNav = new Panel();
-
         public Panel pnlScoreboard = new Panel();
 
 
-
-        private Panel mainContentPanel;
-        private Label lblUtilities = new Label();
-        private Panel UtilPanel;
         public Main()
         {
             InitializeComponent();
@@ -672,44 +680,6 @@ namespace NBAdbToolbox
             }
 
         }
-        //public List<string> Tables  = new List<string>();
-        //public ListView Tables = new ListView();
-
-        //public void GetTables (string connectionString)
-        //{
-        //    int tables = 0;
-        //    Tables.Height = lblDbUtil.Height / 2;
-        //    Tables.Alignment = ListViewAlignment.Top;
-        //    Tables.Scrollable = false;
-        //    int pnlWidth = pnlDbUtil.Width + (pnlDbUtil.Width / 20);
-        //    Tables.TileSize = new Size((int)((pnlWidth / 4) + (.15 * (pnlWidth / 3))), 50);
-        //    AddPanelElement(pnlDbUtil, Tables);
-        //    Tables.View = View.Tile;
-        //    using (SqlCommand GetTables = new SqlCommand("select t.Name from sys.tables t where type_desc = 'USER_TABLE'"))
-        //    {
-        //        SqlConnection conn = new SqlConnection(bob.ToString());
-        //        GetTables.Connection = conn;
-        //        GetTables.CommandType = CommandType.Text;
-        //        conn.Open();
-        //        using (SqlDataReader sdr = GetTables.ExecuteReader())
-        //        {
-        //            while (sdr.Read())
-        //            {
-        //                Tables.Items.Add(sdr.GetString(0));
-        //                tables++;
-        //            }
-        //        }
-        //    }
-        //    if(tables > 0)
-        //    {
-        //        for(int i = 0; i < tables; i++)
-        //        {
-        //            float fontSize = ((float)(Tables.Width / 4) / (96 / 12)) * (72 / 12) / 2;
-        //            Tables.Items[i].Font = SetListFontSize("Segoe UI", fontSize, FontStyle.Bold, Tables, Tables.Items[i]);
-
-        //        }
-        //    }
-        //}
 
         public void GetTablePanelInfo(string connectionString)
         {
@@ -883,15 +853,14 @@ namespace NBAdbToolbox
             CheckServer(connectionString, "create");
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
-                string build = File.ReadAllText(Path.Combine(projectRoot, "Content", "build.sql"));
-                using (SqlCommand InsertData = new SqlCommand(build))
+                using (SqlCommand CreateTables = new SqlCommand(buildFile))
                 {
-                    InsertData.Connection = conn;
-                    InsertData.CommandType = CommandType.Text;
+                    CreateTables.Connection = conn;
+                    CreateTables.CommandType = CommandType.Text;
                     conn.Open();
                     try
                     {
-                        InsertData.ExecuteScalar();
+                        CreateTables.ExecuteScalar();
                         config.Create = false;
                         File.WriteAllText(configPath, JsonConvert.SerializeObject(config, Formatting.Indented));
                         btnBuild.Enabled = false;
@@ -901,11 +870,49 @@ namespace NBAdbToolbox
 
                     }
                     conn.Close();
-                    GetTablePanelInfo(connectionString);
                 }
+                for(int i = 0; i < procs.Count; i++)
+                {
+                    using (SqlCommand CreateProcedures = new SqlCommand(procedures))
+                    {
+                        CreateProcedures.Connection = conn;
+                        CreateProcedures.CommandType = CommandType.Text;
+                        conn.Open();
+                        try
+                        {
+                            CreateProcedures.ExecuteScalar();
+                        }
+                        catch (SqlException ex)
+                        {
+
+                        }
+                        conn.Close();
+                    }
+                }
+                GetTablePanelInfo(connectionString);
             }            
         }
 
+        public void FormatProcedures()
+        {
+            string search = "go";
+            List<int> indices = new List<int>();
+            int startIndex = 0;
+            for (int i = 0; i <= procedures.Length - search.Length; i++)
+            {
+                if (procedures.Substring(i, search.Length) == search)
+                {
+                    indices.Add(i);
+                    procs.Add(procedures.Substring(startIndex, i));
+                    startIndex = i + search.Length;
+                }
+            }
+            for(int i = 0; i < indices.Count; i++)
+            {
+            }
+
+
+        }
 
 
 
