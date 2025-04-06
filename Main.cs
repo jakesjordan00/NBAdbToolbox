@@ -34,8 +34,9 @@ namespace NBAdbToolbox
 
         //SQL building items
         public static string buildFile = File.ReadAllText(Path.Combine(projectRoot, "Content", "build.sql"));   //Creates tables
-        //Splits procedures off from table creation. For some reason, it won't let me do them at once, even if the formatting I have works straight in SQL.
+        //Splits procedures off from table creation. For some reason, it won't let me do them at once, even if the formatting I have works straight in SQL. it really doesnt like 'go'
         public static string procedures = buildFile.Substring(buildFile.IndexOf("~") + 1).Replace("*/", "");
+        //Each procedure is a list item
         public static List<string> procs = new List<string>();
 
         //pnlWelcome items
@@ -49,7 +50,10 @@ namespace NBAdbToolbox
         private string iconFile = "";               //Icon file name
         private string imagePath = "";              //Icon file path
         private Label lblDB = new Label();          //Database
-        private Label lblDBName = new Label();      //Database name
+        private Label lblDbName = new Label();      //Database name
+        private PictureBox picDbStatus =            //Db Status icon
+            new PictureBox();
+        private string imagePathDb = "";            //Db icon file path
         private Label lblDbStat = new Label();      //Need to create database/Database created label
         private Button btnEdit = new Button();      //Edit config file
         private Button btnBuild = new Button();     //Build Database
@@ -60,7 +64,7 @@ namespace NBAdbToolbox
         public Label lblDbUtil = new Label { 
         Text = "Database Utilities",
         };
-        public Panel pnlSeason = new Panel();           public Label lblSeason = new Label();
+        public Panel pnlSeason = new Panel();           public Label lblSeason = new Label();       public Label lblSeasonSub = new Label();
         public Panel pnlTeam = new Panel();             public Label lblTeam = new Label();
         public Panel pnlGame = new Panel();             public Label lblGame = new Label();
         public Panel pnlPlayerBox = new Panel();        public Label lblPlayerBox = new Label();
@@ -141,7 +145,7 @@ namespace NBAdbToolbox
                 //Set label text
                 //lblServer.Text += config.Server;
                 lblServerName.Text = "placeholder";//config.Server;
-                lblDBName.Text = config.Database;
+                lblDbName.Text = config.Database;
 
                 //Build connection string
                 bob.DataSource = config.Server;
@@ -162,7 +166,7 @@ namespace NBAdbToolbox
                     lblCStatus.Text = "Connected";
                     lblCStatus.ForeColor = Color.Green;
                     // Load image
-                    imagePath = Path.Combine(projectRoot, "Content", "Check.png");
+                    imagePath = Path.Combine(projectRoot, "Content", "Success.png");
                     picStatus.Image = Image.FromFile(imagePath);
                     btnBuild.Enabled = true;
                 }
@@ -193,7 +197,8 @@ namespace NBAdbToolbox
             AddPanelElement(pnlWelcome, btnBuild);
             AddPanelElement(pnlWelcome, lblCStatus);
             AddPanelElement(pnlWelcome, picStatus);
-            AddPanelElement(pnlWelcome, lblDBName);
+            AddPanelElement(pnlWelcome, picDbStatus);
+            AddPanelElement(pnlWelcome, lblDbName);
             AddPanelElement(pnlWelcome, lblDB);
             AddPanelElement(pnlWelcome, lblServerName);
             AddPanelElement(pnlWelcome, lblServer);
@@ -314,11 +319,15 @@ namespace NBAdbToolbox
             lblDB.AutoSize = true;
             fontSize = ((float)((pnlWelcome.Height * .04)) / (96 / 12)) * (72 / 12);
             lblDB.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
-            lblDBName.Left = lblDB.Right - 10;
-            lblDBName.Top = lblServer.Bottom;
-            lblDBName.AutoSize = true;
-            lblDBName.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
-
+            lblDbName.Left = lblDB.Right - 10;
+            lblDbName.Top = lblServer.Bottom;
+            lblDbName.AutoSize = true;
+            lblDbName.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
+            picDbStatus.Width = lblDB.Height;
+            picDbStatus.Height = lblDB.Height;
+            picDbStatus.SizeMode = PictureBoxSizeMode.Zoom;
+            picDbStatus.Top = lblDB.Top;
+            picDbStatus.Left = lblDbName.Right;
 
             lblDbStat.Left = 5;
             lblDbStat.Top = lblDB.Bottom;
@@ -594,7 +603,7 @@ namespace NBAdbToolbox
             lblServer.Text = "Server: ";
             lblServerName.Text = config.Server;
             lblDB.Text = "Database: ";
-            lblDBName.Text = config.Database;
+            lblDbName.Text = config.Database;
 
                                                                                 //Build connection string
             bob.DataSource = config.Server;
@@ -612,7 +621,7 @@ namespace NBAdbToolbox
             lblCStatus.Text = isConnected ? "Connected" : "Disconnected";
             lblCStatus.ForeColor = isConnected ? Color.Green : Color.Red;
 
-            iconFile = isConnected ? "Check.png" : "X.png";
+            iconFile = isConnected ? "Success.png" : "X.png";
             imagePath = Path.Combine(projectRoot, "Content", iconFile);
 
             if (File.Exists(imagePath))
@@ -623,6 +632,12 @@ namespace NBAdbToolbox
             if(config.Create == true && isConnected)
             {
                 lblDbStat.Text = "Need to create Database";
+                lblDbStat.ForeColor = Color.FromArgb(255, 204, 0);
+                lblDbName.ForeColor = Color.FromArgb(255, 204, 0);
+                lblDbName.BackColor = Color.FromArgb(100, 0, 0, 0);
+                // Load image
+                imagePathDb = Path.Combine(projectRoot, "Content", "Warning.png");
+                picDbStatus.Image = Image.FromFile(imagePathDb);
             }
 
 
@@ -660,12 +675,19 @@ namespace NBAdbToolbox
                     if (reader.Read())
                     {
                         lblDbStat.Text = "Database created";
+                        lblDbStat.ForeColor = Color.Green;
+                        lblDbStat.BackColor = Color.Transparent;
                         conn.Close();
                         dbConnection = true;
                         bob.InitialCatalog = config.Database;
                         btnBuild.Enabled = false;
                         config.Create = false;
                         File.WriteAllText(configPath, JsonConvert.SerializeObject(config, Formatting.Indented));
+                        lblDbName.ForeColor = Color.Green;
+                        lblDbName.BackColor = Color.Transparent;
+                        imagePathDb = Path.Combine(projectRoot, "Content", "Success.png");
+                        picDbStatus.Image = Image.FromFile(imagePathDb);
+                        picDbStatus.BackColor = Color.Transparent;
                     }
                     else
                     {
@@ -675,6 +697,14 @@ namespace NBAdbToolbox
                         File.WriteAllText(configPath, JsonConvert.SerializeObject(config, Formatting.Indented));
 
                         lblDbStat.Text = "Need to create Database";
+                        lblDbStat.ForeColor = Color.FromArgb(255, 204, 0);
+                        lblDbStat.BackColor = Color.FromArgb(100, 0, 0, 0);
+                        // Load image
+                        lblDbName.ForeColor = Color.FromArgb(255, 204, 0);
+                        lblDbName.BackColor = Color.FromArgb(100, 0, 0, 0);
+                        imagePathDb = Path.Combine(projectRoot, "Content", "Warning.png");
+                        picDbStatus.BackColor = Color.FromArgb(100, 0, 0, 0); 
+                        picDbStatus.Image = Image.FromFile(imagePathDb);
                     }
                 }
             }
@@ -727,11 +757,11 @@ namespace NBAdbToolbox
                 AddPanelElement(pnlDbUtil, panels[i]);
                 panels[i].BorderStyle = BorderStyle.FixedSingle;
             }
-            using (SqlCommand GetTables = new SqlCommand("select t.Name from sys.tables t where type_desc = 'USER_TABLE'"))
+            using (SqlCommand GetTables = new SqlCommand("Tables"))
             {
                 SqlConnection conn = new SqlConnection(bob.ToString());
                 GetTables.Connection = conn;
-                GetTables.CommandType = CommandType.Text;
+                GetTables.CommandType = CommandType.StoredProcedure;
                 conn.Open();
                 using (SqlDataReader sdr = GetTables.ExecuteReader())
                 {
@@ -750,11 +780,19 @@ namespace NBAdbToolbox
                     {
                         if (sdr.GetString(0) == "Season")   //Season Panel
                         {
-                            lblSeason.Text = sdr.GetString(0);
+                            lblSeason.Text = sdr["Name"].ToString();
                             float fontSize = ((float)((panels[0].Height * .15)) / (96 / 12)) * (72 / 12);
                             lblSeason.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
                             AddPanelElement(pnlSeason, lblSeason);
                             CenterElement(pnlSeason, lblSeason);
+
+                            lblSeasonSub.Text = sdr["Rows"].ToString() + " seasons available";
+                            fontSize = ((float)((panels[0].Height * .08)) / (96 / 12)) * (72 / 12);
+                            lblSeasonSub.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
+                            AddPanelElement(pnlSeason, lblSeasonSub);
+                            lblSeasonSub.Left = panels[0].Left;
+                            lblSeasonSub.Top = lblSeason.Bottom;
+                            lblSeasonSub.AutoSize = true;
                         }
                         if (sdr.GetString(0) == "Team")   //Team Panel
                         {
@@ -864,6 +902,7 @@ namespace NBAdbToolbox
                         config.Create = false;
                         File.WriteAllText(configPath, JsonConvert.SerializeObject(config, Formatting.Indented));
                         btnBuild.Enabled = false;
+                        FormatProcedures();
                     }
                     catch (SqlException ex)
                     {
@@ -873,7 +912,7 @@ namespace NBAdbToolbox
                 }
                 for(int i = 0; i < procs.Count; i++)
                 {
-                    using (SqlCommand CreateProcedures = new SqlCommand(procedures))
+                    using (SqlCommand CreateProcedures = new SqlCommand(procs[i]))
                     {
                         CreateProcedures.Connection = conn;
                         CreateProcedures.CommandType = CommandType.Text;
@@ -889,6 +928,21 @@ namespace NBAdbToolbox
                         conn.Close();
                     }
                 }
+                using (SqlCommand InsertSeasons = new SqlCommand("SeasonInsert"))
+                {
+                    InsertSeasons.Connection = conn;
+                    InsertSeasons.CommandType = CommandType.StoredProcedure;
+                    conn.Open();
+                    try
+                    {
+                        InsertSeasons.ExecuteScalar();
+                    }
+                    catch (SqlException ex)
+                    {
+
+                    }
+                    conn.Close();
+                }
                 GetTablePanelInfo(connectionString);
             }            
         }
@@ -903,15 +957,10 @@ namespace NBAdbToolbox
                 if (procedures.Substring(i, search.Length) == search)
                 {
                     indices.Add(i);
-                    procs.Add(procedures.Substring(startIndex, i));
+                    procs.Add(procedures.Substring(startIndex, i - startIndex));
                     startIndex = i + search.Length;
                 }
             }
-            for(int i = 0; i < indices.Count; i++)
-            {
-            }
-
-
         }
 
 
