@@ -27,6 +27,9 @@ namespace NBAdbToolbox
         //dbconfig file
         string configPath = Path.Combine(projectRoot, "Content", "dbconfig.json");
         private DbConfig config;
+        //Screen size/Display variables
+        public int screenWidth = Screen.PrimaryScreen.WorkingArea.Width;
+        public int screenHeight = Screen.PrimaryScreen.WorkingArea.Height;
 
         //Connection String items
         public string cString = "";
@@ -64,14 +67,27 @@ namespace NBAdbToolbox
         public Label lblDbUtil = new Label { 
         Text = "Database Utilities",
         };
-        public Panel pnlSeason = new Panel();           public Label lblSeason = new Label();       public Label lblSeasonSub = new Label();
-        public Panel pnlTeam = new Panel();             public Label lblTeam = new Label();
-        public Panel pnlGame = new Panel();             public Label lblGame = new Label();
-        public Panel pnlPlayerBox = new Panel();        public Label lblPlayerBox = new Label();
-        public Panel pnlTeamBox = new Panel();          public Label lblTeamBox = new Label();
-        public Panel pnlPlayer = new Panel();           public Label lblPlayer = new Label();
-        public Panel pnlPbp = new Panel();              public Label lblPbp = new Label();
-        public Panel pnlTeamBoxLineups = new Panel();   public Label lblTeamBoxLineups = new Label();
+        public Panel pnlSeason = new Panel();           public Label lblSeason = new Label();           public PictureBox picSeason = new PictureBox();         public Label lblSeasonSub = new Label(); 
+        public Panel pnlTeam = new Panel();             public Label lblTeam = new Label();             public PictureBox picTeam = new PictureBox();           public Label lblTeamSub = new Label(); 
+        public Panel pnlGame = new Panel();             public Label lblGame = new Label();             public PictureBox picGame = new PictureBox();           public Label lblGameSub = new Label();
+        public Panel pnlPlayerBox = new Panel();        public Label lblPlayerBox = new Label();        public PictureBox picPlayerBox = new PictureBox();      public Label lblPlayerBoxSub = new Label();
+        public Panel pnlTeamBox = new Panel();          public Label lblTeamBox = new Label();          public PictureBox picTeamBox = new PictureBox();        public Label lblTeamBoxSub = new Label();
+        public Panel pnlPlayer = new Panel();           public Label lblPlayer = new Label();           public PictureBox picPlayer = new PictureBox();         public Label lblPlayerSub = new Label();
+        public Panel pnlPbp = new Panel();              public Label lblPbp = new Label();              public PictureBox picPbp = new PictureBox();            public Label lblPbpSub = new Label();
+        public Panel pnlTeamBoxLineups = new Panel();   public Label lblTeamBoxLineups = new Label();   public PictureBox picTeamBoxLineups = new PictureBox(); public Label lblTeamBoxLineupsSub = new Label();
+        //pnlDbUtil sub panel Positions and sizes
+        public int leftPanelPos = 0;
+        public int midPanelPos = 0;
+        public int rightPanelPos = 0;
+        public int fullHeight = 0;
+        public int dimW = 0;
+        public int dimH = 0;
+        public int dimH2 =0;
+        //
+        public Label lblDbOptions = new Label
+        {
+            Text = "Options",
+        };
 
 
         //Header Panels
@@ -83,8 +99,8 @@ namespace NBAdbToolbox
         {
             InitializeComponent();
             //Set screen size
-            int screenWidth = Screen.PrimaryScreen.WorkingArea.Width;
-            int screenHeight = Screen.PrimaryScreen.WorkingArea.Height;
+            screenWidth = Screen.PrimaryScreen.WorkingArea.Width;
+            screenHeight = Screen.PrimaryScreen.WorkingArea.Height;
             this.Width = (int)(screenWidth / 1.5);
             this.Height = (int)(screenHeight / 1.2);
             this.StartPosition = FormStartPosition.Manual;
@@ -192,6 +208,7 @@ namespace NBAdbToolbox
 
             //This should be second to last i believe.
             //Children elements should go above the parents, background image should be last added.
+            AddPanelElement(pnlDbUtil, lblDbOptions);
             AddPanelElement(pnlDbUtil, lblDbUtil);
             AddPanelElement(pnlWelcome, lblDbStat);
             AddPanelElement(pnlWelcome, btnBuild);
@@ -233,10 +250,19 @@ namespace NBAdbToolbox
             //Auto-size and center
             lblDbUtil.AutoSize = true;
             CenterElement(pnlDbUtil, lblDbUtil);
-            //Tables.Width = pnlDbUtil.Width;
-            //Tables.Height = pnlDbUtil.Height / 4;
-            //Tables.Top = lblDbUtil.Bottom;
 
+            //Will be used primarily for table panel expansion later, but need for DbOptions
+           fullHeight = (int)(pnlDbUtil.Height * .5);
+           dimW = pnlDbUtil.Width / 3;
+           dimH = (int)(fullHeight * .25);
+           dimH2 = (int)(fullHeight * .5);
+
+            lblDbOptions.Height = (int)(lblDbUtil.Height * .9);
+            lblDbOptions.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, pnlDbUtil, lblDbOptions);
+            //Auto-size and center
+            lblDbOptions.Top = fullHeight + (int)(lblDbOptions.Height * .85);
+            lblDbOptions.AutoSize = true;
+            CenterElement(pnlDbUtil, lblDbOptions);
 
 
 
@@ -431,71 +457,29 @@ namespace NBAdbToolbox
             }
             List<Panel> panels = new List<Panel> { pnlSeason, pnlTeam, pnlPlayer, pnlGame, pnlPlayerBox, pnlTeamBox, pnlPbp, pnlTeamBoxLineups };
 
-            int dims = pnlDbUtil.Width / 3;
-            int fullHeight = (dims * 2) + (pnlDbUtil.Width / 2);
-            pnlSeason.Click += (s, e) =>
-            {
-                if (pnlSeason.Focused)
-                {
-                    this.ActiveControl = null;
-                    pnlSeason.Width = dims;
-                    pnlSeason.Height = dims;
-                    fontSize = ((float)((pnlSeason.Height * .15)) / (96 / 12)) * (72 / 12);
-                    TableLabels(pnlSeason, lblSeason, lblSeason.Text, fontSize);
-                }
-                else
-                {
-                    pnlSeason.Focus();
-                    pnlDbUtil.Controls.SetChildIndex(pnlSeason, 1);
-                    pnlSeason.Width = pnlDbUtil.Width;
-                    pnlSeason.Height = fullHeight;
-                    fontSize = ((float)((pnlSeason.Height * .15)) / (96 / 12)) * (72 / 12);
-                    TableLabels(pnlSeason, lblSeason, lblSeason.Text, fontSize);
-
-                }
-            };
-            lblSeason.Click += (s, e) =>
-            {
-                if (pnlSeason.Focused)
-                {
-                    this.ActiveControl = null;
-                    pnlSeason.Width = dims;
-                    pnlSeason.Height = dims;
-                    fontSize = ((float)((pnlSeason.Height * .15)) / (96 / 12)) * (72 / 12);
-                    TableLabels(pnlSeason, lblSeason, lblSeason.Text, fontSize);
-                }
-                else
-                {
-                    pnlSeason.Focus();
-                    pnlDbUtil.Controls.SetChildIndex(pnlSeason, 1);
-                    pnlSeason.Width = pnlDbUtil.Width;
-                    pnlSeason.Height = fullHeight;
-                    fontSize = ((float)((pnlSeason.Height * .15)) / (96 / 12)) * (72 / 12);
-                    TableLabels(pnlSeason, lblSeason, lblSeason.Text, fontSize);
-
-                }
-            };
-
+            //Mid Start
             pnlTeam.Click += (s, e) =>
             {
                 if (pnlTeam.Focused)
                 {
                     this.ActiveControl = null;
                     pnlTeam.Left = pnlSeason.Right;
-                    pnlTeam.Width = dims;
-                    pnlTeam.Height = dims;
+                    pnlTeam.Width = dimW;
+                    pnlTeam.Height = dimH;
                     fontSize = ((float)((pnlTeam.Height * .15)) / (96 / 12)) * (72 / 12);
-                    TableLabels(pnlTeam, lblTeam, lblTeam.Text, fontSize);
+                    TableLabels(pnlTeam, lblTeam, lblTeam.Text, fontSize, "Header", lblTeam);
+                    pnlTeam.Left = midPanelPos;
                 }
                 else
                 {
+                    midPanelPos = pnlTeam.Left;
                     pnlTeam.Focus();
                     pnlDbUtil.Controls.SetChildIndex(pnlTeam, 1);
                     pnlTeam.Left = pnlDbUtil.Left;
                     pnlTeam.Width = pnlDbUtil.Width;
                     pnlTeam.Height = fullHeight;
                     fontSize = ((float)((pnlTeam.Height * .15)) / (96 / 12)) * (72 / 12);
-                    TableLabels(pnlTeam, lblTeam, lblTeam.Text, fontSize);
+                    TableLabels(pnlTeam, lblTeam, lblTeam.Text, fontSize, "Header", lblTeam);
 
                 }
             };
@@ -505,25 +489,77 @@ namespace NBAdbToolbox
                 {
                     this.ActiveControl = null;
                     pnlTeam.Left = pnlSeason.Right;
-                    pnlTeam.Width = dims;
-                    pnlTeam.Height = dims;
+                    pnlTeam.Width = dimW;
+                    pnlTeam.Height = dimH;
                     fontSize = ((float)((pnlTeam.Height * .15)) / (96 / 12)) * (72 / 12);
-                    TableLabels(pnlTeam, lblTeam, lblTeam.Text, fontSize);
+                    TableLabels(pnlTeam, lblTeam, lblTeam.Text, fontSize, "Header", lblTeam);
+                    pnlTeam.Left = midPanelPos;
                 }
                 else
                 {
+                    midPanelPos = pnlTeam.Left;
                     pnlTeam.Focus();
                     pnlDbUtil.Controls.SetChildIndex(pnlTeam, 1);
                     pnlTeam.Left = pnlDbUtil.Left;
                     pnlTeam.Width = pnlDbUtil.Width;
                     pnlTeam.Height = fullHeight;
                     fontSize = ((float)((pnlTeam.Height * .15)) / (96 / 12)) * (72 / 12);
-                    TableLabels(pnlTeam, lblTeam, lblTeam.Text, fontSize);
+                    TableLabels(pnlTeam, lblTeam, lblTeam.Text, fontSize, "Header", lblTeam);
+
+                }
+            }; 
+            //Left start
+            pnlSeason.Click += (s, e) =>
+            {
+                if (pnlSeason.Focused)
+                {
+                    this.ActiveControl = null;
+                    pnlSeason.Width = dimW;
+                    pnlSeason.Height = dimH;
+                    fontSize = ((float)((pnlSeason.Height * .15)) / (96 / 12)) * (72 / 12);
+                    TableLabels(pnlSeason, lblSeason, lblSeason.Text, fontSize, "Header", lblSeason);
+                    fontSize = ((float)((pnlSeason.Height * .08)) / (96 / 12)) * (72 / 12);
+                    TableLabels(pnlSeason, lblSeasonSub, lblSeasonSub.Text, fontSize, "Subhead", lblSeason);
+                    AddTablePic(pnlSeason, picSeason, imagePath, lblSeason, "contract");
+                    pnlSeason.Left = leftPanelPos;
+                }
+                else
+                {
+                    leftPanelPos = pnlSeason.Left;
+                    pnlSeason.Focus();
+                    pnlDbUtil.Controls.SetChildIndex(pnlSeason, 1);
+                    pnlSeason.Width = pnlDbUtil.Width;
+                    pnlSeason.Height = fullHeight;
+                    fontSize = ((float)((pnlSeason.Height * .15)) / (96 / 12)) * (72 / 12);
+                    TableLabels(pnlSeason, lblSeason, lblSeason.Text, fontSize, "Header", lblSeason);
+                    fontSize = ((float)((pnlSeason.Height * .08)) / (96 / 12)) * (72 / 12);
+                    TableLabels(pnlSeason, lblSeasonSub, lblSeasonSub.Text, fontSize, "Subhead", lblSeason);
+                    AddTablePic(pnlSeason, picSeason, imagePath, lblSeason, "expand");
 
                 }
             };
-
-
+            lblSeason.Click += (s, e) =>
+            {
+                if (pnlSeason.Focused)
+                {
+                    this.ActiveControl = null;
+                    pnlSeason.Width = dimW;
+                    pnlSeason.Height = dimH;
+                    fontSize = ((float)((pnlSeason.Height * .15)) / (96 / 12)) * (72 / 12);
+                    TableLabels(pnlSeason, lblSeason, lblSeason.Text, fontSize, "Header", lblSeason);
+                    pnlSeason.Left = leftPanelPos;
+                }
+                else
+                {
+                    leftPanelPos = pnlSeason.Left;
+                    pnlSeason.Focus();
+                    pnlDbUtil.Controls.SetChildIndex(pnlSeason, 1);
+                    pnlSeason.Width = pnlDbUtil.Width;
+                    pnlSeason.Height = fullHeight;
+                    fontSize = ((float)((pnlSeason.Height * .15)) / (96 / 12)) * (72 / 12);
+                    TableLabels(pnlSeason, lblSeason, lblSeason.Text, fontSize, "Header", lblSeason);
+                }
+            };
         }
 
 
@@ -714,18 +750,20 @@ namespace NBAdbToolbox
         public void GetTablePanelInfo(string connectionString)
         {
             List<Panel> panels = new List<Panel> { pnlSeason, pnlTeam, pnlPlayer, pnlGame, pnlPlayerBox, pnlTeamBox, pnlPbp, pnlTeamBoxLineups};
-            int dims = pnlDbUtil.Width/3;
-            int fullHeight = (dims * 6) + pnlDbUtil.Width;
+            fullHeight = (int)(pnlDbUtil.Height * .5);
+            dimW = pnlDbUtil.Width / 3;
+            dimH = (int)(fullHeight * .25);
+            dimH2 = (int)(fullHeight * .5);
             for (int i = 0; i < panels.Count; i++)
             {
                 if(i <= 5)
                 {
-                    panels[i].Height = dims;
-                    panels[i].Width = dims;
+                    panels[i].Height = dimH;
+                    panels[i].Width = dimW;
                 }
                 else
                 {
-                    panels[i].Height = pnlDbUtil.Width / 2;
+                    panels[i].Height = dimH2;
                     panels[i].Width = pnlDbUtil.Width / 2;
                 }
                 if (i == 0)
@@ -765,17 +803,6 @@ namespace NBAdbToolbox
                 conn.Open();
                 using (SqlDataReader sdr = GetTables.ExecuteReader())
                 {
-                    lblPlayerBox = new Label();
-                    lblTeamBox = new Label();
-                    lblPlayer = new Label();
-                    lblPbp = new Label();
-                    lblTeamBoxLineups = new Label();
-
-
-
-
-
-
                     while (sdr.Read())
                     {
                         if (sdr.GetString(0) == "Season")   //Season Panel
@@ -793,6 +820,29 @@ namespace NBAdbToolbox
                             lblSeasonSub.Left = panels[0].Left;
                             lblSeasonSub.Top = lblSeason.Bottom;
                             lblSeasonSub.AutoSize = true;
+
+                            fontSize = ((float)((panels[0].Height * .15)) / (96 / 12)) * (72 / 12);
+                            TableLabels(pnlSeason, lblSeason, sdr["Name"].ToString(), fontSize, "Header", lblSeason);
+
+                            fontSize = ((float)((panels[0].Height * .08)) / (96 / 12)) * (72 / 12);
+                            TableLabels(pnlSeason, lblSeasonSub, sdr["Rows"].ToString() + " seasons available", fontSize, "Subhead", lblSeason);
+
+
+
+                            if (sdr["Rows"].ToString() == "13")
+                            {
+                                imagePath = Path.Combine(projectRoot, "Content", "Success.png");
+                            }
+                            else if(sdr["Rows"].ToString() == "0")
+                            {
+                                imagePath = Path.Combine(projectRoot, "Content", "Error.png");
+                            }
+                            else
+                            {
+                                imagePath = Path.Combine(projectRoot, "Content", "Warning.png");
+                            }
+                            AddTablePic(pnlSeason, picSeason, imagePath, lblSeason, "load");
+
                         }
                         if (sdr.GetString(0) == "Team")   //Team Panel
                         {
@@ -839,30 +889,59 @@ namespace NBAdbToolbox
                         }
                         if (sdr.GetString(0) == "PlayByPlay")   //PlayByPlay Panel
                         {
-                            Label title = new Label();
-                            title.Text = sdr.GetString(0);
                             float fontSize = ((float)((panels[0].Height * .15)) / (96 / 12)) * (72 / 12);
-                            title.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
-                            AddPanelElement(pnlPbp, title);
-                            CenterElement(pnlPbp, title);
+                            TableLabels(pnlPbp, lblPbp, sdr.GetString(0), fontSize, "Header", lblPbp);
                         }
                         if (sdr.GetString(0) == "TeamBoxLineups")   //PlayByPlay Panel
                         {
                             float fontSize = ((float)((panels[0].Height * .15)) / (96 / 12)) * (72 / 12);
-                            TableLabels(pnlTeamBoxLineups, lblTeamBoxLineups, sdr.GetString(0), fontSize);
+                            TableLabels(pnlTeamBoxLineups, lblTeamBoxLineups, sdr.GetString(0), fontSize, "Header", lblTeamBoxLineups);
                         }
                     }
                 }
             }
         }
 
-        public void TableLabels(Panel pnl, Label lbl, String text, float fontSize)
+        public void AddTablePic(Panel panel, PictureBox pic, string path, Label header, string sender)
+        {
+            AddPanelElement(panel, pic);
+            pic.Image = Image.FromFile(path);
+            pic.Height = header.Height - (int)(header.Height * .1);
+            pic.Width = header.Height - (int)(header.Height * .1);
+            pic.Left = header.Right - (int)(header.Height * .1);
+            pic.Top = header.Top + (int)(header.Height * .15);
+            pic.SizeMode = PictureBoxSizeMode.Zoom;
+            if (sender == "expand")
+            {
+                pic.Height = header.Height - (int)(header.Height * .15);
+                pic.Width = header.Height - (int)(header.Height * .15);
+                pic.Left = header.Right - (int)(header.Height * .2);
+
+            }
+            panel.Controls.SetChildIndex(pic, 0);
+
+        }
+
+        public void TableLabels(Panel pnl, Label lbl, String text, float fontSize, string labelType, Label parent)
         {
             lbl.Text = text;
             lbl.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
             AddPanelElement(pnl, lbl);
-            CenterElement(pnl, lbl);
+            if(labelType == "Header")
+            {
+                CenterElement(pnl, lbl);
+            }
+            else if (labelType == "Subhead")
+            {
+                AlignLeft(pnl, lbl, parent);
+            }
 
+        }
+        public void AlignLeft(Panel pnl, Label lbl, Label parent)
+        {
+            lbl.Left = pnl.Left;
+            lbl.Top = parent.Bottom;
+            lbl.AutoSize = true;
         }
 
         public void CreateDB(string connectionString)

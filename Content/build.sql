@@ -285,7 +285,7 @@ Foreign Key (SeasonID, MatchupID) references Team(SeasonID, TeamID))
 
 
 
-use nbadb2 select * from Season
+
 
 /*
 --The below section will be used to create a new string for procedure creation
@@ -303,14 +303,9 @@ insert into Season values(2020, 1610612749, 1080, 85)
 insert into Season values(2021, 1610612744, 1230, 87)
 insert into Season values(2022, 1610612743, 1230, 84)
 insert into Season values(2023, 1610612738, 1230, 82)
-insert into Season values(2024, null, 1127, 0)
+insert into Season values(2024, null, 1131, 0)
 go
 
-create procedure Test 
-as 
-select * 
-from game
-go
 
 create procedure Tables
 as
@@ -320,4 +315,9 @@ from sys.tables t inner join
 where type_desc = 'USER_TABLE'
 go
 
+create procedure Seasons
+as
+select SeasonID, Games, PlayoffGames
+from Season
+go
 */
