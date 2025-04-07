@@ -478,7 +478,7 @@ namespace NBAdbToolbox
                     pnlTeam.Width = dimW;
                     pnlTeam.Height = dimH;
                     fontSize = ((float)((pnlTeam.Height * .15)) / (96 / 12)) * (72 / 12);
-                    TableLabels(pnlTeam, lblTeam, lblTeam.Text, fontSize, "Header", lblTeam);
+                    TableLabels(pnlTeam, lblTeam, fontSize, "Header", lblTeam);
                     pnlTeam.Left = midPanelPos;
                 }
                 else
@@ -490,7 +490,7 @@ namespace NBAdbToolbox
                     pnlTeam.Width = pnlDbUtil.Width;
                     pnlTeam.Height = fullHeight;
                     fontSize = ((float)((pnlTeam.Height * .15)) / (96 / 12)) * (72 / 12);
-                    TableLabels(pnlTeam, lblTeam, lblTeam.Text, fontSize, "Header", lblTeam);
+                    TableLabels(pnlTeam, lblTeam, fontSize, "Header", lblTeam);
 
                 }
             };
@@ -503,7 +503,7 @@ namespace NBAdbToolbox
                     pnlTeam.Width = dimW;
                     pnlTeam.Height = dimH;
                     fontSize = ((float)((pnlTeam.Height * .15)) / (96 / 12)) * (72 / 12);
-                    TableLabels(pnlTeam, lblTeam, lblTeam.Text, fontSize, "Header", lblTeam);
+                    TableLabels(pnlTeam, lblTeam, fontSize, "Header", lblTeam);
                     pnlTeam.Left = midPanelPos;
                 }
                 else
@@ -515,7 +515,7 @@ namespace NBAdbToolbox
                     pnlTeam.Width = pnlDbUtil.Width;
                     pnlTeam.Height = fullHeight;
                     fontSize = ((float)((pnlTeam.Height * .15)) / (96 / 12)) * (72 / 12);
-                    TableLabels(pnlTeam, lblTeam, lblTeam.Text, fontSize, "Header", lblTeam);
+                    TableLabels(pnlTeam, lblTeam, fontSize, "Header", lblTeam);
 
                 }
             }; 
@@ -528,9 +528,9 @@ namespace NBAdbToolbox
                     pnlSeason.Width = dimW;
                     pnlSeason.Height = dimH;
                     fontSize = ((float)((pnlSeason.Height * .15)) / (96 / 12)) * (72 / 12);
-                    TableLabels(pnlSeason, lblSeason, lblSeason.Text, fontSize, "Header", lblSeason);
+                    TableLabels(pnlSeason, lblSeason, fontSize, "Header", lblSeason);
                     fontSize = ((float)((pnlSeason.Height * .08)) / (96 / 12)) * (72 / 12);
-                    TableLabels(pnlSeason, lblSeasonSub, lblSeasonSub.Text, fontSize, "Subhead", lblSeason);
+                    TableLabels(pnlSeason, lblSeasonSub, fontSize, "Subhead", lblSeason);
                     AddTablePic(pnlSeason, picSeason, imagePath, lblSeason, "contract");
                     pnlSeason.Left = leftPanelPos;
                 }
@@ -542,9 +542,9 @@ namespace NBAdbToolbox
                     pnlSeason.Width = pnlDbUtil.Width;
                     pnlSeason.Height = fullHeight;
                     fontSize = ((float)((pnlSeason.Height * .15)) / (96 / 12)) * (72 / 12);
-                    TableLabels(pnlSeason, lblSeason, lblSeason.Text, fontSize, "Header", lblSeason);
+                    TableLabels(pnlSeason, lblSeason, fontSize, "Header", lblSeason);
                     fontSize = ((float)((pnlSeason.Height * .08)) / (96 / 12)) * (72 / 12);
-                    TableLabels(pnlSeason, lblSeasonSub, lblSeasonSub.Text, fontSize, "Subhead", lblSeason);
+                    TableLabels(pnlSeason, lblSeasonSub,  fontSize, "Subhead", lblSeason);
                     AddTablePic(pnlSeason, picSeason, imagePath, lblSeason, "expand");
 
                 }
@@ -557,7 +557,7 @@ namespace NBAdbToolbox
                     pnlSeason.Width = dimW;
                     pnlSeason.Height = dimH;
                     fontSize = ((float)((pnlSeason.Height * .15)) / (96 / 12)) * (72 / 12);
-                    TableLabels(pnlSeason, lblSeason, lblSeason.Text, fontSize, "Header", lblSeason);
+                    TableLabels(pnlSeason, lblSeason, fontSize, "Header", lblSeason);
                     pnlSeason.Left = leftPanelPos;
                 }
                 else
@@ -568,12 +568,34 @@ namespace NBAdbToolbox
                     pnlSeason.Width = pnlDbUtil.Width;
                     pnlSeason.Height = fullHeight;
                     fontSize = ((float)((pnlSeason.Height * .15)) / (96 / 12)) * (72 / 12);
-                    TableLabels(pnlSeason, lblSeason, lblSeason.Text, fontSize, "Header", lblSeason);
+                    TableLabels(pnlSeason, lblSeason, fontSize, "Header", lblSeason);
                 }
             };
         }
 
+        public void LeftPanels(Panel pnl, Label lbl, String text, float fontSize, string labelType, Label parent)
+        {
+            if (pnl.Focused)
+            {
+                this.ActiveControl = null;
+                pnl.Width = dimW;
+                pnl.Height = dimH;
+                fontSize = ((float)((pnl.Height * .15)) / (96 / 12)) * (72 / 12);
+                TableLabels(pnl, lbl, fontSize, "Header", lbl);
+                pnl.Left = leftPanelPos;
+            }
+            else
+            {
+                leftPanelPos = pnl.Left;
+                pnl.Focus();
+                pnlDbUtil.Controls.SetChildIndex(pnl, 1);
+                pnl.Width = pnlDbUtil.Width;
+                pnl.Height = fullHeight;
+                fontSize = ((float)((pnl.Height * .15)) / (96 / 12)) * (72 / 12);
+                TableLabels(pnl, lbl, fontSize, "Header", lbl);
+            }
 
+        }
 
 
 
@@ -833,10 +855,10 @@ namespace NBAdbToolbox
                             lblSeasonSub.AutoSize = true;
 
                             fontSize = ((float)((panels[0].Height * .15)) / (96 / 12)) * (72 / 12);
-                            TableLabels(pnlSeason, lblSeason, sdr["Name"].ToString(), fontSize, "Header", lblSeason);
+                            TableLabels(pnlSeason, lblSeason, fontSize, "Header", lblSeason);
 
                             fontSize = ((float)((panels[0].Height * .08)) / (96 / 12)) * (72 / 12);
-                            TableLabels(pnlSeason, lblSeasonSub, sdr["Rows"].ToString() + " seasons available", fontSize, "Subhead", lblSeason);
+                            TableLabels(pnlSeason, lblSeasonSub, fontSize, "Subhead", lblSeason);
 
 
 
@@ -901,12 +923,12 @@ namespace NBAdbToolbox
                         if (sdr.GetString(0) == "PlayByPlay")   //PlayByPlay Panel
                         {
                             float fontSize = ((float)((panels[0].Height * .15)) / (96 / 12)) * (72 / 12);
-                            TableLabels(pnlPbp, lblPbp, sdr.GetString(0), fontSize, "Header", lblPbp);
+                            TableLabels(pnlPbp, lblPbp, fontSize, "Header", lblPbp);
                         }
                         if (sdr.GetString(0) == "TeamBoxLineups")   //PlayByPlay Panel
                         {
                             float fontSize = ((float)((panels[0].Height * .15)) / (96 / 12)) * (72 / 12);
-                            TableLabels(pnlTeamBoxLineups, lblTeamBoxLineups, sdr.GetString(0), fontSize, "Header", lblTeamBoxLineups);
+                            TableLabels(pnlTeamBoxLineups, lblTeamBoxLineups, fontSize, "Header", lblTeamBoxLineups);
                         }
                     }
                 }
@@ -947,9 +969,8 @@ namespace NBAdbToolbox
 
         }
 
-        public void TableLabels(Panel pnl, Label lbl, String text, float fontSize, string labelType, Label parent)
+        public void TableLabels(Panel pnl, Label lbl, float fontSize, string labelType, Label parent)
         {
-            lbl.Text = text;
             lbl.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
             AddPanelElement(pnl, lbl);
             if(labelType == "Header")
