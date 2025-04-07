@@ -214,6 +214,7 @@ namespace NBAdbToolbox
             //This should be second to last i believe.
             //Children elements should go above the parents, background image should be last added.
             //AddPanelElement(pnlDbUtil, listSeasons);
+            AddPanelElement(pnlDbUtil, lblDbSelectSeason);
             AddPanelElement(pnlDbUtil, lblDbOptions);
             AddPanelElement(pnlDbUtil, lblDbUtil);
             AddPanelElement(pnlWelcome, lblDbStat);
@@ -270,9 +271,14 @@ namespace NBAdbToolbox
             lblDbOptions.AutoSize = true;
             CenterElement(pnlDbUtil, lblDbOptions);
 
-            listSeasons.Text = "Select Seasons";
-            listSeasons.Top = lblDbOptions.Bottom;
-            listSeasons.Left = pnlDbUtil.Left;
+            lblDbSelectSeason.Height = (int)(lblDbUtil.Height * .8);
+            lblDbSelectSeason.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, lblDbOptions, lblDbSelectSeason);
+            lblDbSelectSeason.Top = lblDbOptions.Bottom;
+            lblDbSelectSeason.Left = pnlDbUtil.Left;
+            lblDbSelectSeason.AutoSize = true;
+            AlignLeft(pnlDbUtil, lblDbSelectSeason, lblDbOptions); 
+
+
             listSeasons.SelectionMode = SelectionMode.MultiExtended;
 
 
@@ -531,7 +537,7 @@ namespace NBAdbToolbox
                     TableLabels(pnlSeason, lblSeason, fontSize, "Header", lblSeason);
                     fontSize = ((float)((pnlSeason.Height * .08)) / (96 / 12)) * (72 / 12);
                     TableLabels(pnlSeason, lblSeasonSub, fontSize, "Subhead", lblSeason);
-                    AddTablePic(pnlSeason, picSeason, imagePath, lblSeason, "contract");
+                    AddTablePic(pnlSeason, picSeason, imagePath, "contract", lblSeason);
                     pnlSeason.Left = leftPanelPos;
                 }
                 else
@@ -545,7 +551,7 @@ namespace NBAdbToolbox
                     TableLabels(pnlSeason, lblSeason, fontSize, "Header", lblSeason);
                     fontSize = ((float)((pnlSeason.Height * .08)) / (96 / 12)) * (72 / 12);
                     TableLabels(pnlSeason, lblSeasonSub,  fontSize, "Subhead", lblSeason);
-                    AddTablePic(pnlSeason, picSeason, imagePath, lblSeason, "expand");
+                    AddTablePic(pnlSeason, picSeason, imagePath, "expand", lblSeason);
 
                 }
             };
@@ -558,6 +564,9 @@ namespace NBAdbToolbox
                     pnlSeason.Height = dimH;
                     fontSize = ((float)((pnlSeason.Height * .15)) / (96 / 12)) * (72 / 12);
                     TableLabels(pnlSeason, lblSeason, fontSize, "Header", lblSeason);
+                    fontSize = ((float)((pnlSeason.Height * .08)) / (96 / 12)) * (72 / 12);
+                    TableLabels(pnlSeason, lblSeasonSub, fontSize, "Subhead", lblSeason);
+                    AddTablePic(pnlSeason, picSeason, imagePath, "contract", lblSeason);
                     pnlSeason.Left = leftPanelPos;
                 }
                 else
@@ -569,33 +578,14 @@ namespace NBAdbToolbox
                     pnlSeason.Height = fullHeight;
                     fontSize = ((float)((pnlSeason.Height * .15)) / (96 / 12)) * (72 / 12);
                     TableLabels(pnlSeason, lblSeason, fontSize, "Header", lblSeason);
+                    fontSize = ((float)((pnlSeason.Height * .08)) / (96 / 12)) * (72 / 12);
+                    TableLabels(pnlSeason, lblSeasonSub, fontSize, "Subhead", lblSeason);
+                    AddTablePic(pnlSeason, picSeason, imagePath, "expand", lblSeason);
+
                 }
             };
         }
 
-        public void LeftPanels(Panel pnl, Label lbl, String text, float fontSize, string labelType, Label parent)
-        {
-            if (pnl.Focused)
-            {
-                this.ActiveControl = null;
-                pnl.Width = dimW;
-                pnl.Height = dimH;
-                fontSize = ((float)((pnl.Height * .15)) / (96 / 12)) * (72 / 12);
-                TableLabels(pnl, lbl, fontSize, "Header", lbl);
-                pnl.Left = leftPanelPos;
-            }
-            else
-            {
-                leftPanelPos = pnl.Left;
-                pnl.Focus();
-                pnlDbUtil.Controls.SetChildIndex(pnl, 1);
-                pnl.Width = pnlDbUtil.Width;
-                pnl.Height = fullHeight;
-                fontSize = ((float)((pnl.Height * .15)) / (96 / 12)) * (72 / 12);
-                TableLabels(pnl, lbl, fontSize, "Header", lbl);
-            }
-
-        }
 
 
 
@@ -624,7 +614,15 @@ namespace NBAdbToolbox
         public Font SetFontSize(string font, Single size, FontStyle style, Control parent, Control child)
         {
             Font newFont = new Font(font, size, style);
-            int targetWidth = (int)(parent.Width * 0.7);
+            int targetWidth = 0;
+            if (parent.Text == "Options")
+            {
+                targetWidth = (int)(parent.Width * 0.8);
+            }
+            else
+            {
+                targetWidth = (int)(parent.Width * 0.7);
+            }
             float bestSize = GetBestFitFontSize(child, child.Text, newFont, targetWidth);
             return new Font(newFont.FontFamily, bestSize, newFont.Style);
         }
@@ -874,7 +872,7 @@ namespace NBAdbToolbox
                             {
                                 imagePath = Path.Combine(projectRoot, "Content", "Warning.png");
                             }
-                            AddTablePic(pnlSeason, picSeason, imagePath, lblSeason, "load");
+                            AddTablePic(pnlSeason, picSeason, imagePath, "load", lblSeason);
 
                         }
                         if (sdr.GetString(0) == "Team")   //Team Panel
@@ -949,7 +947,7 @@ namespace NBAdbToolbox
             }
         }
 
-        public void AddTablePic(Panel panel, PictureBox pic, string path, Label header, string sender)
+        public void AddTablePic(Panel panel, PictureBox pic, string path, string sender, Label header)
         {
             AddPanelElement(panel, pic);
             pic.Image = Image.FromFile(path);
