@@ -13,8 +13,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Newtonsoft.Json;
-
-using Newtonsoft.Json;
+using NBAdbToolboxHistoric;
 
 namespace NBAdbToolbox
 {
@@ -93,7 +92,8 @@ namespace NBAdbToolbox
             Text = "Season Select"
         };
         public ListBox listSeasons = new ListBox();
-
+        public Button btnPopulate = new Button();
+        public static DataHistoric historic = new DataHistoric();
 
         //Header Panels
         public Panel pnlNav = new Panel();
@@ -152,9 +152,10 @@ namespace NBAdbToolbox
                 lblCStatus.Text = "Disconnected";
                 lblCStatus.ForeColor = Color.Red;
                 // Load image
-                imagePath = Path.Combine(projectRoot, "Content", "X.png");
+                imagePath = Path.Combine(projectRoot, "Content", "Error.png");
                 picStatus.Image = Image.FromFile(imagePath);
                 btnBuild.Enabled = false;
+                btnPopulate.Enabled = false;
             }
             else if (File.Exists(configPath)) //If our file does exist
             {
@@ -196,7 +197,7 @@ namespace NBAdbToolbox
                     lblCStatus.Text = "Disconnected";
                     lblCStatus.ForeColor = Color.Red;
                     // Load image
-                    imagePath = Path.Combine(projectRoot, "Content", "X.png");
+                    imagePath = Path.Combine(projectRoot, "Content", "Error.png");
                     picStatus.Image = Image.FromFile(imagePath);
                     btnBuild.Enabled = false;
                 }
@@ -213,6 +214,7 @@ namespace NBAdbToolbox
 
             //This should be second to last i believe.
             //Children elements should go above the parents, background image should be last added.
+            AddPanelElement(pnlDbUtil, btnPopulate);
             AddPanelElement(pnlDbUtil, listSeasons);
             AddPanelElement(pnlDbUtil, lblDbSelectSeason);
             AddPanelElement(pnlDbUtil, lblDbOptions);
@@ -282,6 +284,19 @@ namespace NBAdbToolbox
             listSeasons.SelectionMode = SelectionMode.MultiExtended;
             listSeasons.Top = lblDbSelectSeason.Bottom;
             listSeasons.Left = pnlDbUtil.Left;
+
+            btnPopulate.Text = "Populate Db";
+            btnPopulate.Font = SetFontSize("Segoe UI", 6.5F, FontStyle.Bold, pnlWelcome, btnPopulate);
+            btnPopulate.Width = (int)(listSeasons.Width * .8);
+            btnPopulate.Top = listSeasons.Bottom; //subject to change
+            btnPopulate.Click += (s, e) =>
+            {
+
+            };
+
+
+
+
 
 
 
@@ -402,12 +417,12 @@ namespace NBAdbToolbox
 
             fontSize = ((float)(lblServer.Height) / (96 / 12)) * (72 / 12)/2;
             lblCStatus.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, pnlWelcome, lblCStatus);
-            picStatus.Width = lblServer.Height / 2;
-            picStatus.Height = lblServer.Height / 2;
+            picStatus.Width = lblCStatus.Height / 2;
+            picStatus.Height = lblCStatus.Height / 2;
             picStatus.SizeMode = PictureBoxSizeMode.Zoom;    
             //int startX = (pnlWelcome.ClientSize.Width - totalWidth) / 2; //Starting X position to center them together            
             int topY = lblDB.Bottom + 20; //Vertical position            
-            picStatus.Top = lblStatus.Top+4;
+            picStatus.Top = lblStatus.Top+ (int)(lblCStatus.Height / 10);
             lblCStatus.Top = lblStatus.Top;
             lblCStatus.AutoSize = true;
             int totalWidth = picStatus.Width + lblCStatus.Width; //Measure combined width  
@@ -689,7 +704,7 @@ namespace NBAdbToolbox
             lblCStatus.Text = isConnected ? "Connected" : "Disconnected";
             lblCStatus.ForeColor = isConnected ? Color.Green : Color.Red;
 
-            iconFile = isConnected ? "Success.png" : "X.png";
+            iconFile = isConnected ? "Success.png" : "Error.png";
             imagePath = Path.Combine(projectRoot, "Content", iconFile);
 
             if (File.Exists(imagePath))
@@ -703,9 +718,12 @@ namespace NBAdbToolbox
                 lblDbStat.ForeColor = Color.FromArgb(255, 204, 0);
                 lblDbName.ForeColor = Color.FromArgb(255, 204, 0);
                 lblDbName.BackColor = Color.FromArgb(100, 0, 0, 0);
+                lblDbStat.BackColor = Color.FromArgb(100, 0, 0, 0);
                 // Load image
                 imagePathDb = Path.Combine(projectRoot, "Content", "Warning.png");
                 picDbStatus.Image = Image.FromFile(imagePathDb);
+                picDbStatus.Left = lblDbName.Right;
+                picDbStatus.BackColor = Color.FromArgb(100, 0, 0, 0);
             }
 
 
@@ -756,9 +774,11 @@ namespace NBAdbToolbox
                         imagePathDb = Path.Combine(projectRoot, "Content", "Success.png");
                         picDbStatus.Image = Image.FromFile(imagePathDb);
                         picDbStatus.BackColor = Color.Transparent;
+                        btnPopulate.Enabled = true;
                     }
                     else
                     {
+                        btnPopulate.Enabled = false;
                         dbConnection = false;
                         btnBuild.Enabled = true;
                         config.Create = true;
