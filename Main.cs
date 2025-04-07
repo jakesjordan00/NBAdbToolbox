@@ -213,7 +213,7 @@ namespace NBAdbToolbox
 
             //This should be second to last i believe.
             //Children elements should go above the parents, background image should be last added.
-            //AddPanelElement(pnlDbUtil, listSeasons);
+            AddPanelElement(pnlDbUtil, listSeasons);
             AddPanelElement(pnlDbUtil, lblDbSelectSeason);
             AddPanelElement(pnlDbUtil, lblDbOptions);
             AddPanelElement(pnlDbUtil, lblDbUtil);
@@ -280,7 +280,8 @@ namespace NBAdbToolbox
 
 
             listSeasons.SelectionMode = SelectionMode.MultiExtended;
-
+            listSeasons.Top = lblDbSelectSeason.Bottom;
+            listSeasons.Left = pnlDbUtil.Left;
 
 
 
@@ -780,7 +781,7 @@ namespace NBAdbToolbox
 
         public void GetTablePanelInfo(string connectionString)
         {
-            List<Panel> panels = new List<Panel> { pnlSeason, pnlTeam, pnlPlayer, pnlGame, pnlPlayerBox, pnlTeamBox, pnlPbp, pnlTeamBoxLineups};
+            List<Panel> panels = new List<Panel> { pnlSeason, pnlTeam, pnlPlayer, pnlGame, pnlTeamBox, pnlPlayerBox, pnlPbp, pnlTeamBoxLineups};
             fullHeight = (int)(pnlDbUtil.Height * .5);
             dimW = pnlDbUtil.Width / 3;
             dimH = (int)(fullHeight * .25);
@@ -839,23 +840,12 @@ namespace NBAdbToolbox
                         if (sdr.GetString(0) == "Season")   //Season Panel
                         {
                             lblSeason.Text = sdr["Name"].ToString();
-                            float fontSize = ((float)((panels[0].Height * .15)) / (96 / 12)) * (72 / 12);
-                            lblSeason.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
-                            AddPanelElement(pnlSeason, lblSeason);
-                            CenterElement(pnlSeason, lblSeason);
-
                             lblSeasonSub.Text = sdr["Rows"].ToString() + " seasons available";
-                            fontSize = ((float)((panels[0].Height * .08)) / (96 / 12)) * (72 / 12);
-                            lblSeasonSub.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
-                            AddPanelElement(pnlSeason, lblSeasonSub);
-                            lblSeasonSub.Left = panels[0].Left;
-                            lblSeasonSub.Top = lblSeason.Bottom;
-                            lblSeasonSub.AutoSize = true;
+                            float fontSize = ((float)((pnlSeason.Height * .15)) / (96 / 12)) * (72 / 12);
 
-                            fontSize = ((float)((panels[0].Height * .15)) / (96 / 12)) * (72 / 12);
                             TableLabels(pnlSeason, lblSeason, fontSize, "Header", lblSeason);
 
-                            fontSize = ((float)((panels[0].Height * .08)) / (96 / 12)) * (72 / 12);
+                            fontSize = ((float)((pnlSeason.Height * .08)) / (96 / 12)) * (72 / 12);
                             TableLabels(pnlSeason, lblSeasonSub, fontSize, "Subhead", lblSeason);
 
 
@@ -878,54 +868,43 @@ namespace NBAdbToolbox
                         if (sdr.GetString(0) == "Team")   //Team Panel
                         {
                             lblTeam.Text = sdr.GetString(0);
-                            float fontSize = ((float)((panels[0].Height * .15)) / (96 / 12)) * (72 / 12);
-                            lblTeam.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
-                            AddPanelElement(pnlTeam, lblTeam);
-                            CenterElement(pnlTeam, lblTeam);
+                            float fontSize = ((float)((pnlTeam.Height * .15)) / (96 / 12)) * (72 / 12);
+                            TableLabels(pnlTeam, lblTeam, fontSize, "Header", lblTeam);
                         }
                         if (sdr.GetString(0) == "Player")   //PlayerBox Panel
                         {
-                            lblGame.Text = sdr.GetString(0);
-                            float fontSize = ((float)((panels[0].Height * .15)) / (96 / 12)) * (72 / 12);
-                            lblGame.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
-                            AddPanelElement(pnlPlayer, lblGame);
-                            CenterElement(pnlPlayer, lblGame);
+                            lblPlayer.Text = sdr.GetString(0);
+                            float fontSize = ((float)((pnlPlayer.Height * .15)) / (96 / 12)) * (72 / 12);
+                            TableLabels(pnlPlayer, lblPlayer, fontSize, "Header", lblPlayer);
                         }
                         if (sdr.GetString(0) == "Game")   //Game Panel
                         {
-                            Label title = new Label();
-                            title.Text = sdr.GetString(0);
-                            float fontSize = ((float)((panels[0].Height * .15)) / (96 / 12)) * (72 / 12);
-                            title.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
-                            AddPanelElement(pnlGame, title);
-                            CenterElement(pnlGame, title);
+                            lblGame.Text = sdr.GetString(0);
+                            float fontSize = ((float)((pnlGame.Height * .15)) / (96 / 12)) * (72 / 12);
+                            TableLabels(pnlGame, lblGame, fontSize, "Header", lblGame);
                         }
                         if (sdr.GetString(0) == "TeamBox")   //TeamBox Panel
                         {
-                            Label title = new Label();
-                            title.Text = sdr.GetString(0);
-                            float fontSize = ((float)((panels[0].Height * .15)) / (96 / 12)) * (72 / 12);
-                            title.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
-                            AddPanelElement(pnlTeamBox, title);
-                            CenterElement(pnlTeamBox, title);
+                            lblTeamBox.Text = sdr.GetString(0);
+                            float fontSize = ((float)((pnlTeamBox.Height * .15)) / (96 / 12)) * (72 / 12);
+                            TableLabels(pnlTeamBox, lblTeamBox, fontSize, "Header", lblTeamBox);
                         }
                         if (sdr.GetString(0) == "PlayerBox")   //PlayerBox Panel
                         {
-                            Label title = new Label();
-                            title.Text = sdr.GetString(0);
-                            float fontSize = ((float)((panels[0].Height * .15)) / (96 / 12)) * (72 / 12);
-                            title.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
-                            AddPanelElement(pnlPlayerBox, title);
-                            CenterElement(pnlPlayerBox, title);
+                            lblPlayerBox.Text = sdr.GetString(0);
+                            float fontSize = ((float)((pnlPlayerBox.Height * .15)) / (96 / 12)) * (72 / 12);
+                            TableLabels(pnlPlayerBox, lblPlayerBox, fontSize, "Header", lblPlayerBox);
                         }
                         if (sdr.GetString(0) == "PlayByPlay")   //PlayByPlay Panel
                         {
-                            float fontSize = ((float)((panels[0].Height * .15)) / (96 / 12)) * (72 / 12);
+                            lblPbp.Text = sdr.GetString(0);
+                            float fontSize = ((float)((pnlPbp.Height * .1)) / (96 / 12)) * (72 / 12);
                             TableLabels(pnlPbp, lblPbp, fontSize, "Header", lblPbp);
                         }
                         if (sdr.GetString(0) == "TeamBoxLineups")   //PlayByPlay Panel
                         {
-                            float fontSize = ((float)((panels[0].Height * .15)) / (96 / 12)) * (72 / 12);
+                            float fontSize = ((float)((pnlTeamBoxLineups.Height * .1)) / (96 / 12)) * (72 / 12);
+                            lblTeamBoxLineups.Text = sdr.GetString(0);
                             TableLabels(pnlTeamBoxLineups, lblTeamBoxLineups, fontSize, "Header", lblTeamBoxLineups);
                         }
                     }
