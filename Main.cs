@@ -83,11 +83,16 @@ namespace NBAdbToolbox
         public int dimW = 0;
         public int dimH = 0;
         public int dimH2 =0;
-        //
+        //pnlDbUtil Options section
         public Label lblDbOptions = new Label
         {
             Text = "Options",
         };
+        public Label lblDbSelectSeason = new Label
+        {
+            Text = "Season Select"
+        };
+        public ListBox listSeasons = new ListBox();
 
 
         //Header Panels
@@ -208,6 +213,7 @@ namespace NBAdbToolbox
 
             //This should be second to last i believe.
             //Children elements should go above the parents, background image should be last added.
+            //AddPanelElement(pnlDbUtil, listSeasons);
             AddPanelElement(pnlDbUtil, lblDbOptions);
             AddPanelElement(pnlDbUtil, lblDbUtil);
             AddPanelElement(pnlWelcome, lblDbStat);
@@ -252,10 +258,10 @@ namespace NBAdbToolbox
             CenterElement(pnlDbUtil, lblDbUtil);
 
             //Will be used primarily for table panel expansion later, but need for DbOptions
-           fullHeight = (int)(pnlDbUtil.Height * .5);
-           dimW = pnlDbUtil.Width / 3;
-           dimH = (int)(fullHeight * .25);
-           dimH2 = (int)(fullHeight * .5);
+            fullHeight = (int)(pnlDbUtil.Height * .5);
+            dimW = pnlDbUtil.Width / 3;
+            dimH = (int)(fullHeight * .25);
+            dimH2 = (int)(fullHeight * .5);
 
             lblDbOptions.Height = (int)(lblDbUtil.Height * .9);
             lblDbOptions.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, pnlDbUtil, lblDbOptions);
@@ -263,6 +269,11 @@ namespace NBAdbToolbox
             lblDbOptions.Top = fullHeight + (int)(lblDbOptions.Height * .85);
             lblDbOptions.AutoSize = true;
             CenterElement(pnlDbUtil, lblDbOptions);
+
+            listSeasons.Text = "Select Seasons";
+            listSeasons.Top = lblDbOptions.Bottom;
+            listSeasons.Left = pnlDbUtil.Left;
+            listSeasons.SelectionMode = SelectionMode.MultiExtended;
 
 
 
@@ -456,7 +467,7 @@ namespace NBAdbToolbox
                 GetTablePanelInfo(bob.ToString());
             }
             List<Panel> panels = new List<Panel> { pnlSeason, pnlTeam, pnlPlayer, pnlGame, pnlPlayerBox, pnlTeamBox, pnlPbp, pnlTeamBoxLineups };
-
+            
             //Mid Start
             pnlTeam.Click += (s, e) =>
             {
@@ -900,6 +911,20 @@ namespace NBAdbToolbox
                     }
                 }
             }
+            using (SqlCommand GetTables = new SqlCommand("Seasons"))
+            {
+                SqlConnection conn = new SqlConnection(bob.ToString());
+                GetTables.Connection = conn;
+                GetTables.CommandType = CommandType.StoredProcedure;
+                conn.Open();
+                using (SqlDataReader sdr = GetTables.ExecuteReader())
+                {
+                    while (sdr.Read())
+                    {
+                        listSeasons.Items.Add(sdr["SeasonID"].ToString());                    
+                    }
+                }
+            }
         }
 
         public void AddTablePic(Panel panel, PictureBox pic, string path, Label header, string sender)
@@ -1028,7 +1053,7 @@ namespace NBAdbToolbox
 
         public void FormatProcedures()
         {
-            string search = "go";
+            string search = "~~~";
             List<int> indices = new List<int>();
             int startIndex = 0;
             for (int i = 0; i <= procedures.Length - search.Length; i++)

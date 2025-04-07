@@ -304,7 +304,7 @@ insert into Season values(2021, 1610612744, 1230, 87)
 insert into Season values(2022, 1610612743, 1230, 84)
 insert into Season values(2023, 1610612738, 1230, 82)
 insert into Season values(2024, null, 1131, 0)
-go
+~~~
 
 
 create procedure Tables
@@ -313,11 +313,12 @@ select t.Name, p.rows Rows
 from sys.tables t inner join
 		sys.partitions p on t.object_id = p.object_id
 where type_desc = 'USER_TABLE'
-go
+~~~
 
 create procedure Seasons
 as
 select SeasonID, Games, PlayoffGames
 from Season
-go
+order by SeasonID desc
+~~~
 */
