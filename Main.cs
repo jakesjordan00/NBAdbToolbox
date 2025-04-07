@@ -396,7 +396,7 @@ namespace NBAdbToolbox
 
 
 
-
+             
 
             //Edit Button properties
             btnEdit.Width = lblStatus.Width / 2;
