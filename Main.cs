@@ -381,6 +381,7 @@ namespace NBAdbToolbox
             pnlLoad.Height = pnlWelcome.Top;
             pnlLoad.BackColor = Color.Transparent;
             picLoad.Parent = pnlLoad;
+            pnlLoad.Parent = bgCourt;
             picLoad.SizeMode = PictureBoxSizeMode.Zoom;
             picLoad.Width = pnlLoad.Height;
             picLoad.Height = pnlLoad.Height;
