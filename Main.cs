@@ -291,7 +291,24 @@ namespace NBAdbToolbox
             btnPopulate.Top = listSeasons.Bottom; //subject to change
             btnPopulate.Click += (s, e) =>
             {
+                int selectedSeasons = listSeasons.SelectedItems.Count;
+                string dialog = "Seasons selected: ";
+                List<int> seasons = new List<int>();
 
+                for(int i = 0; i < listSeasons.SelectedItems.Count; i++)
+                {
+                    seasons.Add(Int32.Parse(listSeasons.SelectedItems[i].ToString()));
+                    dialog += seasons[i] + ", ";
+                }
+                if(selectedSeasons > 0)
+                {
+                    dialog = dialog.Remove(dialog.Length - 2);
+                }
+                var popup = new PopulatePopup(dialog);
+                if (popup.ShowDialog() == DialogResult.OK)
+                {
+
+                }
             };
 
 

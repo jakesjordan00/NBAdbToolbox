@@ -66,6 +66,12 @@
     <Compile Include="PanelOpacity.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="PopulatePopup.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="PopulatePopup.Designer.cs">
+      <DependentUpon>PopulatePopup.cs</DependentUpon>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Main.resx">
