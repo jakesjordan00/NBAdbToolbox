@@ -98,7 +98,7 @@ namespace NBAdbToolbox
         public Panel pnlLoad = new Panel();
         PictureBox picLoad = new PictureBox
         {
-            Image = Image.FromFile(Path.Combine(projectRoot, "Content", "Loading", ".kawhi01.png"))
+            Image = Image.FromFile(Path.Combine(projectRoot, "Content", "Loading", ".kawhi1.png"))
         };
 
         //Header Panels
