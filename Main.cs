@@ -307,7 +307,7 @@ namespace NBAdbToolbox
                 var popup = new PopulatePopup(dialog);
                 if (popup.ShowDialog() == DialogResult.OK)
                 {
-
+                    PopulateDB(seasons, popup.historic, popup.current);
                 }
             };
 
@@ -1271,5 +1271,42 @@ namespace NBAdbToolbox
 
             }
         }
+
+
+
+
+        public void PopulateDB(List<int> seasons, bool bHistoric, bool bCurrent)
+        {
+            //dbconfig file
+            string filePath = Path.Combine(projectRoot, "Content\\", "dbconfig.json");
+            filePath = filePath.Replace("dbconfig.json", "Historic Data\\");
+            foreach (int season in seasons)
+            {
+                if (bHistoric || (!bHistoric && !bCurrent))
+                {
+                    int iter = 3;
+                    if (season == 2012 || season == 2019 || season == 2020 || season == 2024)
+                    {
+                        iter = 3;
+                    }
+                    else
+                    {
+                        iter = 4;
+                    }
+                    historic.ReadFile(season, iter, filePath);
+                    //for(int i = 0 ; i < iter; i++)
+                    //{
+                    //    string path = filePath + season.ToString() + "p" + i.ToString() + ".json";
+                    //    string seasonFilePart = File.ReadAllText(path);
+                    //    seasonFile += seasonFilePart;
+                    //}
+                    //Root data = JsonConvert.DeserializeObject<Root>(seasonFile);
+                }
+
+            }
+
+        }
+
+
     }
 }

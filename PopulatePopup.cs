@@ -14,6 +14,8 @@ namespace NBAdbToolbox
 {
     public partial class PopulatePopup : Form
     {
+        public bool historic { get; private set; }   //Historic Data?
+        public bool current { get; private set; }   //Current Data?
         public PopulatePopup(string seasons)
         {
             this.Text = "Populate Database";
@@ -29,16 +31,16 @@ namespace NBAdbToolbox
             Label lbl2 = new Label() { Text = "Data source:", Left = 20, Top = top, AutoSize = true };
             Label lbl3 = new Label() { Text = "Leave unchecked if unsure", Left = lbl2.Right - top + 20, Top = top, Font = new Font("Segoe UI", lbl2.Font.Size, FontStyle.Bold), AutoSize = true };
             top += spacing + 20;
-            CheckBox chk2 = new CheckBox() { Text = "Historic", Left = 20, Top = top, AutoSize = true };
-            CheckBox chk3 = new CheckBox() { Text = "Current", Left = chk2.Right, Top = top, AutoSize = true };
+            CheckBox chkHistoric = new CheckBox() { Text = "Historic", Left = 20, Top = top, AutoSize = true };
+            CheckBox chkCurrent = new CheckBox() { Text = "Current", Left = chkHistoric.Right, Top = top, AutoSize = true };
             top += spacing + 20; 
             ToolTip tip = new ToolTip();
             tip.BackColor = Color.Black;
             tip.ForeColor = Color.Wheat;
             tip.SetToolTip(lbl2, "2012-2018 is sourced from Historic only, 2019-2024 can be sourced by both or either.");
-            tip.SetToolTip(chk2, "Data gathered from NBA game page. Valid source for all seasons. Has more data than current source, but is of lesser quality/detail." +
+            tip.SetToolTip(chkHistoric, "Data gathered from NBA game page. Valid source for all seasons. Has more data than current source, but is of lesser quality/detail." +
                 "\nFor example, this source contains the TeamBoxLineups data, but it contains less PlayByPlay information for each row.");
-            tip.SetToolTip(chk3, "Data gathered from NBA endpoints, only valid for 2019-2024. 2019 seems to be missing a few arbitrary games." +
+            tip.SetToolTip(chkCurrent, "Data gathered from NBA endpoints, only valid for 2019-2024. 2019 seems to be missing a few arbitrary games." +
                 "\nData has more detail per row for PlayByPlay and Boxscore");
             tip.IsBalloon = true; // Rounded bubble style
 
@@ -52,9 +54,11 @@ namespace NBAdbToolbox
 
             btnOK.Click += (s, e) =>
             {
+                historic = chkHistoric.Checked;
+                current = chkCurrent.Checked;
                 this.Close();
             };
-            this.Controls.AddRange(new Control[] { lbl1, lbl2, lbl3, chk2, chk3, btnOK, btnCancel });
+            this.Controls.AddRange(new Control[] { lbl1, lbl2, lbl3, chkHistoric, chkCurrent, btnOK, btnCancel });
             this.AcceptButton = btnOK;
             this.CancelButton = btnCancel;
             this.Height = btnOK.Bottom + 60;

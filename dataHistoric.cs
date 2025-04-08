@@ -16,15 +16,19 @@ namespace NBAdbToolboxHistoric
 {
     public class DataHistoric
     {
-        public void ReadFile(int season)
+        public void ReadFile(int season, int iterations, string filePath)
         {
-            string outputPath = @"C:\Users\derfj\Desktop\NBAdb\NBAdb\Old Data\Full Files\" + +season + " Full" + ".json";
-//***Line below is for testing
-//outputPath = @"C:\Users\derfj\Desktop\NBAdb\NBAdb\Old Data\test\Full Files\" + season + " Full" + ".json";
-            string json = File.ReadAllText(outputPath);
-            Root data = JsonConvert.DeserializeObject<Root>(json);
+            string seasonFile = "";
+            for (int i = 0; i < iterations; i++)
+            {
+                string path = filePath + season.ToString() + "p" + i.ToString() + ".json";
+                string seasonFilePart = File.ReadAllText(path);
+                seasonFile += seasonFilePart;
+            }
+            Root data = JsonConvert.DeserializeObject<Root>(seasonFile);
         }
     }
+
 
     public class Root
     {
