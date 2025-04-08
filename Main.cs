@@ -96,6 +96,10 @@ namespace NBAdbToolbox
         public Button btnPopulate = new Button();
         public static DataHistoric historic = new DataHistoric();
         public Panel pnlLoad = new Panel();
+        public Label lblCurrentGame = new Label
+        {
+            Text = "Current game: "
+        };
         PictureBox picLoad = new PictureBox
         {
             Image = Image.FromFile(Path.Combine(projectRoot, "Content", "Loading", ".kawhi1.png"))
@@ -221,6 +225,8 @@ namespace NBAdbToolbox
 
             //This should be second to last i believe.
             //Children elements should go above the parents, background image should be last added.
+            AddPanelElement(pnlLoad, lblCurrentGame);
+            AddPanelElement(pnlLoad, picLoad);
             AddPanelElement(pnlDbUtil, btnPopulate);
             AddPanelElement(pnlDbUtil, listSeasons);
             AddPanelElement(pnlDbUtil, lblDbSelectSeason);
@@ -327,37 +333,40 @@ namespace NBAdbToolbox
                             await ReadSeasonFile(seasons, popup.historic, popup.current);
                         });
                         //End season read
-                        lblStatus.Text = season + " loaded and parsed. Inserting data...";
+                        lblStatus.Text = season + " parsed. Inserting data...";
+                        CenterElement(pnlWelcome, lblStatus);
                         int iterator = 0;
                         int imageIteration = 1;
                         bool reverse = false;
                         int remainder = 10;
                         foreach(NBAdbToolboxHistoric.Game game in root.season.games.regularSeason)
                         {
+                            lblCurrentGame.Text = "Current game: " + game.game_id;
                             await Task.Run(async () =>      //This inserts the games from season file into db
                             {
-                                await InsertGameWithLoading(game);
-                                if(iterator % remainder == 0)
+                                await InsertGameWithLoading(game);                               
+                            }); 
+                            //This changes the loading image
+                            if (iterator % remainder == 0)
+                            {
+                                picLoad.Image = Image.FromFile(Path.Combine(projectRoot, "Content", "Loading", ".kawhi" + imageIteration + ".png"));
+                                if (reverse)
                                 {
-                                    picLoad.Image = Image.FromFile(Path.Combine(projectRoot, "Content", "Loading", ".kawhi" + imageIteration + ".png"));
-                                    if (reverse)
-                                    {
-                                        imageIteration--;
-                                    }
-                                    else
-                                    {
-                                        imageIteration++;
-                                    }
+                                    imageIteration--;
                                 }
-                                if (imageIteration == 15)
+                                else
                                 {
-                                    reverse = true;
+                                    imageIteration++;
                                 }
-                                if (imageIteration == 1)
-                                {
-                                    reverse = false;
-                                }
-                            });
+                            }
+                            if (imageIteration == 15)
+                            {
+                                reverse = true;
+                            }
+                            if (imageIteration == 1)
+                            {
+                                reverse = false;
+                            }
                             iterator++;
                         }
 
@@ -371,7 +380,6 @@ namespace NBAdbToolbox
             pnlLoad.Width = pnlWelcome.Width;
             pnlLoad.Height = pnlWelcome.Top;
             pnlLoad.BackColor = Color.Transparent;
-            pnlLoad.Parent = bgCourt;
             picLoad.Parent = pnlLoad;
             picLoad.SizeMode = PictureBoxSizeMode.Zoom;
             picLoad.Width = pnlLoad.Height;
