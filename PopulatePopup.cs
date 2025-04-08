@@ -32,7 +32,8 @@ namespace NBAdbToolbox
             CheckBox chk3 = new CheckBox() { Text = "Current", Left = chk2.Right, Top = top, AutoSize = true };
             top += spacing + 20; 
             ToolTip tip = new ToolTip();
-            tip.SetToolTip(chk2, "Data gathered from NBA game page. Valid source for all seasons.\nHas more data than current source, but is of lesser quality.");
+            tip.SetToolTip(chk2, "Data gathered from NBA game page. Valid source for all seasons.\nHas more data than current source, but is of lesser quality." +
+                "\nFor example, this source contains the TeamBoxLineups data, but it contains less PlayByPlay information.");
             tip.SetToolTip(chk3, "Data gathered from NBA endpoints. Valid for 2019-2024. 2019 seems to be missing a few arbitrary games.");
             tip.IsBalloon = true; // Rounded bubble style
 
