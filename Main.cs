@@ -327,12 +327,12 @@ namespace NBAdbToolbox
                             await ReadSeasonFile(seasons, popup.historic, popup.current);
                         });
                         //End season read
-                        lblSeason.Text = season + " loaded and parsed. Inserting data...";
+                        lblStatus.Text = season + " loaded and parsed. Inserting data...";
                         int iterator = 0;
                         int imageIteration = 1;
                         bool reverse = false;
                         int remainder = 10;
-                        foreach(NBAdbToolboxHistoric.Game game in root.season.games.playoffs)
+                        foreach(NBAdbToolboxHistoric.Game game in root.season.games.regularSeason)
                         {
                             await Task.Run(async () =>      //This inserts the games from season file into db
                             {
