@@ -329,15 +329,18 @@ namespace NBAdbToolbox
                         //End season read
 
                         int iterator = 0;
-                        int imageIt = 1;
+                        int imageIteration = 1;
+                        bool reverse = false;
                         int remainder = 10;
                         foreach(NBAdbToolboxHistoric.Game game in root.season.games.regularSeason)
                         {
                             await Task.Run(async () =>      //This inserts the games from season file into db
                             {
-                                picLoad.Image = Image.FromFile(Path.Combine(projectRoot, "Content", "Loading", ".kawhi01.png"));
                                 await InsertGameWithLoading(game);
-                                iterator++;
+                                if(iterator % remainder == 0)
+                                {
+                                    picLoad.Image = Image.FromFile(Path.Combine(projectRoot, "Content", "Loading", ".kawhi" + imageIteration + ".png"));
+                                }
                             });
                         }
 
