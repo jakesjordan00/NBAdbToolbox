@@ -96,6 +96,10 @@ namespace NBAdbToolbox
         public Button btnPopulate = new Button();
         public static DataHistoric historic = new DataHistoric();
         public Panel pnlLoad = new Panel();
+        PictureBox picLoad = new PictureBox
+        {
+            Image = Image.FromFile(Path.Combine(projectRoot, "Content", "Loading", ".kawhi01.png"))
+        };
 
         //Header Panels
         public Panel pnlNav = new Panel();
@@ -313,7 +317,6 @@ namespace NBAdbToolbox
                 {
                     foreach(int season in seasons)
                     {
-                        string placehold = lblStatus.Text;
                         lblStatus.Text = "Loading " + season + " season...";
                         CenterElement(pnlWelcome, lblStatus);
                         btnPopulate.Enabled = false;
@@ -323,21 +326,30 @@ namespace NBAdbToolbox
                         {
                             await ReadSeasonFile(seasons, popup.historic, popup.current);
                         });
-                        lblStatus.Text = placehold;
-                        CenterElement(pnlWelcome, lblStatus);
-                        btnPopulate.Enabled = true;
-                        btnEdit.Enabled = true;
-                        listSeasons.Enabled = true;
+
+
+
+                        await Task.Run(async () =>      //This inserts the games from season file into db
+                        {
+                            await ReadSeasonFile(seasons, popup.historic, popup.current);
+                        });
 
                     }
                 }
             };
 
-            pnlLoad.BackColor = Color.Black;
             pnlLoad.Top = pnlWelcome.Bottom;
             pnlLoad.Left = pnlWelcome.Left;
             pnlLoad.Width = pnlWelcome.Width;
             pnlLoad.Height = pnlWelcome.Top;
+            pnlLoad.BackColor = Color.Transparent;
+            pnlLoad.Parent = bgCourt;
+            picLoad.Parent = pnlLoad;
+            picLoad.SizeMode = PictureBoxSizeMode.Zoom;
+            picLoad.Width = pnlLoad.Height;
+            picLoad.Height = pnlLoad.Height;
+            picLoad.Left = (pnlLoad.ClientSize.Width - picLoad.Width) / 2;
+
 
 
 
