@@ -94,10 +94,12 @@ namespace NBAdbToolbox
         public ListBox listSeasons = new ListBox();
         public Button btnPopulate = new Button();
         public static DataHistoric historic = new DataHistoric();
+        public Panel pnlLoad = new Panel();
 
         //Header Panels
         public Panel pnlNav = new Panel();
         public Panel pnlScoreboard = new Panel();
+
 
 
         public Main()
@@ -230,6 +232,7 @@ namespace NBAdbToolbox
             AddPanelElement(pnlWelcome, lblServer);
             AddPanelElement(pnlWelcome, btnEdit);
             AddPanelElement(pnlWelcome, lblStatus);
+            AddMainElement(this, pnlLoad);   //Adding Welcome panel
             AddMainElement(this, pnlWelcome);   //Adding Welcome panel
             AddMainElement(this, pnlScoreboard);   //Adding Database Utilities panel
             AddMainElement(this, pnlNav);   //Adding Database Utilities panel
@@ -315,7 +318,7 @@ namespace NBAdbToolbox
 
                     await Task.Run(async () =>
                     {
-                        await PopulateDB(seasons, popup.historic, popup.current);
+                        await ReadSeasonFile(seasons, popup.historic, popup.current);
                     });
                     lblStatus.Text = placehold;
                     btnPopulate.Enabled = true;
@@ -324,7 +327,11 @@ namespace NBAdbToolbox
                 }
             };
 
-
+            pnlLoad.BackColor = Color.Black;
+            pnlLoad.Top = pnlWelcome.Bottom;
+            pnlLoad.Left = pnlWelcome.Left;
+            pnlLoad.Width = pnlWelcome.Width;
+            pnlLoad.Height = pnlWelcome.Top;
 
 
 
@@ -1288,7 +1295,7 @@ namespace NBAdbToolbox
 
 
 
-        public async Task PopulateDB(List<int> seasons, bool bHistoric, bool bCurrent)
+        public async Task ReadSeasonFile(List<int> seasons, bool bHistoric, bool bCurrent)
         {
             string filePath = Path.Combine(projectRoot, "Content\\", "dbconfig.json");
             filePath = filePath.Replace("dbconfig.json", "Historic Data\\");
