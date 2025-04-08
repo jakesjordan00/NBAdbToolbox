@@ -1352,35 +1352,8 @@ namespace NBAdbToolbox
                 {
                     int iter = (season == 2012 || season == 2019 || season == 2020 || season == 2024) ? 3 : 4;
                     root = await historic.ReadFile(season, iter, filePath);
-                    //foreach(NBAdbToolboxHistoric.Game game in root.season.games.regularSeason)
-                    //{
-                    //    await InsertGameWithLoading(game);
-                    //}
-                    foreach (NBAdbToolboxHistoric.Game game in root.season.games.playoffs)
-                    {
-                        await InsertGameWithLoading(game);
-                    }
                 }
             }
-        }
-        public async Task ReadSeasonFile2(int season, bool bHistoric, bool bCurrent)
-        {
-            string filePath = Path.Combine(projectRoot, "Content\\", "dbconfig.json");
-            filePath = filePath.Replace("dbconfig.json", "Historic Data\\");
-            if (bHistoric || (!bHistoric && !bCurrent))
-            {
-                int iter = (season == 2012 || season == 2019 || season == 2020 || season == 2024) ? 3 : 4;
-                root = await historic.ReadFile(season, iter, filePath);
-                //foreach(NBAdbToolboxHistoric.Game game in root.season.games.regularSeason)
-                //{
-                //    await InsertGameWithLoading(game);
-                //}
-                foreach (NBAdbToolboxHistoric.Game game in root.season.games.playoffs)
-                {
-                    await InsertGameWithLoading(game);
-                }
-            }
-            
         }
 
 
