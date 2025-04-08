@@ -1306,17 +1306,35 @@ namespace NBAdbToolbox
                 {
                     int iter = (season == 2012 || season == 2019 || season == 2020 || season == 2024) ? 3 : 4;
                     NBAdbToolboxHistoric.Root porFavor = await historic.ReadFile(season, iter, filePath);
-                    foreach(NBAdbToolboxHistoric.Game game in porFavor.season.games.regularSeason)
-                    {
-
-                    }
+                    //foreach(NBAdbToolboxHistoric.Game game in porFavor.season.games.regularSeason)
+                    //{
+                    //    await InsertGameWithLoading(game);
+                    //}
                     foreach (NBAdbToolboxHistoric.Game game in porFavor.season.games.playoffs)
                     {
-
+                        await InsertGameWithLoading(game);
                     }
                 }
             }
         }
+        private async Task InsertGameWithLoading(NBAdbToolboxHistoric.Game game)
+        {
+            pnlLoad.Invoke((MethodInvoker)(() => pnlLoad.Visible = true));
+
+
+            await Task.Run(() =>
+            {
+                // Your actual insert logic
+                InsertGame(game);
+            });
+            pnlLoad.Invoke((MethodInvoker)(() => pnlLoad.Visible = true));
+
+        }
+        public void InsertGame(NBAdbToolboxHistoric.Game game)
+        {
+
+        }
+
 
     }
 }
