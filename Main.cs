@@ -1306,6 +1306,14 @@ namespace NBAdbToolbox
                 {
                     int iter = (season == 2012 || season == 2019 || season == 2020 || season == 2024) ? 3 : 4;
                     NBAdbToolboxHistoric.Root porFavor = await historic.ReadFile(season, iter, filePath);
+                    foreach(NBAdbToolboxHistoric.Game game in porFavor.season.games.regularSeason)
+                    {
+
+                    }
+                    foreach (NBAdbToolboxHistoric.Game game in porFavor.season.games.playoffs)
+                    {
+
+                    }
                 }
             }
         }
