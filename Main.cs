@@ -326,13 +326,21 @@ namespace NBAdbToolbox
                         {
                             await ReadSeasonFile(seasons, popup.historic, popup.current);
                         });
+                        //End season read
 
-
-
-                        await Task.Run(async () =>      //This inserts the games from season file into db
+                        int iterator = 0;
+                        int imageIt = 1;
+                        int remainder = 10;
+                        foreach(NBAdbToolboxHistoric.Game game in root.season.games.regularSeason)
                         {
-                            await ReadSeasonFile(seasons, popup.historic, popup.current);
-                        });
+                            await Task.Run(async () =>      //This inserts the games from season file into db
+                            {
+                                picLoad.Image = Image.FromFile(Path.Combine(projectRoot, "Content", "Loading", ".kawhi01.png"));
+                                await InsertGameWithLoading(game);
+                                iterator++;
+                            });
+                        }
+
 
                     }
                 }
