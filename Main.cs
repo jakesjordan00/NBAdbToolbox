@@ -19,6 +19,7 @@ namespace NBAdbToolbox
 {
     public partial class Main: Form
     {
+        NBAdbToolboxHistoric.Root root = new NBAdbToolboxHistoric.Root();
         //Determine whether or not we have a connection to the Database in dbconfig file
         public bool dbConnection = false;
         //File path for project
@@ -310,20 +311,25 @@ namespace NBAdbToolbox
                 var popup = new PopulatePopup(dialog);
                 if (popup.ShowDialog() == DialogResult.OK)
                 {
-                    string placehold = lblStatus.Text;
-                    lblStatus.Text = "Loading...";
-                    btnPopulate.Enabled = false;
-                    btnEdit.Enabled = false;
-                    listSeasons.Enabled = false;
-
-                    await Task.Run(async () =>
+                    foreach(int season in seasons)
                     {
-                        await ReadSeasonFile(seasons, popup.historic, popup.current);
-                    });
-                    lblStatus.Text = placehold;
-                    btnPopulate.Enabled = true;
-                    btnEdit.Enabled = true;
-                    listSeasons.Enabled = true;
+                        string placehold = lblStatus.Text;
+                        lblStatus.Text = "Loading " + season + " season...";
+                        CenterElement(pnlWelcome, lblStatus);
+                        btnPopulate.Enabled = false;
+                        btnEdit.Enabled = false;
+                        listSeasons.Enabled = false;
+                        await Task.Run(async () =>      //This sets the root variable to our big file
+                        {
+                            await ReadSeasonFile(seasons, popup.historic, popup.current);
+                        });
+                        lblStatus.Text = placehold;
+                        CenterElement(pnlWelcome, lblStatus);
+                        btnPopulate.Enabled = true;
+                        btnEdit.Enabled = true;
+                        listSeasons.Enabled = true;
+
+                    }
                 }
             };
 
@@ -1305,18 +1311,39 @@ namespace NBAdbToolbox
                 if (bHistoric || (!bHistoric && !bCurrent))
                 {
                     int iter = (season == 2012 || season == 2019 || season == 2020 || season == 2024) ? 3 : 4;
-                    NBAdbToolboxHistoric.Root porFavor = await historic.ReadFile(season, iter, filePath);
-                    //foreach(NBAdbToolboxHistoric.Game game in porFavor.season.games.regularSeason)
+                    root = await historic.ReadFile(season, iter, filePath);
+                    //foreach(NBAdbToolboxHistoric.Game game in root.season.games.regularSeason)
                     //{
                     //    await InsertGameWithLoading(game);
                     //}
-                    foreach (NBAdbToolboxHistoric.Game game in porFavor.season.games.playoffs)
+                    foreach (NBAdbToolboxHistoric.Game game in root.season.games.playoffs)
                     {
                         await InsertGameWithLoading(game);
                     }
                 }
             }
         }
+        public async Task ReadSeasonFile2(int season, bool bHistoric, bool bCurrent)
+        {
+            string filePath = Path.Combine(projectRoot, "Content\\", "dbconfig.json");
+            filePath = filePath.Replace("dbconfig.json", "Historic Data\\");
+            if (bHistoric || (!bHistoric && !bCurrent))
+            {
+                int iter = (season == 2012 || season == 2019 || season == 2020 || season == 2024) ? 3 : 4;
+                root = await historic.ReadFile(season, iter, filePath);
+                //foreach(NBAdbToolboxHistoric.Game game in root.season.games.regularSeason)
+                //{
+                //    await InsertGameWithLoading(game);
+                //}
+                foreach (NBAdbToolboxHistoric.Game game in root.season.games.playoffs)
+                {
+                    await InsertGameWithLoading(game);
+                }
+            }
+            
+        }
+
+
         private async Task InsertGameWithLoading(NBAdbToolboxHistoric.Game game)
         {
             pnlLoad.Invoke((MethodInvoker)(() => pnlLoad.Visible = true));
