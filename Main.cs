@@ -417,14 +417,14 @@ namespace NBAdbToolbox
 
             fontSize = ((float)(lblServer.Height) / (96 / 12)) * (72 / 12)/2;
             lblCStatus.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, pnlWelcome, lblCStatus);
+            lblCStatus.Height = lblServer.Height / 2;
+            picStatus.SizeMode = PictureBoxSizeMode.Zoom;              
+            int topY = lblDB.Bottom + 20; //Vertical position            
+            //picStatus.Top = lblStatus.Top+ (int)(lblCStatus.Height / 10);
+            lblCStatus.AutoSize = true;
+            lblCStatus.Height = lblServer.Height / 2;
             picStatus.Width = lblCStatus.Height;
             picStatus.Height = lblCStatus.Height;
-            picStatus.SizeMode = PictureBoxSizeMode.Zoom;    
-            //int startX = (pnlWelcome.ClientSize.Width - totalWidth) / 2; //Starting X position to center them together            
-            int topY = lblDB.Bottom + 20; //Vertical position            
-            picStatus.Top = lblStatus.Top+ (int)(lblCStatus.Height / 10);
-            lblCStatus.Top = lblStatus.Top;
-            lblCStatus.AutoSize = true;
             int totalWidth = picStatus.Width + lblCStatus.Width; //Measure combined width  
             picStatus.Left = pnlWelcome.Width - totalWidth; //Position image on the left      
             lblCStatus.Left = picStatus.Right - 2; //Position label on the right
