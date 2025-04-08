@@ -1358,15 +1358,12 @@ namespace NBAdbToolbox
 
         private async Task InsertGameWithLoading(NBAdbToolboxHistoric.Game game)
         {
-            pnlLoad.Invoke((MethodInvoker)(() => pnlLoad.Visible = true));
-
-
+            //pnlLoad.Invoke((MethodInvoker)(() => pnlLoad.Visible = true));
             await Task.Run(() =>
             {
-                // Your actual insert logic
                 InsertGame(game);
             });
-            pnlLoad.Invoke((MethodInvoker)(() => pnlLoad.Visible = true));
+            //pnlLoad.Invoke((MethodInvoker)(() => pnlLoad.Visible = true));
 
         }
         public void InsertGame(NBAdbToolboxHistoric.Game game)
