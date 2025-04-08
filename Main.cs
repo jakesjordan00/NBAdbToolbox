@@ -327,7 +327,7 @@ namespace NBAdbToolbox
                             await ReadSeasonFile(seasons, popup.historic, popup.current);
                         });
                         //End season read
-
+                        lblSeason.Text = season + " loaded and parsed. Inserting data...";
                         int iterator = 0;
                         int imageIteration = 1;
                         bool reverse = false;
