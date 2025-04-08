@@ -11,21 +11,24 @@ using System.Data;
 using System.Data.SqlTypes;
 using System.Net.Http;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace NBAdbToolboxHistoric
 {
     public class DataHistoric
     {
-        public void ReadFile(int season, int iterations, string filePath)
+        public async Task<Root> ReadFile(int season, int iterations, string filePath)
         {
             string seasonFile = "";
+
             for (int i = 0; i < iterations; i++)
             {
                 string path = filePath + season.ToString() + "p" + i.ToString() + ".json";
-                string seasonFilePart = File.ReadAllText(path);
+                string seasonFilePart = await Task.Run(() => File.ReadAllText(path));
                 seasonFile += seasonFilePart;
             }
-            Root data = JsonConvert.DeserializeObject<Root>(seasonFile);
+
+            return JsonConvert.DeserializeObject<Root>(seasonFile);
         }
     }
 

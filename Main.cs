@@ -289,7 +289,7 @@ namespace NBAdbToolbox
             btnPopulate.Font = SetFontSize("Segoe UI", 6.5F, FontStyle.Bold, pnlWelcome, btnPopulate);
             btnPopulate.Width = (int)(listSeasons.Width * .8);
             btnPopulate.Top = listSeasons.Bottom; //subject to change
-            btnPopulate.Click += (s, e) =>
+            btnPopulate.Click += async (s, e) =>
             {
                 int selectedSeasons = listSeasons.SelectedItems.Count;
                 string dialog = "Seasons selected: ";
@@ -307,7 +307,20 @@ namespace NBAdbToolbox
                 var popup = new PopulatePopup(dialog);
                 if (popup.ShowDialog() == DialogResult.OK)
                 {
-                    PopulateDB(seasons, popup.historic, popup.current);
+                    string placehold = lblStatus.Text;
+                    lblStatus.Text = "Loading...";
+                    btnPopulate.Enabled = false;
+                    btnEdit.Enabled = false;
+                    listSeasons.Enabled = false;
+
+                    await Task.Run(async () =>
+                    {
+                        await PopulateDB(seasons, popup.historic, popup.current);
+                    });
+                    lblStatus.Text = placehold;
+                    btnPopulate.Enabled = true;
+                    btnEdit.Enabled = true;
+                    listSeasons.Enabled = true;
                 }
             };
 
@@ -1275,38 +1288,20 @@ namespace NBAdbToolbox
 
 
 
-        public void PopulateDB(List<int> seasons, bool bHistoric, bool bCurrent)
+        public async Task PopulateDB(List<int> seasons, bool bHistoric, bool bCurrent)
         {
-            //dbconfig file
             string filePath = Path.Combine(projectRoot, "Content\\", "dbconfig.json");
             filePath = filePath.Replace("dbconfig.json", "Historic Data\\");
+
             foreach (int season in seasons)
             {
                 if (bHistoric || (!bHistoric && !bCurrent))
                 {
-                    int iter = 3;
-                    if (season == 2012 || season == 2019 || season == 2020 || season == 2024)
-                    {
-                        iter = 3;
-                    }
-                    else
-                    {
-                        iter = 4;
-                    }
-                    historic.ReadFile(season, iter, filePath);
-                    //for(int i = 0 ; i < iter; i++)
-                    //{
-                    //    string path = filePath + season.ToString() + "p" + i.ToString() + ".json";
-                    //    string seasonFilePart = File.ReadAllText(path);
-                    //    seasonFile += seasonFilePart;
-                    //}
-                    //Root data = JsonConvert.DeserializeObject<Root>(seasonFile);
+                    int iter = (season == 2012 || season == 2019 || season == 2020 || season == 2024) ? 3 : 4;
+                    await historic.ReadFile(season, iter, filePath);
                 }
-
             }
-
         }
-
 
     }
 }
