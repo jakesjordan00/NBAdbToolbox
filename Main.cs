@@ -1305,7 +1305,7 @@ namespace NBAdbToolbox
                 if (bHistoric || (!bHistoric && !bCurrent))
                 {
                     int iter = (season == 2012 || season == 2019 || season == 2020 || season == 2024) ? 3 : 4;
-                    await historic.ReadFile(season, iter, filePath);
+                    NBAdbToolboxHistoric.Root porFavor = await historic.ReadFile(season, iter, filePath);
                 }
             }
         }
