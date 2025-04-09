@@ -321,4 +321,38 @@ select SeasonID, Games, PlayoffGames
 from Season
 order by SeasonID desc
 ~~~
+
+create procedure TeamInsert
+@SeasonID			int,
+@TeamID				int,
+@City				varchar(255),
+@Name				varchar(255),
+@Tricode			varchar(255),
+@Wins				int,
+@Losses				int
+as
+insert into Team values(
+@SeasonID			,
+@TeamID				,
+@City				,
+@Name				,
+@Tricode			,
+@Wins				,
+@Losses				,
+concat('(', @Tricode, ') ', @City, ' ', @Name))
+~~~
+
+
+create procedure TeamCheck @TeamID int, @SeasonID int
+as
+select TeamID, (select count(TeamID) from Team where SeasonID = @SeasonID) Teams
+from Team
+where TeamID = @TeamID and SeasonID = @SeasonID
+~~~
+
+
+create procedure TeamUpdate @teamID int, @SeasonID int, @W int, @L int
+as
+update Team set Wins = @W, Losses = @L where TeamID = @teamID and SeasonID = @SeasonID
+~~~
 */

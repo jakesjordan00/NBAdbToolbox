@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Newtonsoft.Json;
 using NBAdbToolboxHistoric;
+using System.Diagnostics;
 
 namespace NBAdbToolbox
 {
@@ -32,8 +33,9 @@ namespace NBAdbToolbox
         public int screenHeight = Screen.PrimaryScreen.WorkingArea.Height;
 
         //Connection String items
-        public string cString = "";
+        public static string cString = "";
         public SqlConnectionStringBuilder bob = new SqlConnectionStringBuilder();  //This builds connection string
+        public SqlConnection SQLdb = new SqlConnection(cString);
 
         //SQL building items
         public static string buildFile = File.ReadAllText(Path.Combine(projectRoot, "Content", "build.sql"));   //Creates tables
@@ -99,6 +101,10 @@ namespace NBAdbToolbox
         public Label lblCurrentGame = new Label
         {
             Text = "Current game: "
+        };
+        public Label lblCurrentGameCount = new Label
+        {
+            Text = "0"
         };
         PictureBox picLoad = new PictureBox
         {
@@ -225,6 +231,7 @@ namespace NBAdbToolbox
 
             //This should be second to last i believe.
             //Children elements should go above the parents, background image should be last added.
+            AddPanelElement(pnlLoad, lblCurrentGameCount);
             AddPanelElement(pnlLoad, lblCurrentGame);
             AddPanelElement(pnlLoad, picLoad);
             AddPanelElement(pnlDbUtil, btnPopulate);
@@ -321,6 +328,7 @@ namespace NBAdbToolbox
                 var popup = new PopulatePopup(dialog);
                 if (popup.ShowDialog() == DialogResult.OK)
                 {
+                    //Stopwatch stopwatch = Stopwatch.StartNew();
                     foreach(int season in seasons)
                     {
                         lblStatus.Text = "Loading " + season + " season...";
@@ -330,7 +338,7 @@ namespace NBAdbToolbox
                         listSeasons.Enabled = false;
                         await Task.Run(async () =>      //This sets the root variable to our big file
                         {
-                            await ReadSeasonFile(seasons, popup.historic, popup.current);
+                            await ReadSeasonFile(season, popup.historic, popup.current);
                         });
                         //End season read
                         lblStatus.Text = season + " parsed. Inserting data...";
@@ -338,27 +346,23 @@ namespace NBAdbToolbox
                         int iterator = 0;
                         int imageIteration = 1;
                         bool reverse = false;
-                        int remainder = 10;
+                        int remainder = 5;
                         foreach(NBAdbToolboxHistoric.Game game in root.season.games.regularSeason)
                         {
-                            lblCurrentGame.Text = "Current game: " + game.game_id;
                             await Task.Run(async () =>      //This inserts the games from season file into db
                             {
-                                await InsertGameWithLoading(game);                               
+                                
+                                await InsertGameWithLoading(game, season, imageIteration);                               
                             }); 
-                            //This changes the loading image
-                            if (iterator % remainder == 0)
+                            //picLoad.Image = Image.FromFile(Path.Combine(projectRoot, "Content", "Loading", ".kawhi" + imageIteration + ".png"));
+                            if (reverse)
                             {
-                                picLoad.Image = Image.FromFile(Path.Combine(projectRoot, "Content", "Loading", ".kawhi" + imageIteration + ".png"));
-                                if (reverse)
-                                {
-                                    imageIteration--;
-                                }
-                                else
-                                {
-                                    imageIteration++;
-                                }
+                                imageIteration--;
                             }
+                            else
+                            {
+                                imageIteration++;
+                            }                            
                             if (imageIteration == 15)
                             {
                                 reverse = true;
@@ -370,8 +374,11 @@ namespace NBAdbToolbox
                             iterator++;
                         }
 
-
+                        teamsDone = false;
                     }
+                    btnPopulate.Enabled = true;
+                    btnEdit.Enabled = true;
+                    listSeasons.Enabled = true;
                 }
             };
 
@@ -388,8 +395,13 @@ namespace NBAdbToolbox
             picLoad.Left = (pnlLoad.ClientSize.Width - picLoad.Width) / 2;
 
 
-
-
+            lblCurrentGame.Left = 0;
+            fontSize = ((float)(pnlLoad.Height * .05) / (96 / 12)) * (72 / 12);
+            lblCurrentGame.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Regular, pnlLoad, lblCurrentGame);
+            lblCurrentGame.AutoSize = true;
+            lblCurrentGameCount.Left = lblCurrentGame.Right - (int)(pnlLoad.Width * .02);
+            lblCurrentGameCount.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, pnlLoad, lblCurrentGameCount);
+            lblCurrentGameCount.AutoSize = true;
 
 
 
@@ -1350,37 +1362,136 @@ namespace NBAdbToolbox
 
 
 
-        public async Task ReadSeasonFile(List<int> seasons, bool bHistoric, bool bCurrent)
+        public async Task ReadSeasonFile(int season, bool bHistoric, bool bCurrent)
         {
             string filePath = Path.Combine(projectRoot, "Content\\", "dbconfig.json");
             filePath = filePath.Replace("dbconfig.json", "Historic Data\\");
-
-            foreach (int season in seasons)
+            if (bHistoric || (!bHistoric && !bCurrent))
             {
-                if (bHistoric || (!bHistoric && !bCurrent))
+                int iter = (season == 2012 || season == 2019 || season == 2020 || season == 2024) ? 3 : 4;
+                root = await historic.ReadFile(season, iter, filePath);
+            }
+            
+        }
+
+
+        private async Task InsertGameWithLoading(NBAdbToolboxHistoric.Game game, int season, int imageIteration)
+        {
+            lblCurrentGameCount.Invoke((MethodInvoker)(() =>
+            {
+                lblCurrentGameCount.Text = game.game_id;
+            }));
+            //pnlLoad.Invoke((MethodInvoker)(() => pnlLoad.Visible = true));
+            await Task.Run(() =>
+            {
+                GetGameDetails(game, season);
+            });
+            //pnlLoad.Invoke((MethodInvoker)(() => pnlLoad.Visible = true));
+            picLoad.Invoke((MethodInvoker)(() =>
+            {
+                if (picLoad.Image != null)
                 {
-                    int iter = (season == 2012 || season == 2019 || season == 2020 || season == 2024) ? 3 : 4;
-                    root = await historic.ReadFile(season, iter, filePath);
+                    picLoad.Image.Dispose(); // release the previous image
+                    picLoad.Image = null;
+                }
+
+                using (var img = Image.FromFile(Path.Combine(projectRoot, "Content", "Loading", ".kawhi" + imageIteration + ".png")))
+                {
+                    picLoad.Image = new Bitmap(img); // clone it so file lock is released
+                }
+            }));
+        }
+        public bool teamsDone = false;
+        public void GetGameDetails(NBAdbToolboxHistoric.Game game, int season)
+        {
+            SQLdb = new SqlConnection(cString);
+            if (!teamsDone)
+            {
+                TeamCheck(game.box.homeTeam, game.box.homeTeam.teamId, season);
+                TeamCheck(game.box.awayTeam, game.box.awayTeam.teamId, season);
+            }
+            if(game.box.homeTeam.teamWins + game.box.homeTeam.teamLosses == 82 || (season == 2024) ||
+              (season == 2019 && (game.box.homeTeam.teamWins + game.box.homeTeam.teamLosses >= 40)) ||
+              (season == 2020 && (game.box.homeTeam.teamWins + game.box.homeTeam.teamLosses == 72)))
+            {
+                TeamUpdate(game.box.homeTeam, season);
+            }
+            if (game.box.awayTeam.teamWins + game.box.awayTeam.teamLosses == 82 || (season == 2024) ||
+              (season == 2019 && (game.box.awayTeam.teamWins + game.box.awayTeam.teamLosses >= 40)) ||
+              (season == 2020 && (game.box.awayTeam.teamWins + game.box.awayTeam.teamLosses == 72)))
+            {
+                TeamUpdate(game.box.awayTeam, season);
+            }
+        }
+
+        public void TeamCheck(NBAdbToolboxHistoric.Team team, int teamID, int season)
+        {
+            using (SqlCommand TeamSearch = new SqlCommand("teamCheck"))
+            {
+                TeamSearch.CommandType = CommandType.StoredProcedure;
+                TeamSearch.Parameters.AddWithValue("@TeamID", teamID);
+                TeamSearch.Parameters.AddWithValue("@SeasonID", season);
+                using (SqlDataAdapter sTeamSearch = new SqlDataAdapter())
+                {
+                    TeamSearch.Connection = SQLdb;
+                    sTeamSearch.SelectCommand = TeamSearch;
+                    SQLdb.Open();
+                    SqlDataReader reader = TeamSearch.ExecuteReader();
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            if (reader["Teams"].ToString() == "30")
+                            {
+                                teamsDone = true;
+                            }
+                        }
+                        SQLdb.Close();
+                    }
+                    else
+                    {
+                        SQLdb.Close();
+                        TeamInsert(team, season);
+                    }
                 }
             }
         }
 
 
-        private async Task InsertGameWithLoading(NBAdbToolboxHistoric.Game game)
+        public void TeamInsert(NBAdbToolboxHistoric.Team team, int season)
         {
-            //pnlLoad.Invoke((MethodInvoker)(() => pnlLoad.Visible = true));
-            await Task.Run(() =>
+            using (SqlCommand TeamInsert = new SqlCommand("TeamInsert"))
             {
-                InsertGame(game);
-            });
-            //pnlLoad.Invoke((MethodInvoker)(() => pnlLoad.Visible = true));
-
+                TeamInsert.Connection = SQLdb;
+                TeamInsert.CommandType = CommandType.StoredProcedure; 
+                TeamInsert.Parameters.AddWithValue("@SeasonID", season);
+                TeamInsert.Parameters.AddWithValue("@TeamID", team.teamId);
+                TeamInsert.Parameters.AddWithValue("@City", team.teamCity);
+                TeamInsert.Parameters.AddWithValue("@Name", team.teamName);
+                TeamInsert.Parameters.AddWithValue("@Tricode", team.teamTricode);
+                TeamInsert.Parameters.AddWithValue("@Wins", team.teamWins);
+                TeamInsert.Parameters.AddWithValue("@Losses", team.teamLosses);
+                SQLdb.Open();
+                TeamInsert.ExecuteScalar();
+                SQLdb.Close();
+            }
         }
-        public void InsertGame(NBAdbToolboxHistoric.Game game)
+
+        public void TeamUpdate(NBAdbToolboxHistoric.Team team, int season)
         {
+            using (SqlCommand TeamUpdate = new SqlCommand("TeamUpdate"))
+            {
+                TeamUpdate.Connection = SQLdb;
+                TeamUpdate.CommandType = CommandType.StoredProcedure;
+                TeamUpdate.Parameters.AddWithValue("@SeasonID", season);
+                TeamUpdate.Parameters.AddWithValue("@TeamID", team.teamId);
+                TeamUpdate.Parameters.AddWithValue("@W", team.teamWins);
+                TeamUpdate.Parameters.AddWithValue("@L", team.teamLosses);
+                SQLdb.Open();
+                TeamUpdate.ExecuteScalar();
+                SQLdb.Close();
+            }
 
         }
-
-
     }
 }
