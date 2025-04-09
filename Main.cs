@@ -15,6 +15,7 @@ using System.Windows.Forms;
 using Newtonsoft.Json;
 using NBAdbToolboxHistoric;
 using System.Diagnostics;
+using static NBAdbToolbox.Main;
 
 namespace NBAdbToolbox
 {
@@ -108,7 +109,7 @@ namespace NBAdbToolbox
         };
         PictureBox picLoad = new PictureBox
         {
-            Image = Image.FromFile(Path.Combine(projectRoot, "Content", "Loading", "kawhi1.png"))
+            Image = Image.FromFile(Path.Combine(projectRoot, "Content", "Loading", ".kawhi1.png"))
         };
 
         //Header Panels
@@ -354,7 +355,7 @@ namespace NBAdbToolbox
                                 
                                 await InsertGameWithLoading(game, season, imageIteration);                               
                             }); 
-                            //picLoad.Image = Image.FromFile(Path.Combine(projectRoot, "Content", "Loading", "kawhi" + imageIteration + ".png"));
+                            //picLoad.Image = Image.FromFile(Path.Combine(projectRoot, "Content", "Loading", ".kawhi" + imageIteration + ".png"));
                             if (reverse)
                             {
                                 imageIteration--;
@@ -363,7 +364,7 @@ namespace NBAdbToolbox
                             {
                                 imageIteration++;
                             }                            
-                            if (imageIteration == 15)
+                            if (imageIteration == 27)
                             {
                                 reverse = true;
                             }
@@ -1395,13 +1396,14 @@ namespace NBAdbToolbox
                     picLoad.Image = null;
                 }
 
-                using (var img = Image.FromFile(Path.Combine(projectRoot, "Content", "Loading", "kawhi" + imageIteration + ".png")))
+                using (var img = Image.FromFile(Path.Combine(projectRoot, "Content", "Loading", ".kawhi" + imageIteration + ".png")))
                 {
                     picLoad.Image = new Bitmap(img); // clone it so file lock is released
                 }
             }));
         }
         public bool teamsDone = false;
+        public bool arenasDone = false;
         public void GetGameDetails(NBAdbToolboxHistoric.Game game, int season)
         {
             SQLdb = new SqlConnection(cString);
@@ -1411,16 +1413,22 @@ namespace NBAdbToolbox
                 TeamCheck(game.box.awayTeam, game.box.awayTeam.teamId, season);
             }
             if(game.box.homeTeam.teamWins + game.box.homeTeam.teamLosses == 82 || (season == 2024) ||
-              (season == 2019 && (game.box.homeTeam.teamWins + game.box.homeTeam.teamLosses >= 40)) ||
-              (season == 2020 && (game.box.homeTeam.teamWins + game.box.homeTeam.teamLosses == 72)))
+            (season == 2019 && (game.box.homeTeam.teamWins + game.box.homeTeam.teamLosses >= 40)) ||
+            (season == 2020 && (game.box.homeTeam.teamWins + game.box.homeTeam.teamLosses == 72)))
             {
                 TeamUpdate(game.box.homeTeam, season);
             }
             if (game.box.awayTeam.teamWins + game.box.awayTeam.teamLosses == 82 || (season == 2024) ||
-              (season == 2019 && (game.box.awayTeam.teamWins + game.box.awayTeam.teamLosses >= 40)) ||
-              (season == 2020 && (game.box.awayTeam.teamWins + game.box.awayTeam.teamLosses == 72)))
+            (season == 2019 && (game.box.awayTeam.teamWins + game.box.awayTeam.teamLosses >= 40)) ||
+            (season == 2020 && (game.box.awayTeam.teamWins + game.box.awayTeam.teamLosses == 72)))
             {
                 TeamUpdate(game.box.awayTeam, season);
+            }
+
+
+            if (!arenasDone)
+            {
+                ArenaCheck(game.box.arena, game.box.homeTeamId, season);
             }
         }
 
@@ -1489,6 +1497,61 @@ namespace NBAdbToolbox
                 TeamUpdate.Parameters.AddWithValue("@L", team.teamLosses);
                 SQLdb.Open();
                 TeamUpdate.ExecuteScalar();
+                SQLdb.Close();
+            }
+
+        }
+        public void ArenaCheck(NBAdbToolboxHistoric.Arena arena, int teamID, int season)
+        {
+            using (SqlCommand TeamSearch = new SqlCommand("ArenaCheck"))
+            {
+                TeamSearch.CommandType = CommandType.StoredProcedure;
+                TeamSearch.Parameters.AddWithValue("@ArenaID", arena.arenaId);
+                TeamSearch.Parameters.AddWithValue("@SeasonID", season);
+                using (SqlDataAdapter sTeamSearch = new SqlDataAdapter())
+                {
+                    TeamSearch.Connection = SQLdb;
+                    sTeamSearch.SelectCommand = TeamSearch;
+                    SQLdb.Open();
+                    SqlDataReader reader = TeamSearch.ExecuteReader();
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            if (Int32.Parse(reader["Arenas"].ToString()) >= 40)
+                            {
+                                arenasDone = true;
+                            }
+                        }
+                        SQLdb.Close();
+                    }
+                    else
+                    {
+                        SQLdb.Close();
+                        ArenaInsert(arena, teamID, season);
+                    }
+                }
+            }
+        }
+
+        public void ArenaInsert(NBAdbToolboxHistoric.Arena arena, int teamID, int season)
+        {
+            using (SqlCommand ArenaInsert = new SqlCommand("ArenaInsert"))
+            {
+                ArenaInsert.Connection = SQLdb;
+                ArenaInsert.CommandType = CommandType.StoredProcedure;
+                ArenaInsert.Parameters.AddWithValue("@SeasonID", season);
+                ArenaInsert.Parameters.AddWithValue("@ArenaID", arena.arenaId);
+                ArenaInsert.Parameters.AddWithValue("@TeamID", teamID);
+                ArenaInsert.Parameters.AddWithValue("@City", arena.arenaCity);
+                ArenaInsert.Parameters.AddWithValue("@Country", arena.arenaCountry);
+                ArenaInsert.Parameters.AddWithValue("@Name", arena.arenaName);
+                ArenaInsert.Parameters.AddWithValue("@PostalCode", arena.arenaPostalCode);
+                ArenaInsert.Parameters.AddWithValue("@State", arena.arenaState);
+                ArenaInsert.Parameters.AddWithValue("@StreetAddress", arena.arenaStreetAddress);
+                ArenaInsert.Parameters.AddWithValue("@Timezone", arena.arenaTimezone);
+                SQLdb.Open();
+                ArenaInsert.ExecuteScalar();
                 SQLdb.Close();
             }
 

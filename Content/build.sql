@@ -322,6 +322,21 @@ from Season
 order by SeasonID desc
 ~~~
 
+
+
+create procedure TeamCheck @TeamID int, @SeasonID int
+as
+select TeamID, (select count(TeamID) from Team where SeasonID = @SeasonID) Teams
+from Team
+where TeamID = @TeamID and SeasonID = @SeasonID
+~~~
+
+
+create procedure TeamUpdate @teamID int, @SeasonID int, @W int, @L int
+as
+update Team set Wins = @W, Losses = @L where TeamID = @teamID and SeasonID = @SeasonID
+~~~
+
 create procedure TeamInsert
 @SeasonID			int,
 @TeamID				int,
@@ -343,16 +358,40 @@ concat('(', @Tricode, ') ', @City, ' ', @Name))
 ~~~
 
 
-create procedure TeamCheck @TeamID int, @SeasonID int
+create procedure ArenaCheck @ArenaID int, @SeasonID int
 as
-select TeamID, (select count(TeamID) from Team where SeasonID = @SeasonID) Teams
-from Team
-where TeamID = @TeamID and SeasonID = @SeasonID
+select ArenaID, (select count(ArenaID) from Arena where SeasonID = @SeasonID) Arenas
+from Arena
+where ArenaID = @ArenaID and SeasonID = @SeasonID
+~~~
+
+create procedure ArenaInsert 
+@SeasonID			int,
+@ArenaID			int,
+@TeamID				int,
+@City				varchar(255),
+@Country			varchar(255),
+@Name				varchar(255),
+@PostalCode			varchar(255),
+@State				varchar(255),
+@StreetAddress		varchar(255),
+@Timezone			varchar(255)
+as
+insert into Arena values(
+@SeasonID			,
+@ArenaID			,
+@TeamID				,
+@City				,
+@Country			,
+@Name				,
+@PostalCode			,
+@State				,
+@StreetAddress		,
+@Timezone			)
 ~~~
 
 
-create procedure TeamUpdate @teamID int, @SeasonID int, @W int, @L int
-as
-update Team set Wins = @W, Losses = @L where TeamID = @teamID and SeasonID = @SeasonID
-~~~
+
+
+
 */
