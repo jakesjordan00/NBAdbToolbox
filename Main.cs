@@ -108,7 +108,7 @@ namespace NBAdbToolbox
         };
         PictureBox picLoad = new PictureBox
         {
-            Image = Image.FromFile(Path.Combine(projectRoot, "Content", "Loading", ".kawhi1.png"))
+            Image = Image.FromFile(Path.Combine(projectRoot, "Content", "Loading", "kawhi1.png"))
         };
 
         //Header Panels
@@ -354,7 +354,7 @@ namespace NBAdbToolbox
                                 
                                 await InsertGameWithLoading(game, season, imageIteration);                               
                             }); 
-                            //picLoad.Image = Image.FromFile(Path.Combine(projectRoot, "Content", "Loading", ".kawhi" + imageIteration + ".png"));
+                            //picLoad.Image = Image.FromFile(Path.Combine(projectRoot, "Content", "Loading", "kawhi" + imageIteration + ".png"));
                             if (reverse)
                             {
                                 imageIteration--;
@@ -1395,7 +1395,7 @@ namespace NBAdbToolbox
                     picLoad.Image = null;
                 }
 
-                using (var img = Image.FromFile(Path.Combine(projectRoot, "Content", "Loading", ".kawhi" + imageIteration + ".png")))
+                using (var img = Image.FromFile(Path.Combine(projectRoot, "Content", "Loading", "kawhi" + imageIteration + ".png")))
                 {
                     picLoad.Image = new Bitmap(img); // clone it so file lock is released
                 }
