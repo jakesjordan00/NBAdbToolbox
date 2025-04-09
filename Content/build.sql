@@ -67,6 +67,7 @@ LScore				int,
 SeriesID			varchar(20),
 Label				varchar(100),
 LabelDetail			varchar(100),
+Datetime			datetime,
 Primary Key(SeasonID, GameID),
 Foreign Key (SeasonID) references Season(SeasonID),
 Foreign Key (SeasonID, HomeID) references Team(SeasonID, TeamID),
@@ -332,7 +333,7 @@ where TeamID = @TeamID and SeasonID = @SeasonID
 ~~~
 
 
-create procedure TeamUpdate @teamID int, @SeasonID int, @W int, @L int
+create procedure TeamUpdate @TeamID int, @SeasonID int, @W int, @L int
 as
 update Team set Wins = @W, Losses = @L where TeamID = @teamID and SeasonID = @SeasonID
 ~~~
@@ -390,8 +391,116 @@ insert into Arena values(
 @Timezone			)
 ~~~
 
+create procedure OfficialCheck @OfficialID int, @SeasonID int
+as
+select OfficialID, (select count(OfficialID) from Official where SeasonID = @SeasonID) Officials
+from Official
+where OfficialID = @OfficialID and SeasonID = @SeasonID
+~~~
+
+create procedure OfficialInsert
+@SeasonID			int,
+@OfficialID			int,
+@Name				varchar(255),
+@Number				varchar(3)
+as
+insert into Official values(
+@SeasonID			,
+@OfficialID			,
+@Name				,
+@Number				)
+~~~
+
+
+create procedure PlayerCheck @PlayerID	int, @SeasonID int
+as
+select * from Player where PlayerID = @PlayerID and SeasonID = @SeasonID
+~~~
+
+create procedure PlayerUpdate 
+@SeasonID			int,
+@PlayerID			int,
+@Name				varchar(255),
+@Number				varchar(3),
+@Position			varchar(100)
+as
+update Player set Name = @Name, Number = @Number, Position = @Position
+where PlayerID = @PlayerID and SeasonID = @SeasonID
+~~~
 
 
 
+
+
+create procedure PlayerInsert
+@SeasonID			int,
+@PlayerID			int,
+@Name				varchar(255),
+@Number				varchar(3),
+@Position			varchar(100)
+as
+insert into Player values(
+@SeasonID			,
+@PlayerID			,
+@Name				,
+@Number				,
+@Position			)
+~~~
+
+
+
+create procedure GameCheck @SeasonID int, @GameID int
+as
+select *
+from Game g
+where g.SeasonID = @SeasonID and g.GameID = @GameID
+~~~
+
+
+create procedure GameUpdate @SeasonID int, @GameID int, @HomeID int, @AwayID int, @HScore int, @AScore int,
+@WinnerID int, @LoserID int, @WScore int, @LScore int
+as
+update Game set 
+HomeID = @HomeID, AwayID = @AwayID, HScore = @HScore, AScore = @AScore,
+WinnerID = @WinnerID, LoserID = @LoserID, WScore = @WScore, LScore = @LScore
+where GameID = @GameID and SeasonID = @SeasonID
+~~~
+
+create procedure GameInsert
+@SeasonID			int,
+@GameID				int,
+@Date				date,
+@GameType			varchar(10),
+@HomeID				int,
+@HScore				int,
+@AwayID				int,
+@AScore				int,
+@WinnerID			int,
+@WScore				int,
+@LoserID			int,
+@LScore				int,
+@SeriesID			varchar(20),
+@Label				varchar(100),
+@LabelDetail		varchar(100),
+@Datetime			datetime
+as
+insert into Game values(
+@SeasonID			,
+@GameID				,
+@Date				,
+@GameType			,
+@HomeID				,
+@HScore				,
+@AwayID				,
+@AScore				,
+@WinnerID			,
+@WScore				,
+@LoserID			,
+@LScore				,
+@SeriesID			,
+@Label				,
+@LabelDetail		,
+@Datetime			)
+~~~
 
 */
