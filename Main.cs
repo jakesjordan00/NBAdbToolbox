@@ -102,34 +102,41 @@ namespace NBAdbToolbox
         public Panel pnlLoad = new Panel();
         public Label lblSeasonStatusLoad = new Label
         {
-            Text = "Currently loading: "
+            Text = "Currently loading: ",
+            Visible = false
         };
         public Label lblSeasonStatusLoadInfo = new Label
         {
-            Text = ""
+            Text = "",
+            Visible = false
         };
         public Label lblCurrentGame = new Label
         {
-            Text = "Current game: "
+            Text = "Current game: ",
+            Visible = false
         };
         public Label lblCurrentGameCount = new Label
         {
-            Text = "0"
+            Text = "0",
+            Visible = false
         };
         public Label lblWorkingOn = new Label
         {
-            Text = "Currently working on: "
+            Text = "Currently working on: ",
+            Visible = false
         };
         public Label lblWorkingOnInfo = new Label
         {
-            Text = ""
+            Text = "",
+            Visible = false
         };
         public float loadFontSize = 0;
         public string completionMessage = "";
 
         PictureBox picLoad = new PictureBox
         {
-            Image = Image.FromFile(Path.Combine(projectRoot, "Content", "Loading", "kawhi1.png"))
+            Image = Image.FromFile(Path.Combine(projectRoot, "Content", "Loading", "kawhi1.png")),
+            Visible = false
         };
 
         //Header Panels
@@ -351,6 +358,11 @@ namespace NBAdbToolbox
                 var popup = new PopulatePopup(dialog);
                 if (popup.ShowDialog() == DialogResult.OK)
                 {
+                    lblCurrentGame.Visible = true;
+                    lblCurrentGameCount.Visible = true;
+                    lblSeasonStatusLoad.Visible = true;
+                    lblSeasonStatusLoadInfo.Visible = true;
+                    picLoad.Visible = true;
                     //Stopwatch stopwatch = Stopwatch.StartNew();
                     foreach (int season in seasons)
                     {
@@ -360,6 +372,7 @@ namespace NBAdbToolbox
                         btnPopulate.Enabled = false;
                         btnEdit.Enabled = false;
                         listSeasons.Enabled = false;
+                        lblSeasonStatusLoadInfo.Text = season + " historic data file";
                         await Task.Run(async () =>      //This sets the root variable to our big file
                         {
                             await ReadSeasonFile(season, popup.historic, popup.current);
