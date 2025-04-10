@@ -686,7 +686,7 @@ create procedure TeamBoxLineupInsertHistoric
 @FoulsPersonal	int
 as
 insert into TeamBoxLineups(SeasonID, GameID, TeamID, MatchupID, Unit, Minutes, FGM, FGA, [FG%], FG2M, FG2A, [FG2%], FG3M, FG3A, [FG3%], FTM, FTA, [FT%], 
-ReboundsDefensive, ReboundsOffensive, ReboundsTotal, Assists, Turnovers, AssistsTurnoverRatio, Steals, Blocks, Points. FoulsPersonal)
+ReboundsDefensive, ReboundsOffensive, ReboundsTotal, Assists, Turnovers, AssistsTurnoverRatio, Steals, Blocks, Points, FoulsPersonal)
 values(
 @SeasonID,
 @GameID,
