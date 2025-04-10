@@ -269,10 +269,11 @@ FGA							int,
 FTM							int,
 FTA							int,
 [FT%]						float,
-ReboundsTeamDefensive		int,
-ReboundsTeamOffensive		int,
+ReboundsDefensive			int,
+ReboundsOffensive			int,
 ReboundsTotal				int,
 Assists						int,
+AssistsTurnoverRatio		float,
 Steals						int,
 Turnovers					int,
 Blocks						int,
@@ -608,5 +609,114 @@ values(
 @FoulsPersonal)
 ~~~
 
+
+create procedure TeamBoxLineupCheck 
+@SeasonID      int,
+@GameID        int,
+@TeamID        int,
+@MatchupID     int,
+@Unit			varchar(30)
+as
+select SeasonID, GameID, TeamID, Unit, Points
+from TeamBoxLineups t
+where t.SeasonID = @SeasonID and t.GameID = @GameID and t.TeamID = @TeamID and t.MatchupID = @MatchupID
+~~~
+
+
+create procedure TeamBoxLineupUpdateHistoric 
+@SeasonID int, @GameID int, @TeamID int, @MatchupID int, @Unit varchar(30),@FGM int, @FGA int, @FGpct float, @FG2M int, @FG2A int, @FG2pct float, 
+@FG3M int, @FG3A int, @FG3pct float, @FTM int, @FTA int, @FTpct float, @RebD int, @RebO int, @RebT int, @Assists int, 
+@Turnovers int, @AtoR float, @Steals int, @Blocks int, @Points int, @FoulsPersonal int, @Minutes varchar(30)
+as
+update TeamBoxLineups set 
+Minutes				=	@Minutes	   ,
+FGM					=	@FGM           ,
+FGA					=	@FGA           ,
+[FG%]				=	@FGpct         ,
+FG2M				=	@FG2M          ,
+FG2A				=	@FG2A          ,
+[FG2%]				=	@FG2pct        ,
+FG3M				=	@FG3M          ,
+FG3A				=	@FG3A          ,
+[FG3%]				=	@FG3pct        ,
+FTM					=	@FTM           ,
+FTA					=	@FTA           ,
+[FT%]				=	@FTpct         ,
+ReboundsDefensive   =	@RebD          ,
+ReboundsOffensive   =	@RebO          ,
+ReboundsTotal       =	@RebT          ,
+Assists				=	@Assists       ,
+Turnovers			=	@Turnovers     ,
+AssistsTurnoverRatio=	@AtoR          ,
+Steals				=	@Steals        ,
+Blocks				=	@Blocks        ,
+Points				=	@Points        ,
+FoulsPersonal		=	@FoulsPersonal 
+where SeasonID = @SeasonID and GameID = @GameID and TeamID = @TeamID and MatchupID = @MatchupID and Unit = @Unit
+~~~
+
+
+create procedure TeamBoxLineupInsertHistoric
+@SeasonID		int,
+@GameID			int,
+@TeamID			int,
+@MatchupID		int,
+@Unit			varchar(30),
+@Minutes		varchar(30),
+@FGM			int,
+@FGA			int,
+@FGpct			float,
+@FG2M			int,
+@FG2A			int,
+@FG2pct			float,
+@FG3M			int,
+@FG3A			int,
+@FG3pct			float,
+@FTM			int,
+@FTA			int,
+@FTpct			float,
+@RebD			int,
+@RebO			int,
+@RebT			int,
+@Assists		int,
+@Turnovers		int,
+@AtoR			float,
+@Steals			int,
+@Blocks			int,
+@Points			int,
+@FoulsPersonal	int
+as
+insert into TeamBoxLineups(SeasonID, GameID, TeamID, MatchupID, Unit, Minutes, FGM, FGA, [FG%], FG2M, FG2A, [FG2%], FG3M, FG3A, [FG3%], FTM, FTA, [FT%], 
+ReboundsDefensive, ReboundsOffensive, ReboundsTotal, Assists, Turnovers, AssistsTurnoverRatio, Steals, Blocks, Points. FoulsPersonal)
+values(
+@SeasonID,
+@GameID,
+@TeamID,
+@MatchupID,
+@Unit,
+@Minutes,
+@FGM,
+@FGA,
+@FGpct,
+@FG2M,
+@FG2A,
+@FG2pct,
+@FG3M,
+@FG3A,
+@FG3pct,
+@FTM,
+@FTA,
+@FTpct,
+@RebD,
+@RebO,
+@RebT,
+@Assists,
+@Turnovers,
+@AtoR,
+@Steals,
+@Blocks,
+@Points,
+@FoulsPersonal)
+~~~
 
 */
