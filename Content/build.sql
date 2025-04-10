@@ -503,4 +503,64 @@ insert into Game values(
 @Datetime			)
 ~~~
 
+create procedure TeamBoxInsert
+@SeasonID      int,
+@GameID        int,
+@TeamID        int,
+@MatchupID     int,
+@FGM           int,
+@FGA           int,
+@FGpct         float,
+@FG2M          int,
+@FG2A          int,
+@FG2pct        float,
+@FG3M          int,
+@FG3A          int,
+@FG3pct        float,
+@FTM           int,
+@FTA           int,
+@FTpct         float,
+@RebD          int,
+@RebO          int,
+@RebT          int,
+@Assists       int,
+@Turnovers     int,
+@AtoR          float,
+@Steals        int,
+@Blocks        int,
+@Points        int,
+@PointsAgainst int,
+@FoulsPersonal int
+as
+insert into TeamBox(SeasonID, GameID, TeamID, MatchupID, FGM, FGA, [FG%], FG2M, FG2A, [FG2%], FG3M, FG3A, [FG3%], FTM, FTA, [FT%], RebD, RebO, RebT, Assists, Turnovers, AtoR, Steals, Blocks, Points, PointsAgainst, FoulsPersonal)
+values(
+@SeasonID,
+@GameID,
+@TeamID,
+@MatchupID,
+@FGM,
+@FGA,
+@FGpct,
+@FG2M,
+@FG2A,
+@FG2pct,
+@FG3M,
+@FG3A,
+@FG3pct,
+@FTM,
+@FTA,
+@FTpct,
+@RebD,
+@RebO,
+@RebT,
+@Assists,
+@Turnovers,
+@AtoR,
+@Steals,
+@Blocks,
+@Points,
+@PointsAgainst,
+@FoulsPersonal)
+~~~
+
 */

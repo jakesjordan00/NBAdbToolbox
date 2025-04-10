@@ -1993,6 +1993,7 @@ namespace NBAdbToolbox
                 TeamBoxInsert.Parameters.AddWithValue("@Blocks", team.statistics.blocks);
                 TeamBoxInsert.Parameters.AddWithValue("@Points", team.statistics.points);
                 TeamBoxInsert.Parameters.AddWithValue("@PointsAgainst", PointsAgainst);
+                TeamBoxInsert.Parameters.AddWithValue("@FoulsPersonal", team.statistics.foulsPersonal);
             }
         }
         #endregion
