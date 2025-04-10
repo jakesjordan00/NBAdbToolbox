@@ -655,7 +655,6 @@ FoulsPersonal		=	@FoulsPersonal
 where SeasonID = @SeasonID and GameID = @GameID and TeamID = @TeamID and MatchupID = @MatchupID and Unit = @Unit
 ~~~
 
-
 create procedure TeamBoxLineupInsertHistoric
 @SeasonID		int,
 @GameID			int,
