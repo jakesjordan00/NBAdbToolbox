@@ -619,7 +619,7 @@ create procedure TeamBoxLineupCheck
 as
 select SeasonID, GameID, TeamID, Unit, Points
 from TeamBoxLineups t
-where t.SeasonID = @SeasonID and t.GameID = @GameID and t.TeamID = @TeamID and t.MatchupID = @MatchupID
+where t.SeasonID = @SeasonID and t.GameID = @GameID and t.TeamID = @TeamID and t.MatchupID = @MatchupID and t.Unit = @Unit
 ~~~
 
 

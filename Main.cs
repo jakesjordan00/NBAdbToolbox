@@ -1955,6 +1955,7 @@ namespace NBAdbToolbox
             TeamBoxCheck(game.box.homeTeam, season, game.game_id, game.box.awayTeamId, game.box.awayTeam.statistics.points, "TeamBoxCheck", game.box.homeTeam.lineups[0]);
             TeamBoxCheck(game.box.awayTeam, season, game.game_id, game.box.homeTeamId, game.box.homeTeam.statistics.points, "TeamBoxCheck", game.box.awayTeam.lineups[0]);
 
+
             foreach(NBAdbToolboxHistoric.Lineups lineup in game.box.homeTeam.lineups)
             {
                 TeamBoxCheck(game.box.homeTeam, season, game.game_id, game.box.awayTeamId, game.box.awayTeam.statistics.points, "TeamBoxLineupCheck", lineup);
@@ -2015,7 +2016,7 @@ namespace NBAdbToolbox
                         }
                         else if (procedure == "TeamBoxLineupCheck")
                         {
-                            if (reader.GetInt32(4) != team.statistics.points)
+                            if (reader.GetInt32(4) != lineup.points)
                             {
                                 SQLdb.Close();
                                 TeamBoxUpdate(team, season, GameID, MatchupID, PointsAgainst, "TeamBoxLineupUpdateHistoric", lineup);
@@ -2042,8 +2043,29 @@ namespace NBAdbToolbox
                 TeamBoxUpdate.Parameters.AddWithValue("@MatchupID", MatchupID);
                 if (procedure == "TeamBoxLineupUpdateHistoric")
                 {
+                    int minutes = 0;
+                    int seconds = 0;
                     TeamBoxUpdate.Parameters.AddWithValue("@Unit", lineup.unit.Substring(0, 1).ToUpper() + lineup.unit.Substring(1));
-                    TeamBoxUpdate.Parameters.AddWithValue("@Minutes", lineup.minutes + ".00"); 
+                    if(lineup.unit == "bench")
+                    {
+                        for(int i = 0; i < team.players.Count; i++)
+                        {
+                            if(team.players[i].position == "" && team.players[i].statistics.minutes != "")
+                            {
+                                minutes += Int32.Parse(team.players[i].statistics.minutes.Remove(team.players[i].statistics.minutes.IndexOf(":")));
+                                seconds += Int32.Parse(team.players[i].statistics.minutes.Substring(team.players[i].statistics.minutes.IndexOf(":") + 1));
+                            }
+                        }
+                        double secondsDiv = (double) seconds % 60;
+                        double minutesWhole = Math.Floor((double)(seconds / 60));
+                        minutes += (int)(minutesWhole);
+                        seconds = (int)secondsDiv;
+                        TeamBoxUpdate.Parameters.AddWithValue("@Minutes", minutes + ":" + seconds + ".00");
+                    }
+                    else
+                    {
+                        TeamBoxUpdate.Parameters.AddWithValue("@Minutes", lineup.minutes + ".00");
+                    } 
                     TeamBoxUpdate.Parameters.AddWithValue("@FGM", lineup.fieldGoalsMade);
                     TeamBoxUpdate.Parameters.AddWithValue("@FGA", lineup.fieldGoalsAttempted);
                     TeamBoxUpdate.Parameters.AddWithValue("@FGpct", lineup.fieldGoalsPercentage);
@@ -2051,8 +2073,9 @@ namespace NBAdbToolbox
                     TeamBoxUpdate.Parameters.AddWithValue("@FG2A", lineup.fieldGoalsAttempted - lineup.threePointersAttempted);
                     if ((double)(lineup.fieldGoalsAttempted - lineup.threePointersAttempted) != 0)
                     {
-                        TeamBoxUpdate.Parameters.AddWithValue("@FG2pct", (double)(lineup.fieldGoalsMade - lineup.threePointersMade) /
-                        (double)(lineup.fieldGoalsAttempted - lineup.threePointersAttempted));
+                        TeamBoxUpdate.Parameters.AddWithValue("@FG2pct", 
+                        Math.Round((double)(lineup.fieldGoalsMade - lineup.threePointersMade) /
+                        (double)(lineup.fieldGoalsAttempted - lineup.threePointersAttempted), 4));
                     }
                     else
                     {
@@ -2069,13 +2092,13 @@ namespace NBAdbToolbox
                     TeamBoxUpdate.Parameters.AddWithValue("@RebT", lineup.reboundsTotal);
                     TeamBoxUpdate.Parameters.AddWithValue("@Assists", lineup.assists);
                     TeamBoxUpdate.Parameters.AddWithValue("@Turnovers", lineup.turnovers);
-                    if (team.statistics.turnovers > 0)
+                    if (lineup.turnovers > 0)
                     {
-                        TeamBoxUpdate.Parameters.AddWithValue("@AtoR", (double)(lineup.assists) / (double)(lineup.turnovers));
+                        TeamBoxUpdate.Parameters.AddWithValue("@AtoR", Math.Round((double)(lineup.assists) / (double)(lineup.turnovers), 3));
                     }
                     else
                     {
-                        TeamBoxUpdate.Parameters.AddWithValue("@AtoR", 999);
+                        TeamBoxUpdate.Parameters.AddWithValue("@AtoR", 99);
                     }
                     TeamBoxUpdate.Parameters.AddWithValue("@Steals", lineup.steals);
                     TeamBoxUpdate.Parameters.AddWithValue("@Blocks", lineup.blocks);
@@ -2091,8 +2114,9 @@ namespace NBAdbToolbox
                     TeamBoxUpdate.Parameters.AddWithValue("@FG2A", team.statistics.fieldGoalsAttempted - team.statistics.threePointersAttempted);
                     if ((double)(team.statistics.fieldGoalsAttempted - team.statistics.threePointersAttempted) != 0)
                     {
-                        TeamBoxUpdate.Parameters.AddWithValue("@FG2pct", (double)(team.statistics.fieldGoalsMade - team.statistics.threePointersMade) /
-                        (double)(team.statistics.fieldGoalsAttempted - team.statistics.threePointersAttempted));
+                        TeamBoxUpdate.Parameters.AddWithValue("@FG2pct", 
+                        Math.Round((double)(team.statistics.fieldGoalsMade - team.statistics.threePointersMade) /
+                        (double)(team.statistics.fieldGoalsAttempted - team.statistics.threePointersAttempted), 4));
                     }
                     else
                     {
@@ -2111,11 +2135,11 @@ namespace NBAdbToolbox
                     TeamBoxUpdate.Parameters.AddWithValue("@Turnovers", team.statistics.turnovers);
                     if (team.statistics.turnovers > 0)
                     {
-                        TeamBoxUpdate.Parameters.AddWithValue("@AtoR", (double)(team.statistics.assists) / (double)(team.statistics.turnovers));
+                        TeamBoxUpdate.Parameters.AddWithValue("@AtoR", Math.Round((double)(team.statistics.assists) / (double)(team.statistics.turnovers), 3));
                     }
                     else
                     {
-                        TeamBoxUpdate.Parameters.AddWithValue("@AtoR", 999);
+                        TeamBoxUpdate.Parameters.AddWithValue("@AtoR", 99);
                     }
                     TeamBoxUpdate.Parameters.AddWithValue("@Steals", team.statistics.steals);
                     TeamBoxUpdate.Parameters.AddWithValue("@Blocks", team.statistics.blocks);
@@ -2141,8 +2165,29 @@ namespace NBAdbToolbox
                 TeamBoxInsert.Parameters.AddWithValue("@MatchupID", MatchupID);
                 if (procedure == "TeamBoxLineupInsertHistoric")
                 {
+                    int minutes = 0;
+                    int seconds = 0;
                     TeamBoxInsert.Parameters.AddWithValue("@Unit", lineup.unit.Substring(0, 1).ToUpper() + lineup.unit.Substring(1));
-                    TeamBoxInsert.Parameters.AddWithValue("@Minutes", lineup.minutes + ".00");
+                    if (lineup.unit == "bench")
+                    {
+                        for (int i = 0; i < team.players.Count; i++)
+                        {
+                            if (team.players[i].position == "" && team.players[i].statistics.minutes != "")
+                            {
+                                minutes += Int32.Parse(team.players[i].statistics.minutes.Remove(team.players[i].statistics.minutes.IndexOf(":")));
+                                seconds += Int32.Parse(team.players[i].statistics.minutes.Substring(team.players[i].statistics.minutes.IndexOf(":") + 1));
+                            }
+                        }
+                        double secondsDiv = (double)seconds % 60;
+                        double minutesWhole = Math.Floor((double)(seconds / 60));
+                        minutes += (int)(minutesWhole);
+                        seconds = (int)secondsDiv;
+                        TeamBoxInsert.Parameters.AddWithValue("@Minutes", minutes + ":" + seconds + ".00");
+                    }
+                    else
+                    {
+                        TeamBoxInsert.Parameters.AddWithValue("@Minutes", lineup.minutes + ".00");
+                    }
                     TeamBoxInsert.Parameters.AddWithValue("@FGM", lineup.fieldGoalsMade);
                     TeamBoxInsert.Parameters.AddWithValue("@FGA", lineup.fieldGoalsAttempted);
                     TeamBoxInsert.Parameters.AddWithValue("@FGpct", lineup.fieldGoalsPercentage);
@@ -2150,8 +2195,8 @@ namespace NBAdbToolbox
                     TeamBoxInsert.Parameters.AddWithValue("@FG2A", lineup.fieldGoalsAttempted - lineup.threePointersAttempted);
                     if ((double)(lineup.fieldGoalsAttempted - lineup.threePointersAttempted) != 0)
                     {
-                        TeamBoxInsert.Parameters.AddWithValue("@FG2pct", (double)(lineup.fieldGoalsMade - lineup.threePointersMade) /
-                        (double)(lineup.fieldGoalsAttempted - lineup.threePointersAttempted));
+                        TeamBoxInsert.Parameters.AddWithValue("@FG2pct", Math.Round((double)(lineup.fieldGoalsMade - lineup.threePointersMade) /
+                        (double)(lineup.fieldGoalsAttempted - lineup.threePointersAttempted), 4));
                     }
                     else
                     {
@@ -2168,13 +2213,13 @@ namespace NBAdbToolbox
                     TeamBoxInsert.Parameters.AddWithValue("@RebT", lineup.reboundsTotal);
                     TeamBoxInsert.Parameters.AddWithValue("@Assists", lineup.assists);
                     TeamBoxInsert.Parameters.AddWithValue("@Turnovers", lineup.turnovers);
-                    if (team.statistics.turnovers > 0)
+                    if (lineup.turnovers > 0)
                     {
-                        TeamBoxInsert.Parameters.AddWithValue("@AtoR", (double)(lineup.assists) / (double)(lineup.turnovers));
+                        TeamBoxInsert.Parameters.AddWithValue("@AtoR", Math.Round((double)(lineup.assists) / (double)(lineup.turnovers), 3));
                     }
                     else
                     {
-                        TeamBoxInsert.Parameters.AddWithValue("@AtoR", 999);
+                        TeamBoxInsert.Parameters.AddWithValue("@AtoR", 99);
                     }
                     TeamBoxInsert.Parameters.AddWithValue("@Steals", lineup.steals);
                     TeamBoxInsert.Parameters.AddWithValue("@Blocks", lineup.blocks);
@@ -2192,8 +2237,8 @@ namespace NBAdbToolbox
                     TeamBoxInsert.Parameters.AddWithValue("@FG2A", team.statistics.fieldGoalsAttempted - team.statistics.threePointersAttempted);
                     if ((double)(team.statistics.fieldGoalsAttempted - team.statistics.threePointersAttempted) != 0)
                     {
-                        TeamBoxInsert.Parameters.AddWithValue("@FG2pct", (double)(team.statistics.fieldGoalsMade - team.statistics.threePointersMade) /
-                        (double)(team.statistics.fieldGoalsAttempted - team.statistics.threePointersAttempted));
+                        TeamBoxInsert.Parameters.AddWithValue("@FG2pct", Math.Round((double)(team.statistics.fieldGoalsMade - team.statistics.threePointersMade) /
+                        (double)(team.statistics.fieldGoalsAttempted - team.statistics.threePointersAttempted), 4));
                     }
                     else
                     {
@@ -2212,11 +2257,11 @@ namespace NBAdbToolbox
                     TeamBoxInsert.Parameters.AddWithValue("@Turnovers", team.statistics.turnovers);
                     if (team.statistics.turnovers > 0)
                     {
-                        TeamBoxInsert.Parameters.AddWithValue("@AtoR", (double)(team.statistics.assists) / (double)(team.statistics.turnovers));
+                        TeamBoxInsert.Parameters.AddWithValue("@AtoR", Math.Round((double)(team.statistics.assists) / (double)(team.statistics.turnovers), 3));
                     }
                     else
                     {
-                        TeamBoxInsert.Parameters.AddWithValue("@AtoR", 999);
+                        TeamBoxInsert.Parameters.AddWithValue("@AtoR", 99);
                     }
                     TeamBoxInsert.Parameters.AddWithValue("@Steals", team.statistics.steals);
                     TeamBoxInsert.Parameters.AddWithValue("@Blocks", team.statistics.blocks);
