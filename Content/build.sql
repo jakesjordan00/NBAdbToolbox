@@ -503,7 +503,51 @@ insert into Game values(
 @Datetime			)
 ~~~
 
-create procedure TeamBoxInsert
+create procedure TeamBoxCheck 
+@SeasonID      int,
+@GameID        int,
+@TeamID        int,
+@MatchupID     int
+as
+select SeasonID, GameID, TeamID, Points, PointsAgainst
+from TeamBox t
+where t.SeasonID = @SeasonID and t.GameID = @GameID and t.TeamID = @TeamID and t.MatchupID = @MatchupID
+~~~
+
+
+create procedure TeamBoxUpdateHistoric 
+@SeasonID int, @GameID int, @TeamID int, @MatchupID int, @FGM int, @FGA int, @FGpct float, @FG2M int, @FG2A int, @FG2pct float, 
+@FG3M int, @FG3A int, @FG3pct float, @FTM int, @FTA int, @FTpct float, @RebD int, @RebO int, @RebT int, @Assists int, 
+@Turnovers int, @AtoR float, @Steals int, @Blocks int, @Points int, @PointsAgainst int, @FoulsPersonal int
+as
+update TeamBox set 
+FGM					=	@FGM           ,
+FGA					=	@FGA           ,
+[FG%]				=	@FGpct         ,
+FG2M				=	@FG2M          ,
+FG2A				=	@FG2A          ,
+[FG2%]				=	@FG2pct        ,
+FG3M				=	@FG3M          ,
+FG3A				=	@FG3A          ,
+[FG3%]				=	@FG3pct        ,
+FTM					=	@FTM           ,
+FTA					=	@FTA           ,
+[FT%]				=	@FTpct         ,
+ReboundsDefensive   =	@RebD          ,
+ReboundsOffensive   =	@RebO          ,
+ReboundsTotal       =	@RebT          ,
+Assists				=	@Assists       ,
+Turnovers			=	@Turnovers     ,
+AssistsTurnoverRatio=	@AtoR          ,
+Steals				=	@Steals        ,
+Blocks				=	@Blocks        ,
+Points				=	@Points        ,
+PointsAgainst		=	@PointsAgainst ,
+FoulsPersonal		=	@FoulsPersonal 
+where SeasonID = @SeasonID and GameID = @GameID and TeamID = @TeamID and MatchupID = @MatchupID
+~~~
+
+create procedure TeamBoxInsertHistoric
 @SeasonID      int,
 @GameID        int,
 @TeamID        int,
@@ -532,7 +576,8 @@ create procedure TeamBoxInsert
 @PointsAgainst int,
 @FoulsPersonal int
 as
-insert into TeamBox(SeasonID, GameID, TeamID, MatchupID, FGM, FGA, [FG%], FG2M, FG2A, [FG2%], FG3M, FG3A, [FG3%], FTM, FTA, [FT%], RebD, RebO, RebT, Assists, Turnovers, AtoR, Steals, Blocks, Points, PointsAgainst, FoulsPersonal)
+insert into TeamBox(SeasonID, GameID, TeamID, MatchupID, FGM, FGA, [FG%], FG2M, FG2A, [FG2%], FG3M, FG3A, [FG3%], FTM, FTA, [FT%], 
+ReboundsDefensive, ReboundsOffensive, ReboundsTotal, Assists, Turnovers, AssistsTurnoverRatio, Steals, Blocks, Points, PointsAgainst, FoulsPersonal)
 values(
 @SeasonID,
 @GameID,
@@ -562,5 +607,6 @@ values(
 @PointsAgainst,
 @FoulsPersonal)
 ~~~
+
 
 */
