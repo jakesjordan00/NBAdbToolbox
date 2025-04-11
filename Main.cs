@@ -18,6 +18,7 @@ using System.Diagnostics;
 using static NBAdbToolbox.Main;
 using System.Data.SqlTypes;
 using System.Drawing.Drawing2D;
+using System.Globalization;
 
 namespace NBAdbToolbox
 {
@@ -372,9 +373,9 @@ namespace NBAdbToolbox
                     lblWorkingOn.AutoSize = true;
                     lblWorkingOn.Top = lblSeasonStatusLoadInfo.Bottom; 
                     Stopwatch stopwatchFull = Stopwatch.StartNew();
-                    Stopwatch stopwatch = Stopwatch.StartNew();
                     foreach (int season in seasons)
                     {
+                        Stopwatch stopwatch = Stopwatch.StartNew();
                         completionMessage += season + ": ";
                         lblStatus.Text = "Loading " + season + " season...";
                         CenterElement(pnlWelcome, lblStatus);
@@ -444,12 +445,20 @@ namespace NBAdbToolbox
                             }
                             iterator++;
                         }
+                        stopwatch.Stop();
                         TimeSpan timeElapsedSeason = stopwatch.Elapsed;
-                        string elapsedStringSeason = timeElapsedSeason.Hours + ":" + timeElapsedSeason.Minutes + ":" + timeElapsedSeason.Seconds + "." + timeElapsedSeason.Milliseconds;
+                        Dictionary<string, int> timeUnitsSeason = new Dictionary<string, int>
+                        {
+                            { "h", timeElapsedSeason.Hours },
+                            { "m", timeElapsedSeason.Minutes },
+                            { "s", timeElapsedSeason.Seconds },
+                            { "ms", timeElapsedSeason.Milliseconds }
+                        };
+                        string elapsedStringSeason = CheckTime(timeUnitsSeason);
                         //completionMessage += (iterator - regGames) + " postseason games loaded successfully.\n";
 
                         completionMessage += elapsedStringSeason + ". ";
-                        completionMessage += iterator + " games loaded. " + regGames + " RS, " + (iterator - regGames) + " PS.\n";
+                        completionMessage += iterator + " games, " + regGames + "/" + (iterator - regGames) + "\n";
                         lblWorkingOn.Text = completionMessage;
                         fontSize = ((float)(pnlLoad.Height * .04) / (96 / 12)) * (72 / 12);
                         lblWorkingOn.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Regular, pnlLoad, lblWorkingOn);
@@ -464,10 +473,15 @@ namespace NBAdbToolbox
                     stopwatchFull.Stop();
                     DateTime end = DateTime.Now;
                     TimeSpan timeElapsed = stopwatchFull.Elapsed;
-                    string elapsedString = timeElapsed.Hours + ":" + timeElapsed.Minutes + ":" + timeElapsed.Seconds + "." + timeElapsed.Milliseconds;
-                    //For example:  2022 season: 00:04:12.123. 2023 season: 00:03:54.636. 
-                    //lblTimeElapsed.Text += seasons[i].Split('-')[2] + " season: " + timeElapsed.Hours + ":" + timeElapsed.Minutes + ":" +
-                    //timeElapsed.Seconds + "." + timeElapsed.Milliseconds + ". ";
+                    Dictionary<string, int> timeUnits = new Dictionary<string, int>
+                        {
+                            { "h", timeElapsed.Hours },
+                            { "m", timeElapsed.Minutes },
+                            { "s", timeElapsed.Seconds },
+                            { "ms", timeElapsed.Milliseconds }
+                        };
+                    //string elapsedString = timeElapsed.Hours + ":" + timeElapsed.Minutes + ":" + timeElapsed.Seconds + "." + timeElapsed.Milliseconds;
+                    string elapsedString = CheckTime(timeUnits);
                     btnPopulate.Enabled = true;
                     btnEdit.Enabled = true;
                     listSeasons.Enabled = true;
@@ -840,7 +854,6 @@ namespace NBAdbToolbox
                 }
             };
         }
-
 
 
 
@@ -1497,10 +1510,37 @@ namespace NBAdbToolbox
 
 
 
+        public string CheckTime(Dictionary<string, int> timeUnits)
+        {
+            string returnString = "";
+            foreach (KeyValuePair<string, int> pair in timeUnits)
+            {
+                if (pair.Value != 0)
+                {
+                    if (pair.Value < 10 && pair.Key != "ms")
+                    {
+                        returnString += "0" + pair.Value + pair.Key;
+                    }
+                    else if (pair.Value < 100 && pair.Key == "ms")
+                    {
+                        returnString += "0" + pair.Value + pair.Key;
+                    }
+                    else if (pair.Value >= 100 && pair.Key == "ms")
+                    {
+                        returnString += pair.Value + pair.Key;
+                    }
+                    else if (pair.Value >= 10 && pair.Key != "ms")
+                    {
+                        returnString += pair.Value + pair.Key;
+                    }
+                }
+            }
+            return returnString;
+        }
         public async Task ReadSeasonFile(int season, bool bHistoric, bool bCurrent)
         {
             string filePath = Path.Combine(projectRoot, "Content\\", "dbconfig.json");
-            filePath = filePath.Replace("dbconfig.json", "Historic Data\\");              //REMOVE TEST WHEN DONE TESTING
+            filePath = filePath.Replace("dbconfig.json", "Historic Data\\test\\");              //REMOVE TEST WHEN DONE TESTING
             if (bHistoric || (!bHistoric && !bCurrent))
             {
                 int iter = (season == 2012 || season == 2019 || season == 2020 || season == 2024) ? 3 : 4;
@@ -1561,7 +1601,8 @@ namespace NBAdbToolbox
             //PlayerBox
             //PlayerBoxStaging(game, season);
 
-
+            //PlayByPlay
+            PlayByPlayStaging(game.playByPlay, season);
         }
         //Team methods
         #region Team Methods
@@ -2351,6 +2392,7 @@ namespace NBAdbToolbox
                     }
                     else
                     {
+                        reader.Read();
                         if (reader.GetString(4) != player.statistics.minutes)
                         {
                             SQLdb.Close();
@@ -2363,7 +2405,6 @@ namespace NBAdbToolbox
                     }
                 }
             }
-
         }
         public void PlayerBoxUpdate(NBAdbToolboxHistoric.Game game, NBAdbToolboxHistoric.Player player, int TeamID, int season, string procedure)
         {
@@ -2474,6 +2515,83 @@ namespace NBAdbToolbox
             }
 
         }
+        #endregion
+
+
+
+        //PlayByPlay methods
+        #region PlayByPlay Methods
+        public void PlayByPlayStaging(NBAdbToolboxHistoric.PlayByPlay pbp, int season)
+        {
+            string instructions = PlayByPlayCheck(pbp, season, "PlayByPlayCheckHistorical");
+            int actions = pbp.actions.Count;
+            int start = 0;
+            if (instructions.Contains("Update"))
+            {
+                start = Int32.Parse(instructions.Substring(instructions.IndexOf("-") + 1));
+                instructions = "Insert";
+            }
+
+            for (int i = start; i < actions; i++)
+            {
+                if (instructions == "Insert")
+                {
+                    PlayByPlayInsert(pbp.actions[i], season, "PlayByPlayInsertHistorical");
+                }
+                if (instructions.Contains("Update"))
+                {
+                    PlayByPlayUpdate(pbp.actions[i], season, "PlayByPlayUpdateHistorical");
+                }
+            }
+
+
+        }
+        public string PlayByPlayCheck(NBAdbToolboxHistoric.PlayByPlay pbp, int season, string procedure)
+        {
+            using (SqlCommand PlayByPlayCheck = new SqlCommand(procedure))
+            {
+                PlayByPlayCheck.Connection = SQLdb;
+                PlayByPlayCheck.CommandType = CommandType.StoredProcedure;
+                PlayByPlayCheck.Parameters.AddWithValue("@SeasonID", season);
+                PlayByPlayCheck.Parameters.AddWithValue("@GameID", Int32.Parse(pbp.gameId));
+                using (SqlDataAdapter sTeamSearch = new SqlDataAdapter())
+                {
+                    PlayByPlayCheck.Connection = SQLdb;
+                    sTeamSearch.SelectCommand = PlayByPlayCheck;
+                    SQLdb.Open();
+                    SqlDataReader reader = PlayByPlayCheck.ExecuteReader();
+                    if (!reader.HasRows)
+                    {
+                        SQLdb.Close();
+                        return "Insert"; //True means we insert
+                    }
+                    else
+                    {
+                        reader.Read();
+                        if (reader.GetInt32(2) != pbp.actions.Count)
+                        {
+                            SQLdb.Close();
+                            return "Update  -" + (reader.GetInt32(3) - 1);
+                        }
+                        else
+                        {
+                            SQLdb.Close();
+                            return "Skip";
+                        }
+                    }
+                }
+            }
+        }
+        public void PlayByPlayUpdate(NBAdbToolboxHistoric.Action action, int season, string procedure)
+        {
+
+        }
+        public void PlayByPlayInsert(NBAdbToolboxHistoric.Action action, int season, string procedure)
+        {
+
+        }
+
+
         #endregion
     }
 }

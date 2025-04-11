@@ -827,5 +827,15 @@ values(
 @Minutes)
 ~~~
 
+create procedure PlayByPlayCheckHistorical @SeasonID int, @GameID int
+as
+select p.SeasonID, p.GameID, count(p.GameID) Actions,
+(select max(actionNumber) from PlayByPlay b where p.GameID = b.GameID and p.SeasonID = b.SeasonID) LastAction
+
+
+from PlayByPlay p
+where p.SeasonID = @SeasonID and p.GameID = @GameID
+group by p.SeasonID, p.GameID
+~~~
 
 */
