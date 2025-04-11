@@ -2275,5 +2275,31 @@ namespace NBAdbToolbox
             }
         }
         #endregion
+
+
+        #region PlayerBox Methods
+
+        public void PlayerBoxStaging(NBAdbToolboxHistoric.Game game, int season)
+        {
+            foreach(NBAdbToolboxHistoric.Player player in game.box.homeTeam.players)
+            {
+                PlayerBoxCheck(game, player);
+            }
+
+        }
+        public void PlayerBoxCheck(NBAdbToolboxHistoric.Game game, NBAdbToolboxHistoric.Player player)
+        {
+
+        }
+        public void PlayerBoxUpdate()
+        {
+
+        }
+        public void PlayerBoxInsert()
+        {
+
+        }
+
+        #endregion
     }
 }
