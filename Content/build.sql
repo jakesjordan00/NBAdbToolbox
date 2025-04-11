@@ -719,4 +719,113 @@ values(
 @FoulsPersonal)
 ~~~
 
+
+create procedure PlayerBoxCheck 
+@SeasonID      int,
+@GameID        int,
+@TeamID        int,
+@PlayerID      int
+as
+select SeasonID, GameID, TeamID, PlayerID, Minutes
+from PlayerBox p
+where p.SeasonID = @SeasonID and p.GameID = @GameID and p.TeamID = @TeamID and p.PlayerID = @PlayerID
+~~~
+
+
+
+create procedure PlayerBoxUpdateHistoric 
+@SeasonID int, @GameID int, @TeamID int, @PlayerID int, @FGM int, @FGA int, @FGpct float, @FG2M int, @FG2A int, @FG2pct float, 
+@FG3M int, @FG3A int, @FG3pct float, @FTM int, @FTA int, @FTpct float, @RebD int, @RebO int, @RebT int, @Assists int, 
+@Turnovers int, @AtoR float, @Steals int, @Blocks int, @Points int, @FoulsPersonal int, @Minutes varchar(30)
+as
+update PlayerBox set 
+FGM					=	@FGM           ,
+FGA					=	@FGA           ,
+[FG%]				=	@FGpct         ,
+FG2M				=	@FG2M          ,
+FG2A				=	@FG2A          ,
+[FG2%]				=	@FG2pct        ,
+FG3M				=	@FG3M          ,
+FG3A				=	@FG3A          ,
+[FG3%]				=	@FG3pct        ,
+FTM					=	@FTM           ,
+FTA					=	@FTA           ,
+[FT%]				=	@FTpct         ,
+ReboundsDefensive   =	@RebD          ,
+ReboundsOffensive   =	@RebO          ,
+ReboundsTotal       =	@RebT          ,
+Assists				=	@Assists       ,
+Turnovers			=	@Turnovers     ,
+AssistsTurnoverRatio=	@AtoR          ,
+Steals				=	@Steals        ,
+Blocks				=	@Blocks        ,
+Points				=	@Points        ,
+FoulsPersonal		=	@FoulsPersonal ,
+Minutes			=	@Minutes
+where SeasonID = @SeasonID and GameID = @GameID and TeamID = @TeamID and PlayerID = @PlayerID
+~~~
+
+
+create procedure PlayerBoxInsertHistoric
+@SeasonID      int,
+@GameID        int,
+@TeamID        int,
+@PlayerID     int,
+@FGM           int,
+@FGA           int,
+@FGpct         float,
+@FG2M          int,
+@FG2A          int,
+@FG2pct        float,
+@FG3M          int,
+@FG3A          int,
+@FG3pct        float,
+@FTM           int,
+@FTA           int,
+@FTpct         float,
+@RebD          int,
+@RebO          int,
+@RebT          int,
+@Assists       int,
+@Turnovers     int,
+@AtoR          float,
+@Steals        int,
+@Blocks        int,
+@Points        int,
+@FoulsPersonal int,
+@Minutes	  varchar(30)
+as
+insert into PlayerBox(SeasonID, GameID, TeamID, PlayerID, FGM, FGA, [FG%], FG2M, FG2A, [FG2%], FG3M, FG3A, [FG3%], FTM, FTA, [FT%], 
+ReboundsDefensive, ReboundsOffensive, ReboundsTotal, Assists, Turnovers, AssistsTurnoverRatio, Steals, Blocks, Points, FoulsPersonal, Minutes)
+values(
+@SeasonID,
+@GameID,
+@TeamID,
+@PlayerID,
+@FGM,
+@FGA,
+@FGpct,
+@FG2M,
+@FG2A,
+@FG2pct,
+@FG3M,
+@FG3A,
+@FG3pct,
+@FTM,
+@FTA,
+@FTpct,
+@RebD,
+@RebO,
+@RebT,
+@Assists,
+@Turnovers,
+@AtoR,
+@Steals,
+@Blocks,
+@Points,
+@FoulsPersonal,
+@Minutes)
+~~~
+
+
 */

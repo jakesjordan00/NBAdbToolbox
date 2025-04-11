@@ -1,7 +1,7 @@
 {
   "Server": "71.251.236.14",
   "Create": false,
-  "Database": "nbadb01",
+  "Database": "nba0TestData",
   "Username": "test",
   "Password": "test123"
 }

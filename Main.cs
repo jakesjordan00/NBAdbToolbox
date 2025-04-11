@@ -123,7 +123,7 @@ namespace NBAdbToolbox
         };
         public Label lblWorkingOn = new Label
         {
-            Text = "Currently working on: ",
+            Text = "",
             Visible = false
         };
         public Label lblWorkingOnInfo = new Label
@@ -259,7 +259,8 @@ namespace NBAdbToolbox
 
 
             //This should be second to last i believe.
-            //Children elements should go above the parents, background image should be last added.        
+            //Children elements should go above the parents, background image should be last added.      
+            AddPanelElement(pnlLoad, lblWorkingOn);
             AddPanelElement(pnlLoad, lblCurrentGameCount);
             AddPanelElement(pnlLoad, lblCurrentGame);
             AddPanelElement(pnlLoad, lblSeasonStatusLoadInfo);
@@ -364,7 +365,14 @@ namespace NBAdbToolbox
                     lblSeasonStatusLoad.Visible = true;
                     lblSeasonStatusLoadInfo.Visible = true;
                     picLoad.Visible = true;
-                    //Stopwatch stopwatch = Stopwatch.StartNew();
+                    lblWorkingOn.Visible = true;
+                    fontSize = ((float)(pnlLoad.Height * .04) / (96 / 12)) * (72 / 12);
+                    lblWorkingOn.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Regular, pnlLoad, lblWorkingOn);
+                    lblWorkingOn.Left = picLoad.Right - (int)(picLoad.Width / 6);
+                    lblWorkingOn.AutoSize = true;
+                    lblWorkingOn.Top = lblSeasonStatusLoadInfo.Bottom; 
+                    Stopwatch stopwatchFull = Stopwatch.StartNew();
+                    Stopwatch stopwatch = Stopwatch.StartNew();
                     foreach (int season in seasons)
                     {
                         completionMessage += season + ": ";
@@ -410,7 +418,6 @@ namespace NBAdbToolbox
                             }
                             iterator++;
                         }
-                        completionMessage += iterator + " regular season and ";
                         int regGames = iterator;
                         lblSeasonStatusLoadInfo.Text = season + " Postseason";
                         foreach (NBAdbToolboxHistoric.Game game in root.season.games.playoffs)
@@ -437,21 +444,49 @@ namespace NBAdbToolbox
                             }
                             iterator++;
                         }
-                        completionMessage += (iterator - regGames) + " postseason games loaded successfully.\n";
+                        TimeSpan timeElapsedSeason = stopwatch.Elapsed;
+                        string elapsedStringSeason = timeElapsedSeason.Hours + ":" + timeElapsedSeason.Minutes + ":" + timeElapsedSeason.Seconds + "." + timeElapsedSeason.Milliseconds;
+                        //completionMessage += (iterator - regGames) + " postseason games loaded successfully.\n";
+
+                        completionMessage += elapsedStringSeason + ". ";
+                        completionMessage += iterator + " games loaded. " + regGames + " RS, " + (iterator - regGames) + " PS.\n";
+                        lblWorkingOn.Text = completionMessage;
+                        fontSize = ((float)(pnlLoad.Height * .04) / (96 / 12)) * (72 / 12);
+                        lblWorkingOn.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Regular, pnlLoad, lblWorkingOn);
+                        lblWorkingOn.AutoSize = true;
+                        lblWorkingOn.Left = picLoad.Right - (int)(picLoad.Width / 5);
+                        lblWorkingOn.Top = lblSeasonStatusLoadInfo.Bottom;
+
 
                         teamsDone = false;
                         arenasDone = false;
                     }
+                    stopwatchFull.Stop();
+                    DateTime end = DateTime.Now;
+                    TimeSpan timeElapsed = stopwatchFull.Elapsed;
+                    string elapsedString = timeElapsed.Hours + ":" + timeElapsed.Minutes + ":" + timeElapsed.Seconds + "." + timeElapsed.Milliseconds;
+                    //For example:  2022 season: 00:04:12.123. 2023 season: 00:03:54.636. 
+                    //lblTimeElapsed.Text += seasons[i].Split('-')[2] + " season: " + timeElapsed.Hours + ":" + timeElapsed.Minutes + ":" +
+                    //timeElapsed.Seconds + "." + timeElapsed.Milliseconds + ". ";
                     btnPopulate.Enabled = true;
                     btnEdit.Enabled = true;
                     listSeasons.Enabled = true;
                     lblStatus.Text = "Welcome Back!";
                     CenterElement(pnlWelcome, lblStatus);
-                    lblCurrentGame.Text = completionMessage;
+                    lblCurrentGame.Text = "Total time elapsed: " + elapsedString;
                     lblCurrentGame.ForeColor = Color.Green;
                     fontSize = ((float)(pnlLoad.Height * .05) / (96 / 12)) * (72 / 12);
                     lblCurrentGame.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Regular, pnlLoad, lblCurrentGame);
                     lblCurrentGame.AutoSize = true;
+
+                    lblSeasonStatusLoadInfo.Text = "";
+                    lblSeasonStatusLoadInfo.Visible = false;
+                    //lblSeasonStatusLoadInfo.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Regular, pnlLoad, lblSeasonStatusLoadInfo);
+                    //lblSeasonStatusLoadInfo.Top = lblCurrentGame.Bottom;
+                    //lblSeasonStatusLoadInfo.Left = 4;
+                    //lblSeasonStatusLoadInfo.AutoSize = true;
+
+
                     lblCurrentGameCount.Text = "";
                     lblCurrentGameCount.Visible = false;
                     lblSeasonStatusLoad.Text = "Done! Check your SQL db";
@@ -459,8 +494,9 @@ namespace NBAdbToolbox
                     fontSize = ((float)(pnlLoad.Height * .08) / (96 / 12)) * (72 / 12);
                     lblSeasonStatusLoad.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Regular, pnlLoad, lblSeasonStatusLoad);
                     lblSeasonStatusLoad.AutoSize = true;
-                    lblSeasonStatusLoadInfo.Text = "";
-                    lblSeasonStatusLoadInfo.Visible = false;
+
+
+                    lblWorkingOn.Top = 0;
                 }
             };
 
@@ -866,8 +902,8 @@ namespace NBAdbToolbox
 
                 while (fontSize > 1)
                 {
-                    Font testFont = new Font(baseFont.FontFamily, fontSize, baseFont.Style);
-                    SizeF size = g.MeasureString(text, testFont);
+                    Font newFont = new Font(baseFont.FontFamily, fontSize, baseFont.Style);
+                    SizeF size = g.MeasureString(text, newFont);
 
                     if (size.Width <= targetWidth)
                         return fontSize;
@@ -1464,7 +1500,7 @@ namespace NBAdbToolbox
         public async Task ReadSeasonFile(int season, bool bHistoric, bool bCurrent)
         {
             string filePath = Path.Combine(projectRoot, "Content\\", "dbconfig.json");
-            filePath = filePath.Replace("dbconfig.json", "Historic Data\\");
+            filePath = filePath.Replace("dbconfig.json", "Historic Data\\");              //REMOVE TEST WHEN DONE TESTING
             if (bHistoric || (!bHistoric && !bCurrent))
             {
                 int iter = (season == 2012 || season == 2019 || season == 2020 || season == 2024) ? 3 : 4;
@@ -1516,12 +1552,14 @@ namespace NBAdbToolbox
             {
                 OfficialCheck(official, season);
             }
-            //Players
-            PlayerStaging(game, season);
             //Games
             GameCheck(game, season, sender);
+            //Players
+            PlayerStaging(game, season);
             //TeamBox
             TeamBoxStaging(game, season);
+            //PlayerBox
+            //PlayerBoxStaging(game, season);
 
 
         }
@@ -1725,6 +1763,123 @@ namespace NBAdbToolbox
         }
         #endregion
 
+        //Game methods
+        #region Game Methods
+        public void GameCheck(NBAdbToolboxHistoric.Game game, int season, string sender)
+        {
+            using (SqlCommand GameCheck = new SqlCommand("GameCheck"))
+            {
+                GameCheck.CommandType = CommandType.StoredProcedure;
+                GameCheck.Parameters.AddWithValue("@GameID", game.game_id);
+                GameCheck.Parameters.AddWithValue("@SeasonID", season);
+                using (SqlDataAdapter sGameSearch = new SqlDataAdapter())
+                {
+                    GameCheck.Connection = SQLdb;
+                    sGameSearch.SelectCommand = GameCheck;
+                    SQLdb.Open();
+                    SqlDataReader reader = GameCheck.ExecuteReader();
+                    reader.Read();
+                    if (!reader.HasRows)
+                    {
+                        SQLdb.Close();
+                        GameInsert(game, season, sender);
+                    }
+                    else
+                    {
+                        if (reader.GetInt32(5) != game.box.homeTeam.score || reader.GetInt32(7) != game.box.awayTeam.score)
+                        {
+                            SQLdb.Close();
+                            GameUpdate(game, season, sender);
+                        }
+                        else
+                        {
+                            SQLdb.Close();
+                        }
+                    }
+                }
+            }
+
+        }
+        public void GameUpdate(NBAdbToolboxHistoric.Game game, int season, string sender)
+        {
+            using (SqlCommand GameUpdate = new SqlCommand("GameUpdate"))
+            {
+                GameUpdate.Connection = SQLdb;
+                GameUpdate.CommandType = CommandType.StoredProcedure;
+                GameUpdate.Parameters.AddWithValue("@SeasonID", season);
+                GameUpdate.Parameters.AddWithValue("@GameID", game.game_id);
+                GameUpdate.Parameters.AddWithValue("@HomeID", game.box.homeTeamId);
+                GameUpdate.Parameters.AddWithValue("@AwayID", game.box.awayTeamId);
+                GameUpdate.Parameters.AddWithValue("@HScore", game.box.homeTeam.score);
+                GameUpdate.Parameters.AddWithValue("@AScore", game.box.awayTeam.score);
+                if (game.box.homeTeam.score > game.box.awayTeam.score)
+                {
+                    GameUpdate.Parameters.AddWithValue("@WinnerID", game.box.homeTeamId);
+                    GameUpdate.Parameters.AddWithValue("@LoserID", game.box.awayTeamId);
+                    GameUpdate.Parameters.AddWithValue("@WScore", game.box.homeTeam.score);
+                    GameUpdate.Parameters.AddWithValue("@LScore", game.box.awayTeam.score);
+                }
+                else
+                {
+                    GameUpdate.Parameters.AddWithValue("@WinnerID", game.box.awayTeamId);
+                    GameUpdate.Parameters.AddWithValue("@LoserID", game.box.homeTeamId);
+                    GameUpdate.Parameters.AddWithValue("@WScore", game.box.awayTeam.score);
+                    GameUpdate.Parameters.AddWithValue("@LScore", game.box.homeTeam.score);
+                }
+                SQLdb.Open();
+                GameUpdate.ExecuteScalar();
+                SQLdb.Close();
+            }
+
+        }
+        public void GameInsert(NBAdbToolboxHistoric.Game game, int season, string sender)
+        {
+            using (SqlCommand GameInsert = new SqlCommand("GameInsert"))
+            {
+                GameInsert.Connection = SQLdb;
+                GameInsert.CommandType = CommandType.StoredProcedure;
+                GameInsert.Parameters.AddWithValue("@SeasonID", season);
+                GameInsert.Parameters.AddWithValue("@GameID", game.game_id);
+                GameInsert.Parameters.AddWithValue("@Date", SqlDateTime.Parse(game.box.gameEt.Remove(game.box.gameEt.IndexOf('T'))));
+                GameInsert.Parameters.AddWithValue("@HomeID", game.box.homeTeamId);
+                GameInsert.Parameters.AddWithValue("@HScore", game.box.homeTeam.score);
+                GameInsert.Parameters.AddWithValue("@AwayID", game.box.awayTeamId);
+                GameInsert.Parameters.AddWithValue("@AScore", game.box.awayTeam.score);
+                if (game.box.homeTeam.score > game.box.awayTeam.score)
+                {
+                    GameInsert.Parameters.AddWithValue("@WinnerID", game.box.homeTeamId);
+                    GameInsert.Parameters.AddWithValue("@WScore", game.box.homeTeam.score);
+                    GameInsert.Parameters.AddWithValue("@LoserID", game.box.awayTeamId);
+                    GameInsert.Parameters.AddWithValue("@LScore", game.box.awayTeam.score);
+                }
+                else
+                {
+                    GameInsert.Parameters.AddWithValue("@WinnerID", game.box.awayTeamId);
+                    GameInsert.Parameters.AddWithValue("@WScore", game.box.awayTeam.score);
+                    GameInsert.Parameters.AddWithValue("@LoserID", game.box.homeTeamId);
+                    GameInsert.Parameters.AddWithValue("@LScore", game.box.homeTeam.score);
+                }
+                if (sender == "Regular Season")
+                {
+                    GameInsert.Parameters.AddWithValue("@GameType", "RS");
+                    GameInsert.Parameters.AddWithValue("@SeriesID", SqlString.Null);
+                }
+                else
+                {
+                    GameInsert.Parameters.AddWithValue("@GameType", "PS");
+                    GameInsert.Parameters.AddWithValue("@SeriesID", "placeholder");
+                }
+                SqlDateTime datetime = SqlDateTime.Parse(game.box.gameTimeUTC);
+                GameInsert.Parameters.AddWithValue("@Label", game.box.gameLabel);
+                GameInsert.Parameters.AddWithValue("@LabelDetail", game.box.gameSubLabel);
+                GameInsert.Parameters.AddWithValue("@Datetime", datetime);
+                SQLdb.Open();
+                GameInsert.ExecuteScalar();
+                SQLdb.Close();
+            }
+        }
+        #endregion
+
         //Player methods
         #region Player Methods
         public void PlayerStaging(NBAdbToolboxHistoric.Game game, int season)
@@ -1735,12 +1890,12 @@ namespace NBAdbToolbox
                 if (index == -1)
                 {
                     PlayerCheck(player, season, "");
-
                 }
                 else
                 {
                     PlayerCheck(player, season, game.box.homeTeamPlayers[index].jerseyNum);
                 }
+                PlayerBoxCheck(game, player, game.box.homeTeamId, season, "PlayerBoxCheck");
             }
             foreach (NBAdbToolboxHistoric.Player player in game.box.awayTeam.players)
             {//Away Team
@@ -1748,12 +1903,12 @@ namespace NBAdbToolbox
                 if (index == -1)
                 {
                     PlayerCheck(player, season, "");
-
                 }
                 else
                 {
                     PlayerCheck(player, season, game.box.awayTeamPlayers[index].jerseyNum);
                 }
+                PlayerBoxCheck(game, player, game.box.awayTeamId, season, "PlayerBoxCheck");
             }
 
         }
@@ -1826,123 +1981,6 @@ namespace NBAdbToolbox
                 PlayerInsert.Parameters.AddWithValue("@position", player.position);
                 SQLdb.Open();
                 PlayerInsert.ExecuteScalar();
-                SQLdb.Close();
-            }
-        }
-        #endregion
-
-        //Game methods
-        #region Game Methods
-        public void GameCheck(NBAdbToolboxHistoric.Game game, int season, string sender)
-        {
-            using (SqlCommand GameCheck = new SqlCommand("GameCheck"))
-            {
-                GameCheck.CommandType = CommandType.StoredProcedure;
-                GameCheck.Parameters.AddWithValue("@GameID", game.game_id);
-                GameCheck.Parameters.AddWithValue("@SeasonID", season);
-                using (SqlDataAdapter sGameSearch = new SqlDataAdapter())
-                {
-                    GameCheck.Connection = SQLdb;
-                    sGameSearch.SelectCommand = GameCheck;
-                    SQLdb.Open();
-                    SqlDataReader reader = GameCheck.ExecuteReader();
-                    reader.Read();
-                    if (!reader.HasRows)
-                    {
-                        SQLdb.Close();
-                        GameInsert(game, season, sender);
-                    }
-                    else
-                    {
-                        if (reader.GetInt32(5) != game.box.homeTeam.score || reader.GetInt32(7) != game.box.awayTeam.score)
-                        {
-                            SQLdb.Close();
-                            GameUpdate(game, season, sender);
-                        }
-                        else
-                        {
-                            SQLdb.Close();
-                        }
-                    }
-                }
-            }
-
-        }
-        public void GameUpdate(NBAdbToolboxHistoric.Game game, int season, string sender)
-        {
-            using (SqlCommand GameUpdate = new SqlCommand("GameUpdate"))
-            {
-                GameUpdate.Connection = SQLdb;
-                GameUpdate.CommandType = CommandType.StoredProcedure;
-                GameUpdate.Parameters.AddWithValue("@SeasonID", season);
-                GameUpdate.Parameters.AddWithValue("@GameID", game.game_id);
-                GameUpdate.Parameters.AddWithValue("@HomeID", game.box.homeTeamId);
-                GameUpdate.Parameters.AddWithValue("@AwayID", game.box.awayTeamId);
-                GameUpdate.Parameters.AddWithValue("@HScore", game.box.homeTeam.score);
-                GameUpdate.Parameters.AddWithValue("@AScore", game.box.awayTeam.score);
-                if(game.box.homeTeam.score > game.box.awayTeam.score)
-                {
-                    GameUpdate.Parameters.AddWithValue("@WinnerID", game.box.homeTeamId);
-                    GameUpdate.Parameters.AddWithValue("@LoserID", game.box.awayTeamId);
-                    GameUpdate.Parameters.AddWithValue("@WScore", game.box.homeTeam.score);
-                    GameUpdate.Parameters.AddWithValue("@LScore", game.box.awayTeam.score);
-                }
-                else
-                {
-                    GameUpdate.Parameters.AddWithValue("@WinnerID", game.box.awayTeamId);
-                    GameUpdate.Parameters.AddWithValue("@LoserID", game.box.homeTeamId);
-                    GameUpdate.Parameters.AddWithValue("@WScore", game.box.awayTeam.score);
-                    GameUpdate.Parameters.AddWithValue("@LScore", game.box.homeTeam.score);
-                }
-                SQLdb.Open();
-                GameUpdate.ExecuteScalar();
-                SQLdb.Close();
-            }
-
-        }
-        public void GameInsert(NBAdbToolboxHistoric.Game game, int season, string sender)
-        {
-            using (SqlCommand GameInsert = new SqlCommand("GameInsert"))
-            {
-                GameInsert.Connection = SQLdb;
-                GameInsert.CommandType = CommandType.StoredProcedure;
-                GameInsert.Parameters.AddWithValue("@SeasonID", season);
-                GameInsert.Parameters.AddWithValue("@GameID", game.game_id);
-                GameInsert.Parameters.AddWithValue("@Date", SqlDateTime.Parse(game.box.gameEt.Remove(game.box.gameEt.IndexOf('T'))));
-                GameInsert.Parameters.AddWithValue("@HomeID", game.box.homeTeamId);
-                GameInsert.Parameters.AddWithValue("@HScore", game.box.homeTeam.score);
-                GameInsert.Parameters.AddWithValue("@AwayID", game.box.awayTeamId);
-                GameInsert.Parameters.AddWithValue("@AScore", game.box.awayTeam.score);
-                if (game.box.homeTeam.score > game.box.awayTeam.score)
-                {
-                    GameInsert.Parameters.AddWithValue("@WinnerID", game.box.homeTeamId);
-                    GameInsert.Parameters.AddWithValue("@WScore", game.box.homeTeam.score);
-                    GameInsert.Parameters.AddWithValue("@LoserID", game.box.awayTeamId);
-                    GameInsert.Parameters.AddWithValue("@LScore", game.box.awayTeam.score);
-                }
-                else
-                {
-                    GameInsert.Parameters.AddWithValue("@WinnerID", game.box.awayTeamId);
-                    GameInsert.Parameters.AddWithValue("@WScore", game.box.awayTeam.score);
-                    GameInsert.Parameters.AddWithValue("@LoserID", game.box.homeTeamId);
-                    GameInsert.Parameters.AddWithValue("@LScore", game.box.homeTeam.score);
-                }
-                if (sender == "Regular Season")
-                {
-                    GameInsert.Parameters.AddWithValue("@GameType", "RS");
-                    GameInsert.Parameters.AddWithValue("@SeriesID", SqlString.Null);
-                }
-                else
-                {
-                    GameInsert.Parameters.AddWithValue("@GameType", "PS");
-                    GameInsert.Parameters.AddWithValue("@SeriesID", "placeholder");
-                }
-                SqlDateTime datetime = SqlDateTime.Parse(game.box.gameTimeUTC);
-                GameInsert.Parameters.AddWithValue("@Label", game.box.gameLabel);
-                GameInsert.Parameters.AddWithValue("@LabelDetail", game.box.gameSubLabel);
-                GameInsert.Parameters.AddWithValue("@Datetime", datetime);
-                SQLdb.Open();
-                GameInsert.ExecuteScalar();
                 SQLdb.Close();
             }
         }
@@ -2276,30 +2314,166 @@ namespace NBAdbToolbox
         }
         #endregion
 
-
+        //PlayerBox methods
         #region PlayerBox Methods
-
         public void PlayerBoxStaging(NBAdbToolboxHistoric.Game game, int season)
         {
             foreach(NBAdbToolboxHistoric.Player player in game.box.homeTeam.players)
             {
-                PlayerBoxCheck(game, player);
+                PlayerBoxCheck(game, player, game.box.homeTeamId, season, "PlayerBoxCheck");
+            }
+            foreach (NBAdbToolboxHistoric.Player player in game.box.awayTeam.players)
+            {
+                PlayerBoxCheck(game, player, game.box.awayTeamId, season, "PlayerBoxCheck");
             }
 
         }
-        public void PlayerBoxCheck(NBAdbToolboxHistoric.Game game, NBAdbToolboxHistoric.Player player)
+        public void PlayerBoxCheck(NBAdbToolboxHistoric.Game game, NBAdbToolboxHistoric.Player player, int TeamID, int season, string procedure)
         {
+            using (SqlCommand PlayerBoxCheck = new SqlCommand(procedure))
+            {
+                PlayerBoxCheck.Connection = SQLdb;
+                PlayerBoxCheck.CommandType = CommandType.StoredProcedure;
+                PlayerBoxCheck.Parameters.AddWithValue("@SeasonID", season);
+                PlayerBoxCheck.Parameters.AddWithValue("@GameID", Int32.Parse(game.game_id));
+                PlayerBoxCheck.Parameters.AddWithValue("@TeamID", TeamID);
+                PlayerBoxCheck.Parameters.AddWithValue("@PlayerID", player.personId);
+                using (SqlDataAdapter sTeamSearch = new SqlDataAdapter())
+                {
+                    PlayerBoxCheck.Connection = SQLdb;
+                    sTeamSearch.SelectCommand = PlayerBoxCheck;
+                    SQLdb.Open();
+                    SqlDataReader reader = PlayerBoxCheck.ExecuteReader();
+                    if (!reader.HasRows)
+                    {
+                        SQLdb.Close();
+                        PlayerBoxInsert(game, player, TeamID, season, "PlayerBoxInsertHistoric");
+                    }
+                    else
+                    {
+                        if (reader.GetString(4) != player.statistics.minutes)
+                        {
+                            SQLdb.Close();
+                            PlayerBoxUpdate(game, player, TeamID, season, "PlayerBoxUpdateHistoric");
+                        }
+                        else
+                        {
+                            SQLdb.Close();
+                        }
+                    }
+                }
+            }
 
         }
-        public void PlayerBoxUpdate()
+        public void PlayerBoxUpdate(NBAdbToolboxHistoric.Game game, NBAdbToolboxHistoric.Player player, int TeamID, int season, string procedure)
         {
+            using (SqlCommand PlayerBoxUpdate = new SqlCommand(procedure))
+            {
+                PlayerBoxUpdate.Connection = SQLdb;
+                PlayerBoxUpdate.CommandType = CommandType.StoredProcedure;
+                PlayerBoxUpdate.Parameters.AddWithValue("@SeasonID", season);
+                PlayerBoxUpdate.Parameters.AddWithValue("@GameID", Int32.Parse(game.game_id));
+                PlayerBoxUpdate.Parameters.AddWithValue("@TeamID", TeamID);
+                PlayerBoxUpdate.Parameters.AddWithValue("@PlayerID", player.personId);
+                PlayerBoxUpdate.Parameters.AddWithValue("@Minutes", player.statistics.minutes + ".00");
+                PlayerBoxUpdate.Parameters.AddWithValue("@FGM", player.statistics.fieldGoalsMade);
+                PlayerBoxUpdate.Parameters.AddWithValue("@FGA", player.statistics.fieldGoalsAttempted);
+                PlayerBoxUpdate.Parameters.AddWithValue("@FGpct", player.statistics.fieldGoalsPercentage);
+                PlayerBoxUpdate.Parameters.AddWithValue("@FG2M", player.statistics.fieldGoalsMade - player.statistics.threePointersMade);
+                PlayerBoxUpdate.Parameters.AddWithValue("@FG2A", player.statistics.fieldGoalsAttempted - player.statistics.threePointersAttempted);
+                if ((double)(player.statistics.fieldGoalsAttempted - player.statistics.threePointersAttempted) != 0)
+                {
+                    PlayerBoxUpdate.Parameters.AddWithValue("@FG2pct",
+                    Math.Round((double)(player.statistics.fieldGoalsMade - player.statistics.threePointersMade) /
+                    (double)(player.statistics.fieldGoalsAttempted - player.statistics.threePointersAttempted), 4));
+                }
+                else
+                {
+                    PlayerBoxUpdate.Parameters.AddWithValue("@FG2pct", 0);
+                }
+                PlayerBoxUpdate.Parameters.AddWithValue("@FG3M", player.statistics.threePointersMade);
+                PlayerBoxUpdate.Parameters.AddWithValue("@FG3A", player.statistics.threePointersAttempted);
+                PlayerBoxUpdate.Parameters.AddWithValue("@FG3pct", player.statistics.threePointersPercentage);
+                PlayerBoxUpdate.Parameters.AddWithValue("@FTM", player.statistics.freeThrowsMade);
+                PlayerBoxUpdate.Parameters.AddWithValue("@FTA", player.statistics.freeThrowsAttempted);
+                PlayerBoxUpdate.Parameters.AddWithValue("@FTpct", player.statistics.freeThrowsPercentage);
+                PlayerBoxUpdate.Parameters.AddWithValue("@RebD", player.statistics.reboundsDefensive);
+                PlayerBoxUpdate.Parameters.AddWithValue("@RebO", player.statistics.reboundsOffensive);
+                PlayerBoxUpdate.Parameters.AddWithValue("@RebT", player.statistics.reboundsTotal);
+                PlayerBoxUpdate.Parameters.AddWithValue("@Assists", player.statistics.assists);
+                PlayerBoxUpdate.Parameters.AddWithValue("@Turnovers", player.statistics.turnovers);
+                if (player.statistics.turnovers > 0)
+                {
+                    PlayerBoxUpdate.Parameters.AddWithValue("@AtoR", Math.Round((double)(player.statistics.assists) / (double)(player.statistics.turnovers), 3));
+                }
+                else
+                {
+                    PlayerBoxUpdate.Parameters.AddWithValue("@AtoR", 99);
+                }
+                PlayerBoxUpdate.Parameters.AddWithValue("@Steals", player.statistics.steals);
+                PlayerBoxUpdate.Parameters.AddWithValue("@Blocks", player.statistics.blocks);
+                PlayerBoxUpdate.Parameters.AddWithValue("@Points", player.statistics.points);
+                PlayerBoxUpdate.Parameters.AddWithValue("@FoulsPersonal", player.statistics.foulsPersonal);
+                SQLdb.Open();
+                PlayerBoxUpdate.ExecuteScalar();
+                SQLdb.Close();
+            }
+        }
+        public void PlayerBoxInsert(NBAdbToolboxHistoric.Game game, NBAdbToolboxHistoric.Player player, int TeamID, int season, string procedure)
+        {
+            using (SqlCommand PlayerBoxInsert = new SqlCommand(procedure))
+            {
+                PlayerBoxInsert.Connection = SQLdb;
+                PlayerBoxInsert.CommandType = CommandType.StoredProcedure;
+                PlayerBoxInsert.Parameters.AddWithValue("@SeasonID", season);
+                PlayerBoxInsert.Parameters.AddWithValue("@GameID", Int32.Parse(game.game_id));
+                PlayerBoxInsert.Parameters.AddWithValue("@TeamID", TeamID);
+                PlayerBoxInsert.Parameters.AddWithValue("@PlayerID", player.personId);
+                PlayerBoxInsert.Parameters.AddWithValue("@Minutes", player.statistics.minutes + ".00");
+                PlayerBoxInsert.Parameters.AddWithValue("@FGM", player.statistics.fieldGoalsMade);
+                PlayerBoxInsert.Parameters.AddWithValue("@FGA", player.statistics.fieldGoalsAttempted);
+                PlayerBoxInsert.Parameters.AddWithValue("@FGpct", player.statistics.fieldGoalsPercentage);
+                PlayerBoxInsert.Parameters.AddWithValue("@FG2M", player.statistics.fieldGoalsMade - player.statistics.threePointersMade);
+                PlayerBoxInsert.Parameters.AddWithValue("@FG2A", player.statistics.fieldGoalsAttempted - player.statistics.threePointersAttempted);
+                if ((double)(player.statistics.fieldGoalsAttempted - player.statistics.threePointersAttempted) != 0)
+                {
+                    PlayerBoxInsert.Parameters.AddWithValue("@FG2pct",
+                    Math.Round((double)(player.statistics.fieldGoalsMade - player.statistics.threePointersMade) /
+                    (double)(player.statistics.fieldGoalsAttempted - player.statistics.threePointersAttempted), 4));
+                }
+                else
+                {
+                    PlayerBoxInsert.Parameters.AddWithValue("@FG2pct", 0);
+                }
+                PlayerBoxInsert.Parameters.AddWithValue("@FG3M", player.statistics.threePointersMade);
+                PlayerBoxInsert.Parameters.AddWithValue("@FG3A", player.statistics.threePointersAttempted);
+                PlayerBoxInsert.Parameters.AddWithValue("@FG3pct", player.statistics.threePointersPercentage);
+                PlayerBoxInsert.Parameters.AddWithValue("@FTM", player.statistics.freeThrowsMade);
+                PlayerBoxInsert.Parameters.AddWithValue("@FTA", player.statistics.freeThrowsAttempted);
+                PlayerBoxInsert.Parameters.AddWithValue("@FTpct", player.statistics.freeThrowsPercentage);
+                PlayerBoxInsert.Parameters.AddWithValue("@RebD", player.statistics.reboundsDefensive);
+                PlayerBoxInsert.Parameters.AddWithValue("@RebO", player.statistics.reboundsOffensive);
+                PlayerBoxInsert.Parameters.AddWithValue("@RebT", player.statistics.reboundsTotal);
+                PlayerBoxInsert.Parameters.AddWithValue("@Assists", player.statistics.assists);
+                PlayerBoxInsert.Parameters.AddWithValue("@Turnovers", player.statistics.turnovers);
+                if (player.statistics.turnovers > 0)
+                {
+                    PlayerBoxInsert.Parameters.AddWithValue("@AtoR", Math.Round((double)(player.statistics.assists) / (double)(player.statistics.turnovers), 3));
+                }
+                else
+                {
+                    PlayerBoxInsert.Parameters.AddWithValue("@AtoR", 99);
+                }
+                PlayerBoxInsert.Parameters.AddWithValue("@Steals", player.statistics.steals);
+                PlayerBoxInsert.Parameters.AddWithValue("@Blocks", player.statistics.blocks);
+                PlayerBoxInsert.Parameters.AddWithValue("@Points", player.statistics.points);
+                PlayerBoxInsert.Parameters.AddWithValue("@FoulsPersonal", player.statistics.foulsPersonal);
+                SQLdb.Open();
+                PlayerBoxInsert.ExecuteScalar();
+                SQLdb.Close();
+            }
 
         }
-        public void PlayerBoxInsert()
-        {
-
-        }
-
         #endregion
     }
 }
