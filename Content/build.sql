@@ -285,6 +285,28 @@ Foreign Key (SeasonID, GameID) references Game(SeasonID, GameID),
 Foreign Key (SeasonID, TeamID) references Team(SeasonID, TeamID),
 Foreign Key (SeasonID, MatchupID) references Team(SeasonID, TeamID))
 
+create table BuildLog(
+BuildID int,
+RunID INT IDENTITY(1,1),
+Season int,
+Hr  int,
+Min int,
+Sec int,
+Ms  int,
+FullTime varchar(255),
+HrR  int,
+MinR int,
+SecR int,
+MsR  int,
+ReadTime varchar(255),
+HrI  int,
+MinI int,
+SecI int,
+MsI  int,
+InsertTime varchar(255),
+DatetimeStarted datetime,
+DatetimeComplete datetime,
+Primary Key (BuildID, RunID))
 
 
 
@@ -829,13 +851,170 @@ values(
 
 create procedure PlayByPlayCheckHistorical @SeasonID int, @GameID int
 as
-select p.SeasonID, p.GameID, count(p.GameID) Actions,
-(select max(actionNumber) from PlayByPlay b where p.GameID = b.GameID and p.SeasonID = b.SeasonID) LastAction
-
-
+select p.SeasonID, p.GameID, count(p.GameID) Actions
 from PlayByPlay p
 where p.SeasonID = @SeasonID and p.GameID = @GameID
 group by p.SeasonID, p.GameID
 ~~~
+
+create procedure PlayByPlayInsertHistorical
+		@SeasonID			int,
+		@GameID				int,
+		@ActionID			int,
+		@ActionNumber		int,
+		@Qtr					int,
+		@Clock				varchar(20),
+		--@TimeActual			datetime,
+		@ScoreHome			int,
+		@ScoreAway			int,
+		@TeamID				int,
+		@Tricode				varchar(3),
+		@PlayerID			int,
+		@Description			varchar(999),
+		@SubType				varchar(999),
+		@IsFieldGoal			int,
+		@ShotResult			varchar(999),
+		@ShotValue			int,
+		@ActionType			varchar(999),
+		@ShotDistance		float,
+		@Xlegacy				float,
+		@Ylegacy				float,
+		--@X					float,
+		--@Y					float,
+		@Location			varchar(35)
+--@Area				varchar(50),
+--@AreaDetail			varchar(50),
+--@Side				varchar(30),
+--@ShotType			varchar(4),
+--@PtsGenerated		int,
+--@Descriptor			varchar(30),
+--@Qual1				varchar(30),
+--@Qual2				varchar(30),
+--@Qual3				varchar(30),
+--@ShotActionNbr		int,
+--@PlayerIDAst			int,
+--@PlayerIDBlk			int,
+--@PlayerIDStl			int,
+--@PlayerIDFoulDrawn	int,
+--@PlayerIDJumpW		int,
+--@PlayerIDJumpL		int,
+--@OfficialID			int,
+--@QtrType				varchar(20),
+--@EventMsgTypeID		int
+as
+insert into PlayByPlay(SeasonID, GameID, ActionID, ActionNumber, Qtr, Clock,
+ScoreHome,
+ScoreAway,
+TeamID,
+Tricode,
+PlayerID,
+Description,
+SubType,
+IsFieldGoal,
+ShotResult,
+ShotValue,
+ActionType,
+ShotDistance,
+Xlegacy,
+Ylegacy,
+Location)
+values(
+@SeasonID		,
+@GameID			,
+@ActionID		,
+@ActionNumber	,
+@Qtr			,
+replace(replace(replace(@Clock, 'PT', ''), 'M', ':'), 'S', ''),
+@ScoreHome		,
+@ScoreAway		,
+@TeamID			,
+@Tricode		,
+@PlayerID		,
+@Description	,
+@SubType		,
+@IsFieldGoal	,
+@ShotResult		,
+@ShotValue		,
+@ActionType		,
+@ShotDistance	,
+@Xlegacy		,
+@Ylegacy		,
+@Location			
+)
+~~~
+
+
+create procedure BuildLogCheck
+as
+Select case when max(BuildID) is null then 1 else max(BuildID) + 1 end BuildID
+from BuildLog
+~~~
+
+
+create procedure BuildLogInsert
+@BuildID int,
+@Season int,
+@Hr  int,
+@Min int,
+@Sec int,
+@Ms  int,
+@FullTime varchar(255),
+@HrR  int,
+@MinR int,
+@SecR int,
+@MsR  int,
+@ReadTime varchar(255),
+@HrI  int,
+@MinI int,
+@SecI int,
+@MsI  int,
+@InsertTime varchar(255),
+@DatetimeStarted datetime,
+@DatetimeComplete datetime
+as
+insert into BuildLog(
+BuildID, 
+Season, 
+Hr, 
+Min, 
+Sec, 
+Ms, 
+FullTime, 
+HrR,
+MinR,
+SecR,
+MsR,
+ReadTime,
+HrI,
+MinI,
+SecI,
+MsI,
+InsertTime, 
+DatetimeStarted, 
+DatetimeComplete) 
+values(
+@BuildID, 
+@Season, 
+@Hr, 
+@Min, 
+@Sec, 
+@Ms, 
+@FullTime, 
+@HrR,
+@MinR,
+@SecR,
+@MsR,
+@ReadTime,
+@HrI,
+@MinI,
+@SecI,
+@MsI,
+@InsertTime, 
+@DatetimeStarted, 
+@DatetimeComplete)
+~~~
+
+
+
 
 */

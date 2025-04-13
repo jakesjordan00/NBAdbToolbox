@@ -371,11 +371,33 @@ namespace NBAdbToolbox
                     lblWorkingOn.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Regular, pnlLoad, lblWorkingOn);
                     lblWorkingOn.Left = picLoad.Right - (int)(picLoad.Width / 6);
                     lblWorkingOn.AutoSize = true;
-                    lblWorkingOn.Top = lblSeasonStatusLoadInfo.Bottom; 
+                    lblWorkingOn.Top = lblSeasonStatusLoadInfo.Bottom;
+                    int buildID = 0;
+                    using (SqlCommand BuildLogCheck = new SqlCommand("BuildLogCheck"))
+                    {
+                        BuildLogCheck.CommandType = CommandType.StoredProcedure;
+                        SqlConnection SQLdb = new SqlConnection(cString);
+                            using (SqlDataAdapter sBuildLogCheck = new SqlDataAdapter())
+                            {
+
+                                BuildLogCheck.Connection = SQLdb;
+                                sBuildLogCheck.SelectCommand = BuildLogCheck;
+                                SQLdb.Open();
+                                SqlDataReader reader = BuildLogCheck.ExecuteReader();
+                                while (reader.Read())
+                                {
+                                    buildID = reader.GetInt32(0);
+                                }
+                                SQLdb.Close();
+                            }
+                        
+                    }
                     Stopwatch stopwatchFull = Stopwatch.StartNew();
+                    DateTime startFull = DateTime.Now;
                     foreach (int season in seasons)
                     {
                         Stopwatch stopwatch = Stopwatch.StartNew();
+                        DateTime start = DateTime.Now;
                         completionMessage += season + ": ";
                         lblStatus.Text = "Loading " + season + " season...";
                         CenterElement(pnlWelcome, lblStatus);
@@ -383,10 +405,21 @@ namespace NBAdbToolbox
                         btnEdit.Enabled = false;
                         listSeasons.Enabled = false;
                         lblSeasonStatusLoadInfo.Text = season + " historic data file";
+                        Stopwatch stopwatchRead = Stopwatch.StartNew();
                         await Task.Run(async () =>      //This sets the root variable to our big file
                         {
                             await ReadSeasonFile(season, popup.historic, popup.current);
                         });
+                        stopwatchRead.Stop();
+                        TimeSpan timeElapsedRead = stopwatchRead.Elapsed;
+                        Dictionary<string, (int, string)> timeUnitsRead = new Dictionary<string, (int value, string sep)>
+                        {
+                        { "h", (timeElapsedRead.Hours, ":") },
+                        { "m", (timeElapsedRead.Minutes, ":") },
+                        { "s", (timeElapsedRead.Seconds, ".") },
+                        { "ms", (timeElapsedRead.Milliseconds, "") }
+                        };
+                        string elapsedStringRead = CheckTime(timeUnitsRead);
                         //End season read
                         lblStatus.Text = season + " parsed. Inserting data...";
                         CenterElement(pnlWelcome, lblStatus);
@@ -395,6 +428,7 @@ namespace NBAdbToolbox
                         bool reverse = false;
                         int remainder = 5;
                         lblSeasonStatusLoadInfo.Text = season + " Regular Season";
+                        Stopwatch stopwatchInsert = Stopwatch.StartNew();
                         foreach (NBAdbToolboxHistoric.Game game in root.season.games.regularSeason)
                         {
                             await Task.Run(async () =>      //This inserts the games from season file into db
@@ -446,15 +480,57 @@ namespace NBAdbToolbox
                             iterator++;
                         }
                         stopwatch.Stop();
+                        stopwatchInsert.Stop();
+                        DateTime end = DateTime.Now;
                         TimeSpan timeElapsedSeason = stopwatch.Elapsed;
-                        Dictionary<string, int> timeUnitsSeason = new Dictionary<string, int>
+                        Dictionary<string, (int, string)> timeUnitsSeason = new Dictionary<string, (int value, string sep)>
                         {
-                            { "h", timeElapsedSeason.Hours },
-                            { "m", timeElapsedSeason.Minutes },
-                            { "s", timeElapsedSeason.Seconds },
-                            { "ms", timeElapsedSeason.Milliseconds }
+                        { "h", (timeElapsedSeason.Hours, ":") },
+                        { "m", (timeElapsedSeason.Minutes, ":") },
+                        { "s", (timeElapsedSeason.Seconds, ".") },
+                        { "ms", (timeElapsedSeason.Milliseconds, "") }
                         };
                         string elapsedStringSeason = CheckTime(timeUnitsSeason);
+
+                        TimeSpan timeElapsedInsert = stopwatchInsert.Elapsed;
+                        Dictionary<string, (int, string)> timeUnitsInsert = new Dictionary<string, (int value, string sep)>
+                        {
+                        { "h", (timeElapsedInsert.Hours, ":") },
+                        { "m", (timeElapsedInsert.Minutes, ":") },
+                        { "s", (timeElapsedInsert.Seconds, ".") },
+                        { "ms", (timeElapsedInsert.Milliseconds, "") }
+                        };
+                        string elapsedStringInsert = CheckTime(timeUnitsInsert);
+
+
+                        using (SqlCommand BuildLogInsert = new SqlCommand("BuildLogInsert"))
+                        {
+                            BuildLogInsert.Connection = SQLdb;
+                            BuildLogInsert.CommandType = CommandType.StoredProcedure;
+                            BuildLogInsert.Parameters.AddWithValue("@BuildID", buildID);
+                            BuildLogInsert.Parameters.AddWithValue("@Season", season);
+                            BuildLogInsert.Parameters.AddWithValue("@Hr", timeElapsedSeason.Hours);
+                            BuildLogInsert.Parameters.AddWithValue("@Min", timeElapsedSeason.Minutes);
+                            BuildLogInsert.Parameters.AddWithValue("@Sec", timeElapsedSeason.Seconds);
+                            BuildLogInsert.Parameters.AddWithValue("@Ms", timeElapsedSeason.Milliseconds);
+                            BuildLogInsert.Parameters.AddWithValue("@FullTime", elapsedStringSeason);
+                            BuildLogInsert.Parameters.AddWithValue("@HrR", timeElapsedRead.Hours);
+                            BuildLogInsert.Parameters.AddWithValue("@MinR", timeElapsedRead.Minutes);
+                            BuildLogInsert.Parameters.AddWithValue("@SecR", timeElapsedRead.Seconds);
+                            BuildLogInsert.Parameters.AddWithValue("@MsR", timeElapsedRead.Milliseconds);
+                            BuildLogInsert.Parameters.AddWithValue("@ReadTime", elapsedStringRead);
+                            BuildLogInsert.Parameters.AddWithValue("@HrI", timeElapsedInsert.Hours);
+                            BuildLogInsert.Parameters.AddWithValue("@MinI", timeElapsedInsert.Minutes);
+                            BuildLogInsert.Parameters.AddWithValue("@SecI", timeElapsedInsert.Seconds);
+                            BuildLogInsert.Parameters.AddWithValue("@MsI", timeElapsedInsert.Milliseconds);
+                            BuildLogInsert.Parameters.AddWithValue("@InsertTime", elapsedStringInsert);
+                            BuildLogInsert.Parameters.AddWithValue("@DatetimeStarted", start);
+                            BuildLogInsert.Parameters.AddWithValue("@DatetimeComplete", end);
+                            SQLdb.Open();
+                            BuildLogInsert.ExecuteScalar();
+                            SQLdb.Close();
+                        }
+
                         //completionMessage += (iterator - regGames) + " postseason games loaded successfully.\n";
 
                         completionMessage += elapsedStringSeason + ". ";
@@ -471,15 +547,15 @@ namespace NBAdbToolbox
                         arenasDone = false;
                     }
                     stopwatchFull.Stop();
-                    DateTime end = DateTime.Now;
+                    DateTime endFull = DateTime.Now;
                     TimeSpan timeElapsed = stopwatchFull.Elapsed;
-                    Dictionary<string, int> timeUnits = new Dictionary<string, int>
-                        {
-                            { "h", timeElapsed.Hours },
-                            { "m", timeElapsed.Minutes },
-                            { "s", timeElapsed.Seconds },
-                            { "ms", timeElapsed.Milliseconds }
-                        };
+                    Dictionary<string, (int, string)> timeUnits = new Dictionary<string, (int value, string sep)>
+                    {
+                        { "h", (timeElapsed.Hours, ":") },
+                        { "m", (timeElapsed.Minutes, ":") },
+                        { "s", (timeElapsed.Seconds, ".") },
+                        { "ms", (timeElapsed.Milliseconds, "") }
+                    };
                     //string elapsedString = timeElapsed.Hours + ":" + timeElapsed.Minutes + ":" + timeElapsed.Seconds + "." + timeElapsed.Milliseconds;
                     string elapsedString = CheckTime(timeUnits);
                     btnPopulate.Enabled = true;
@@ -509,8 +585,24 @@ namespace NBAdbToolbox
                     lblSeasonStatusLoad.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Regular, pnlLoad, lblSeasonStatusLoad);
                     lblSeasonStatusLoad.AutoSize = true;
 
+                    if (picLoad.Image != null)
+                    {
+                        picLoad.Image.Dispose(); // release the previous image
+                        picLoad.Image = null;
+                    }
 
+                    lblWorkingOn.Left = lblSeasonStatusLoad.Right + (int)(pnlLoad.Width * .01);
                     lblWorkingOn.Top = 0;
+                    using (var img = Image.FromFile(Path.Combine(projectRoot, "Content", "Success.png")))
+                    {
+                        picLoad.Image = new Bitmap(img); // clone it so file lock is released
+                        picLoad.SizeMode = PictureBoxSizeMode.Zoom;
+                        picLoad.Width = (int)(pnlLoad.Height * .5);
+                        picLoad.Height = (int)(pnlLoad.Height * .5);
+                        picLoad.Top = lblCurrentGame.Bottom + (int)(picLoad.Height * .25);
+                        picLoad.Left = ((pnlLoad.ClientSize.Width - picLoad.Width) / 2) - picLoad.Width;
+                    }
+
                 }
             };
 
@@ -1509,38 +1601,11 @@ namespace NBAdbToolbox
 
 
 
-
-        public string CheckTime(Dictionary<string, int> timeUnits)
-        {
-            string returnString = "";
-            foreach (KeyValuePair<string, int> pair in timeUnits)
-            {
-                if (pair.Value != 0)
-                {
-                    if (pair.Value < 10 && pair.Key != "ms")
-                    {
-                        returnString += "0" + pair.Value + pair.Key;
-                    }
-                    else if (pair.Value < 100 && pair.Key == "ms")
-                    {
-                        returnString += "0" + pair.Value + pair.Key;
-                    }
-                    else if (pair.Value >= 100 && pair.Key == "ms")
-                    {
-                        returnString += pair.Value + pair.Key;
-                    }
-                    else if (pair.Value >= 10 && pair.Key != "ms")
-                    {
-                        returnString += pair.Value + pair.Key;
-                    }
-                }
-            }
-            return returnString;
-        }
         public async Task ReadSeasonFile(int season, bool bHistoric, bool bCurrent)
         {
-            string filePath = Path.Combine(projectRoot, "Content\\", "dbconfig.json");
-            filePath = filePath.Replace("dbconfig.json", "Historic Data\\test\\");              //REMOVE TEST WHEN DONE TESTING
+            string filePath = Path.Combine(projectRoot, "Content\\", "dbconfig.json");              //Line 1568 is TESTing data, 1567 normal
+            filePath = filePath.Replace("dbconfig.json", "Historic Data\\");
+            //filePath = filePath.Replace("dbconfig.json", "Historic Data\\test\\");
             if (bHistoric || (!bHistoric && !bCurrent))
             {
                 int iter = (season == 2012 || season == 2019 || season == 2020 || season == 2024) ? 3 : 4;
@@ -1574,6 +1639,42 @@ namespace NBAdbToolbox
                 }
             }));
         }
+
+        //Formats Time elapsed string for season load
+        public string CheckTime(Dictionary<string, (int, string)> timeUnits)
+        {
+            string returnString = "";
+            foreach (KeyValuePair<string, (int, string)> pair in timeUnits)
+            {
+                if (pair.Value.Item1 != 0 && pair.Value.Item1 < 10 && pair.Key != "ms")              //If value is Hour, Min or Sec and single digit
+                {
+                    returnString += "0" + pair.Value.Item1 + pair.Value.Item2;
+                }
+                else if (pair.Value.Item1 != 0 && pair.Value.Item1 < 100 && pair.Key == "ms")        //If value is ms and double digit
+                {
+                    returnString += "0" + pair.Value.Item1;
+                }
+                else if (pair.Value.Item1 != 0 && pair.Value.Item1 >= 100 && pair.Key == "ms")       //If value ms and triple digits (normal)
+                {
+                    returnString += pair.Value.Item1;
+                }
+                else if (pair.Value.Item1 != 0 && pair.Value.Item1 >= 10 && pair.Key != "ms")        //If value Hour, Min or sec and double digit (normal)
+                {
+                    returnString += pair.Value.Item1 + pair.Value.Item2;
+                }
+                else if (pair.Value.Item1 == 0 && pair.Key != "ms")
+                {
+                    returnString += "00" + pair.Value.Item2;
+                }
+                else if (pair.Value.Item1 == 0 && pair.Key == "ms")
+                {
+                    returnString += "000";
+                }
+
+            }
+            return returnString;
+        }
+
         public bool teamsDone = false;
         public bool arenasDone = false;
         public void GetGameDetails(NBAdbToolboxHistoric.Game game, int season, string sender)
@@ -1604,6 +1705,7 @@ namespace NBAdbToolbox
             //PlayByPlay
             PlayByPlayStaging(game.playByPlay, season);
         }
+
         //Team methods
         #region Team Methods
         //Reduces GetGameDetails
@@ -2521,6 +2623,7 @@ namespace NBAdbToolbox
 
         //PlayByPlay methods
         #region PlayByPlay Methods
+        public string insertString = "";
         public void PlayByPlayStaging(NBAdbToolboxHistoric.PlayByPlay pbp, int season)
         {
             string instructions = PlayByPlayCheck(pbp, season, "PlayByPlayCheckHistorical");
@@ -2531,16 +2634,11 @@ namespace NBAdbToolbox
                 start = Int32.Parse(instructions.Substring(instructions.IndexOf("-") + 1));
                 instructions = "Insert";
             }
-
             for (int i = start; i < actions; i++)
             {
                 if (instructions == "Insert")
                 {
-                    PlayByPlayInsert(pbp.actions[i], season, "PlayByPlayInsertHistorical");
-                }
-                if (instructions.Contains("Update"))
-                {
-                    PlayByPlayUpdate(pbp.actions[i], season, "PlayByPlayUpdateHistorical");
+                    PlayByPlayInsert(pbp.actions[i], season, Int32.Parse(pbp.gameId), "PlayByPlayInsertHistorical");
                 }
             }
 
@@ -2571,7 +2669,7 @@ namespace NBAdbToolbox
                         if (reader.GetInt32(2) != pbp.actions.Count)
                         {
                             SQLdb.Close();
-                            return "Update  -" + (reader.GetInt32(3) - 1);
+                            return "Update  -" + (reader.GetInt32(2));
                         }
                         else
                         {
@@ -2582,13 +2680,147 @@ namespace NBAdbToolbox
                 }
             }
         }
-        public void PlayByPlayUpdate(NBAdbToolboxHistoric.Action action, int season, string procedure)
+        public void PlayByPlayInsert(NBAdbToolboxHistoric.Action action, int season, int GameID, string procedure)
         {
+            using (SqlCommand PlayByPlayInsert = new SqlCommand(procedure))
+            {
+                PlayByPlayInsert.Connection = SQLdb;
+                PlayByPlayInsert.CommandType = CommandType.StoredProcedure;
+                PlayByPlayInsert.Parameters.AddWithValue("@SeasonID", season);
+                PlayByPlayInsert.Parameters.AddWithValue("@GameID", GameID);
+                PlayByPlayInsert.Parameters.AddWithValue("@ActionID", action.actionId);
+                PlayByPlayInsert.Parameters.AddWithValue("@ActionNumber", action.actionNumber);
+                PlayByPlayInsert.Parameters.AddWithValue("@Qtr", action.period);
+                PlayByPlayInsert.Parameters.AddWithValue("@Clock", action.clock);
+                if(action.scoreAway == "")                                                          //Away Score
+                {                                                                                   //Away Score
+                    PlayByPlayInsert.Parameters.AddWithValue("@ScoreAway", SqlInt32.Null);          //Away Score
+                }                                                                                   //Away Score
+                else                                                                                //Away Score
+                {                                                                                   //Away Score
+                    PlayByPlayInsert.Parameters.AddWithValue("@ScoreAway", action.scoreAway);       //Away Score
+                }
+                if (action.scoreHome == "")                                                         //Home Score
+                {                                                                                   //Home Score
+                    PlayByPlayInsert.Parameters.AddWithValue("@ScoreHome", SqlInt32.Null);          //Home Score
+                }                                                                                   //Home Score
+                else                                                                                //Home Score
+                {                                                                                   //Home Score
+                    PlayByPlayInsert.Parameters.AddWithValue("@ScoreHome", action.scoreHome);       //Home Score
+                }
+                if (action.teamId != 0)                                                             //TeamID and Tricode
+                {                                                                                   //TeamID and Tricode
+                    PlayByPlayInsert.Parameters.AddWithValue("@TeamID", action.teamId);             //TeamID and Tricode
+                    PlayByPlayInsert.Parameters.AddWithValue("@Tricode", action.teamTricode);       //TeamID and Tricode
+                }                                                                                   //TeamID and Tricode
+                else                                                                                //TeamID and Tricode
+                {                                                                                   //TeamID and Tricode
+                    PlayByPlayInsert.Parameters.AddWithValue("@TeamID", SqlInt32.Null);             //TeamID and Tricode
+                    PlayByPlayInsert.Parameters.AddWithValue("@Tricode", SqlString.Null);           //TeamID and Tricode
+                }
 
+                if (action.personId == 0)                                                           //PlayerID
+                {                                                                                   //PlayerID
+                    PlayByPlayInsert.Parameters.AddWithValue("@PlayerID", SqlInt32.Null);           //PlayerID
+                }                                                                                   //PlayerID
+                else                                                                                //PlayerID
+                {                                                                                   //PlayerID
+                    PlayByPlayInsert.Parameters.AddWithValue("@PlayerID", action.personId);         //PlayerID
+                }
+                PlayByPlayInsert.Parameters.AddWithValue("@Description", action.description);
+                PlayByPlayInsert.Parameters.AddWithValue("@SubType", action.subType);
+                PlayByPlayInsert.Parameters.AddWithValue("@IsFieldGoal", action.isFieldGoal);
+                PlayByPlayInsert.Parameters.AddWithValue("@ShotResult", action.shotResult);
+                PlayByPlayInsert.Parameters.AddWithValue("@ShotValue", action.shotValue);
+                PlayByPlayInsert.Parameters.AddWithValue("@ActionType", action.actionType);
+                PlayByPlayInsert.Parameters.AddWithValue("@ShotDistance", action.shotDistance);
+                if (action.isFieldGoal == 1)
+                {
+                    PlayByPlayInsert.Parameters.AddWithValue("@XLegacy", action.xLegacy);
+                    PlayByPlayInsert.Parameters.AddWithValue("@YLegacy", action.yLegacy);
+                }
+                else
+                {
+                    PlayByPlayInsert.Parameters.AddWithValue("@XLegacy", SqlDouble.Null);
+                    PlayByPlayInsert.Parameters.AddWithValue("@YLegacy", SqlDouble.Null);
+                }
+                PlayByPlayInsert.Parameters.AddWithValue("@Location", action.location);
+
+                SQLdb.Open();
+                PlayByPlayInsert.ExecuteScalar();
+                SQLdb.Close();
+            }
         }
-        public void PlayByPlayInsert(NBAdbToolboxHistoric.Action action, int season, string procedure)
+        public void PlayByPlayInsertString(NBAdbToolboxHistoric.Action action, int season, int GameID, string procedure)
         {
+            using (SqlCommand PlayByPlayInsert = new SqlCommand(procedure))
+            {
+                PlayByPlayInsert.Connection = SQLdb;
+                PlayByPlayInsert.CommandType = CommandType.StoredProcedure;
+                PlayByPlayInsert.Parameters.AddWithValue("@SeasonID", season);
+                PlayByPlayInsert.Parameters.AddWithValue("@GameID", GameID);
+                PlayByPlayInsert.Parameters.AddWithValue("@ActionID", action.actionId);
+                PlayByPlayInsert.Parameters.AddWithValue("@ActionNumber", action.actionNumber);
+                PlayByPlayInsert.Parameters.AddWithValue("@Qtr", action.period);
+                PlayByPlayInsert.Parameters.AddWithValue("@Clock", action.clock);
+                if (action.scoreAway == "")                                                          //Away Score
+                {                                                                                   //Away Score
+                    PlayByPlayInsert.Parameters.AddWithValue("@ScoreAway", SqlInt32.Null);          //Away Score
+                }                                                                                   //Away Score
+                else                                                                                //Away Score
+                {                                                                                   //Away Score
+                    PlayByPlayInsert.Parameters.AddWithValue("@ScoreAway", action.scoreAway);       //Away Score
+                }
+                if (action.scoreHome == "")                                                         //Home Score
+                {                                                                                   //Home Score
+                    PlayByPlayInsert.Parameters.AddWithValue("@ScoreHome", SqlInt32.Null);          //Home Score
+                }                                                                                   //Home Score
+                else                                                                                //Home Score
+                {                                                                                   //Home Score
+                    PlayByPlayInsert.Parameters.AddWithValue("@ScoreHome", action.scoreHome);       //Home Score
+                }
+                if (action.teamId != 0)                                                             //TeamID and Tricode
+                {                                                                                   //TeamID and Tricode
+                    PlayByPlayInsert.Parameters.AddWithValue("@TeamID", action.teamId);             //TeamID and Tricode
+                    PlayByPlayInsert.Parameters.AddWithValue("@Tricode", action.teamTricode);       //TeamID and Tricode
+                }                                                                                   //TeamID and Tricode
+                else                                                                                //TeamID and Tricode
+                {                                                                                   //TeamID and Tricode
+                    PlayByPlayInsert.Parameters.AddWithValue("@TeamID", SqlInt32.Null);             //TeamID and Tricode
+                    PlayByPlayInsert.Parameters.AddWithValue("@Tricode", SqlString.Null);           //TeamID and Tricode
+                }
 
+                if (action.personId == 0)                                                           //PlayerID
+                {                                                                                   //PlayerID
+                    PlayByPlayInsert.Parameters.AddWithValue("@PlayerID", SqlInt32.Null);           //PlayerID
+                }                                                                                   //PlayerID
+                else                                                                                //PlayerID
+                {                                                                                   //PlayerID
+                    PlayByPlayInsert.Parameters.AddWithValue("@PlayerID", action.personId);         //PlayerID
+                }
+                PlayByPlayInsert.Parameters.AddWithValue("@Description", action.description);
+                PlayByPlayInsert.Parameters.AddWithValue("@SubType", action.subType);
+                PlayByPlayInsert.Parameters.AddWithValue("@IsFieldGoal", action.isFieldGoal);
+                PlayByPlayInsert.Parameters.AddWithValue("@ShotResult", action.shotResult);
+                PlayByPlayInsert.Parameters.AddWithValue("@ShotValue", action.shotValue);
+                PlayByPlayInsert.Parameters.AddWithValue("@ActionType", action.actionType);
+                PlayByPlayInsert.Parameters.AddWithValue("@ShotDistance", action.shotDistance);
+                if (action.isFieldGoal == 1)
+                {
+                    PlayByPlayInsert.Parameters.AddWithValue("@XLegacy", action.xLegacy);
+                    PlayByPlayInsert.Parameters.AddWithValue("@YLegacy", action.yLegacy);
+                }
+                else
+                {
+                    PlayByPlayInsert.Parameters.AddWithValue("@XLegacy", SqlDouble.Null);
+                    PlayByPlayInsert.Parameters.AddWithValue("@YLegacy", SqlDouble.Null);
+                }
+                PlayByPlayInsert.Parameters.AddWithValue("@Location", action.location);
+
+                SQLdb.Open();
+                PlayByPlayInsert.ExecuteScalar();
+                SQLdb.Close();
+            }
         }
 
 
