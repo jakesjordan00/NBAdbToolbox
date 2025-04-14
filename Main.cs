@@ -1604,8 +1604,8 @@ namespace NBAdbToolbox
         public async Task ReadSeasonFile(int season, bool bHistoric, bool bCurrent)
         {
             string filePath = Path.Combine(projectRoot, "Content\\", "dbconfig.json");              //Line 1568 is TESTing data, 1567 normal
-            filePath = filePath.Replace("dbconfig.json", "Historic Data\\");
-            //filePath = filePath.Replace("dbconfig.json", "Historic Data\\test\\");
+            //filePath = filePath.Replace("dbconfig.json", "Historic Data\\");
+            filePath = filePath.Replace("dbconfig.json", "Historic Data\\test\\");
             if (bHistoric || (!bHistoric && !bCurrent))
             {
                 int iter = (season == 2012 || season == 2019 || season == 2020 || season == 2024) ? 3 : 4;
@@ -2626,6 +2626,7 @@ namespace NBAdbToolbox
         public string insertString = "";
         public void PlayByPlayStaging(NBAdbToolboxHistoric.PlayByPlay pbp, int season)
         {
+            insertString = "";
             string instructions = PlayByPlayCheck(pbp, season, "PlayByPlayCheckHistorical");
             int actions = pbp.actions.Count;
             int start = 0;
@@ -2638,10 +2639,20 @@ namespace NBAdbToolbox
             {
                 if (instructions == "Insert")
                 {
-                    PlayByPlayInsert(pbp.actions[i], season, Int32.Parse(pbp.gameId), "PlayByPlayInsertHistorical");
+                    //PlayByPlayInsert(pbp.actions[i], season, Int32.Parse(pbp.gameId), "PlayByPlayInsertHistorical");
+                    PlayByPlayInsertString(pbp.actions[i], season, Int32.Parse(pbp.gameId));
                 }
             }
+            insertString = insertString.Replace("'',", "");
+            using (SqlCommand PlayByPlayInsert = new SqlCommand(insertString))
+            {
+                PlayByPlayInsert.Connection = SQLdb;
+                PlayByPlayInsert.CommandType = CommandType.Text;
+                SQLdb.Open();
+                PlayByPlayInsert.ExecuteScalar();
+                SQLdb.Close();
 
+            }
 
         }
         public string PlayByPlayCheck(NBAdbToolboxHistoric.PlayByPlay pbp, int season, string procedure)
@@ -2751,76 +2762,120 @@ namespace NBAdbToolbox
                 SQLdb.Close();
             }
         }
-        public void PlayByPlayInsertString(NBAdbToolboxHistoric.Action action, int season, int GameID, string procedure)
+        public void PlayByPlayInsertString(NBAdbToolboxHistoric.Action action, int season, int GameID)
         {
-            using (SqlCommand PlayByPlayInsert = new SqlCommand(procedure))
-            {
-                PlayByPlayInsert.Connection = SQLdb;
-                PlayByPlayInsert.CommandType = CommandType.StoredProcedure;
-                PlayByPlayInsert.Parameters.AddWithValue("@SeasonID", season);
-                PlayByPlayInsert.Parameters.AddWithValue("@GameID", GameID);
-                PlayByPlayInsert.Parameters.AddWithValue("@ActionID", action.actionId);
-                PlayByPlayInsert.Parameters.AddWithValue("@ActionNumber", action.actionNumber);
-                PlayByPlayInsert.Parameters.AddWithValue("@Qtr", action.period);
-                PlayByPlayInsert.Parameters.AddWithValue("@Clock", action.clock);
-                if (action.scoreAway == "")                                                          //Away Score
-                {                                                                                   //Away Score
-                    PlayByPlayInsert.Parameters.AddWithValue("@ScoreAway", SqlInt32.Null);          //Away Score
-                }                                                                                   //Away Score
-                else                                                                                //Away Score
-                {                                                                                   //Away Score
-                    PlayByPlayInsert.Parameters.AddWithValue("@ScoreAway", action.scoreAway);       //Away Score
-                }
-                if (action.scoreHome == "")                                                         //Home Score
-                {                                                                                   //Home Score
-                    PlayByPlayInsert.Parameters.AddWithValue("@ScoreHome", SqlInt32.Null);          //Home Score
-                }                                                                                   //Home Score
-                else                                                                                //Home Score
-                {                                                                                   //Home Score
-                    PlayByPlayInsert.Parameters.AddWithValue("@ScoreHome", action.scoreHome);       //Home Score
-                }
-                if (action.teamId != 0)                                                             //TeamID and Tricode
-                {                                                                                   //TeamID and Tricode
-                    PlayByPlayInsert.Parameters.AddWithValue("@TeamID", action.teamId);             //TeamID and Tricode
-                    PlayByPlayInsert.Parameters.AddWithValue("@Tricode", action.teamTricode);       //TeamID and Tricode
-                }                                                                                   //TeamID and Tricode
-                else                                                                                //TeamID and Tricode
-                {                                                                                   //TeamID and Tricode
-                    PlayByPlayInsert.Parameters.AddWithValue("@TeamID", SqlInt32.Null);             //TeamID and Tricode
-                    PlayByPlayInsert.Parameters.AddWithValue("@Tricode", SqlString.Null);           //TeamID and Tricode
-                }
+            string insert = "insert into PlayByPlay (SeasonID, GameID, ActionID, ActionNumber, Qtr, Clock, Description, ";
+            string values = ") values(" + season + ", " + GameID + ", " + action.actionId + ", " + action.actionNumber + ", " + action.period + ", replace(replace(replace('" + action.clock + "', 'PT', ''), 'M', ':'), 'S', ''), '"
+                + action.description.Replace("'", "''") + "', ";
+                //+ action.isFieldGoal + ", '" 
+                //+ action.shotResult + "', " 
+                //+ action.shotValue + ", '" 
+                //+ action.actionType + "', " 
+                //+ action.shotDistance + ", '" 
+                //+ action.location + "', ";
 
-                if (action.personId == 0)                                                           //PlayerID
-                {                                                                                   //PlayerID
-                    PlayByPlayInsert.Parameters.AddWithValue("@PlayerID", SqlInt32.Null);           //PlayerID
-                }                                                                                   //PlayerID
-                else                                                                                //PlayerID
-                {                                                                                   //PlayerID
-                    PlayByPlayInsert.Parameters.AddWithValue("@PlayerID", action.personId);         //PlayerID
-                }
-                PlayByPlayInsert.Parameters.AddWithValue("@Description", action.description);
-                PlayByPlayInsert.Parameters.AddWithValue("@SubType", action.subType);
-                PlayByPlayInsert.Parameters.AddWithValue("@IsFieldGoal", action.isFieldGoal);
-                PlayByPlayInsert.Parameters.AddWithValue("@ShotResult", action.shotResult);
-                PlayByPlayInsert.Parameters.AddWithValue("@ShotValue", action.shotValue);
-                PlayByPlayInsert.Parameters.AddWithValue("@ActionType", action.actionType);
-                PlayByPlayInsert.Parameters.AddWithValue("@ShotDistance", action.shotDistance);
-                if (action.isFieldGoal == 1)
+            if (action.subType != "Unknown" && action.subType != "")
+            {
+                insert += "SubType, ";
+                values += "'" + action.subType + "', ";
+            }
+            if(action.description.Length > 3)
+            {
+                if (action.description.Substring(action.description.Length - 4) == "STL)")
                 {
-                    PlayByPlayInsert.Parameters.AddWithValue("@XLegacy", action.xLegacy);
-                    PlayByPlayInsert.Parameters.AddWithValue("@YLegacy", action.yLegacy);
+                    insert += "ActionType, ";
+                    values += "'Steal', ";
+                }
+                else if (action.description.Substring(action.description.Length - 4) == "BLK)")
+                {
+                    insert += "ActionType, ";
+                    values += "'Block', ";
                 }
                 else
                 {
-                    PlayByPlayInsert.Parameters.AddWithValue("@XLegacy", SqlDouble.Null);
-                    PlayByPlayInsert.Parameters.AddWithValue("@YLegacy", SqlDouble.Null);
+                    insert += "ActionType, ";
+                    values += "'" + action.actionType + "', ";
                 }
-                PlayByPlayInsert.Parameters.AddWithValue("@Location", action.location);
-
-                SQLdb.Open();
-                PlayByPlayInsert.ExecuteScalar();
-                SQLdb.Close();
             }
+            else
+            {
+                insert += "ActionType, ";
+                values += "'" + action.actionType + "', ";
+            }
+
+
+            if (action.location != "")
+            {
+                insert += "Location, ";
+                values += "'" + action.location + "', ";
+            }
+
+            //Field Goals
+            if(action.isFieldGoal == 1)
+            {
+                insert += "IsFieldGoal, ";
+                values += action.isFieldGoal + ", ";
+                if(action.shotResult == "Made")                 //If Make
+                {
+                    insert += "ShotType, ";                         //Shot Type
+                    values += "'FG" + action.shotValue + "M', ";    //Shot Type
+                    insert += "PtsGenerated, ";                     //PtsGenerated
+                    values += action.shotValue + ", ";              //PtsGenerated
+                }
+                else if (action.shotResult == "Missed")         //If Miss
+                {
+                    insert += "ShotType, ";                         //Shot Type
+                    values += "'FG" + action.shotValue + "A', ";    //Shot Type
+                    insert += "PtsGenerated, ";                     //PtsGenerated
+                    values += "0, ";                                //PtsGenerated
+                }
+                insert += "ShotResult, ShotValue, ShotDistance, ";
+                values += "'" + action.shotResult + "', " + action.shotValue + ", " + action.shotDistance + ", ";
+            }
+            else if(action.actionType == "Free Throw")
+            {
+                if (action.description.Substring(action.description.Length - 4) == "PTS)")
+                {
+                    insert += "ShotType, PtsGenerated, ShotResult, ShotValue, ";
+                    values += "'FTM', 1, 'Made', 1, ";
+                }
+                else if(action.description.Substring(0, 4) == "MISS")
+                {
+                    insert += "ShotType, PtsGenerated, ShotResult, ShotValue, ";
+                    values += "'FTA', 0, 'Missed', 1, ";
+                }
+            }
+
+
+            if (action.scoreAway != "")
+            {
+                insert += "ScoreAway, ";
+                values += action.scoreAway + ", ";
+            }
+            if (action.scoreHome != "")
+            {
+                insert += "ScoreHome, ";
+                values += action.scoreHome + ", ";
+            }
+            if (action.teamId != 0)
+            {
+                insert += "TeamID, Tricode, ";
+                values += action.teamId + ", '" + action.teamTricode + "', ";
+            }
+            if (action.personId != 0)
+            {
+                insert += "PlayerID, ";
+                values += action.personId + ", ";
+            }
+            if (action.isFieldGoal == 1)
+            {
+                insert += "Xlegacy, Ylegacy, ";
+                values += action.xLegacy + ", " + action.yLegacy + ", ";
+            }
+            insert = insert.Remove(insert.Length - ", ".Length);
+            values = values.Remove(values.Length - ", ".Length) + ") ";
+
+            insertString += insert + values + "\n";
         }
 
 
