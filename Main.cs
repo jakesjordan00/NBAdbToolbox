@@ -2028,6 +2028,7 @@ namespace NBAdbToolbox
         public string playerBoxInsertString = "";
         public void PlayerStaging(NBAdbToolboxHistoric.Game game, int season)
         {
+            playerBoxInsertString = "";
             foreach (NBAdbToolboxHistoric.Player player in game.box.homeTeam.players)
             {//Home Team
                 int index = game.box.homeTeamPlayers.FindIndex(p => p.personId == player.personId);
