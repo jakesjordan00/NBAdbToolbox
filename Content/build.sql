@@ -156,6 +156,7 @@ create table PlayerBox(
 SeasonID					int,
 GameID						int,
 TeamID						int,
+MatchupID					int,
 PlayerID					int,
 Status						varchar(20),
 Starter						int,
@@ -196,11 +197,12 @@ FoulsPersonal				int,
 FoulsTechnical				int,
 StatusReason				varchar(100),
 StatusDescription			varchar(200),
-Primary Key(SeasonID, GameID, TeamID, PlayerID),
+Primary Key(SeasonID, GameID, TeamID, MatchupID, PlayerID),
 Foreign Key (SeasonID) references Season(SeasonID),
 Foreign Key (SeasonID, GameID) references Game(SeasonID, GameID),
 Foreign Key (SeasonID, TeamID) references Team(SeasonID, TeamID),
-Foreign Key (SeasonID, PlayerID) references Player(SeasonID, PlayerID))
+Foreign Key (SeasonID, PlayerID) references Player(SeasonID, PlayerID),
+Foreign Key (SeasonID, GameID, TeamID, MatchupID) references TeamBox(SeasonID, GameID, TeamID, MatchupID))
 
 create table PlayByPlay(
 SeasonID			int,
@@ -283,7 +285,25 @@ Primary Key (SeasonID, GameID, TeamID, MatchupID, Unit),
 Foreign Key (SeasonID) references Season(SeasonID),
 Foreign Key (SeasonID, GameID) references Game(SeasonID, GameID),
 Foreign Key (SeasonID, TeamID) references Team(SeasonID, TeamID),
-Foreign Key (SeasonID, MatchupID) references Team(SeasonID, TeamID))
+Foreign Key (SeasonID, MatchupID) references Team(SeasonID, TeamID),
+Foreign Key (SeasonID, GameID, TeamID, MatchupID) references TeamBox(SeasonID, GameID, TeamID, MatchupID))
+
+create table StartingLineups(
+SeasonID		int,
+GameID			int,
+TeamID			int,
+MatchupID		int,
+PlayerID		int,
+Unit			varchar(30),
+Position		varchar(10),
+Primary Key(SeasonID, GameID, TeamID, MatchupID, PlayerID),
+Foreign Key (SeasonID) references Season(SeasonID),
+Foreign Key (SeasonID, GameID) references Game(SeasonID, GameID),
+Foreign Key (SeasonID, TeamID) references Team(SeasonID, TeamID),
+Foreign Key (SeasonID, PlayerID) references Player(SeasonID, PlayerID),
+Foreign Key (SeasonID, GameID, TeamID, MatchupID, Unit) references TeamBoxLineups(SeasonID, GameID, TeamID, MatchupID, Unit),
+Foreign Key (SeasonID, GameID, TeamID, MatchupID, PlayerID) references PlayerBox(SeasonID, GameID, TeamID, MatchupID, PlayerID))
+
 
 create table BuildLog(
 BuildID int,
@@ -1028,5 +1048,19 @@ from PlayByPlay p inner join
 where p.ScoreAway is not null order by p.ActionNumber desc)
 where ActionNumber = (select ActionNumber from inserted) and ScoreAway is null and ScoreHome is null
 ~~~
+
+create procedure NewPlayerCheckHistorical @PlayerID int, @SeasonID int, @TeamID int, @GameID int
+as
+select p.PlayerID, (select COUNT(distinct PlayerID) from Player where SeasonID = p.SeasonID) Players,	--Count of all players
+(select Minutes from PlayerBox b where b.PlayerID = p.PlayerID and b.SeasonID = p.SeasonID				--If Minutes is null, add to insert string
+and b.TeamID = @TeamID																					--If it has a value, compare to our data file
+and b.GameID = @GameID) PlayerBox,																		--If equal, do nothing. If different, add update to string
+(select Position from StartingLineups s where s.PlayerID = p.PlayerID and s.SeasonID = p.SeasonID		--If Position is null, add to insert string for StartingLineups
+and s.TeamID = @TeamID																					--If it has a value, compare to our data file														
+and s.GameID = @GameID) StartingLineups																	--If equal, do nothing. If different, add update to string
+from Player p
+where p.PlayerID = @PlayerID and p.SeasonID = @SeasonID
+~~~
+
 
 */
