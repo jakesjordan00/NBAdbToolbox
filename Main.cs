@@ -2162,7 +2162,7 @@ namespace NBAdbToolbox
                 int index = game.box.homeTeamPlayers.FindIndex(p => p.personId == player.personId);
                 if (index == -1)
                 {
-                    //PlayerCheckNew(player, season, "");
+                    PlayerCheckNew(game, player, season, "", game.box.homeTeamId, game.box.awayTeamId, Int32.Parse(game.game_id));
                 }
                 else
                 {
@@ -2175,7 +2175,7 @@ namespace NBAdbToolbox
                 int index = game.box.awayTeamPlayers.FindIndex(p => p.personId == player.personId);
                 if (index == -1)
                 {
-                    //PlayerCheckNew(player, season, "");
+                    PlayerCheckNew(game, player, season, "", game.box.awayTeamId, game.box.homeTeamId, Int32.Parse(game.game_id));
                 }
                 else
                 {
