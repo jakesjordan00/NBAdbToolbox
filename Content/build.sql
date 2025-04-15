@@ -344,11 +344,11 @@ insert into Season values(2016, 1610612744, 1230, 79)
 insert into Season values(2017, 1610612744, 1230, 81)
 insert into Season values(2018, 1610612761, 1230, 82)
 insert into Season values(2019, 1610612747, 1059, 83)
-insert into Season values(2020, 1610612749, 1080, 85)
-insert into Season values(2021, 1610612744, 1230, 87)
-insert into Season values(2022, 1610612743, 1230, 84)
-insert into Season values(2023, 1610612738, 1230, 82)
-insert into Season values(2024, null, 1131, 0)
+insert into Season values(2020, 1610612749, 1080, 91)
+insert into Season values(2021, 1610612744, 1230, 93)
+insert into Season values(2022, 1610612743, 1230, 90)
+insert into Season values(2023, 1610612738, 1230, 88)
+insert into Season values(2024, null, 1230, 0)
 ~~~
 
 
