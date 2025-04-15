@@ -603,10 +603,11 @@ namespace NBAdbToolbox
                         completionMessage += elapsedStringSeason + ". ";
                         completionMessage += iterator + " games, " + regGames + "/" + (iterator - regGames) + "\n";
                         lblWorkingOn.Text = completionMessage;
-                        fontSize = ((float)(pnlLoad.Height * .0375) / (96 / 12)) * (72 / 12);
+                        fontSize = ((float)(pnlLoad.Height * .03) / (96 / 12)) * (72 / 12);
                         lblWorkingOn.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Regular, pnlLoad, lblWorkingOn);
                         lblWorkingOn.AutoSize = true;
-                        lblWorkingOn.Left = picLoad.Right - (int)(picLoad.Width / 5);
+                        //lblWorkingOn.Left = picLoad.Right - (int)(picLoad.Width / 5);
+                        lblWorkingOn.Left = pnlLoad.Width - lblWorkingOn.Width;
                         lblWorkingOn.Top = lblSeasonStatusLoadInfo.Bottom;
 
 
