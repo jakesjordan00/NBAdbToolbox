@@ -151,6 +151,7 @@ namespace NBAdbToolbox
             Text = "",
             Visible = false
         };
+        public int picLoadLoc = 0;
 
         //Header Panels
         public Panel pnlNav = new Panel();
@@ -391,7 +392,7 @@ namespace NBAdbToolbox
                 string dialog = "Seasons selected: ";
                 List<int> seasons = new List<int>();
 
-                for(int i = 0; i < listSeasons.SelectedItems.Count; i++)
+                for (int i = 0; i < listSeasons.SelectedItems.Count; i++)
                 {
                     seasons.Add(Int32.Parse(listSeasons.SelectedItems[i].ToString()));
                     dialog += seasons[i] + ", ";
@@ -403,11 +404,34 @@ namespace NBAdbToolbox
                 var popup = new PopulatePopup(dialog);
                 if (popup.ShowDialog() == DialogResult.OK)
                 {
+                    using (var img = Image.FromFile(Path.Combine(projectRoot, "Content", "Loading", "kawhi1" + ".png")))
+                    {
+                        picLoad.Image = new Bitmap(img); // clone it so file lock is released
+                        picLoad.SizeMode = PictureBoxSizeMode.Zoom;
+                        picLoad.Width = pnlLoad.Height;
+                        picLoad.Height = pnlLoad.Height;
+                        picLoad.Left = (pnlLoad.ClientSize.Width - picLoad.Width) / 2;
+                        picLoad.BackColor = Color.Transparent;
+                        picLoad.Top = 0;
+                    }
                     gpm.Visible = true;
                     gpmValue.Visible = true;
                     lblCurrentGame.Visible = true;
                     lblCurrentGameCount.Visible = true;
+                    lblCurrentGame.Text = "Current game: ";
+                    lblCurrentGame.Left = 4;
+                    fontSize = ((float)(pnlLoad.Height * .05) / (96 / 12)) * (72 / 12);
+                    lblCurrentGame.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Regular, pnlLoad, lblCurrentGame);
+                    lblCurrentGame.AutoSize = true;
+                    lblCurrentGame.ForeColor = Color.Black;
                     lblSeasonStatusLoad.Visible = true;
+                    lblSeasonStatusLoad.Text = "Currently loading: ";
+                    lblSeasonStatusLoad.ForeColor = Color.Black;
+                    fontSize = ((float)(pnlLoad.Height * .08) / (96 / 12)) * (72 / 12);
+                    lblSeasonStatusLoad.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Regular, pnlLoad, lblSeasonStatusLoad);
+                    lblSeasonStatusLoad.Left = 0;
+                    lblSeasonStatusLoad.AutoSize = true;
+
                     lblSeasonStatusLoadInfo.Visible = true;
                     picLoad.Visible = true;
                     lblWorkingOn.Visible = true;
@@ -653,14 +677,16 @@ namespace NBAdbToolbox
                     fontSize = ((float)(pnlLoad.Height * .08) / (96 / 12)) * (72 / 12);
                     lblSeasonStatusLoad.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Regular, pnlLoad, lblSeasonStatusLoad);
                     lblSeasonStatusLoad.AutoSize = true;
-
                     if (picLoad.Image != null)
                     {
                         picLoad.Image.Dispose(); // release the previous image
                         picLoad.Image = null;
                     }
 
-                    lblWorkingOn.Left = lblSeasonStatusLoad.Right + (int)(pnlLoad.Width * .01);
+                    fontSize = ((float)(pnlLoad.Height * .035) / (96 / 12)) * (72 / 12);
+                    lblWorkingOn.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Regular, pnlLoad, lblWorkingOn);
+                    lblWorkingOn.AutoSize = true;
+                    lblWorkingOn.Left = pnlLoad.Width - lblWorkingOn.Width;
                     lblWorkingOn.Top = 0;
                     using (var img = Image.FromFile(Path.Combine(projectRoot, "Content", "Success.png")))
                     {
