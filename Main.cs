@@ -534,6 +534,17 @@ namespace NBAdbToolbox
                                 reverse = false;
                             }
                             iterator++;
+                            int gamesLeft = totalGames - iterator;
+                            double gamesPerSec = iterator / stopwatchInsert.Elapsed.TotalSeconds;
+                            double gamesPerMin = Math.Round(gamesPerSec * 60, 2);
+                            double estimatedSeconds = gamesLeft / gamesPerSec;
+                            TimeSpan timeRemaining = TimeSpan.FromSeconds(estimatedSeconds);
+                            string time = timeRemaining.ToString();
+                            time = time.Remove(time.Length - 3);
+                            gpmValue.Invoke((MethodInvoker)(() =>
+                            {
+                                gpmValue.Text = gamesPerMin + "\n" + time;
+                            }));
                         }
                         stopwatch.Stop();
                         stopwatchInsert.Stop();
@@ -592,7 +603,7 @@ namespace NBAdbToolbox
                         completionMessage += elapsedStringSeason + ". ";
                         completionMessage += iterator + " games, " + regGames + "/" + (iterator - regGames) + "\n";
                         lblWorkingOn.Text = completionMessage;
-                        fontSize = ((float)(pnlLoad.Height * .04) / (96 / 12)) * (72 / 12);
+                        fontSize = ((float)(pnlLoad.Height * .0375) / (96 / 12)) * (72 / 12);
                         lblWorkingOn.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Regular, pnlLoad, lblWorkingOn);
                         lblWorkingOn.AutoSize = true;
                         lblWorkingOn.Left = picLoad.Right - (int)(picLoad.Width / 5);
@@ -2933,12 +2944,12 @@ namespace NBAdbToolbox
             //+ action.shotDistance + ", '" 
             //+ action.location + "', ";
 
-            if (action.description == "" && action.actionType != "")
+            if (action.description == "" && action.actionType != "" && action.actionType != " ")
             {
                 insert += "Description, ";
                 values += "'" + action.actionType + "', ";
             }
-            else if(action.description != "")
+            else if(action.description != "" && action.description != " ")
             {
                 insert += "Description, ";
                 values += "'" + action.description.Replace("'", "''") + "', " ;
@@ -2966,7 +2977,7 @@ namespace NBAdbToolbox
                     values += "'" + action.actionType + "', ";
                 }
             }
-            else
+            else if(action.actionType != "" && action.actionType != " ")
             {
                 insert += "ActionType, ";
                 values += "'" + action.actionType + "', ";
