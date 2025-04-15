@@ -1682,8 +1682,8 @@ namespace NBAdbToolbox
         public async Task ReadSeasonFile(int season, bool bHistoric, bool bCurrent)
         {
             string filePath = Path.Combine(projectRoot, "Content\\", "dbconfig.json");              //Line 1568 is TESTing data, 1567 normal
-            //filePath = filePath.Replace("dbconfig.json", "Historic Data\\");
-            filePath = filePath.Replace("dbconfig.json", "Historic Data\\test\\");
+            filePath = filePath.Replace("dbconfig.json", "Historic Data\\");
+            //filePath = filePath.Replace("dbconfig.json", "Historic Data\\test\\");
             if (bHistoric || (!bHistoric && !bCurrent))
             {
                 int iter = (season == 2012 || season == 2019 || season == 2020 || season == 2024) ? 3 : 4;
