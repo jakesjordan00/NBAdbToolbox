@@ -1034,33 +1034,17 @@ values(
 @DatetimeComplete)
 ~~~
 
-create trigger PBPScores
-on PlayByPlay after insert as
-update PlayByPlay set ScoreHome = (
-select top 1 p.ScoreHome 
-from PlayByPlay p inner join
-		inserted i on p.SeasonID = i.SeasonID and p.GameID = i.GameID and p.ActionNumber < i.ActionNumber
-where p.ScoreHome is not null order by p.ActionNumber desc),
-ScoreAway = (
-select top 1 p.ScoreAway 
-from PlayByPlay p inner join
-		inserted i on p.SeasonID = i.SeasonID and p.GameID = i.GameID and p.ActionNumber < i.ActionNumber
-where p.ScoreAway is not null order by p.ActionNumber desc)
-where ActionNumber = (select ActionNumber from inserted) and ScoreAway is null and ScoreHome is null
-~~~
 
-create procedure NewPlayerCheckHistorical @PlayerID int, @SeasonID int, @TeamID int, @GameID int
-as
-select p.PlayerID, (select COUNT(distinct PlayerID) from Player where SeasonID = p.SeasonID) Players,	--Count of all players
-(select Minutes from PlayerBox b where b.PlayerID = p.PlayerID and b.SeasonID = p.SeasonID				--If Minutes is null, add to insert string
-and b.TeamID = @TeamID																					--If it has a value, compare to our data file
-and b.GameID = @GameID) PlayerBox,																		--If equal, do nothing. If different, add update to string
-(select Position from StartingLineups s where s.PlayerID = p.PlayerID and s.SeasonID = p.SeasonID		--If Position is null, add to insert string for StartingLineups
-and s.TeamID = @TeamID																					--If it has a value, compare to our data file														
-and s.GameID = @GameID) StartingLineups																	--If equal, do nothing. If different, add update to string
-from Player p
-where p.PlayerID = @PlayerID and p.SeasonID = @SeasonID
-~~~
 
+
+
+create procedure NewPlayerCheckHistorical @PlayerID int, @SeasonID int, @TeamID int, @GameID int	   
+as																									   
+select p.PlayerID, b.minutes, s.Position																 
+from Player p left join
+		PlayerBox b on p.PlayerID = b.PlayerID and p.SeasonID = b.SeasonID left join
+		StartingLineups s on b.PlayerID = s.PlayerID and b.GameID = s.GameID and b.TeamID = s.TeamID and b.MatchupID = s.MatchupID and b.SeasonID = s.SeasonID
+where p.PlayerID = @PlayerID and p.SeasonID = @SeasonID and ((b.GameID = @GameID and b.TeamID = @TeamID) or b.PlayerID is null or s.PlayerID is null)
+~~~
 
 */
