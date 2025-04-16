@@ -1709,8 +1709,8 @@ namespace NBAdbToolbox
         public async Task ReadSeasonFile(int season, bool bHistoric, bool bCurrent)
         {
             string filePath = Path.Combine(projectRoot, "Content\\", "dbconfig.json");              //Line 1568 is TESTing data, 1567 normal
-            filePath = filePath.Replace("dbconfig.json", "Historic Data\\");
-            //filePath = filePath.Replace("dbconfig.json", "Historic Data\\test\\");
+            //filePath = filePath.Replace("dbconfig.json", "Historic Data\\");
+            filePath = filePath.Replace("dbconfig.json", "Historic Data\\test\\");
             if (bHistoric || (!bHistoric && !bCurrent))
             {
                 int iter = (season == 2012 || season == 2019 || season == 2020 || season == 2024) ? 3 : 4;
@@ -2152,6 +2152,7 @@ namespace NBAdbToolbox
         public void PlayerStaging(NBAdbToolboxHistoric.Game game, int season)
         {
             playerBoxInsertString = "";
+            playerBoxUpdateString = "";
             foreach (NBAdbToolboxHistoric.Player player in game.box.homeTeam.players)
             {//Home Team
                 if (!playerList.Contains((season, player.personId)))
@@ -2185,13 +2186,18 @@ namespace NBAdbToolbox
                 PlayerBoxCheck(game, player, game.box.awayTeamId, game.box.homeTeamId, season, "PlayerBoxCheck");
             }
             playerBoxInsertString = playerBoxInsertString.Replace("'',", "");
-            using (SqlCommand PlayerBoxInsert = new SqlCommand(playerBoxInsertString))
+            //playerBoxUpdateString = playerBoxUpdateString.Replace("'',", "");
+            string playerBoxCommand = playerBoxInsertString + "\n" + playerBoxUpdateString;
+            if(playerBoxCommand != "\n")
             {
-                PlayerBoxInsert.Connection = SQLdb;
-                PlayerBoxInsert.CommandType = CommandType.Text;
-                SQLdb.Open();
-                PlayerBoxInsert.ExecuteScalar();
-                SQLdb.Close();
+                using (SqlCommand PlayerBoxInsert = new SqlCommand(playerBoxCommand))
+                {
+                    PlayerBoxInsert.Connection = SQLdb;
+                    PlayerBoxInsert.CommandType = CommandType.Text;
+                    SQLdb.Open();
+                    PlayerBoxInsert.ExecuteScalar();
+                    SQLdb.Close();
+                }
             }
         }
         public void PlayerCheck(NBAdbToolboxHistoric.Player player, int season, string number)
@@ -2616,6 +2622,7 @@ namespace NBAdbToolbox
                 PlayerBoxCheck.Parameters.AddWithValue("@SeasonID", season);
                 PlayerBoxCheck.Parameters.AddWithValue("@GameID", Int32.Parse(game.game_id));
                 PlayerBoxCheck.Parameters.AddWithValue("@TeamID", TeamID);
+                PlayerBoxCheck.Parameters.AddWithValue("@MatchupID", MatchupID);
                 PlayerBoxCheck.Parameters.AddWithValue("@PlayerID", player.personId);
                 using (SqlDataAdapter sTeamSearch = new SqlDataAdapter())
                 {
@@ -2632,10 +2639,11 @@ namespace NBAdbToolbox
                     else
                     {
                         reader.Read();
-                        if (reader.GetString(4) != player.statistics.minutes)
+                        if (reader.GetString(4) != player.statistics.minutes && reader.GetString(4) != "0" && reader.GetString(4) != "")
                         {
                             SQLdb.Close();
-                            PlayerBoxUpdate(game, player, TeamID, season, "PlayerBoxUpdateHistoric");
+                            //PlayerBoxUpdate(game, player, TeamID, season, "PlayerBoxUpdateHistoric");
+                            PlayerBoxUpdateString(game, player, TeamID, MatchupID, season);
                         }
                         else
                         {
@@ -2715,8 +2723,13 @@ namespace NBAdbToolbox
             {
                 insert += "Minutes, ";
                 values += "'" + player.statistics.minutes + "', ";
+                if (player.statistics.plusMinusPoints != 0)
+                {
+                    insert += "PlusMinusPoints, ";
+                    values += player.statistics.plusMinusPoints + ", ";
+                }
             }
-            else
+            else if(player.statistics.minutes == "")
             {
                 insert += "Minutes, ";
                 values += "'0', ";
@@ -2820,6 +2833,52 @@ namespace NBAdbToolbox
         }
         #endregion
 
+        public string playerBoxUpdateString = "";
+        public void PlayerBoxUpdateString(NBAdbToolboxHistoric.Game game, NBAdbToolboxHistoric.Player player, int TeamID, int MatchupID, int season)
+        {            
+            string update = "update PlayerBox set" +
+                " Points = " + player.statistics.points
+                + ", FGM = " + player.statistics.fieldGoalsMade
+                + ", FGA = " + player.statistics.fieldGoalsAttempted
+                + ", [FG%] = " + player.statistics.fieldGoalsPercentage
+                + ", FG3M = " + player.statistics.threePointersMade
+                + ", FG3A = " + player.statistics.threePointersAttempted
+                + ", [FG3%] = " + player.statistics.threePointersPercentage
+                + ", FTM = " + player.statistics.freeThrowsMade
+                + ", FTA = " + player.statistics.freeThrowsAttempted
+                + ", [FT%] = " + player.statistics.freeThrowsPercentage
+                + ", ReboundsDefensive = " + player.statistics.reboundsDefensive
+                + ", ReboundsOffensive = " + player.statistics.reboundsOffensive
+                + ", ReboundsTotal = " + player.statistics.reboundsTotal
+                + ", Assists = " + player.statistics.assists
+                + ", Turnovers = " + player.statistics.turnovers
+                + ", Steals = " + player.statistics.steals
+                + ", Blocks = " + player.statistics.blocks
+                + ", FoulsPersonal = " + player.statistics.foulsPersonal
+                + ", PlusMinusPoints = " + player.statistics.plusMinusPoints
+                + ", FG2M = " + (player.statistics.fieldGoalsMade - player.statistics.threePointersMade)
+                + ", FG2A = " + (player.statistics.fieldGoalsAttempted - player.statistics.threePointersAttempted);
+
+
+            if ((double)(player.statistics.fieldGoalsAttempted - player.statistics.threePointersAttempted) != 0)
+            {
+                update += ", [FG2%] = " + Math.Round((double)(player.statistics.fieldGoalsMade - player.statistics.threePointersMade) /
+                    (double)(player.statistics.fieldGoalsAttempted - player.statistics.threePointersAttempted), 4);
+            }
+
+            if (player.statistics.turnovers > 0)
+            {
+                update += ", AssistsTurnoverRatio = " + Math.Round((double)(player.statistics.assists) / (double)(player.statistics.turnovers), 3);
+            }
+            if(player.statistics.minutes != "")
+            {
+                update += ", Minutes = '" + player.statistics.minutes + "'";
+            }
+            string where = " where SeasonID = " + season + " and GameID = " + game.game_id + " and TeamID = " + TeamID + " and MatchupID = " + MatchupID + " and PlayerID = " + player.personId;
+
+            playerBoxUpdateString += update + where + "\n";
+        }
+
         //PlayByPlay methods
         #region PlayByPlay Methods
         public string insertString = "";
@@ -2843,13 +2902,16 @@ namespace NBAdbToolbox
                 }
             }
             insertString = insertString.Replace("'',", "");
-            using (SqlCommand PlayByPlayInsert = new SqlCommand(insertString))
+            if(insertString != "")
             {
-                PlayByPlayInsert.Connection = SQLdb;
-                PlayByPlayInsert.CommandType = CommandType.Text;
-                SQLdb.Open();
-                PlayByPlayInsert.ExecuteScalar();
-                SQLdb.Close();
+                using (SqlCommand PlayByPlayInsert = new SqlCommand(insertString))
+                {
+                    PlayByPlayInsert.Connection = SQLdb;
+                    PlayByPlayInsert.CommandType = CommandType.Text;
+                    SQLdb.Open();
+                    PlayByPlayInsert.ExecuteScalar();
+                    SQLdb.Close();
+                }
             }
 
         }

@@ -766,11 +766,12 @@ create procedure PlayerBoxCheck
 @SeasonID      int,
 @GameID        int,
 @TeamID        int,
+@MatchupID     int,
 @PlayerID      int
 as
 select SeasonID, GameID, TeamID, PlayerID, Minutes
 from PlayerBox p
-where p.SeasonID = @SeasonID and p.GameID = @GameID and p.TeamID = @TeamID and p.PlayerID = @PlayerID
+where p.SeasonID = @SeasonID and p.GameID = @GameID and p.TeamID = @TeamID and p.MatchupID = @MatchupID and p.PlayerID = @PlayerID
 ~~~
 
 
@@ -803,7 +804,7 @@ Steals				=	@Steals        ,
 Blocks				=	@Blocks        ,
 Points				=	@Points        ,
 FoulsPersonal		=	@FoulsPersonal ,
-Minutes			=	@Minutes
+Minutes				=	@Minutes
 where SeasonID = @SeasonID and GameID = @GameID and TeamID = @TeamID and PlayerID = @PlayerID
 ~~~
 
