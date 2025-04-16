@@ -4,6 +4,8 @@ SeasonID			int,
 ChampionID			int,
 Games				int,
 PlayoffGames		int,
+HistoricLoaded		int,
+CurrentLoaded		int,
 Primary Key(SeasonID))
 
 create table Team(
@@ -214,6 +216,7 @@ Clock				varchar(20),
 TimeActual			datetime,
 ScoreHome			int,
 ScoreAway			int,
+Possession			int,
 TeamID				int,
 Tricode				varchar(3),
 PlayerID			int,
@@ -247,7 +250,6 @@ PlayerIDJumpW		int,
 PlayerIDJumpL		int,
 OfficialID			int,
 QtrType				varchar(20),
-EventMsgTypeID		int,
 Primary Key(SeasonID, GameID, ActionNumber, ActionID),
 Foreign Key (SeasonID) references Season(SeasonID),
 Foreign Key (SeasonID, GameID) references Game(SeasonID, GameID))
@@ -336,19 +338,19 @@ Primary Key (BuildID, RunID))
 --The below section will be used to create a new string for procedure creation
 ~create procedure SeasonInsert
 as
-insert into Season values(2012, 1610612748, 1229, 85)
-insert into Season values(2013, 1610612759, 1230, 89)
-insert into Season values(2014, 1610612744, 1230, 81)
-insert into Season values(2015, 1610612739, 1230, 86)
-insert into Season values(2016, 1610612744, 1230, 79)
-insert into Season values(2017, 1610612744, 1230, 81)
-insert into Season values(2018, 1610612761, 1230, 82)
-insert into Season values(2019, 1610612747, 1059, 83)
-insert into Season values(2020, 1610612749, 1080, 91)
-insert into Season values(2021, 1610612744, 1230, 93)
-insert into Season values(2022, 1610612743, 1230, 90)
-insert into Season values(2023, 1610612738, 1230, 88)
-insert into Season values(2024, null, 1230, 0)
+insert into Season values(2012, 1610612748, 1229, 85, 0, 0)
+insert into Season values(2013, 1610612759, 1230, 89, 0, 0)
+insert into Season values(2014, 1610612744, 1230, 81, 0, 0)
+insert into Season values(2015, 1610612739, 1230, 86, 0, 0)
+insert into Season values(2016, 1610612744, 1230, 79, 0, 0)
+insert into Season values(2017, 1610612744, 1230, 81, 0, 0)
+insert into Season values(2018, 1610612761, 1230, 82, 0, 0)
+insert into Season values(2019, 1610612747, 1059, 83, 0, 0)
+insert into Season values(2020, 1610612749, 1080, 91, 0, 0)
+insert into Season values(2021, 1610612744, 1230, 93, 0, 0)
+insert into Season values(2022, 1610612743, 1230, 90, 0, 0)
+insert into Season values(2023, 1610612738, 1230, 88, 0, 0)
+insert into Season values(2024, null, 1230, 0, 0, 0)
 ~~~
 
 
@@ -362,7 +364,7 @@ where type_desc = 'USER_TABLE'
 
 create procedure Seasons
 as
-select SeasonID, Games, PlayoffGames
+select SeasonID, Games + PlayoffGames Games, HistoricLoaded, CurrentLoaded, Games, PlayoffGames
 from Season
 order by SeasonID desc
 ~~~
@@ -972,6 +974,7 @@ from BuildLog
 ~~~
 
 
+
 create procedure BuildLogInsert
 @BuildID int,
 @Season int,
@@ -991,7 +994,9 @@ create procedure BuildLogInsert
 @MsI  int,
 @InsertTime varchar(255),
 @DatetimeStarted datetime,
-@DatetimeComplete datetime
+@DatetimeComplete datetime,
+@Historic int,
+@Current int
 as
 insert into BuildLog(
 BuildID, 
@@ -1033,6 +1038,8 @@ values(
 @InsertTime, 
 @DatetimeStarted, 
 @DatetimeComplete)
+update Season set HistoricLoaded = 1 where SeasonID = @Season and @Historic = 1
+update Season set CurrentLoaded  = 1 where SeasonID = @Season and @Current = 1
 ~~~
 
 

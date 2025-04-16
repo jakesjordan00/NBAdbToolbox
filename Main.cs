@@ -13,19 +13,23 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Newtonsoft.Json;
-using NBAdbToolboxHistoric;
 using System.Diagnostics;
 using static NBAdbToolbox.Main;
 using System.Data.SqlTypes;
 using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.Runtime.ConstrainedExecution;
+using NBAdbToolboxHistoric;
+using NBAdbToolboxCurrent;
+using NBAdbToolboxCurrentPBP;
 
 namespace NBAdbToolbox
 {
     public partial class Main : Form
     {
         NBAdbToolboxHistoric.Root root = new NBAdbToolboxHistoric.Root();
+        NBAdbToolboxCurrent.Root rootC = new NBAdbToolboxCurrent.Root();
+        NBAdbToolboxCurrentPBP.Root rootCPBP = new NBAdbToolboxCurrentPBP.Root();
         //Determine whether or not we have a connection to the Database in dbconfig file
         public bool dbConnection = false;
         //File path for project
@@ -102,6 +106,7 @@ namespace NBAdbToolbox
         public ListBox listSeasons = new ListBox();
         public Button btnPopulate = new Button();
         public static DataHistoric historic = new DataHistoric();
+        public static DataCurrent currentData = new DataCurrent();
         public Panel pnlLoad = new Panel();
         public Label lblSeasonStatusLoad = new Label
         {
@@ -189,6 +194,10 @@ namespace NBAdbToolbox
             {2022, 548},
             {2023, 586}
         };
+        public Stopwatch stopwatchInsert    = new Stopwatch();
+        public Stopwatch stopwatchRead      = new Stopwatch();
+        public TimeSpan  timeElapsedRead    = new TimeSpan(0);
+        public string    elapsedStringRead  = "";
         public Main()
         {
             InitializeComponent();
@@ -414,6 +423,8 @@ namespace NBAdbToolbox
                         picLoad.BackColor = Color.Transparent;
                         picLoad.Top = 0;
                     }
+                    int historic = 0;
+                    int current = 0;
                     gpm.Visible = true;
                     gpmValue.Visible = true;
                     lblCurrentGame.Visible = true;
@@ -472,104 +483,181 @@ namespace NBAdbToolbox
                         btnPopulate.Enabled = false;
                         btnEdit.Enabled = false;
                         listSeasons.Enabled = false;
-                        lblSeasonStatusLoadInfo.Text = season + " historic data file";
-                        Stopwatch stopwatchRead = Stopwatch.StartNew();
-                        await Task.Run(async () =>      //This sets the root variable to our big file
-                        {
-                            await ReadSeasonFile(season, popup.historic, popup.current);
-                        });
-                        stopwatchRead.Stop();
-                        TimeSpan timeElapsedRead = stopwatchRead.Elapsed;
-                        Dictionary<string, (int, string)> timeUnitsRead = new Dictionary<string, (int value, string sep)>
-                        {
-                        { "h", (timeElapsedRead.Hours, ":") },
-                        { "m", (timeElapsedRead.Minutes, ":") },
-                        { "s", (timeElapsedRead.Seconds, ".") },
-                        { "ms", (timeElapsedRead.Milliseconds, "") }
-                        };
-                        string elapsedStringRead = CheckTime(timeUnitsRead);
-                        //End season read
-                        lblStatus.Text = season + " parsed. Inserting data...";
-                        CenterElement(pnlWelcome, lblStatus);
+
                         int iterator = 0;
                         int imageIteration = 1;
                         bool reverse = false;
                         int remainder = 5;
-                        lblSeasonStatusLoadInfo.Text = season + " Regular Season";
-                        Stopwatch stopwatchInsert = Stopwatch.StartNew();
-                        int totalGames = seasonGames.First(g => g.SeasonID == season).Games;
-                        foreach (NBAdbToolboxHistoric.Game game in root.season.games.regularSeason)
+                        int regGames = 0;
+                        //Historic Data
+                        #region Historic Data
+                        if (popup.historic || (!popup.historic && !popup.current) || season < 2019)
                         {
-                            await Task.Run(async () =>      //This inserts the games from season file into db
+                            historic = 1;
+                            lblSeasonStatusLoadInfo.Text = season + " historic data file";
+                            stopwatchRead.Start();
+                            await Task.Run(async () =>      //This sets the root variable to our big file
                             {
-                                await InsertGameWithLoading(game, season, imageIteration, "Regular Season");                               
-                            }); 
-                            if (reverse)
-                            {
-                                imageIteration--;
-                            }
-                            else
-                            {
-                                imageIteration++;
-                            }                            
-                            if (imageIteration == 25)
-                            {
-                                reverse = true;
-                            }
-                            if (imageIteration == 1)
-                            {
-                                reverse = false;
-                            }
-                            iterator++;
-                            int gamesLeft = totalGames - iterator;
-                            double gamesPerSec = iterator / stopwatchInsert.Elapsed.TotalSeconds;
-                            double gamesPerMin = Math.Round(gamesPerSec * 60, 2);
-                            double estimatedSeconds = gamesLeft / gamesPerSec;
-                            TimeSpan timeRemaining = TimeSpan.FromSeconds(estimatedSeconds);
-                            string time = timeRemaining.ToString();
-                            time = time.Remove(time.Length - 3);
-                            gpmValue.Invoke((MethodInvoker)(() =>
-                            {
-                                gpmValue.Text = gamesPerMin + "\n" + time;
-                            }));
-                        }
-                        int regGames = iterator;
-                        lblSeasonStatusLoadInfo.Text = season + " Postseason";
-                        foreach (NBAdbToolboxHistoric.Game game in root.season.games.playoffs)
-                        {
-                            await Task.Run(async () =>      //This inserts the games from season file into db
-                            {
-                                await InsertGameWithLoading(game, season, imageIteration, "Postseason");
+                                await ReadSeasonFile(season, popup.historic, popup.current);
                             });
-                            if (reverse)
+                            stopwatchRead.Stop();
+                            TimeSpan timeElapsedRead = stopwatchRead.Elapsed;
+                            Dictionary<string, (int, string)> timeUnitsRead = new Dictionary<string, (int value, string sep)>
                             {
-                                imageIteration--;
+                                { "h", (timeElapsedRead.Hours, ":") },
+                                { "m", (timeElapsedRead.Minutes, ":") },
+                                { "s", (timeElapsedRead.Seconds, ".") },
+                                { "ms", (timeElapsedRead.Milliseconds, "") }
+                            };
+                            string elapsedStringRead = CheckTime(timeUnitsRead);
+                            //End season read
+                            lblStatus.Text = season + " parsed. Inserting data...";
+                            CenterElement(pnlWelcome, lblStatus);
+                            lblSeasonStatusLoadInfo.Text = season + " Regular Season";
+                            stopwatchInsert.Start();
+                            int totalGames = seasonGames.First(g => g.SeasonID == season).Games;
+                            foreach (NBAdbToolboxHistoric.Game game in root.season.games.regularSeason)
+                            {
+                                await Task.Run(async () =>      //This inserts the games from season file into db
+                                {
+                                    await InsertGameWithLoading(game, season, imageIteration, "Regular Season");
+                                });
+                                if (reverse)
+                                {
+                                    imageIteration--;
+                                }
+                                else
+                                {
+                                    imageIteration++;
+                                }
+                                if (imageIteration == 25)
+                                {
+                                    reverse = true;
+                                }
+                                if (imageIteration == 1)
+                                {
+                                    reverse = false;
+                                }
+                                iterator++;
+                                int gamesLeft = totalGames - iterator;
+                                double gamesPerSec = iterator / stopwatchInsert.Elapsed.TotalSeconds;
+                                double gamesPerMin = Math.Round(gamesPerSec * 60, 2);
+                                double estimatedSeconds = gamesLeft / gamesPerSec;
+                                TimeSpan timeRemaining = TimeSpan.FromSeconds(estimatedSeconds);
+                                string time = timeRemaining.ToString();
+                                time = time.Remove(time.Length - 3);
+                                gpmValue.Invoke((MethodInvoker)(() =>
+                                {
+                                    gpmValue.Text = gamesPerMin + "\n" + time;
+                                }));
                             }
-                            else
+                            regGames = iterator;
+                            lblSeasonStatusLoadInfo.Text = season + " Postseason";
+                            foreach (NBAdbToolboxHistoric.Game game in root.season.games.playoffs)
                             {
-                                imageIteration++;
+                                await Task.Run(async () =>      //This inserts the games from season file into db
+                                {
+                                    await InsertGameWithLoading(game, season, imageIteration, "Postseason");
+                                });
+                                if (reverse)
+                                {
+                                    imageIteration--;
+                                }
+                                else
+                                {
+                                    imageIteration++;
+                                }
+                                if (imageIteration == 25)
+                                {
+                                    reverse = true;
+                                }
+                                if (imageIteration == 1)
+                                {
+                                    reverse = false;
+                                }
+                                iterator++;
+                                int gamesLeft = totalGames - iterator;
+                                double gamesPerSec = iterator / stopwatchInsert.Elapsed.TotalSeconds;
+                                double gamesPerMin = Math.Round(gamesPerSec * 60, 2);
+                                double estimatedSeconds = gamesLeft / gamesPerSec;
+                                TimeSpan timeRemaining = TimeSpan.FromSeconds(estimatedSeconds);
+                                string time = timeRemaining.ToString();
+                                time = time.Remove(time.Length - 3);
+                                gpmValue.Invoke((MethodInvoker)(() =>
+                                {
+                                    gpmValue.Text = gamesPerMin + "\n" + time;
+                                }));
                             }
-                            if (imageIteration == 25)
-                            {
-                                reverse = true;
-                            }
-                            if (imageIteration == 1)
-                            {
-                                reverse = false;
-                            }
-                            iterator++;
-                            int gamesLeft = totalGames - iterator;
-                            double gamesPerSec = iterator / stopwatchInsert.Elapsed.TotalSeconds;
-                            double gamesPerMin = Math.Round(gamesPerSec * 60, 2);
-                            double estimatedSeconds = gamesLeft / gamesPerSec;
-                            TimeSpan timeRemaining = TimeSpan.FromSeconds(estimatedSeconds);
-                            string time = timeRemaining.ToString();
-                            time = time.Remove(time.Length - 3);
-                            gpmValue.Invoke((MethodInvoker)(() =>
-                            {
-                                gpmValue.Text = gamesPerMin + "\n" + time;
-                            }));
+                        
                         }
+                        #endregion
+                        //Current Data
+                        #region Current Data
+                        List<int> currentGames = new List<int>();
+
+                        var match = seasonInfo.FirstOrDefault(x => x.Item1 == season);
+                        int historicCheck = 0;
+                        if (!match.Equals(default))
+                        {
+                            historicCheck = match.Item2.Item3;
+                            // use thirdValue here
+                        }
+
+                        if (!popup.historic && popup.current && season > 2018 && historicCheck == 1)   //If historic exists
+                        {
+                            current = 1;
+                            using (SqlCommand GetTables = new SqlCommand("select distinct GameID from Game where SeasonID = " + season))
+                            {
+                                SqlConnection conn = new SqlConnection(bob.ToString());
+                                GetTables.Connection = conn;
+                                GetTables.CommandType = CommandType.Text;
+                                conn.Open();
+                                using (SqlDataReader sdr = GetTables.ExecuteReader())
+                                {
+                                    while (sdr.Read())
+                                    {
+                                        currentGames.Add(sdr.GetInt32(0));
+                                    }
+                                }
+                            }
+                            foreach(int game in currentGames)
+                            {
+                                await Task.Run(async () =>      //This sets the root variable to our big file
+                                {
+                                    await ReadCurrentData(game, season, imageIteration, "Existing");
+                                });
+                                if (reverse)
+                                {
+                                    imageIteration--;
+                                }
+                                else
+                                {
+                                    imageIteration++;
+                                }
+                                if (imageIteration == 25)
+                                {
+                                    reverse = true;
+                                }
+                                if (imageIteration == 1)
+                                {
+                                    reverse = false;
+                                }
+                                iterator++;
+                                int gamesLeft = currentGames.Count - iterator;
+                                double gamesPerSec = iterator / stopwatchInsert.Elapsed.TotalSeconds;
+                                double gamesPerMin = Math.Round(gamesPerSec * 60, 2);
+                                double estimatedSeconds = gamesLeft / gamesPerSec;
+                                TimeSpan timeRemaining = TimeSpan.FromSeconds(estimatedSeconds);
+                                string time = timeRemaining.ToString();
+                                time = time.Remove(time.Length - 3);
+                                gpmValue.Invoke((MethodInvoker)(() =>
+                                {
+                                    gpmValue.Text = gamesPerMin + "\n" + time;
+                                }));
+                            }
+                        }
+                        #endregion
+
                         stopwatch.Stop();
                         stopwatchInsert.Stop();
                         DateTime end = DateTime.Now;
@@ -617,6 +705,8 @@ namespace NBAdbToolbox
                             BuildLogInsert.Parameters.AddWithValue("@InsertTime", elapsedStringInsert);
                             BuildLogInsert.Parameters.AddWithValue("@DatetimeStarted", start);
                             BuildLogInsert.Parameters.AddWithValue("@DatetimeComplete", end);
+                            BuildLogInsert.Parameters.AddWithValue("@Historic", historic);
+                            BuildLogInsert.Parameters.AddWithValue("@Current", current);
                             SQLdb.Open();
                             BuildLogInsert.ExecuteScalar();
                             SQLdb.Close();
@@ -638,6 +728,8 @@ namespace NBAdbToolbox
                         teamsDone = false;
                         arenasDone = false;
                         playersDone = false;
+                        timeElapsedRead = TimeSpan.Zero;
+                        elapsedStringRead = "";
                     }
                     stopwatchFull.Stop();
                     DateTime endFull = DateTime.Now;
@@ -700,7 +792,8 @@ namespace NBAdbToolbox
 
                 }
             };
-
+            //Panel Formatting
+            #region Panel Formatting
             pnlLoad.Top = pnlWelcome.Bottom;
             pnlLoad.Left = pnlWelcome.Left;
             pnlLoad.Width = pnlWelcome.Width;
@@ -886,7 +979,7 @@ namespace NBAdbToolbox
             btnBuild.AutoSize = true;
             CenterElement(pnlWelcome, btnBuild);
             btnBuild.Top = btnEdit.Bottom + 10; //subject to change
-
+            #endregion
 
 
 
@@ -1389,7 +1482,9 @@ namespace NBAdbToolbox
                 {
                     while (sdr.Read())
                     {
-                        listSeasons.Items.Add(sdr["SeasonID"].ToString());                    
+                        //select SeasonID, Games + PlayoffGames Games, HistoricLoaded, CurrentLoaded, Games, PlayoffGames
+                        listSeasons.Items.Add(sdr["SeasonID"].ToString());
+                        seasonInfo.Add((sdr.GetInt32(0), (sdr.GetInt32(1), sdr.GetInt32(2), sdr.GetInt32(3), sdr.GetInt32(4))));
                     }
                 }
             }
@@ -1540,7 +1635,7 @@ namespace NBAdbToolbox
 
 
         //Scoreboard
-
+        #region Scoreboard
         public class Meta
         {
             public int Version { get; set; }
@@ -1704,19 +1799,27 @@ namespace NBAdbToolbox
             }
         }
 
+        #endregion
 
 
+
+        public HashSet<(int, (int, int, int, int))> seasonInfo = new HashSet<(int, (int, int, int, int))>();
         public async Task ReadSeasonFile(int season, bool bHistoric, bool bCurrent)
         {
             string filePath = Path.Combine(projectRoot, "Content\\", "dbconfig.json");              //Line 1568 is TESTing data, 1567 normal
             //filePath = filePath.Replace("dbconfig.json", "Historic Data\\");
             filePath = filePath.Replace("dbconfig.json", "Historic Data\\test\\");
-            if (bHistoric || (!bHistoric && !bCurrent))
-            {
-                int iter = (season == 2012 || season == 2019 || season == 2020 || season == 2024) ? 3 : 4;
-                root = await historic.ReadFile(season, iter, filePath);
-            }            
+            if (bHistoric || (!bHistoric && !bCurrent) || season < 2019)                                    //Load Historic if selection is either:
+            {                                                                                                   //Historic Data file
+                int iter = (season == 2012 || season == 2019 || season == 2020 || season == 2024) ? 3 : 4;      //No Selection
+                root = await historic.ReadFile(season, iter, filePath);                                         //Season before 2019
+            }
+            else if(!bHistoric && bCurrent && season > 2018)        //Load current data if selection is:                         
+            {                                                       //Current, not Historic and season is after 2018
+
+            }
         }
+
 
 
         private async Task InsertGameWithLoading(NBAdbToolboxHistoric.Game game, int season, int imageIteration, string sender)
@@ -3151,8 +3254,6 @@ namespace NBAdbToolbox
         #endregion
 
 
-
-
         public void PlayerStagingNew(NBAdbToolboxHistoric.Game game, int season)
         {
             playerTablesInsertString = "";
@@ -3331,6 +3432,49 @@ namespace NBAdbToolbox
                 insert += "Starters', '" + position + "')\n";
             }
             return insert;
+        }
+
+
+
+        public async Task ReadCurrentData(int GameID, int season, int imageIteration, string sender)
+        {
+            rootC = await currentData.GetJSON(GameID, season);
+            lblCurrentGameCount.Invoke((MethodInvoker)(() =>
+            {
+                lblCurrentGameCount.Text = GameID.ToString();
+            }));
+
+            await Task.Run(() =>
+            {
+                GetCurrentGameDetails(rootC.game, season, imageIteration, sender);
+            });
+        }
+
+        public void GetCurrentGameDetails(NBAdbToolboxCurrent.Game game, int season, int imageIteration, string sender)
+        {
+            //pnlLoad.Invoke((MethodInvoker)(() => pnlLoad.Visible = true));
+            picLoad.Invoke((MethodInvoker)(() =>
+            {
+                if (picLoad.Image != null)
+                {
+                    picLoad.Image.Dispose(); // release the previous image
+                    picLoad.Image = null;
+                }
+
+                using (var img = Image.FromFile(Path.Combine(projectRoot, "Content", "Loading", "kawhi" + imageIteration + ".png")))
+                {
+                    picLoad.Image = new Bitmap(img); // clone it so file lock is released
+                }
+            }));
+
+            if(sender == "New")
+            {
+
+            }
+            else if(sender == "Existing")
+            {
+
+            }
         }
 
     }

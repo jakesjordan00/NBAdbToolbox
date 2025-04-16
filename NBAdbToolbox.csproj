@@ -49,6 +49,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataCurrent.cs" />
+    <Compile Include="DataCurrentPBP.cs" />
     <Compile Include="DataHistoric.cs" />
     <Compile Include="DbConfig.cs" />
     <Compile Include="EditPopup.cs">
