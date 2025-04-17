@@ -3624,9 +3624,11 @@ namespace NBAdbToolbox
             }
             else if (sender == "Existing")
             {
+                int i = 1;
                 foreach(NBAdbToolboxCurrentPBP.Action action in game.actions)
                 {
-                    CurrentPBPUpdateString(action, Int32.Parse(game.gameId), season);
+                    CurrentPBPInsertString(action, Int32.Parse(game.gameId), season, i);
+                    i++;
                 }
 
             }
@@ -3694,6 +3696,16 @@ namespace NBAdbToolbox
                 }
             }
             updateCurrentPBPString += update + where + "\n";
+        }
+
+        public void CurrentPBPInsertString(NBAdbToolboxCurrentPBP.Action action, int GameID, int season, int iteration)
+        {
+            string insert = "insert into PlayByPlay(SeasonID, GameID, ActionID, ActionNumber, Qtr, Clock, TimeActual, ScoreHome, ScoreAway, ";
+            string values = ") values(" + season + ", " + GameID + ", " + iteration + ", " + action.actionNumber + ", " + action.period + ", replace(replace(replace('" + action.clock + "', 'PT', ''), 'M', ':'), 'S', ''), TimeActual = '" + SqlDateTime.Parse(action.timeActual) +
+                "', ScoreHome = " + action.scoreHome + ", ScoreAway = " + action.scoreAway + ", ";
+            
+        
+        
         }
         public void CurrentBoxUpdateString(NBAdbToolboxCurrent.Game game, int season)
         {
