@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -13,11 +14,15 @@ namespace NBAdbToolboxCurrent
     {
         public async Task<Root>GetJSON(int GameID, int season)
         {
-            var client = new WebClient { Encoding = System.Text.Encoding.UTF8 };
             string boxLink = "https://cdn.nba.com/static/json/liveData/boxscore/boxscore_00" + GameID + ".json";
+            string json = "";
             WebRequest BoxScoreReq = WebRequest.Create(boxLink);
-            WebResponse BoxScoreResp = BoxScoreReq.GetResponse();
-            string json = await Task.Run(() => client.DownloadString(boxLink));
+            WebResponse BoxScoreResp = BoxScoreReq.GetResponse(); using (HttpClient client = new HttpClient())
+            {
+                client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0");
+                client.Timeout = TimeSpan.FromSeconds(30);
+                json = await client.GetStringAsync(boxLink);
+            }
             return JsonConvert.DeserializeObject<Root>(json);
         }
     }

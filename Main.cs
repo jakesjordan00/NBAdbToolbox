@@ -107,6 +107,7 @@ namespace NBAdbToolbox
         public Button btnPopulate = new Button();
         public static DataHistoric historic = new DataHistoric();
         public static DataCurrent currentData = new DataCurrent();
+        public static DataCurrentPBP currentDataPBP = new DataCurrentPBP();
         public Panel pnlLoad = new Panel();
         public Label lblSeasonStatusLoad = new Label
         {
@@ -620,28 +621,16 @@ namespace NBAdbToolbox
                                     }
                                 }
                             }
-                            foreach(int game in currentGames)
+                            currentIterator = 0;
+                            currentImageIterator = 0;
+                            currentReverse = false;
+
+                            foreach (int game in currentGames)
                             {
                                 await Task.Run(async () =>      //This sets the root variable to our big file
                                 {
-                                    await ReadCurrentData(game, season, imageIteration, "Existing");
+                                    await ReadCurrentGameData(game, season, "Existing");
                                 });
-                                if (reverse)
-                                {
-                                    imageIteration--;
-                                }
-                                else
-                                {
-                                    imageIteration++;
-                                }
-                                if (imageIteration == 25)
-                                {
-                                    reverse = true;
-                                }
-                                if (imageIteration == 1)
-                                {
-                                    reverse = false;
-                                }
                                 iterator++;
                                 int gamesLeft = currentGames.Count - iterator;
                                 double gamesPerSec = iterator / stopwatchInsert.Elapsed.TotalSeconds;
@@ -1920,8 +1909,6 @@ namespace NBAdbToolbox
             TeamBoxStaging(game, season);
             //Players
             PlayerStaging(game, season);
-            //PlayerBox
-            //PlayerBoxStaging(game, season);
 
             //PlayByPlay
             PlayByPlayStaging(game.playByPlay, season);
@@ -2288,6 +2275,23 @@ namespace NBAdbToolbox
                 }
                 PlayerBoxCheck(game, player, game.box.awayTeamId, game.box.homeTeamId, season, "PlayerBoxCheck");
             }
+
+            foreach (NBAdbToolboxHistoric.Inactive inactive in game.box.homeTeam.inactives)
+            {
+                if (!playerList.Contains((season, inactive.personId)))
+                {
+                    InactiveCheck(inactive, season);
+                }
+                InactiveBoxCheck(game, inactive, game.box.homeTeamId, game.box.awayTeamId, season);
+            }
+            foreach (NBAdbToolboxHistoric.Inactive inactive in game.box.awayTeam.inactives)
+            {
+                if (!playerList.Contains((season, inactive.personId)))
+                {
+                    InactiveCheck(inactive, season);
+                }
+                InactiveBoxCheck(game, inactive, game.box.awayTeamId, game.box.homeTeamId, season);
+            }
             playerBoxInsertString = playerBoxInsertString.Replace("'',", "");
             //playerBoxUpdateString = playerBoxUpdateString.Replace("'',", "");
             string playerBoxCommand = playerBoxInsertString + "\n" + playerBoxUpdateString;
@@ -2369,6 +2373,80 @@ namespace NBAdbToolbox
                 SQLdb.Close();
                 playerList.Add((season, player.personId));
             }
+        }
+        public void InactiveCheck(NBAdbToolboxHistoric.Inactive inactive, int season)
+        {
+            using (SqlCommand InactiveCheck = new SqlCommand("PlayerCheck"))
+            {
+                InactiveCheck.CommandType = CommandType.StoredProcedure;
+                InactiveCheck.Parameters.AddWithValue("@PlayerID", inactive.personId);
+                InactiveCheck.Parameters.AddWithValue("@SeasonID", season);
+                using (SqlDataAdapter sInactiveCheck = new SqlDataAdapter())
+                {
+                    InactiveCheck.Connection = SQLdb;
+                    sInactiveCheck.SelectCommand = InactiveCheck;
+                    SQLdb.Open();
+                    SqlDataReader reader = InactiveCheck.ExecuteReader();
+                    reader.Read();
+                    if (!reader.HasRows)
+                    {
+                        SQLdb.Close();
+                        InactiveInsert(inactive, season);
+                    }
+                    else
+                    {
+                        SQLdb.Close();
+                    }
+                }
+            }
+        }
+        public void InactiveInsert(NBAdbToolboxHistoric.Inactive inactive, int season)
+        {
+            using (SqlCommand InactiveInsert = new SqlCommand("InactiveInsert"))
+            {
+                InactiveInsert.Connection = SQLdb;
+                InactiveInsert.CommandType = CommandType.StoredProcedure;
+                InactiveInsert.Parameters.AddWithValue("@SeasonID", season);
+                InactiveInsert.Parameters.AddWithValue("@PlayerID", inactive.personId);
+                InactiveInsert.Parameters.AddWithValue("@Name", inactive.firstName + " " + inactive.familyName);
+                SQLdb.Open();
+                InactiveInsert.ExecuteScalar();
+                SQLdb.Close();
+                playerList.Add((season, inactive.personId));
+            }
+        }
+        public void InactiveBoxCheck(NBAdbToolboxHistoric.Game game, NBAdbToolboxHistoric.Inactive inactive, int TeamID, int MatchupID, int season)
+        {
+            using (SqlCommand PlayerBoxCheck = new SqlCommand("PlayerBoxCheck"))
+            {
+                PlayerBoxCheck.Connection = SQLdb;
+                PlayerBoxCheck.CommandType = CommandType.StoredProcedure;
+                PlayerBoxCheck.Parameters.AddWithValue("@SeasonID", season);
+                PlayerBoxCheck.Parameters.AddWithValue("@GameID", Int32.Parse(game.game_id));
+                PlayerBoxCheck.Parameters.AddWithValue("@TeamID", TeamID);
+                PlayerBoxCheck.Parameters.AddWithValue("@MatchupID", MatchupID);
+                PlayerBoxCheck.Parameters.AddWithValue("@PlayerID", inactive.personId);
+                using (SqlDataAdapter sTeamSearch = new SqlDataAdapter())
+                {
+                    PlayerBoxCheck.Connection = SQLdb;
+                    sTeamSearch.SelectCommand = PlayerBoxCheck;
+                    SQLdb.Open();
+                    SqlDataReader reader = PlayerBoxCheck.ExecuteReader();
+                    if (!reader.HasRows)
+                    {
+                        SQLdb.Close();
+                        InactiveBoxInsertString(Int32.Parse(game.game_id), TeamID, MatchupID, season, inactive.personId);
+                    }
+                    else
+                    {
+                        SQLdb.Close();                        
+                    }
+                }
+            }
+        }
+        public void InactiveBoxInsertString(int GameID, int TeamID, int MatchupID, int season, int InactiveID)
+        {
+            playerBoxInsertString += "insert into PlayerBox(SeasonID, GameID, TeamID, MatchupID, PlayerID, Status) values(" + season + ", " + GameID + ", " + TeamID + ", " + MatchupID + ", " + InactiveID + ", 'INACTIVE')\n";
         }
         #endregion
 
@@ -2703,19 +2781,6 @@ namespace NBAdbToolbox
 
         //PlayerBox methods
         #region PlayerBox Methods
-        public void PlayerBoxStaging(NBAdbToolboxHistoric.Game game, int season)
-        {
-            foreach(NBAdbToolboxHistoric.Player player in game.box.homeTeam.players)
-            {
-                PlayerBoxCheck(game, player, game.box.homeTeamId, game.box.awayTeamId, season, "PlayerBoxCheck");
-            }
-            foreach (NBAdbToolboxHistoric.Player player in game.box.awayTeam.players)
-            {
-                PlayerBoxCheck(game, player, game.box.awayTeamId, game.box.homeTeamId, season, "PlayerBoxCheck");
-            }
-
-
-        }
         public void PlayerBoxCheck(NBAdbToolboxHistoric.Game game, NBAdbToolboxHistoric.Player player, int TeamID, int MatchupID, int season, string procedure)
         {
             using (SqlCommand PlayerBoxCheck = new SqlCommand(procedure))
@@ -2812,9 +2877,9 @@ namespace NBAdbToolbox
         }
         public void PlayerBoxInsertString(NBAdbToolboxHistoric.Game game, NBAdbToolboxHistoric.Player player, int TeamID, int MatchupID, int season)
         {
-            string insert = "insert into PlayerBox(SeasonID, GameID, TeamID, MatchupID, PlayerID, FGM, FGA, [FG%], FG2M, FG2A, FG3M, FG3A, [FG3%], FTM, FTA, [FT%], " +
+            string insert = "insert into PlayerBox(SeasonID, GameID, TeamID, MatchupID, PlayerID, Status, FGM, FGA, [FG%], FG2M, FG2A, FG3M, FG3A, [FG3%], FTM, FTA, [FT%], " +
                 "ReboundsDefensive, ReboundsOffensive, ReboundsTotal, Assists, Turnovers, Steals, Blocks, Points, FoulsPersonal, ";
-            string values = ") values(" + season + ", " + game.game_id + ", " + TeamID + ", " + MatchupID + ", " + player.personId + ", " + player.statistics.fieldGoalsMade + ", " + player.statistics.fieldGoalsAttempted
+            string values = ") values(" + season + ", " + game.game_id + ", " + TeamID + ", " + MatchupID + ", " + player.personId + ", 'ACTIVE', " + player.statistics.fieldGoalsMade + ", " + player.statistics.fieldGoalsAttempted
                     + ", " + player.statistics.fieldGoalsPercentage
                     + ", " + (player.statistics.fieldGoalsMade - player.statistics.threePointersMade)
                     + ", " + (player.statistics.fieldGoalsAttempted - player.statistics.threePointersAttempted)
@@ -3435,24 +3500,84 @@ namespace NBAdbToolbox
         }
 
 
-
-        public async Task ReadCurrentData(int GameID, int season, int imageIteration, string sender)
+        public int currentIterator = 0;
+        public int currentImageIterator = 0;
+        public bool currentReverse = false;
+        public async Task ReadCurrentGameData(int GameID, int season, string sender)
         {
+            //BoxScore
+            #region BoxScore
+            if (currentReverse)
+            {
+                currentImageIterator--;
+            }
+            else
+            {
+                currentImageIterator++;
+            }
+            if (currentImageIterator == 25)
+            {
+                currentReverse = true;
+            }
+            if (currentImageIterator == 1)
+            {
+                currentReverse = false;
+            }
             rootC = await currentData.GetJSON(GameID, season);
             lblCurrentGameCount.Invoke((MethodInvoker)(() =>
             {
-                lblCurrentGameCount.Text = GameID.ToString();
+                lblCurrentGameCount.Text = GameID.ToString() + " Box";
             }));
-
             await Task.Run(() =>
             {
-                GetCurrentGameDetails(rootC.game, season, imageIteration, sender);
+                GetCurrentBoxDetails(rootC.game, season, sender);
             });
+            #endregion
+
+            //PlayByPlay
+            #region PlayByPlay
+            if (currentReverse)
+            {
+                currentImageIterator--;
+            }
+            else
+            {
+                currentImageIterator++;
+            }
+            if (currentImageIterator == 25)
+            {
+                currentReverse = true;
+            }
+            if (currentImageIterator == 1)
+            {
+                currentReverse = false;
+            }
+            rootCPBP = await currentDataPBP.GetJSON(GameID, season);
+            lblCurrentGameCount.Invoke((MethodInvoker)(() =>
+            {
+                lblCurrentGameCount.Text = GameID.ToString() + " PlayByPlay";
+            }));
+            await Task.Run(() =>
+            {
+                GetCurrentPBPDetails(rootCPBP.game, season, sender);
+            });
+            #endregion
+
+            SQLdb = new SqlConnection(cString);
+            using (SqlCommand CurrentBoxUpdate = new SqlCommand(currentBoxUpdate + "\n" + updateCurrentPBPString))
+            {
+                CurrentBoxUpdate.Connection = SQLdb;
+                CurrentBoxUpdate.CommandType = CommandType.Text;
+                SQLdb.Open();
+                CurrentBoxUpdate.ExecuteScalar();
+                SQLdb.Close();
+            }
         }
 
-        public void GetCurrentGameDetails(NBAdbToolboxCurrent.Game game, int season, int imageIteration, string sender)
+        public string currentBoxUpdate = "";
+
+        public void GetCurrentBoxDetails(NBAdbToolboxCurrent.Game game, int season, string sender)
         {
-            //pnlLoad.Invoke((MethodInvoker)(() => pnlLoad.Visible = true));
             picLoad.Invoke((MethodInvoker)(() =>
             {
                 if (picLoad.Image != null)
@@ -3461,7 +3586,7 @@ namespace NBAdbToolbox
                     picLoad.Image = null;
                 }
 
-                using (var img = Image.FromFile(Path.Combine(projectRoot, "Content", "Loading", "kawhi" + imageIteration + ".png")))
+                using (var img = Image.FromFile(Path.Combine(projectRoot, "Content", "Loading", "kawhi" + currentImageIterator + ".png")))
                 {
                     picLoad.Image = new Bitmap(img); // clone it so file lock is released
                 }
@@ -3473,9 +3598,212 @@ namespace NBAdbToolbox
             }
             else if(sender == "Existing")
             {
+                CurrentBoxUpdateString(game, season);
+            }
+        }
+        public void GetCurrentPBPDetails(NBAdbToolboxCurrentPBP.Game game, int season, string sender)
+        {
+            updateCurrentPBPString = "";
+            picLoad.Invoke((MethodInvoker)(() =>
+            {
+                if (picLoad.Image != null)
+                {
+                    picLoad.Image.Dispose(); // release the previous image
+                    picLoad.Image = null;
+                }
+
+                using (var img = Image.FromFile(Path.Combine(projectRoot, "Content", "Loading", "kawhi" + currentImageIterator + ".png")))
+                {
+                    picLoad.Image = new Bitmap(img); // clone it so file lock is released
+                }
+            }));
+
+            if (sender == "New")
+            {
+
+            }
+            else if (sender == "Existing")
+            {
+                foreach(NBAdbToolboxCurrentPBP.Action action in game.actions)
+                {
+                    CurrentPBPUpdateString(action, Int32.Parse(game.gameId), season);
+                }
 
             }
         }
+        public string updateCurrentPBPString = "";
+        public void CurrentPBPUpdateString(NBAdbToolboxCurrentPBP.Action action, int GameID, int season)
+        {
+            string update = "update PlayByPlay set TimeActual = '" + SqlDateTime.Parse(action.timeActual) + "'";
+
+            string actionType = "";
+            if(action.actionType == "2pt" || action.actionType == "3pt")
+            {
+                if(action.shotResult == "Missed")
+                {
+                    actionType = "Missed Shot";
+                }
+                else
+                {
+                    actionType = "Made Shot";
+                }
+            }
+            else if(action.actionType == "freethrow")
+            {
+                actionType = "Free Throw";
+            }
+            else if (action.actionType == "jumpball")
+            {
+                actionType = "Jump Ball";
+            }
+            else
+            {
+                actionType = action.actionType.Substring(0, 1).ToUpper() + action.actionType.Substring(1);
+            }
+
+            int? PlayerID = 0;
+            if(action.personId != 0)
+            {
+                PlayerID = action.personId;
+            }
+            string clock = action.clock.Replace("PT", "").Replace("M", ":").Replace("S", "");
+
+
+
+            string where = " where SeasonID = " + season + " and GameID = " + GameID + " and Qtr = " + action.period + " and ActionType = '" + actionType + "'";
+            if(PlayerID != 0 && PlayerID != null)
+            {
+                if(actionType == "Jump Ball")
+                {
+                    where += "and PlayerID in(" + action.jumpBallLostPersonId + ", " + action.jumpBallWonPersonId + ")";
+                }
+                else
+                {
+                    where += " and Clock = '" + clock + "' and PlayerID  = " + PlayerID;
+                }
+            }
+            if(PlayerID == 0)
+            {
+                if(actionType == "Rebound" || actionType == "Turnover" || actionType == "Timeout")
+                {
+                    where += " and TeamID = " + action.teamId + " and PlayerID is null and (Clock = '" + clock + "' or left(Clock, 4) = '" + clock.Substring(0, 4) + "')";
+                }
+                if (actionType == "Period")
+                {
+                    where += " and (SubType = '" + action.subType + "' or SubType = '" + action.subType + " " + action.actionType + "')";                    
+                }
+            }
+            updateCurrentPBPString += update + where + "\n";
+        }
+        public void CurrentBoxUpdateString(NBAdbToolboxCurrent.Game game, int season)
+        {
+            CurrentTeamBoxUpdate(game.homeTeam, season, Int32.Parse(game.gameId), game.awayTeam.teamId);    //TeamBox Update - Home Team
+            CurrentTeamBoxUpdate(game.awayTeam, season, Int32.Parse(game.gameId), game.homeTeam.teamId);    //TeamBox Update - Away Team
+        }
+
+        public void CurrentTeamBoxUpdate(NBAdbToolboxCurrent.Team team, int season, int GameID, int MatchupID)
+        {
+            string update = "update TeamBox set"
+                + " FieldGoalsEffectiveAdjusted = " + team.statistics.fieldGoalsEffectiveAdjusted
+                + ", SecondChancePointsMade = " + team.statistics.secondChancePointsMade
+                + ", SecondChancePointsAttempted = " + team.statistics.secondChancePointsAttempted
+                + ", SecondChancePointsPercentage = " + team.statistics.secondChancePointsMade
+                + ", TrueShootingAttempts = " + team.statistics.trueShootingAttempts
+                + ", TrueShootingPercentage = " + team.statistics.trueShootingPercentage
+                + ", PointsFromTurnovers = " + team.statistics.pointsFromTurnovers
+                + ", PointsSecondChance = " + team.statistics.pointsSecondChance
+                + ", PointsInThePaint = " + team.statistics.pointsInThePaint
+                + ", PointsInThePaintMade = " + team.statistics.pointsInThePaintMade
+                + ", PointsInThePaintAttempted = " + team.statistics.pointsInThePaintAttempted
+                + ", PointsInThePaintPercentage = " + team.statistics.pointsInThePaintPercentage
+                + ", PointsFastBreak = " + team.statistics.pointsFastBreak
+                + ", FastBreakPointsMade = " + team.statistics.fastBreakPointsMade
+                + ", FastBreakPointsAttempted = " + team.statistics.fastBreakPointsAttempted
+                + ", FastBreakPointsPercentage = " + team.statistics.fastBreakPointsPercentage
+                + ", BenchPoints = " + team.statistics.benchPoints
+                + ", ReboundsPersonal = " + team.statistics.reboundsPersonal
+                + ", ReboundsTeam = " + team.statistics.reboundsTeam
+                + ", ReboundsTeamDefensive = " + team.statistics.reboundsTeamDefensive
+                + ", ReboundsTeamOffensive = " + team.statistics.reboundsTeamOffensive
+                + ", BiggestLead = " + team.statistics.biggestLead
+                + ", BiggestLeadScore = '" + team.statistics.biggestLeadScore + "'"
+                + ", BiggestScoringRun = " + team.statistics.biggestScoringRun
+                + ", BiggestScoringRunScore = '" + team.statistics.biggestScoringRunScore + "'"
+                + ", TimeLeading = '" + team.statistics.timeLeading + "'"
+                + ", TimesTied = " + team.statistics.timesTied
+                + ", LeadChanges = " + team.statistics.leadChanges
+                + ", TurnoversTeam = " + team.statistics.turnoversTeam
+                + ", TurnoversTotal = " + team.statistics.turnoversTotal
+                + ", BlocksReceived = " + team.statistics.blocksReceived
+                + ", FoulsDrawn = " + team.statistics.foulsDrawn
+                + ", FoulsOffensive = " + team.statistics.foulsOffensive
+                + ", FoulsTeam = " + team.statistics.foulsTeam
+                + ", FoulsTeamTechnical = " + team.statistics.foulsTeamTechnical
+                + ", FoulsTechnical = " + team.statistics.foulsTechnical;
+
+            string where = " where SeasonID = " + season + " and GameID = " + GameID + " and TeamID = " + team.teamId + " and MatchupID = " + MatchupID;
+
+            currentBoxUpdate += update + where + "\n";
+
+            //Sends to PlayerUpdates
+            foreach(NBAdbToolboxCurrent.Player player in team.players)
+            {
+                CurrentPlayerUpdates(player, season, GameID, team.teamId, MatchupID);
+            }
+        }
+
+        public void CurrentPlayerUpdates(NBAdbToolboxCurrent.Player player, int season, int GameID, int TeamID, int MatchupID)
+        {
+            string updateSL = "update StartingLineups set ";
+            string updatePB = "update PlayerBox set ";
+
+            if (player.starter == "1")
+            {
+                updateSL += "Unit = 'Starters', ";
+                updatePB += "Starter = 1, ";
+            }
+            else
+            {
+                updateSL += "Unit = 'Bench', ";
+                updatePB += "Starter = 0, ";
+            }
+            if (player.position != "" && player.position != null)
+            {
+                updateSL += "Position = '" + player.position + "', ";
+                updatePB += "Position = '" + player.position + "', ";
+            }
+            updatePB += "Status = '" + player.status + "', ";
+            if (player.notPlayingReason != "" && player.notPlayingReason != null)
+            {
+                updatePB += "StatusReason = '" + player.notPlayingReason + "', ";
+                if (player.notPlayingDescription != "" && player.notPlayingDescription != null)
+                {
+                    updatePB += "StatusDescription = '" + player.notPlayingDescription + "', ";
+                }
+            }
+            //Minutes Calc
+            double sec = double.Parse(player.statistics.minutes.Substring(player.statistics.minutes.IndexOf("M") + 1, 5));
+            sec = sec / 60;
+            double minCalc = double.Parse(player.statistics.minutes.Substring(2, 2));
+            minCalc = Math.Round(minCalc + sec, 2);
+            updatePB += "MinutesCalculated = " + minCalc + ", "
+                + "BlocksReceived = " + player.statistics.blocksReceived + ", "
+                + "Plus = " + player.statistics.plus + ", "
+                + "Minus = " + player.statistics.minus + ", "
+                + "PlusMinusPoints = " + player.statistics.plusMinusPoints + ", "
+                + "PointsFastBreak = " + player.statistics.pointsFastBreak + ", "
+                + "PointsInThePaint = " + player.statistics.pointsInThePaint + ", "
+                + "PointsSecondChance = " + player.statistics.pointsSecondChance + ", "
+                + "FoulsOffensive = " + player.statistics.foulsOffensive + ", "
+                + "FoulsDrawn = " + player.statistics.foulsDrawn + ", "
+                + "FoulsTechnical = " + player.statistics.foulsTechnical;
+
+
+            string where = " where SeasonID = " + season + " and GameID = " + GameID + " and TeamID = " + TeamID + " and MatchupID = " + MatchupID + " and PlayerID = " + player.personId;
+
+            currentBoxUpdate += (updateSL + where + "\n" + updatePB + where + "\n").Replace(",  where", " where").Replace(", where", " where");
+        }
+
 
     }
 }

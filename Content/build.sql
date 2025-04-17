@@ -164,7 +164,7 @@ Status						varchar(20),
 Starter						int,
 Position					varchar(2),
 Minutes						varchar(30),
-MinutesCalculated			varchar(30),
+MinutesCalculated			float,
 Points						int,
 Assists						int,
 ReboundsTotal				int,
@@ -493,7 +493,16 @@ insert into Player values(
 @Position			)
 ~~~
 
-
+create procedure InactiveInsert
+@SeasonID			int,
+@PlayerID			int,
+@Name				varchar(255)
+as
+Insert into Player(SeasonID, PlayerID, Name) values(
+@SeasonID,
+@PlayerID,
+@Name)
+~~~
 
 create procedure GameCheck @SeasonID int, @GameID int
 as
@@ -1053,6 +1062,15 @@ from Player p left join
 		PlayerBox b on p.PlayerID = b.PlayerID and p.SeasonID = b.SeasonID left join
 		StartingLineups s on b.PlayerID = s.PlayerID and b.GameID = s.GameID and b.TeamID = s.TeamID and b.MatchupID = s.MatchupID and b.SeasonID = s.SeasonID
 where p.PlayerID = @PlayerID and p.SeasonID = @SeasonID and ((b.GameID = @GameID and b.TeamID = @TeamID) or b.PlayerID is null or s.PlayerID is null)
+~~~
+
+
+create procedure PlayByPlayCleanup
+as
+update PlayByPlay set TeamID = PlayerID, Tricode = (select Tricode from Team t where PlayerID = t.TeamID and t.SeasonID = PlayByPlay.SeasonID), PlayerID = null 
+where PlayerID in((select distinct TeamID from Team t where t.SeasonID = PlayByPlay.SeasonID))
+update PlayByPlay set OfficialID = PlayerID, PlayerID = null
+where PlayerID in((select distinct OfficialID from Official o where o.SeasonID = PlayByPlay.SeasonID))
 ~~~
 
 */

@@ -11,6 +11,40 @@ select * from Game p order by SeasonID desc, GameID										--1
 select * from Arena p order by SeasonID desc											--1
 select * from Official p order by SeasonID desc											--3
 
+/*
+Tables to update for new data
+	TeamBox
+		SeasonID, GameID, TeamID, MatchupID
+		FieldGoalsEffectiveAdjusted, SecondChancePointsMade, SecondChancePointsAttempted, SecondChancePointsPercentage, TrueShootingAttempts, TrueShootingPercentage, PointsFromTurnovers, PointsSecondChance, PointsInThePaint, PointsInThePaintMade, PointsInThePaintAttempted, PointsInThePaintPercentage, 
+		PointsFastBreak, FastBreakPointsMade, FastBreakPointsAttempted, FastBreakPointsPercentage, BenchPoints, ReboundsPersonal, ReboundsTeam, ReboundsTeamDefensive, ReboundsTeamOffensive, 
+		BiggestLead, BiggestLeadScore, BiggestScoringRun, BiggestScoringRunScore, TimeLeading, TimesTied, LeadChanges, 
+		TurnoversTeam, TurnoversTotal, BlocksReceived, FoulsDrawn, FoulsOffensive, FoulsTeam, FoulsTeamTechnical, FoulsTechnical
+	StartingLineups
+		SeasonID, GameID, TeamID, MatchupID, PlayerID
+		Unit, Position
+	PlayerBox
+		SeasonID, GameID, TeamID, MatchupID, PlayerID
+		Status, Starter, Position, MinutesCalculated, BlocksReceived, Plus, Minus, PlusMinusPoints, PointsFastBreak, PointsInThePaint, PointsSecondChance, 
+		FoulsOffensive, FoulsDrawn, FoulsTechnical, StatusReason, StatusDescription
+	Player			
+		SeasonID, PlayerID	
+		Position **Maybe
+			honestly if i figure out a way to get the update working after the insert, i dont think i need
+			Update after insert being like find all the different position a player has started at for the season, then update Player
+				Maybe sort by most starts at or something idk. Like if Bron has 50 starts at PF, 20 at C, and 12 at SF, display as PF/C/SF
+	PlayByPlay
+		SeasonID, GameID, ActionID, ActionNumber
+		TimeActual, ScoreHome, ScoreAway, Possession, SubType, ActionType, ShotDistance, 
+		X, Y, Area, AreaDetail, Side, Descriptor, Qual1, Qual2, Qual3, ShotActionNbr, PlayerIDAst, PlayerIDBlk, PlayerIDStl, 
+		PlayerIDFoulDrawn, PlayerIDJumpW, PlayerIDJumpL, OfficialID, QtrType
+*/
+
+
+
+
+
+
+
 select * from Season
 
 select distinct SeasonID from Team
@@ -29,7 +63,6 @@ delete from Arena
 delete from Team
 
 
-
 SELECT sum(rows) Rows
 from sys.tables t inner join
 		sys.partitions p on t.object_id = p.object_id
@@ -43,3 +76,50 @@ select seasonID, Games + PlayoffGames Games from Season
 select SeasonID, count(GameID) Games
 from Game
 group by SeasonID
+
+
+
+
+
+
+
+
+
+
+select * from StartingLineups		where SeasonID = 2015 --
+select * from TeamBoxLineups		where SeasonID = 2016 --
+select * from PlayByPlay			where SeasonID = 2016 --
+select * from PlayerBox				where SeasonID = 2016 --
+select * from TeamBox				where SeasonID = 2016 --
+select * from Game 					where SeasonID = 2016 --
+select * from Player				where SeasonID = 2016 --
+select * from Official 				where SeasonID = 2016 --
+select * from Arena 				where SeasonID = 2016 --
+select * from Team					where SeasonID = 2016 --
+
+
+
+delete from StartingLineups		where SeasonID = 2016 --7
+delete from TeamBoxLineups		where SeasonID = 2016 --10
+delete from PlayByPlay			where SeasonID = 2016 --4
+delete from PlayerBox			where SeasonID = 2016 --6
+delete from TeamBox				where SeasonID = 2016 --9
+delete from Game 				where SeasonID = 2016 --2
+delete from Player				where SeasonID = 2016 --5
+delete from Official 			where SeasonID = 2016 --3
+delete from Arena 				where SeasonID = 2016 --1
+delete from Team				where SeasonID = 2016 --8
+
+
+
+
+select * from Arena 			 --1
+select * from StartingLineups	 --7
+select * from TeamBoxLineups	 --10
+select * from PlayByPlay		 --4
+select * from PlayerBox			 --6
+select * from TeamBox			 --9
+select * from Game 				 --2
+select * from Player			 --5
+select * from Official 			 --3
+select * from Team				 --8
