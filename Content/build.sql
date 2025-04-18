@@ -1,4 +1,6 @@
 
+
+
 create table Season(
 SeasonID			int,
 ChampionID			int,
@@ -332,8 +334,6 @@ Primary Key (BuildID, RunID))
 
 
 
-
-
 /*
 --The below section will be used to create a new string for procedure creation
 ~create procedure SeasonInsert
@@ -364,7 +364,7 @@ where type_desc = 'USER_TABLE'
 
 create procedure Seasons
 as
-select SeasonID, Games + PlayoffGames Games, HistoricLoaded, CurrentLoaded, Games, PlayoffGames
+select SeasonID, Games, PlayoffGames, HistoricLoaded, CurrentLoaded
 from Season
 order by SeasonID desc
 ~~~
@@ -1073,4 +1073,24 @@ update PlayByPlay set OfficialID = PlayerID, PlayerID = null
 where PlayerID in((select distinct OfficialID from Official o where o.SeasonID = PlayByPlay.SeasonID))
 ~~~
 
+create procedure SelectGamesDeletePBP @Season int
+as
+select distinct GameID from Game where SeasonID = @Season 
+delete from PlayByPlay where SeasonID = @Season
+~~~
+
+create schema util
+~~~
+
+create table util.MissingData(
+SeasonID		int,
+GameID			int,
+Source			varchar(15),
+MissingData		varchar(100),
+Note			varchar(999),
+Primary Key(SeasonID, GameID, Source, MissingData),
+Foreign Key (SeasonID, GameID) references Game(SeasonID, GameID))
+~~~
 */
+
+

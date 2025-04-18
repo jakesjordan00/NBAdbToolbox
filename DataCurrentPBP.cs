@@ -23,8 +23,18 @@ namespace NBAdbToolboxCurrentPBP
                 client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0");
                 client.Timeout = TimeSpan.FromSeconds(30);
                 json = await client.GetStringAsync(pbpLink);
+                json = json.Replace("None", "null");
             }
-            return JsonConvert.DeserializeObject<Root>(json);
+            Root root = new Root(); 
+            try
+            {
+                root = JsonConvert.DeserializeObject<Root>(json);
+            }
+            catch
+            {
+
+            }
+            return root;
         }
     }
     public class Root

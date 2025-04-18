@@ -51,7 +51,7 @@ namespace NBAdbToolboxCurrent
         public int duration { get; set; }
         public string gameCode { get; set; }
         public string gameStatusText { get; set; }
-        public int gameStatus { get; set; }
+        //public int gameStatus { get; set; }
         public int regulationPeriods { get; set; }
         public int period { get; set; }
         public string gameClock { get; set; }
