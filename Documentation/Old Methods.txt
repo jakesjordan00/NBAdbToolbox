@@ -329,3 +329,216 @@
             }
 
         }
+        public void PlayerBoxUpdate(NBAdbToolboxHistoric.Game game, NBAdbToolboxHistoric.Player player, int TeamID, int season, string procedure)
+        {
+            using (SqlCommand PlayerBoxUpdate = new SqlCommand(procedure))
+            {
+                PlayerBoxUpdate.Connection = SQLdb;
+                PlayerBoxUpdate.CommandType = CommandType.StoredProcedure;
+                PlayerBoxUpdate.Parameters.AddWithValue("@SeasonID", season);
+                PlayerBoxUpdate.Parameters.AddWithValue("@GameID", Int32.Parse(game.game_id));
+                PlayerBoxUpdate.Parameters.AddWithValue("@TeamID", TeamID);
+                PlayerBoxUpdate.Parameters.AddWithValue("@PlayerID", player.personId);
+                PlayerBoxUpdate.Parameters.AddWithValue("@Minutes", player.statistics.minutes + ".00");
+                PlayerBoxUpdate.Parameters.AddWithValue("@FGM", player.statistics.fieldGoalsMade);
+                PlayerBoxUpdate.Parameters.AddWithValue("@FGA", player.statistics.fieldGoalsAttempted);
+                PlayerBoxUpdate.Parameters.AddWithValue("@FGpct", player.statistics.fieldGoalsPercentage);
+                PlayerBoxUpdate.Parameters.AddWithValue("@FG2M", player.statistics.fieldGoalsMade - player.statistics.threePointersMade);
+                PlayerBoxUpdate.Parameters.AddWithValue("@FG2A", player.statistics.fieldGoalsAttempted - player.statistics.threePointersAttempted);
+                if ((double)(player.statistics.fieldGoalsAttempted - player.statistics.threePointersAttempted) != 0)
+                {
+                    PlayerBoxUpdate.Parameters.AddWithValue("@FG2pct",
+                    Math.Round((double)(player.statistics.fieldGoalsMade - player.statistics.threePointersMade) /
+                    (double)(player.statistics.fieldGoalsAttempted - player.statistics.threePointersAttempted), 4));
+                }
+                else
+                {
+                    PlayerBoxUpdate.Parameters.AddWithValue("@FG2pct", 0);
+                }
+                PlayerBoxUpdate.Parameters.AddWithValue("@FG3M", player.statistics.threePointersMade);
+                PlayerBoxUpdate.Parameters.AddWithValue("@FG3A", player.statistics.threePointersAttempted);
+                PlayerBoxUpdate.Parameters.AddWithValue("@FG3pct", player.statistics.threePointersPercentage);
+                PlayerBoxUpdate.Parameters.AddWithValue("@FTM", player.statistics.freeThrowsMade);
+                PlayerBoxUpdate.Parameters.AddWithValue("@FTA", player.statistics.freeThrowsAttempted);
+                PlayerBoxUpdate.Parameters.AddWithValue("@FTpct", player.statistics.freeThrowsPercentage);
+                PlayerBoxUpdate.Parameters.AddWithValue("@RebD", player.statistics.reboundsDefensive);
+                PlayerBoxUpdate.Parameters.AddWithValue("@RebO", player.statistics.reboundsOffensive);
+                PlayerBoxUpdate.Parameters.AddWithValue("@RebT", player.statistics.reboundsTotal);
+                PlayerBoxUpdate.Parameters.AddWithValue("@Assists", player.statistics.assists);
+                PlayerBoxUpdate.Parameters.AddWithValue("@Turnovers", player.statistics.turnovers);
+                if (player.statistics.turnovers > 0)
+                {
+                    PlayerBoxUpdate.Parameters.AddWithValue("@AtoR", Math.Round((double)(player.statistics.assists) / (double)(player.statistics.turnovers), 3));
+                }
+                else
+                {
+                    PlayerBoxUpdate.Parameters.AddWithValue("@AtoR", 99);
+                }
+                PlayerBoxUpdate.Parameters.AddWithValue("@Steals", player.statistics.steals);
+                PlayerBoxUpdate.Parameters.AddWithValue("@Blocks", player.statistics.blocks);
+                PlayerBoxUpdate.Parameters.AddWithValue("@Points", player.statistics.points);
+                PlayerBoxUpdate.Parameters.AddWithValue("@FoulsPersonal", player.statistics.foulsPersonal);
+                SQLdb.Open();
+                PlayerBoxUpdate.ExecuteScalar();
+                SQLdb.Close();
+            }
+        }
+        public void PlayerStagingNew(NBAdbToolboxHistoric.Game game, int season)
+        {
+            playerTablesInsertString = "";
+            foreach (NBAdbToolboxHistoric.Player player in game.box.homeTeam.players)
+            {//Home Team
+                int index = game.box.homeTeamPlayers.FindIndex(p => p.personId == player.personId);
+                if (index == -1)
+                {
+                    PlayerCheckNew(game, player, season, player.jerseyNum, game.box.homeTeamId, game.box.awayTeamId, Int32.Parse(game.game_id));
+                }
+                else
+                {
+                    PlayerCheckNew(game, player, season, game.box.homeTeamPlayers[index].jerseyNum, game.box.homeTeamId, game.box.awayTeamId, Int32.Parse(game.game_id));
+                }
+                //PlayerBoxCheck(game, player, game.box.homeTeamId, season, "PlayerBoxCheck");
+            }
+            foreach (NBAdbToolboxHistoric.Player player in game.box.awayTeam.players)
+            {//Away Team
+                int index = game.box.awayTeamPlayers.FindIndex(p => p.personId == player.personId);
+                if (index == -1)
+                {
+                    PlayerCheckNew(game, player, season, player.jerseyNum, game.box.awayTeamId, game.box.homeTeamId, Int32.Parse(game.game_id));
+                }
+                else
+                {
+                    PlayerCheckNew(game, player, season, game.box.awayTeamPlayers[index].jerseyNum, game.box.awayTeamId, game.box.homeTeamId, Int32.Parse(game.game_id));
+                }
+                //PlayerBoxCheck(game, player, game.box.awayTeamId, season, "PlayerBoxCheck");
+            }
+            playerTablesInsertString = playerTablesInsertString.Replace("'',", "");
+            using (SqlCommand PlayerDataInsert = new SqlCommand(playerTablesInsertString))
+            {
+                PlayerDataInsert.Connection = SQLdb;
+                PlayerDataInsert.CommandType = CommandType.Text;
+                SQLdb.Open();
+                PlayerDataInsert.ExecuteScalar();
+                SQLdb.Close();
+            }
+        }
+        public void PlayerCheckNew(NBAdbToolboxHistoric.Game game, NBAdbToolboxHistoric.Player player, int season, string number, int TeamID, int MatchupID, int GameID)
+        {
+            string insert = "Insert into Player ";
+            string update = "";
+            string values = "";
+            using (SqlCommand PlayerCheck = new SqlCommand("NewPlayerCheckHistorical"))
+            {
+                PlayerCheck.CommandType = CommandType.StoredProcedure;
+                PlayerCheck.Parameters.AddWithValue("@PlayerID", player.personId);
+                PlayerCheck.Parameters.AddWithValue("@SeasonID", season);
+                PlayerCheck.Parameters.AddWithValue("@TeamID", TeamID);
+                PlayerCheck.Parameters.AddWithValue("@GameID", GameID);
+                using (SqlDataAdapter sPlayerSearch = new SqlDataAdapter())
+                {
+                    PlayerCheck.Connection = SQLdb;
+                    sPlayerSearch.SelectCommand = PlayerCheck;
+                    SQLdb.Open();
+                    SqlDataReader reader = PlayerCheck.ExecuteReader();
+                    reader.Read();
+                    if (!reader.HasRows) //Insert all
+                    {
+                        SQLdb.Close();
+                        //Player
+                        values += "values(" + season + ", " + player.personId + ", '" + player.firstName.Replace("'", "''") + " " + player.familyName.Replace("'", "''") + "', ";
+                        if (player.jerseyNum == "")
+                        {
+                            if (number == "")
+                            {
+                                values += "null, null, ";
+                            }
+                            else
+                            {
+                                values += "'" + number + "', null, ";
+                            }
+                        }
+                        else
+                        {
+                            values += "'" + player.jerseyNum + "', null, ";
+                        }
+
+                        values = values.Remove(values.Length - ", ".Length) + ") ";
+                        playerTablesInsertString += insert + values + "\n";
+                        //PlayerBox
+                        playerTablesInsertString += PlayerBoxString(game, player, TeamID, MatchupID, season);
+                        //Starting Lineups
+                        playerTablesInsertString += StartingLineupString(season, GameID, TeamID, MatchupID, player.personId, player.position);
+                    }
+                    else if (reader.HasRows && reader.IsDBNull(1)) //Insert PlayerBox
+                    {
+                        SQLdb.Close();
+                        //PlayerBox
+                        playerTablesInsertString += PlayerBoxString(game, player, TeamID, MatchupID, season);
+
+                    }
+                    else if (reader.HasRows && reader.GetString(1) != player.statistics.minutes) //Update PlayerBox
+                    {
+                        SQLdb.Close();
+
+                    }
+                    else if (reader.HasRows && reader.IsDBNull(2)) //Insert Starting Lineups
+                    {
+                        //Starting Lineups
+                        SQLdb.Close();
+                        playerTablesInsertString += StartingLineupString(season, GameID, TeamID, MatchupID, player.personId, player.position);
+                    }
+                }
+            }
+        }
+        public string playerTablesInsertString = "";
+        public string PlayerBoxString(NBAdbToolboxHistoric.Game game, NBAdbToolboxHistoric.Player player, int TeamID, int MatchupID, int season)
+        {
+            string insert = "insert into PlayerBox(SeasonID, GameID, TeamID, MatchupID, PlayerID, FGM, FGA, [FG%], FG2M, FG2A, FG3M, FG3A, [FG3%], FTM, FTA, [FT%], " +
+                "ReboundsDefensive, ReboundsOffensive, ReboundsTotal, Assists, Turnovers, Steals, Blocks, Points, FoulsPersonal, ";
+            string values = ") values(" + season + ", " + game.game_id + ", " + TeamID + ", " + MatchupID + ", " + player.personId + ", " + player.statistics.fieldGoalsMade + ", " + player.statistics.fieldGoalsAttempted
+                    + ", " + player.statistics.fieldGoalsPercentage
+                    + ", " + (player.statistics.fieldGoalsMade - player.statistics.threePointersMade)
+                    + ", " + (player.statistics.fieldGoalsAttempted - player.statistics.threePointersAttempted)
+                    + ", " + player.statistics.threePointersMade + ", " + player.statistics.threePointersAttempted + ", " + player.statistics.threePointersPercentage
+                    + ", " + player.statistics.freeThrowsMade + ", " + player.statistics.freeThrowsAttempted + ", " + player.statistics.freeThrowsPercentage + ", " + player.statistics.reboundsDefensive
+                    + ", " + player.statistics.reboundsOffensive + ", " + player.statistics.reboundsTotal + ", " + player.statistics.assists + ", " + player.statistics.turnovers
+                    + ", " + player.statistics.steals + ", " + player.statistics.blocks + ", " + player.statistics.points + ", " + player.statistics.foulsPersonal + ", ";
+            if (player.statistics.minutes != "")
+            {
+                insert += "Minutes, ";
+                values += "'" + player.statistics.minutes + "', ";
+            }
+            else
+            {
+                insert += "Minutes, ";
+                values += "'0', ";
+            }
+
+            if ((double)(player.statistics.fieldGoalsAttempted - player.statistics.threePointersAttempted) != 0)
+            {
+                insert += "[FG2%], ";
+                values += Math.Round((double)(player.statistics.fieldGoalsMade - player.statistics.threePointersMade) /
+                    (double)(player.statistics.fieldGoalsAttempted - player.statistics.threePointersAttempted), 4) + ", ";
+            }
+            else
+            {
+                insert += "[FG2%], ";
+                values += "0, ";
+            }
+
+
+            if (player.statistics.turnovers > 0)
+            {
+                insert += "AssistsTurnoverRatio, ";
+                values += Math.Round((double)(player.statistics.assists) / (double)(player.statistics.turnovers), 3) + ", ";
+            }
+            else
+            {
+                insert += "AssistsTurnoverRatio, ";
+                values += "0, ";
+            }
+            insert = insert.Remove(insert.Length - ", ".Length);
+            values = values.Remove(values.Length - ", ".Length) + ") ";
+            return insert + values + "\n";
+
+        }
