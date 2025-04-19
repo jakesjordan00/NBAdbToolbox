@@ -730,6 +730,7 @@ namespace NBAdbToolbox
                         playersDone = false;
                         timeElapsedRead = TimeSpan.Zero;
                         elapsedStringRead = "";
+                        iterator = 0;
                     }
                     stopwatchFull.Stop();
                     DateTime endFull = DateTime.Now;

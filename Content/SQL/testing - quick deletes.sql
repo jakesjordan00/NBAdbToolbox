@@ -1,6 +1,6 @@
 
 
-select * from PlayByPlay p order by SeasonID desc, GameID desc, ActionNumber desc		--500
+select * from PlayByPlay p order by SeasonID, GameID desc, ActionNumber desc		--500
 select * from StartingLineups order by SeasonID desc, GameID desc						--30
 select * from PlayerBox p order by SeasonID desc, GameID desc							--30
 select * from TeamBox p order by SeasonID desc, GameID desc								--2
@@ -10,6 +10,7 @@ select * from Team p order by SeasonID desc												--2
 select * from Game p order by SeasonID desc, GameID										--1
 select * from Arena p order by SeasonID desc											--1
 select * from Official p order by SeasonID desc											--3
+
 
 /*
 Tables to update for new data
@@ -43,6 +44,9 @@ Tables to update for new data
 
 
 select * from PlayByPlay p
+order by GameID
+
+select * from Game p
 order by GameID
 
 
@@ -90,7 +94,7 @@ execute  Seasons
 
 select * from StartingLineups		where SeasonID = 2015 --
 select * from TeamBoxLineups		where SeasonID = 2016 --
-select * from PlayByPlay			where SeasonID = 2016 --
+select * from PlayByPlay			where SeasonID = 2022 --
 select * from PlayerBox				where SeasonID = 2016 --
 select * from TeamBox				where SeasonID = 2016 --
 select * from Game 					where SeasonID = 2016 --
@@ -130,8 +134,14 @@ select * from Team				 --8
 
 
 
+
 select distinct p.GameID
 from PlayByPlay p
+--where p.TimeActual is null
+order by GameID desc
+
+select distinct p.GameID
+from Game p
 --where p.TimeActual is null
 order by GameID desc
 
