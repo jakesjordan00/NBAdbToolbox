@@ -16,14 +16,28 @@ namespace NBAdbToolboxCurrent
         {
             string boxLink = "https://cdn.nba.com/static/json/liveData/boxscore/boxscore_00" + GameID + ".json";
             string json = "";
-            WebRequest BoxScoreReq = WebRequest.Create(boxLink);
-            WebResponse BoxScoreResp = BoxScoreReq.GetResponse(); using (HttpClient client = new HttpClient())
+            Root root = new Root();
+            using (HttpClient client = new HttpClient())
             {
                 client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0");
-                client.Timeout = TimeSpan.FromSeconds(30);
-                json = await client.GetStringAsync(boxLink);
+                client.Timeout = TimeSpan.FromSeconds(3);
+
+                try
+                {
+                    json = await client.GetStringAsync(boxLink);
+                    json = json.Replace("None", "null");
+                    root = JsonConvert.DeserializeObject<Root>(json);
+                }
+                catch (HttpRequestException ex)
+                {
+                    
+                }
+                catch(NullReferenceException nah)
+                {
+
+                }
             }
-            return JsonConvert.DeserializeObject<Root>(json);
+            return root;
         }
     }
     public class Root

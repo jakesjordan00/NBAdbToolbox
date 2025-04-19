@@ -42,6 +42,8 @@ Tables to update for new data
 
 
 
+select * from PlayByPlay p
+order by GameID
 
 
 
@@ -56,10 +58,10 @@ delete from TeamBoxLineups
 delete from PlayByPlay
 delete from PlayerBox
 delete from TeamBox
-delete from Game 
+delete from Game
 delete from Player
-delete from Official 
-delete from Arena 
+delete from Official
+delete from Arena
 delete from Team
 
 
@@ -78,7 +80,7 @@ from Game
 group by SeasonID
 
 
-
+execute  Seasons
 
 
 
@@ -123,3 +125,33 @@ select * from Game 				 --2
 select * from Player			 --5
 select * from Official 			 --3
 select * from Team				 --8
+
+
+
+
+
+select distinct p.GameID
+from PlayByPlay p
+--where p.TimeActual is null
+order by GameID desc
+
+
+select *
+from util.MissingData
+order by GameID desc
+go
+
+select * from BuildLog
+
+delete from PlayByPlay where GameID = 21900193
+
+drop procedure SelectGamesDeletePBP
+
+
+create procedure SelectGamesDeletePBP @Season int
+as
+select distinct GameID from Game where SeasonID = @Season and GameID >= 21900193
+delete from PlayByPlay where SeasonID = @Season
+
+
+delete from util.MissingData

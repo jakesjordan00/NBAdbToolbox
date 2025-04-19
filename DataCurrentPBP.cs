@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using NBAdbToolbox;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,22 +18,25 @@ namespace NBAdbToolboxCurrentPBP
         {
             string pbpLink = "https://cdn.nba.com/static/json/liveData/playbyplay/playbyplay_00" + GameID + ".json";
             string json = "";
-            WebRequest PlayByPlayReq = WebRequest.Create(pbpLink);
-            WebResponse PlayByPlayResp = PlayByPlayReq.GetResponse(); using (HttpClient client = new HttpClient())
+            Root root = new Root();
+            using (HttpClient client = new HttpClient())
             {
                 client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0");
-                client.Timeout = TimeSpan.FromSeconds(30);
-                json = await client.GetStringAsync(pbpLink);
-                json = json.Replace("None", "null");
-            }
-            Root root = new Root(); 
-            try
-            {
-                root = JsonConvert.DeserializeObject<Root>(json);
-            }
-            catch
-            {
+                client.Timeout = TimeSpan.FromSeconds(3);
+                try
+                {
+                    json = await client.GetStringAsync(pbpLink);
+                    json = json.Replace("None", "null");
+                    root = JsonConvert.DeserializeObject<Root>(json);
+                }
+                catch (HttpRequestException ex)
+                {
 
+                }
+                catch (NullReferenceException nah)
+                {
+
+                }
             }
             return root;
         }

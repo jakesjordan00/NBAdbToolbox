@@ -1,0 +1,35 @@
+Database Docs
+
+ aaToolboxTest_FullLoad3
+	Scope
+		2019
+		Full load
+	New Introductions
+		.util schema
+		MissingGames table
+	Goal
+		Tracking
+		Current Data
+aaToolboxTest_FullLoad4
+	Scope
+		2019
+		Full
+	New Introductions
+		
+	Goal
+		Speed
+
+aaToolboxTest_FullLoad5
+	Scope
+		tbd
+	New Introductions
+		Fast load times 
+	Goal
+		Test further loads with fast speeds
+placeholder DBname
+	Scope
+		
+	New Introductions
+		
+
+.
