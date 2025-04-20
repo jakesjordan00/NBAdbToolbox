@@ -373,7 +373,7 @@ order by SeasonID desc
 
 create procedure TeamCheck @TeamID int, @SeasonID int
 as
-select TeamID, (select count(TeamID) from Team where SeasonID = @SeasonID) Teams
+select TeamID
 from Team
 where TeamID = @TeamID and SeasonID = @SeasonID
 ~~~

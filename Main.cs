@@ -1868,9 +1868,10 @@ namespace NBAdbToolbox
         public bool teamsDone = false;
         public bool arenasDone = false;
         public bool playersDone = false;
+        public HashSet<(int SeasonID, int TeamID)> teamList = new HashSet<(int, int)>();
         public HashSet<(int SeasonID, int PlayerID)> playerList = new HashSet<(int, int)>();
-        public HashSet<(int SeasonID, int PlayerID)> officialList = new HashSet<(int, int)>();
-        public HashSet<(int SeasonID, int PlayerID)> arenaList = new HashSet<(int, int)>();
+        public HashSet<(int SeasonID, int OfficialID)> officialList = new HashSet<(int, int)>();
+        public HashSet<(int SeasonID, int ArenaID)> arenaList = new HashSet<(int, int)>();
 
         public string teamInsert = "";
         public string arenaInsert = "";
@@ -2018,22 +2019,19 @@ namespace NBAdbToolbox
                     SQLdb.Open();
                     SqlDataReader reader = TeamSearch.ExecuteReader();
                     if (reader.HasRows)
-                    {   //If we have a result
-                        while (reader.Read())
-                        {
-                            if (reader["Teams"].ToString() == "30")
-                            {
-                                teamsDone = true;   //If we have 30 teams, we can skip the Team methods until we come up on the end of the load
-                            }
-                        }
+                    {
                         SQLdb.Close();
                     }
                     else
                     { //If no result, send to TeamInsert to insert into DB
                         SQLdb.Close();
-                        //TeamInsert(team, season);
+                        teamList.Add((season, team.teamId));
                         teamInsert += "insert into Team values(" + season + ", " + team.teamId + ", '" + team.teamCity + "', '" + team.teamName + "', '" + team.teamTricode + "', " + team.teamWins + ", " + team.teamLosses + ", '(" + team.teamTricode + ") " + 
                             team.teamCity + " " + team.teamName + "')\n";
+                        if(teamList.Count == 30)
+                        {
+                            teamsDone = true;
+                        }
                     }
                 }
             }
@@ -2116,7 +2114,6 @@ namespace NBAdbToolbox
                     else
                     {
                         SQLdb.Close();
-                        //OfficialInsert(official, season);
                         officialList.Add((season, official.personId));
                         officialInsert += "insert into Official values(" + season + ", " + official.personId + ", '" + official.name + "', '" + official.jerseyNum + "')\n";
                     }
@@ -2181,7 +2178,6 @@ namespace NBAdbToolbox
                     }
                 }
             }
-
         }
         public void GameUpdate(NBAdbToolboxHistoric.Game game, int season, string sender)
         {
@@ -3629,8 +3625,6 @@ namespace NBAdbToolbox
 
             currentBoxUpdate += (updateSL + where + "\n" + updatePB + where + "\n").Replace(",  where", " where").Replace(", where", " where");
         }
-
-
         public void CurrentPlayerBoxInsert(NBAdbToolboxCurrent.Player player, int season, int GameID, int TeamID, int MatchupID)
         {
             string insert = "insert into PlayerBox(SeasonID, GameID, TeamID, MatchupID, PlayerID, Status, FGM, FGA, [FG%], FG2M, FG2A, [FG2%], FG3M, FG3A, [FG3%], FTM, FTA, [FT%], " +
@@ -3725,5 +3719,241 @@ namespace NBAdbToolbox
         }
 
         #endregion
+
+
+
+
+
+
+
+
+        public bool currentTeamsDone = false;
+        public HashSet<(int SeasonID, int PlayerID)> currentTeamList = new HashSet<(int, int)>();
+        public HashSet<(int SeasonID, int PlayerID)> currentPlayerList = new HashSet<(int, int)>();
+        public HashSet<(int SeasonID, int PlayerID)> currentOfficialList = new HashSet<(int, int)>();
+        public HashSet<(int SeasonID, int PlayerID)> currentArenaList = new HashSet<(int, int)>();
+        public string currentFirstInsert = "";
+        public void CurrentInsertStaging(NBAdbToolboxCurrent.Game game, int season)
+        {
+            string firstInsert = "";
+            if (!currentTeamsDone)
+            {
+                firstInsert += CurrentTeamStaging(game, season);
+            }
+            if (!currentArenaList.Contains((season, game.arena.arenaId)))
+            {
+                firstInsert += CurrentArenaCheck(game.arena, game.homeTeam.teamId, season);
+            }
+            //Officials
+            Dictionary<int, string> officials = new Dictionary<int, string>();
+            foreach (NBAdbToolboxCurrent.Official official in game.officials)
+            {
+                if (!currentOfficialList.Contains((season, official.personId)))
+                {
+                    firstInsert += CurrentOfficialCheck(official, season);
+                }
+                officials.Add(official.personId, official.assignment);
+            }
+
+            firstInsert += CurrentGameCheck(game, season, officials);
+        }
+
+        //Current Teams
+        #region Current Teams
+        public string CurrentTeamStaging(NBAdbToolboxCurrent.Game game, int season)
+        {
+            string firstInsert = "";
+            if (!currentTeamList.Contains((season, game.homeTeam.teamId)))
+            {
+                firstInsert += CurrentTeamCheck(game.homeTeam, season);
+            }
+            if (!currentTeamList.Contains((season, game.awayTeam.teamId)))
+            {
+                firstInsert += CurrentTeamCheck(game.awayTeam, season);
+            }
+            return firstInsert;
+        }
+        public string CurrentTeamCheck(NBAdbToolboxCurrent.Team team, int season)
+        {
+            using (SqlCommand TeamSearch = new SqlCommand("TeamCheck"))
+            {
+                TeamSearch.CommandType = CommandType.StoredProcedure;
+                TeamSearch.Parameters.AddWithValue("@TeamID", team.teamId);
+                TeamSearch.Parameters.AddWithValue("@SeasonID", season);
+                using (SqlDataAdapter sTeamSearch = new SqlDataAdapter())
+                {
+                    TeamSearch.Connection = SQLdb;
+                    sTeamSearch.SelectCommand = TeamSearch;
+                    SQLdb.Open();
+                    SqlDataReader reader = TeamSearch.ExecuteReader();
+                    if (reader.HasRows)
+                    {//If we have a result
+                        SQLdb.Close();
+                    }
+                    else
+                    { //If no result, send to TeamInsert to insert into DB
+                        SQLdb.Close();
+                        currentTeamList.Add((season, team.teamId));
+                        currentFirstInsert += "insert into Team(SeasonID, TeamID, City, Name, Tricode, FullName) values(" + season + ", " + team.teamId + ", '" + team.teamCity + "', '" + team.teamName + "', '" + team.teamTricode + "', '(" + team.teamTricode + ") " +
+                            team.teamCity + " " + team.teamName + "')\n";
+                        if(currentTeamList.Count == 30)
+                        {
+                            currentTeamsDone = true;
+                        }
+                    }
+                }
+            }
+            return "insert into Team(SeasonID, TeamID, City, Name, Tricode, FullName) values(" + season + ", " + team.teamId + ", '" + team.teamCity + "', '" + team.teamName + "', '" + team.teamTricode + "', '(" + team.teamTricode + ") " +
+                team.teamCity + " " + team.teamName + "')\n";
+        }
+        #endregion
+
+
+        //Current ArenaCheck
+        public string CurrentArenaCheck(NBAdbToolboxCurrent.Arena arena, int teamID, int season)
+        {
+            string firstInsert = "";
+            using (SqlCommand TeamSearch = new SqlCommand("ArenaCheck"))
+            {
+                TeamSearch.CommandType = CommandType.StoredProcedure;
+                TeamSearch.Parameters.AddWithValue("@ArenaID", arena.arenaId);
+                TeamSearch.Parameters.AddWithValue("@SeasonID", season);
+                using (SqlDataAdapter sTeamSearch = new SqlDataAdapter())
+                {
+                    TeamSearch.Connection = SQLdb;
+                    sTeamSearch.SelectCommand = TeamSearch;
+                    SQLdb.Open();
+                    SqlDataReader reader = TeamSearch.ExecuteReader();
+                    if (reader.HasRows)
+                    {
+                        SQLdb.Close();
+                    }
+                    else
+                    {
+                        SQLdb.Close();
+                        currentArenaList.Add((season, arena.arenaId));
+                        currentFirstInsert += "insert into Arena(SeasonID, ArenaID, TeamID, City, Country, Name, State, Timezone) values(" + season + ", " + arena.arenaId + ", " + teamID + ", '" + arena.arenaCity + "', '" + arena.arenaCountry + "', '" + arena.arenaName
+                        + "', '" + arena.arenaState + "', '" + arena.arenaTimezone + "')\n";
+                    }
+                }
+            }
+            return "insert into Arena(SeasonID, ArenaID, TeamID, City, Country, Name, State, Timezone) values(" + season + ", " + arena.arenaId + ", " + teamID + ", '" + arena.arenaCity + "', '" + arena.arenaCountry + "', '" + arena.arenaName
+                        + "', '" + arena.arenaState + "', '" + arena.arenaTimezone + "')\n";
+        }
+
+        public string CurrentOfficialCheck(NBAdbToolboxCurrent.Official official, int season)
+        {
+            using (SqlCommand TeamSearch = new SqlCommand("OfficialCheck"))
+            {
+                TeamSearch.CommandType = CommandType.StoredProcedure;
+                TeamSearch.Parameters.AddWithValue("@OfficialID", official.personId);
+                TeamSearch.Parameters.AddWithValue("@SeasonID", season);
+                using (SqlDataAdapter sTeamSearch = new SqlDataAdapter())
+                {
+                    TeamSearch.Connection = SQLdb;
+                    sTeamSearch.SelectCommand = TeamSearch;
+                    SQLdb.Open();
+                    SqlDataReader reader = TeamSearch.ExecuteReader();
+                    if (reader.HasRows)
+                    {
+                        SQLdb.Close();
+                    }
+                    else
+                    {
+                        SQLdb.Close();
+                        officialList.Add((season, official.personId));
+                        currentFirstInsert += "insert into Official values(" + season + ", " + official.personId + ", '" + official.name + "', '" + official.jerseyNum + "')\n";
+                    }
+                }
+            }
+            return "insert into Official values(" + season + ", " + official.personId + ", '" + official.name + "', '" + official.jerseyNum + "')\n";
+        }
+        public string CurrentGameCheck(NBAdbToolboxCurrent.Game game, int season, Dictionary<int, string> officials)
+        {
+            string insert = "Insert into Game(SeasonID, GameID, Date, HomeID, HScore, AwayID, AScore, Datetime, ";
+            string values = "";
+            string insertExt = "Insert into GameExt(SeasonID, GameID, Status, Attendance, Sellout, ";
+            string valuesExt = "";
+            using (SqlCommand GameCheck = new SqlCommand("GameCheck"))
+            {
+                GameCheck.CommandType = CommandType.StoredProcedure;
+                GameCheck.Parameters.AddWithValue("@GameID", game.gameId);
+                GameCheck.Parameters.AddWithValue("@SeasonID", season);
+                using (SqlDataAdapter sGameSearch = new SqlDataAdapter())
+                {
+                    GameCheck.Connection = SQLdb;
+                    sGameSearch.SelectCommand = GameCheck;
+                    SQLdb.Open();
+                    SqlDataReader reader = GameCheck.ExecuteReader();
+                    reader.Read();
+                    if (!reader.HasRows)
+                    {
+                        SQLdb.Close();
+                        SqlDateTime datetime = SqlDateTime.Parse(game.gameTimeUTC);
+                        values = ") values(" + season + ", " + game.gameId + ", '" + SqlDateTime.Parse(game.gameEt.Remove(game.gameEt.IndexOf('T'))) + "', " + game.homeTeam.teamId + ", " + game.homeTeam.score
+                            + ", " + game.awayTeam.teamId + ", " + game.awayTeam.score + ", '" + datetime + "', ";
+                        insert += "WinnerID, WScore, LoserID, Lscore, GameType, SeriesID";
+                        if (game.homeTeam.score > game.awayTeam.score)
+                        {
+                            values += game.homeTeam.teamId + ", " + game.homeTeam.score + ", " + game.awayTeam.teamId + ", " + game.awayTeam.score + ", ";
+                        }
+                        else
+                        {
+                            values += game.awayTeam.teamId + ", " + game.awayTeam.score + ", " + game.homeTeam.teamId + ", " + game.homeTeam.score + ", ";
+                        }
+                        if (game.gameId.Substring(0, 1) == "2")
+                        {
+                            values += "'RS', null)";
+                        }
+                        else
+                        {
+                            values += "'PS', 'placeholder')";
+                        }
+                        gameInsert = insert + values + "\n";
+                        valuesExt = ") values(" + season + ", " + game.gameId + ", '" + game.gameStatusText + "', " + game.attendance + ", " + game.sellout + ", ";
+                        foreach (KeyValuePair<int, string> kvp in officials)
+                        {
+                            if(kvp.Value == "OFFICIAL1")
+                            {
+                                insertExt += "OfficialID, ";
+                                valuesExt += kvp.Key + ", ";
+                            }
+                            if (kvp.Value == "OFFICIAL2")
+                            {
+                                insertExt += "Official2ID, ";
+                                valuesExt += kvp.Key + ", ";
+                            }
+                            if (kvp.Value == "OFFICIAL3")
+                            {
+                                insertExt += "Official3ID, ";
+                                valuesExt += kvp.Key + ", ";
+                            }
+                            if (kvp.Value == "ALTERNATE")
+                            {
+                                insertExt += "OfficialAlternateID, ";
+                                valuesExt += kvp.Key + ", ";
+                            }
+                        }
+                        
+                    }
+                    else
+                    {
+                        if (reader.GetInt32(5) != game.homeTeam.score || reader.GetInt32(7) != game.awayTeam.score)
+                        {
+                            SQLdb.Close();
+                            //GameUpdate(game, season, sender);
+                        }
+                        else
+                        {
+                            SQLdb.Close();
+                        }
+                    }
+                }
+            }
+            return insert + values + "\n" + insertExt.Remove(insertExt.Length - ", ".Length) + valuesExt.Remove(valuesExt.Length - ", ".Length) + "\n";
+        }
+
     }
+
+
 }
