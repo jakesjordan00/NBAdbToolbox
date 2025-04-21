@@ -79,7 +79,23 @@ Foreign Key (SeasonID, AwayID) references Team(SeasonID, TeamID),
 Foreign Key (SeasonID, WinnerID) references Team(SeasonID, TeamID),
 Foreign Key (SeasonID, LoserID) references Team(SeasonID, TeamID))
 
-
+create table GameExt(
+SeasonID			int,
+GameID				int,
+OfficialID			int,
+Official2ID			int,
+Official3ID			int,
+OfficialAlternateID int,
+Status				varchar(50),
+Attendance			int,
+Sellout				int,
+Primary Key(SeasonID, GameID),
+Foreign Key (SeasonID) references Season(SeasonID),
+Foreign Key (SeasonID, GameID) references Game(SeasonID, GameID),
+Foreign Key (SeasonID, OfficialID) references Official(SeasonID, OfficialID),
+Foreign Key (SeasonID, Official2ID) references Official(SeasonID, OfficialID),
+Foreign Key (SeasonID, Official3ID) references Official(SeasonID, OfficialID)
+)
 
 create table TeamBox(
 SeasonID					int,
@@ -312,7 +328,8 @@ Foreign Key (SeasonID, GameID, TeamID, MatchupID, PlayerID) references PlayerBox
 create table BuildLog(
 BuildID int,
 RunID INT IDENTITY(1,1),
-Season int,
+SeasonID int,
+Source varchar(25),
 Hr  int,
 Min int,
 Sec int,
@@ -330,7 +347,8 @@ MsI  int,
 InsertTime varchar(255),
 DatetimeStarted datetime,
 DatetimeComplete datetime,
-Primary Key (BuildID, RunID))
+Primary Key (BuildID, RunID),
+Foreign Key (SeasonID) references Season(SeasonID))
 
 
 
@@ -1005,11 +1023,12 @@ create procedure BuildLogInsert
 @DatetimeStarted datetime,
 @DatetimeComplete datetime,
 @Historic int,
-@Current int
+@Current int,
+@Source varchar(30)
 as
 insert into BuildLog(
 BuildID, 
-Season, 
+SeasonID, 
 Hr, 
 Min, 
 Sec, 
@@ -1026,7 +1045,8 @@ SecI,
 MsI,
 InsertTime, 
 DatetimeStarted, 
-DatetimeComplete) 
+DatetimeComplete,
+Source) 
 values(
 @BuildID, 
 @Season, 
@@ -1046,7 +1066,8 @@ values(
 @MsI,
 @InsertTime, 
 @DatetimeStarted, 
-@DatetimeComplete)
+@DatetimeComplete,
+@Source)
 update Season set HistoricLoaded = 1 where SeasonID = @Season and @Historic = 1
 update Season set CurrentLoaded  = 1 where SeasonID = @Season and @Current = 1
 ~~~
