@@ -321,7 +321,6 @@ Foreign Key (SeasonID) references Season(SeasonID),
 Foreign Key (SeasonID, GameID) references Game(SeasonID, GameID),
 Foreign Key (SeasonID, TeamID) references Team(SeasonID, TeamID),
 Foreign Key (SeasonID, PlayerID) references Player(SeasonID, PlayerID),
-Foreign Key (SeasonID, GameID, TeamID, MatchupID, Unit) references TeamBoxLineups(SeasonID, GameID, TeamID, MatchupID, Unit),
 Foreign Key (SeasonID, GameID, TeamID, MatchupID, PlayerID) references PlayerBox(SeasonID, GameID, TeamID, MatchupID, PlayerID))
 
 
