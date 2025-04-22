@@ -21,15 +21,36 @@ aaToolboxTest_FullLoad4
 
 aaToolboxTest_FullLoad5
 	Scope
-		tbd
+		multiple seasons
 	New Introductions
 		Fast load times 
 	Goal
 		Test further loads with fast speeds
-placeholder DBname
-	Scope
 		
+aaToolboxTest_FullLoad6
+	Scope
+		multiple seasons
 	New Introductions
 		
-
+	Goal	
+		Need to fix Games remaining/time left for multiple runs
 .
+aaToolboxTest_FullLoad7
+	Scope
+		Multiple Seasons
+	New Introductions
+		Current Data
+		a bunch idk
+	Goal	
+	
+	
+aaToolboxTest_FullLoad8
+	Scope
+		Multiple Seasons
+	New Introductions
+		Current Data inserts and updates
+		more probably
+	Goal	
+		If Game is missing, use historic data.
+		Optimization.
+		Route selection; i.e. what data should be loaded in any given scenario.

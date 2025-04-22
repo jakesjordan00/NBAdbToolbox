@@ -1,15 +1,28 @@
 
 
-select * from PlayByPlay p order by SeasonID, GameID desc, ActionNumber desc		--500
+select * from PlayByPlay p order by SeasonID desc, GameID desc, ActionNumber desc		--500
 select * from StartingLineups order by SeasonID desc, GameID desc						--30
 select * from PlayerBox p order by SeasonID desc, GameID desc							--30
 select * from TeamBox p order by SeasonID desc, GameID desc								--2
 select * from TeamBoxLineups p order by SeasonID desc, GameID desc						--2
 select * from Player p order by SeasonID desc											--30
 select * from Team p order by SeasonID desc												--2
-select * from Game p order by SeasonID desc, GameID										--1
+select * from GameExt p order by SeasonID , GameID										--1
+select * from Game p order by SeasonID desc, GameID	desc									--1
 select * from Arena p order by SeasonID desc											--1
 select * from Official p order by SeasonID desc											--3
+
+delete from StartingLineups
+delete from TeamBoxLineups
+delete from PlayByPlay
+delete from PlayerBox
+delete from TeamBox
+delete from GameExt
+delete from Game
+delete from Player
+delete from Official
+delete from Arena
+delete from Team
 
 
 /*
@@ -62,6 +75,7 @@ delete from TeamBoxLineups
 delete from PlayByPlay
 delete from PlayerBox
 delete from TeamBox
+delete from GameExt
 delete from Game
 delete from Player
 delete from Official
@@ -92,29 +106,31 @@ execute  Seasons
 
 
 
-select * from StartingLineups		where SeasonID = 2015 --
-select * from TeamBoxLineups		where SeasonID = 2016 --
-select * from PlayByPlay			where SeasonID = 2022 --
-select * from PlayerBox				where SeasonID = 2016 --
-select * from TeamBox				where SeasonID = 2016 --
-select * from Game 					where SeasonID = 2016 --
-select * from Player				where SeasonID = 2016 --
-select * from Official 				where SeasonID = 2016 --
-select * from Arena 				where SeasonID = 2016 --
-select * from Team					where SeasonID = 2016 --
+select * from StartingLineups		where SeasonID = 2019 order by GameID desc
+--select * from TeamBoxLineups		where SeasonID = 2019 order by GameID desc
+select * from PlayByPlay			where SeasonID = 2019 order by GameID desc
+select * from PlayerBox				where SeasonID = 2019 order by GameID desc
+select * from TeamBox				where SeasonID = 2019 order by GameID desc
+select * from Game 					where SeasonID = 2019 order by GameID desc
+select * from Player				where SeasonID = 2019
+select * from Official 				where SeasonID = 2019
+select * from Arena 				where SeasonID = 2019
+select * from Team					where SeasonID = 2019
+
+select * from util.MissingData
 
 
-
-delete from StartingLineups		where SeasonID = 2016 --7
-delete from TeamBoxLineups		where SeasonID = 2016 --10
-delete from PlayByPlay			where SeasonID = 2016 --4
-delete from PlayerBox			where SeasonID = 2016 --6
-delete from TeamBox				where SeasonID = 2016 --9
-delete from Game 				where SeasonID = 2016 --2
-delete from Player				where SeasonID = 2016 --5
-delete from Official 			where SeasonID = 2016 --3
-delete from Arena 				where SeasonID = 2016 --1
-delete from Team				where SeasonID = 2016 --8
+delete from StartingLineups		where SeasonID = 2022 --7
+delete from TeamBoxLineups		where SeasonID = 2022 --10
+delete from PlayByPlay			where SeasonID = 2022 --4
+delete from PlayerBox			where SeasonID = 2022 --6
+delete from TeamBox				where SeasonID = 2022 --9
+delete from GameExt 			where SeasonID = 2022 --2
+delete from Game 				where SeasonID = 2022 --2
+delete from Player				where SeasonID = 2022 --5
+delete from Official 			where SeasonID = 2022 --3
+delete from Arena 				where SeasonID = 2022 --1
+delete from Team				where SeasonID = 2022 --8
 
 
 

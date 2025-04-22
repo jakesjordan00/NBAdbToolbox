@@ -595,6 +595,9 @@ namespace NBAdbToolbox
                             List<int> gamesRS = new List<int>();
                             List<int> gamesPS = new List<int>();
                             current = 1;
+                            lblSeasonStatusLoad.Text = "Currently ";
+                            lblSeasonStatusLoad.AutoSize = true;
+                            lblSeasonStatusLoadInfo.Left = lblSeasonStatusLoad.Right;
                             lblSeasonStatusLoadInfo.Text = "Getting " + season + " GameIDs";
                             await Task.Run(async () =>      //We need to read the big file to get our game list
                             {
@@ -617,9 +620,10 @@ namespace NBAdbToolbox
                             currentImageIterator = 0;
                             currentReverse = false;
                             stopwatchInsert.Restart();
-                            lblSeasonStatusLoad.Text = "Currently ";
-                            lblSeasonStatusLoad.AutoSize = true;
-                            lblSeasonStatusLoadInfo.Text = "Hitting endpoints and inserting" + season + " data";
+                            lblSeasonStatusLoadInfo.Text = "Hitting endpoints and inserting " + season + " data";
+                            fontSize = ((float)(pnlLoad.Height * .075) / (96 / 12)) * (72 / 12);
+                            lblSeasonStatusLoadInfo.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Regular, pnlLoad, lblSeasonStatusLoadInfo);
+                            lblSeasonStatusLoadInfo.AutoSize = true;
                             for (int i = 0; i < regular; i++)
                             {
                                 await CurrentGameData(gamesRS[i], season, "");
@@ -654,6 +658,7 @@ namespace NBAdbToolbox
                             }
                         }
                         #endregion
+
 
 
                         //Updates
@@ -1895,6 +1900,23 @@ namespace NBAdbToolbox
 
         //Historic Data
         #region Historic Data
+
+        //Declarations
+        #region Declarations
+        public bool teamsDone = false;
+        public bool arenasDone = false;
+        public bool playersDone = false;
+        public HashSet<(int SeasonID, int TeamID)> teamList = new HashSet<(int, int)>();
+        public HashSet<(int SeasonID, int PlayerID)> playerList = new HashSet<(int, int)>();
+        public HashSet<(int SeasonID, int OfficialID)> officialList = new HashSet<(int, int)>();
+        public HashSet<(int SeasonID, int ArenaID)> arenaList = new HashSet<(int, int)>();
+        public string teamInsert = "";
+        public string arenaInsert = "";
+        public string officialInsert = "";
+        public string playerInsert = "";
+        public string gameInsert = "";
+        public string teamBoxInsert = "";
+        #endregion
         public async Task ReadSeasonFile(int season, bool bHistoric, bool bCurrent)
         {
             string filePath = Path.Combine(projectRoot, "Content\\", "dbconfig.json");              //Line 1568 is TESTing data, 1567 normal
@@ -1904,7 +1926,6 @@ namespace NBAdbToolbox
             root = await historic.ReadFile(season, iter, filePath);                                         //Season before 2019
 
         }
-
         private async Task InsertGameWithLoading(NBAdbToolboxHistoric.Game game, int season, int imageIteration, string sender)
         {
             lblCurrentGameCount.Invoke((MethodInvoker)(() =>
@@ -1930,21 +1951,6 @@ namespace NBAdbToolbox
                 }
             })); 
         }
-
-        public bool teamsDone = false;
-        public bool arenasDone = false;
-        public bool playersDone = false;
-        public HashSet<(int SeasonID, int TeamID)> teamList = new HashSet<(int, int)>();
-        public HashSet<(int SeasonID, int PlayerID)> playerList = new HashSet<(int, int)>();
-        public HashSet<(int SeasonID, int OfficialID)> officialList = new HashSet<(int, int)>();
-        public HashSet<(int SeasonID, int ArenaID)> arenaList = new HashSet<(int, int)>();
-
-        public string teamInsert = "";
-        public string arenaInsert = "";
-        public string officialInsert = "";
-        public string playerInsert = "";
-        public string gameInsert = "";
-        public string teamBoxInsert = "";
         //For each game, this method checks each of our tables and determines what to do, Insert, update, or nothing.
         public void GetGameDetails(NBAdbToolboxHistoric.Game game, int season, string sender)
         {
@@ -1974,15 +1980,17 @@ namespace NBAdbToolbox
                 ArenaCheck(game.box.arena, game.box.homeTeamId, season);
             }
             //Officials
+            List<int> officials = new List<int>();
             foreach (NBAdbToolboxHistoric.Official official in game.box.officials)
             {
                 if (!officialList.Contains((season, official.personId)))
                 {
                     OfficialCheck(official, season);
                 }
+                officials.Add(official.personId);
             }
             //Games
-            GameCheck(game, season, sender);
+            GameCheck(game, season, sender, officials);
             //TeamBox
             TeamBoxStaging(game, season);
             //Players
@@ -2042,7 +2050,6 @@ namespace NBAdbToolbox
                 }
             });
             #endregion
-
             lastSeason = season;
         }
 
@@ -2190,8 +2197,10 @@ namespace NBAdbToolbox
 
         //Game methods
         #region Game Methods
-        public void GameCheck(NBAdbToolboxHistoric.Game game, int season, string sender)
+        public void GameCheck(NBAdbToolboxHistoric.Game game, int season, string sender, List<int> officials)
         {
+            string iExt = "Insert into GameExt(SeasonID, GameID, Status, Attendance, Sellout, ";
+            string vExt = "";
             using (SqlCommand GameCheck = new SqlCommand("GameCheck"))
             {
                 GameCheck.CommandType = CommandType.StoredProcedure;
@@ -2229,6 +2238,24 @@ namespace NBAdbToolbox
                             values += "'PS', 'placeholder')";
                         }
                         gameInsert = insert + values + "\n";
+                        vExt = ") values(" + season + ", " + game.game_id + ", '" + game.box.gameStatusText + "', " + game.box.attendance + ", " + game.box.sellout + ", ";
+                        for(int o = 0; o < officials.Count; o++)
+                        {
+                            if(o == 0)
+                            {
+                                iExt += "OfficialID, ";
+                            }
+                            else if(o != 3)
+                            {
+                                iExt += "Official" + (o + 1) + "ID, ";
+                            }
+                            else
+                            {
+                                iExt += "OfficialAlternateID, ";
+                            }
+                            vExt += officials[o] + ", ";
+                        }
+                        gameInsert += iExt.Remove(iExt.Length - ", ".Length) + vExt.Remove(vExt.Length - ", ".Length) + ")\n";
                     }
                     else
                     {
@@ -2299,7 +2326,10 @@ namespace NBAdbToolbox
                         PlayerCheck(player, season, game.box.homeTeamPlayers[index].jerseyNum);
                     }
                 }
-                PlayerBoxCheck(game, player, game.box.homeTeamId, game.box.awayTeamId, season, "PlayerBoxCheck");
+                _ = Task.Run(() =>
+                {
+                    PlayerBoxCheck(game, player, game.box.homeTeamId, game.box.awayTeamId, season, "PlayerBoxCheck");
+                });
             }
             foreach (NBAdbToolboxHistoric.Player player in game.box.awayTeam.players)
             {//Away Team
@@ -2315,7 +2345,10 @@ namespace NBAdbToolbox
                         PlayerCheck(player, season, game.box.awayTeamPlayers[index].jerseyNum);
                     }
                 }
-                PlayerBoxCheck(game, player, game.box.awayTeamId, game.box.homeTeamId, season, "PlayerBoxCheck");
+                _ = Task.Run(() =>
+                {
+                    PlayerBoxCheck(game, player, game.box.awayTeamId, game.box.homeTeamId, season, "PlayerBoxCheck");
+                });
             }
 
             foreach (NBAdbToolboxHistoric.Inactive inactive in game.box.homeTeam.inactives)
@@ -2429,6 +2462,7 @@ namespace NBAdbToolbox
         public string playerBoxUpdateString = "";
         public void PlayerBoxCheck(NBAdbToolboxHistoric.Game game, NBAdbToolboxHistoric.Player player, int TeamID, int MatchupID, int season, string procedure)
         {
+            SqlConnection SQLdb = new SqlConnection(cString);
             using (SqlCommand PlayerBoxCheck = new SqlCommand(procedure))
             {
                 PlayerBoxCheck.Connection = SQLdb;
@@ -3316,7 +3350,7 @@ namespace NBAdbToolbox
                 }
             //});
 
-            string teamPlayerBoxPlayByPlay = currentTeamBox + currentPlayerBox + currentPlayByPlay;
+            string teamPlayerBoxPlayByPlay = currentTeamBox + currentPlayerBox + currentPlayByPlay + missingData;
             currentTeamBox = "";
             currentPlayerBox = "";
             currentPlayByPlay = "";
@@ -3488,7 +3522,7 @@ namespace NBAdbToolbox
                     else
                     {
                         SQLdb.Close();
-                        officialList.Add((season, official.personId));
+                        currentOfficialList.Add((season, official.personId));
                         currentBigInsert += "insert into Official values(" + season + ", " + official.personId + ", '" + official.name + "', '" + official.jerseyNum + "')\n";
                     }
                 }
@@ -3501,6 +3535,8 @@ namespace NBAdbToolbox
         #region Current Games
         public string insertExt = "";
         public string valuesExt = "";
+        public string lastGame = "";
+        public string seriesIDfirst7 = "";
         public string CurrentGameCheck(NBAdbToolboxCurrent.Game game, int season, Dictionary<int, string> officials)
         {
             string insert = "Insert into Game(SeasonID, GameID, Date, HomeID, HScore, AwayID, AScore, Datetime, ";
@@ -3535,13 +3571,23 @@ namespace NBAdbToolbox
                         {
                             values += game.awayTeam.teamId + ", " + game.awayTeam.score + ", " + game.homeTeam.teamId + ", " + game.homeTeam.score + ", ";
                         }
-                        if (game.gameId.Substring(0, 1) == "2")
+                        if (game.gameId.Substring(2, 1) == "2")
                         {
                             values += "'RS', null)";
                         }
-                        else
+                        else if(game.gameId.Substring(2, 1) == "4")
                         {
-                            values += "'PS', 'placeholder')";
+                            string SeriesID = game.gameId.Substring(2);
+                            SeriesID = SeriesID.Remove(SeriesID.Length - 1);
+                            //if(SeriesID != seriesIDfirst7 && seriesIDfirst7 != "")
+                            //{
+                                SeriesID += "-";    //+ lastGame.Substring(lastGame.Length - 1);
+                            //}
+                            values += "'PS', '" + SeriesID + "')";
+                        }
+                        else if (game.gameId.Substring(2, 1) == "5")
+                        {
+                            values += "'PS', null)";
                         }
                         gameInsert = insert + values + "\n";
                         valuesExt = ") values(" + season + ", " + game.gameId + ", '" + game.gameStatusText + "', " + game.attendance + ", " + game.sellout + ", ";
@@ -3584,7 +3630,12 @@ namespace NBAdbToolbox
                     }
                 }
             }
-            return insert + values + "\n" + insertExt.Remove(insertExt.Length - ", ".Length) + valuesExt.Remove(valuesExt.Length - ", ".Length) + ")" + "\n";
+            if (game.gameId.Substring(2, 1) == "4")
+            {
+                lastGame = Int32.Parse(game.gameId).ToString();
+                seriesIDfirst7 = lastGame.Remove(lastGame.Length - 1);
+            }                
+            return insert + values + "\n" + insertExt.Remove(insertExt.Length - ", ".Length) + valuesExt.Remove(valuesExt.Length - ", ".Length) + ")\n";
         }
         #endregion
 
