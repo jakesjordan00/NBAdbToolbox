@@ -1920,6 +1920,7 @@ namespace NBAdbToolbox
         public string playerInsert = "";
         public string gameInsert = "";
         public string teamBoxInsert = "";
+        public string startingLineupsInsertString = "";
         #endregion
         public async Task ReadSeasonFile(int season, bool bHistoric, bool bCurrent)
         {
@@ -1966,6 +1967,7 @@ namespace NBAdbToolbox
             teamBoxInsert = "";
             playerBoxInsertString = "";
             playerBoxUpdateString = "";
+            startingLineupsInsertString = "";
             if (season != lastSeason)
             {
                 playerList.Clear();
@@ -2031,6 +2033,10 @@ namespace NBAdbToolbox
 
             //After Insert is complete, use multithreading to insert the bulk of our data - PlayByPlay, PlayerBox (+StartingLineups) and TeamBox (+TeamBoxLineups)
             #region
+
+            string bigOnesInOne = teamBoxInsert + playerBoxInsertString + startingLineupsInsertString + insertPBPString;
+            string hitIt = bigOnesInOne;
+            bigOnesInOne = "";
             _ = Task.Run(() =>
             {
                 SqlConnection bigInsertsPBP = new SqlConnection(cString);
@@ -2038,7 +2044,7 @@ namespace NBAdbToolbox
                 {
                     using (bigInsertsPBP)
                     {
-                        using (SqlCommand PBPInsert = new SqlCommand(teamBoxInsert + playerBoxInsertString + insertPBPString))
+                        using (SqlCommand PBPInsert = new SqlCommand(hitIt))
                         {
                             PBPInsert.Connection = bigInsertsPBP;
                             PBPInsert.CommandType = CommandType.Text;
@@ -2330,10 +2336,7 @@ namespace NBAdbToolbox
                         PlayerCheck(player, season, game.box.homeTeamPlayers[index].jerseyNum);
                     }
                 }
-                _ = Task.Run(() =>
-                {
-                    PlayerBoxCheck(game, player, game.box.homeTeamId, game.box.awayTeamId, season, "PlayerBoxCheck");
-                });
+                PlayerBoxCheck(game, player, game.box.homeTeamId, game.box.awayTeamId, season, "PlayerBoxCheck");
             }
             foreach (NBAdbToolboxHistoric.Player player in game.box.awayTeam.players)
             {//Away Team
@@ -2349,10 +2352,8 @@ namespace NBAdbToolbox
                         PlayerCheck(player, season, game.box.awayTeamPlayers[index].jerseyNum);
                     }
                 }
-                _ = Task.Run(() =>
-                {
-                    PlayerBoxCheck(game, player, game.box.awayTeamId, game.box.homeTeamId, season, "PlayerBoxCheck");
-                });
+                PlayerBoxCheck(game, player, game.box.awayTeamId, game.box.homeTeamId, season, "PlayerBoxCheck");
+               
             }
 
             foreach (NBAdbToolboxHistoric.Inactive inactive in game.box.homeTeam.inactives)
@@ -2417,7 +2418,7 @@ namespace NBAdbToolbox
                 PlayerUpdate.CommandType = CommandType.StoredProcedure;
                 PlayerUpdate.Parameters.AddWithValue("@SeasonID", season);
                 PlayerUpdate.Parameters.AddWithValue("@PlayerID", player.personId);
-                PlayerUpdate.Parameters.AddWithValue("@Name", player.firstName + " " + player.familyName);
+                PlayerUpdate.Parameters.AddWithValue("@Name", player.firstName.Replace("'", "''") + " " + player.familyName.Replace("'", "''"));
                 PlayerUpdate.Parameters.AddWithValue("@Number", number);
                 if (oldPosition != "" && !oldPosition.Contains(player.position))
                 {
@@ -2451,7 +2452,7 @@ namespace NBAdbToolbox
                     {
                         SQLdb.Close();
                         playerList.Add((season, inactive.personId));
-                        playerInsert += "Insert into Player(SeasonID, PlayerID, Name) values(" + season + ", " + inactive.personId + ", '" + inactive.firstName + " " + inactive.familyName + "')\n";
+                        playerInsert += "Insert into Player(SeasonID, PlayerID, Name) values(" + season + ", " + inactive.personId + ", '" + inactive.firstName.Replace("'", "''") + " " + inactive.familyName.Replace("'", "''") + "')\n";
                     }
                     else
                     {
@@ -2621,8 +2622,7 @@ namespace NBAdbToolbox
             {
                 insertStarters += "Starters', '" + player.position + "')\n";
             }
-
-            playerBoxInsertString += insertStarters;
+            startingLineupsInsertString += insertStarters;
         }
         public void InactiveBoxCheck(NBAdbToolboxHistoric.Game game, NBAdbToolboxHistoric.Inactive inactive, int TeamID, int MatchupID, int season)
         {
@@ -3821,12 +3821,19 @@ namespace NBAdbToolbox
                     + ", " + player.statistics.steals + ", " + player.statistics.blocks + ", " + player.statistics.points + ", " + player.statistics.foulsPersonal + ", ";
 
             double sec = 0;
-            sec = double.Parse(player.statistics.minutes.Substring(player.statistics.minutes.IndexOf("M") + 1, 5));
-            sec = sec / 60;
             double minCalc = 0;
-            minCalc = double.Parse(player.statistics.minutes.Substring(2, 2));
-            minCalc = Math.Round(minCalc + sec, 2);
-            if (player.statistics.minutes != "")
+            try
+            {
+                sec = double.Parse(player.statistics.minutes.Substring(player.statistics.minutes.IndexOf("M") + 1, 5));
+                sec = sec / 60;
+                minCalc = double.Parse(player.statistics.minutes.Substring(2, 2));
+                minCalc = Math.Round(minCalc + sec, 2);
+            }
+            catch (NullReferenceException e)
+            {
+
+            }
+            if (player.statistics.minutes != "" && player.statistics.minutes != null)
             {
                 insert += "Minutes, ";
                 values += "'" + player.statistics.minutes.Replace("PT", "").Replace("M", ":").Replace("S", "") + "', ";
@@ -3840,7 +3847,7 @@ namespace NBAdbToolbox
                 minCalc = double.Parse(player.statistics.minutes.Substring(2, 2));
                 minCalc = Math.Round(minCalc + sec, 2);
             }
-            else if (player.statistics.minutes == "")
+            else if (player.statistics.minutes == "" || player.statistics.minutes == null)
             {
                 insert += "Minutes, ";
                 values += "'0', ";
