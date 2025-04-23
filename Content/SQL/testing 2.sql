@@ -5,12 +5,10 @@ order by GameID desc
 
 select distinct t.SeasonID, t.GameID
 from PlayByPlay t
-where SeasonID = 2021
 order by seasonID, GameID desc
 
 select distinct t.SeasonID, t.GameID
 from GameExt t
-where SeasonID = 2021
 order by seasonID, GameID desc
 
 select distinct t.SeasonID, t.GameID

@@ -10,15 +10,16 @@ using System.Windows.Forms;
 
 namespace NBAdbToolbox
 {
-    public partial class EditPopup: Form
+    public partial class EditPopup : Form
     {
-        public string Value1 { get; private set; } //Server
-        public bool ?Value2 { get; private set; }   //Create Database?
-        public string Value3 { get; private set; } //Database
-        public string Value4 { get; private set; } //Username
-        public string Value5 { get; private set; } //Password
+        public string Server { get; private set; }
+        public bool? CreateDatabase { get; private set; }
+        public string Database { get; private set; }
+        public string Username { get; private set; }
+        public string Password { get; private set; }
+        public bool? UseWindowsAuth { get; private set; }
 
-        public EditPopup(string mode, bool fileExist, string initial1 = "", bool ?initial2 = true, string initial3 = "", string initial4 = "", string initial5 = "")
+        public EditPopup(string mode, bool fileExists, string initialServer = "", bool? initialCreateDb = true, string initialDb = "", bool? initalWindowsAuth = true, string initialUser = "", string initialPass = "")
         {
             this.Text = "Create or Edit Connection";
             this.Width = 300;
@@ -28,43 +29,69 @@ namespace NBAdbToolbox
             int top = 20;
             int spacing = 30;
 
-            Label lbl1 = new Label() { Text = "Server:", Left = 20, Top = top, AutoSize = true };
-            TextBox txt1 = new TextBox() { Text = initial1, Left = 20, Top = top + 20, Width = 240 };
+            // Server
+            Label lblServer = new Label() { Text = "Server:", Left = 20, Top = top, AutoSize = true };
+            TextBox txtServer = new TextBox() { Text = initialServer, Left = 20, Top = top + 20, Width = 240 };
             top += spacing + 20;
 
-            CheckBox chk2 = new CheckBox() { Text = "Create Database?", Left = 20, Top = top, AutoSize = true };
+            // Create DB
+            CheckBox chkCreateDb = new CheckBox() { Text = "Create Database?", Left = 20, Top = top, AutoSize = true };
+            chkCreateDb.Checked = !fileExists || initialCreateDb == true;
             top += spacing + 20;
-            if(fileExist == false)
+
+            // Database
+            Label lblDatabase = new Label() { Text = "Database:", Left = 20, Top = top, AutoSize = true };
+            TextBox txtDatabase = new TextBox() { Text = initialDb, Left = 20, Top = top + 20, Width = 240 };
+            top += spacing + 20;
+
+            // Windows Auth
+            CheckBox chkWindowsAuth = new CheckBox() { Text = "Use Windows Authentication", Left = 20, Top = top, AutoSize = true };
+            top += spacing + 20;
+
+            // Username
+            Label lblUsername = new Label() { Text = "Username:", Left = 20, Top = top, AutoSize = true };
+            TextBox txtUsername = new TextBox() { Text = initialUser, Left = 20, Top = top + 20, Width = 240 };
+            top += spacing + 20;
+
+            // Password
+            Label lblPassword = new Label() { Text = "Password:", Left = 20, Top = top, AutoSize = true };
+            TextBox txtPassword = new TextBox() { Text = initialPass, Left = 20, Top = top + 20, Width = 240, UseSystemPasswordChar = true };
+            top += spacing + 20;
+
+            // Toggle username/password fields based on checkbox
+            chkWindowsAuth.CheckedChanged += (s, e) =>
             {
-                chk2.Checked = true;
-            }
+                bool useAuth = chkWindowsAuth.Checked;
+                txtUsername.Enabled = !useAuth;
+                txtPassword.Enabled = !useAuth;
+            };
 
-            Label lbl3 = new Label() { Text = "Database:", Left = 20, Top = top, AutoSize = true };
-            TextBox txt3= new TextBox() { Text = initial3, Left = 20, Top = top + 20, Width = 240 };
-            top += spacing + 20;
-
-            Label lbl4 = new Label() { Text = "Username:", Left = 20, Top = top, AutoSize = true };
-            TextBox txt4 = new TextBox() { Text = initial4, Left = 20, Top = top + 20, Width = 240 };
-            top += spacing + 20;
-
-            Label lbl5 = new Label() { Text = "Password:", Left = 20, Top = top, AutoSize = true };
-            TextBox txt5 = new TextBox() { Text = initial5, Left = 20, Top = top + 20, Width = 240, UseSystemPasswordChar = true };
-            top += spacing + 20;
-
+            // Buttons
             Button btnOK = new Button() { Text = "OK", Left = 80, Top = top, Width = 60, DialogResult = DialogResult.OK };
             Button btnCancel = new Button() { Text = "Cancel", Left = 150, Top = top, Width = 70, DialogResult = DialogResult.Cancel };
 
             btnOK.Click += (s, e) =>
             {
-                Value1 = txt1.Text;
-                Value2 = chk2.Checked;
-                Value3 = txt3.Text;
-                Value4 = txt4.Text;
-                Value5 = txt5.Text;
+                Server = txtServer.Text;
+                CreateDatabase = chkCreateDb.Checked;
+                Database = txtDatabase.Text;
+                Username = txtUsername.Text;
+                Password = txtPassword.Text;
+                UseWindowsAuth = chkWindowsAuth.Checked;
                 this.Close();
             };
 
-            this.Controls.AddRange(new Control[] { lbl1, txt1, chk2, lbl3, txt3, lbl4, txt4, lbl5, txt5, btnOK, btnCancel });
+            this.Controls.AddRange(new Control[]
+            {
+                lblServer, txtServer,
+                chkCreateDb,
+                lblDatabase, txtDatabase,
+                chkWindowsAuth,
+                lblUsername, txtUsername,
+                lblPassword, txtPassword,
+                btnOK, btnCancel
+            });
+
             this.AcceptButton = btnOK;
             this.CancelButton = btnCancel;
             this.Height = btnOK.Bottom + 60;

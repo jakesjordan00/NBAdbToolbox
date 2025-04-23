@@ -10,6 +10,7 @@ namespace NBAdbToolbox
     {
         public string Server { get; set; }
         public bool ?Create { get; set; }
+        public bool? UseWindowsAuth { get; set; }
         public string Database { get; set; }
         public string Username { get; set; }
         public string Password { get; set; }

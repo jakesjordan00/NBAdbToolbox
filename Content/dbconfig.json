@@ -1,7 +1,8 @@
 {
-  "Server": "LAZARUS",
+  "Server": "DESKTOP-F7FN836",
   "Create": false,
-  "Database": "NBAdb_0424",
-  "Username": "localadm",
-  "Password": "Racecar1"
+  "UseWindowsAuth": true,
+  "Database": "aaToolboxTest_FullLoad9",
+  "Username": "",
+  "Password": ""
 }

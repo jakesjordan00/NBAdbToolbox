@@ -43,6 +43,7 @@ select distinct SeasonID from Team
 
 select * from buildlog
 
+delete from util.MissingData
 delete from StartingLineups
 delete from TeamBoxLineups
 delete from PlayByPlay
@@ -54,7 +55,6 @@ delete from Player
 delete from Official
 delete from Arena
 delete from Team
-
 
 SELECT sum(rows) Rows
 from sys.tables t inner join

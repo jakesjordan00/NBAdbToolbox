@@ -401,27 +401,6 @@ as
 update Team set Wins = @W, Losses = @L where TeamID = @teamID and SeasonID = @SeasonID
 ~~~
 
-create procedure TeamInsert
-@SeasonID			int,
-@TeamID				int,
-@City				varchar(255),
-@Name				varchar(255),
-@Tricode			varchar(255),
-@Wins				int,
-@Losses				int
-as
-insert into Team values(
-@SeasonID			,
-@TeamID				,
-@City				,
-@Name				,
-@Tricode			,
-@Wins				,
-@Losses				,
-concat('(', @Tricode, ') ', @City, ' ', @Name))
-~~~
-
-
 create procedure ArenaCheck @ArenaID int, @SeasonID int
 as
 select ArenaID, (select count(ArenaID) from Arena where SeasonID = @SeasonID) Arenas
@@ -429,30 +408,6 @@ from Arena
 where ArenaID = @ArenaID and SeasonID = @SeasonID
 ~~~
 
-create procedure ArenaInsert 
-@SeasonID			int,
-@ArenaID			int,
-@TeamID				int,
-@City				varchar(255),
-@Country			varchar(255),
-@Name				varchar(255),
-@PostalCode			varchar(255),
-@State				varchar(255),
-@StreetAddress		varchar(255),
-@Timezone			varchar(255)
-as
-insert into Arena values(
-@SeasonID			,
-@ArenaID			,
-@TeamID				,
-@City				,
-@Country			,
-@Name				,
-@PostalCode			,
-@State				,
-@StreetAddress		,
-@Timezone			)
-~~~
 
 create procedure OfficialCheck @OfficialID int, @SeasonID int
 as
@@ -461,18 +416,6 @@ from Official
 where OfficialID = @OfficialID and SeasonID = @SeasonID
 ~~~
 
-create procedure OfficialInsert
-@SeasonID			int,
-@OfficialID			int,
-@Name				varchar(255),
-@Number				varchar(3)
-as
-insert into Official values(
-@SeasonID			,
-@OfficialID			,
-@Name				,
-@Number				)
-~~~
 
 
 create procedure PlayerCheck @PlayerID	int, @SeasonID int
@@ -494,21 +437,6 @@ where PlayerID = @PlayerID and SeasonID = @SeasonID
 
 
 
-
-create procedure PlayerInsert
-@SeasonID			int,
-@PlayerID			int,
-@Name				varchar(255),
-@Number				varchar(3),
-@Position			varchar(100)
-as
-insert into Player values(
-@SeasonID			,
-@PlayerID			,
-@Name				,
-@Number				,
-@Position			)
-~~~
 
 create procedure InactiveInsert
 @SeasonID			int,
@@ -538,43 +466,6 @@ WinnerID = @WinnerID, LoserID = @LoserID, WScore = @WScore, LScore = @LScore
 where GameID = @GameID and SeasonID = @SeasonID
 ~~~
 
-create procedure GameInsert
-@SeasonID			int,
-@GameID				int,
-@Date				date,
-@GameType			varchar(10),
-@HomeID				int,
-@HScore				int,
-@AwayID				int,
-@AScore				int,
-@WinnerID			int,
-@WScore				int,
-@LoserID			int,
-@LScore				int,
-@SeriesID			varchar(20),
-@Label				varchar(100),
-@LabelDetail		varchar(100),
-@Datetime			datetime
-as
-insert into Game values(
-@SeasonID			,
-@GameID				,
-@Date				,
-@GameType			,
-@HomeID				,
-@HScore				,
-@AwayID				,
-@AScore				,
-@WinnerID			,
-@WScore				,
-@LoserID			,
-@LScore				,
-@SeriesID			,
-@Label				,
-@LabelDetail		,
-@Datetime			)
-~~~
-
 create procedure TeamBoxCheck 
 @SeasonID      int,
 @GameID        int,
@@ -587,98 +478,6 @@ where t.SeasonID = @SeasonID and t.GameID = @GameID and t.TeamID = @TeamID and t
 ~~~
 
 
-create procedure TeamBoxUpdateHistoric 
-@SeasonID int, @GameID int, @TeamID int, @MatchupID int, @FGM int, @FGA int, @FGpct float, @FG2M int, @FG2A int, @FG2pct float, 
-@FG3M int, @FG3A int, @FG3pct float, @FTM int, @FTA int, @FTpct float, @RebD int, @RebO int, @RebT int, @Assists int, 
-@Turnovers int, @AtoR float, @Steals int, @Blocks int, @Points int, @PointsAgainst int, @FoulsPersonal int
-as
-update TeamBox set 
-FGM					=	@FGM           ,
-FGA					=	@FGA           ,
-[FG%]				=	@FGpct         ,
-FG2M				=	@FG2M          ,
-FG2A				=	@FG2A          ,
-[FG2%]				=	@FG2pct        ,
-FG3M				=	@FG3M          ,
-FG3A				=	@FG3A          ,
-[FG3%]				=	@FG3pct        ,
-FTM					=	@FTM           ,
-FTA					=	@FTA           ,
-[FT%]				=	@FTpct         ,
-ReboundsDefensive   =	@RebD          ,
-ReboundsOffensive   =	@RebO          ,
-ReboundsTotal       =	@RebT          ,
-Assists				=	@Assists       ,
-Turnovers			=	@Turnovers     ,
-AssistsTurnoverRatio=	@AtoR          ,
-Steals				=	@Steals        ,
-Blocks				=	@Blocks        ,
-Points				=	@Points        ,
-PointsAgainst		=	@PointsAgainst ,
-FoulsPersonal		=	@FoulsPersonal 
-where SeasonID = @SeasonID and GameID = @GameID and TeamID = @TeamID and MatchupID = @MatchupID
-~~~
-
-create procedure TeamBoxInsertHistoric
-@SeasonID      int,
-@GameID        int,
-@TeamID        int,
-@MatchupID     int,
-@FGM           int,
-@FGA           int,
-@FGpct         float,
-@FG2M          int,
-@FG2A          int,
-@FG2pct        float,
-@FG3M          int,
-@FG3A          int,
-@FG3pct        float,
-@FTM           int,
-@FTA           int,
-@FTpct         float,
-@RebD          int,
-@RebO          int,
-@RebT          int,
-@Assists       int,
-@Turnovers     int,
-@AtoR          float,
-@Steals        int,
-@Blocks        int,
-@Points        int,
-@PointsAgainst int,
-@FoulsPersonal int
-as
-insert into TeamBox(SeasonID, GameID, TeamID, MatchupID, FGM, FGA, [FG%], FG2M, FG2A, [FG2%], FG3M, FG3A, [FG3%], FTM, FTA, [FT%], 
-ReboundsDefensive, ReboundsOffensive, ReboundsTotal, Assists, Turnovers, AssistsTurnoverRatio, Steals, Blocks, Points, PointsAgainst, FoulsPersonal)
-values(
-@SeasonID,
-@GameID,
-@TeamID,
-@MatchupID,
-@FGM,
-@FGA,
-@FGpct,
-@FG2M,
-@FG2A,
-@FG2pct,
-@FG3M,
-@FG3A,
-@FG3pct,
-@FTM,
-@FTA,
-@FTpct,
-@RebD,
-@RebO,
-@RebT,
-@Assists,
-@Turnovers,
-@AtoR,
-@Steals,
-@Blocks,
-@Points,
-@PointsAgainst,
-@FoulsPersonal)
-~~~
 
 
 create procedure TeamBoxLineupCheck 
@@ -692,103 +491,6 @@ select SeasonID, GameID, TeamID, Unit, Points
 from TeamBoxLineups t
 where t.SeasonID = @SeasonID and t.GameID = @GameID and t.TeamID = @TeamID and t.MatchupID = @MatchupID and t.Unit = @Unit
 ~~~
-
-
-create procedure TeamBoxLineupUpdateHistoric 
-@SeasonID int, @GameID int, @TeamID int, @MatchupID int, @Unit varchar(30),@FGM int, @FGA int, @FGpct float, @FG2M int, @FG2A int, @FG2pct float, 
-@FG3M int, @FG3A int, @FG3pct float, @FTM int, @FTA int, @FTpct float, @RebD int, @RebO int, @RebT int, @Assists int, 
-@Turnovers int, @AtoR float, @Steals int, @Blocks int, @Points int, @FoulsPersonal int, @Minutes varchar(30)
-as
-update TeamBoxLineups set 
-Minutes				=	@Minutes	   ,
-FGM					=	@FGM           ,
-FGA					=	@FGA           ,
-[FG%]				=	@FGpct         ,
-FG2M				=	@FG2M          ,
-FG2A				=	@FG2A          ,
-[FG2%]				=	@FG2pct        ,
-FG3M				=	@FG3M          ,
-FG3A				=	@FG3A          ,
-[FG3%]				=	@FG3pct        ,
-FTM					=	@FTM           ,
-FTA					=	@FTA           ,
-[FT%]				=	@FTpct         ,
-ReboundsDefensive   =	@RebD          ,
-ReboundsOffensive   =	@RebO          ,
-ReboundsTotal       =	@RebT          ,
-Assists				=	@Assists       ,
-Turnovers			=	@Turnovers     ,
-AssistsTurnoverRatio=	@AtoR          ,
-Steals				=	@Steals        ,
-Blocks				=	@Blocks        ,
-Points				=	@Points        ,
-FoulsPersonal		=	@FoulsPersonal 
-where SeasonID = @SeasonID and GameID = @GameID and TeamID = @TeamID and MatchupID = @MatchupID and Unit = @Unit
-~~~
-
-create procedure TeamBoxLineupInsertHistoric
-@SeasonID		int,
-@GameID			int,
-@TeamID			int,
-@MatchupID		int,
-@Unit			varchar(30),
-@Minutes		varchar(30),
-@FGM			int,
-@FGA			int,
-@FGpct			float,
-@FG2M			int,
-@FG2A			int,
-@FG2pct			float,
-@FG3M			int,
-@FG3A			int,
-@FG3pct			float,
-@FTM			int,
-@FTA			int,
-@FTpct			float,
-@RebD			int,
-@RebO			int,
-@RebT			int,
-@Assists		int,
-@Turnovers		int,
-@AtoR			float,
-@Steals			int,
-@Blocks			int,
-@Points			int,
-@FoulsPersonal	int
-as
-insert into TeamBoxLineups(SeasonID, GameID, TeamID, MatchupID, Unit, Minutes, FGM, FGA, [FG%], FG2M, FG2A, [FG2%], FG3M, FG3A, [FG3%], FTM, FTA, [FT%], 
-ReboundsDefensive, ReboundsOffensive, ReboundsTotal, Assists, Turnovers, AssistsTurnoverRatio, Steals, Blocks, Points, FoulsPersonal)
-values(
-@SeasonID,
-@GameID,
-@TeamID,
-@MatchupID,
-@Unit,
-@Minutes,
-@FGM,
-@FGA,
-@FGpct,
-@FG2M,
-@FG2A,
-@FG2pct,
-@FG3M,
-@FG3A,
-@FG3pct,
-@FTM,
-@FTA,
-@FTpct,
-@RebD,
-@RebO,
-@RebT,
-@Assists,
-@Turnovers,
-@AtoR,
-@Steals,
-@Blocks,
-@Points,
-@FoulsPersonal)
-~~~
-
 
 create procedure PlayerBoxCheck 
 @SeasonID      int,
@@ -837,67 +539,6 @@ where SeasonID = @SeasonID and GameID = @GameID and TeamID = @TeamID and PlayerI
 ~~~
 
 
-create procedure PlayerBoxInsertHistoric
-@SeasonID      int,
-@GameID        int,
-@TeamID        int,
-@PlayerID     int,
-@FGM           int,
-@FGA           int,
-@FGpct         float,
-@FG2M          int,
-@FG2A          int,
-@FG2pct        float,
-@FG3M          int,
-@FG3A          int,
-@FG3pct        float,
-@FTM           int,
-@FTA           int,
-@FTpct         float,
-@RebD          int,
-@RebO          int,
-@RebT          int,
-@Assists       int,
-@Turnovers     int,
-@AtoR          float,
-@Steals        int,
-@Blocks        int,
-@Points        int,
-@FoulsPersonal int,
-@Minutes	  varchar(30)
-as
-insert into PlayerBox(SeasonID, GameID, TeamID, PlayerID, FGM, FGA, [FG%], FG2M, FG2A, [FG2%], FG3M, FG3A, [FG3%], FTM, FTA, [FT%], 
-ReboundsDefensive, ReboundsOffensive, ReboundsTotal, Assists, Turnovers, AssistsTurnoverRatio, Steals, Blocks, Points, FoulsPersonal, Minutes)
-values(
-@SeasonID,
-@GameID,
-@TeamID,
-@PlayerID,
-@FGM,
-@FGA,
-@FGpct,
-@FG2M,
-@FG2A,
-@FG2pct,
-@FG3M,
-@FG3A,
-@FG3pct,
-@FTM,
-@FTA,
-@FTpct,
-@RebD,
-@RebO,
-@RebT,
-@Assists,
-@Turnovers,
-@AtoR,
-@Steals,
-@Blocks,
-@Points,
-@FoulsPersonal,
-@Minutes)
-~~~
-
 create procedure PlayByPlayCheckHistorical @SeasonID int, @GameID int
 as
 select p.SeasonID, p.GameID, count(p.GameID) Actions
@@ -906,91 +547,6 @@ where p.SeasonID = @SeasonID and p.GameID = @GameID
 group by p.SeasonID, p.GameID
 ~~~
 
-create procedure PlayByPlayInsertHistorical
-		@SeasonID			int,
-		@GameID				int,
-		@ActionID			int,
-		@ActionNumber		int,
-		@Qtr					int,
-		@Clock				varchar(20),
-		--@TimeActual			datetime,
-		@ScoreHome			int,
-		@ScoreAway			int,
-		@TeamID				int,
-		@Tricode				varchar(3),
-		@PlayerID			int,
-		@Description			varchar(999),
-		@SubType				varchar(999),
-		@IsFieldGoal			int,
-		@ShotResult			varchar(999),
-		@ShotValue			int,
-		@ActionType			varchar(999),
-		@ShotDistance		float,
-		@Xlegacy				float,
-		@Ylegacy				float,
-		--@X					float,
-		--@Y					float,
-		@Location			varchar(35)
---@Area				varchar(50),
---@AreaDetail			varchar(50),
---@Side				varchar(30),
---@ShotType			varchar(4),
---@PtsGenerated		int,
---@Descriptor			varchar(30),
---@Qual1				varchar(30),
---@Qual2				varchar(30),
---@Qual3				varchar(30),
---@ShotActionNbr		int,
---@PlayerIDAst			int,
---@PlayerIDBlk			int,
---@PlayerIDStl			int,
---@PlayerIDFoulDrawn	int,
---@PlayerIDJumpW		int,
---@PlayerIDJumpL		int,
---@OfficialID			int,
---@QtrType				varchar(20),
---@EventMsgTypeID		int
-as
-insert into PlayByPlay(SeasonID, GameID, ActionID, ActionNumber, Qtr, Clock,
-ScoreHome,
-ScoreAway,
-TeamID,
-Tricode,
-PlayerID,
-Description,
-SubType,
-IsFieldGoal,
-ShotResult,
-ShotValue,
-ActionType,
-ShotDistance,
-Xlegacy,
-Ylegacy,
-Location)
-values(
-@SeasonID		,
-@GameID			,
-@ActionID		,
-@ActionNumber	,
-@Qtr			,
-replace(replace(replace(@Clock, 'PT', ''), 'M', ':'), 'S', ''),
-@ScoreHome		,
-@ScoreAway		,
-@TeamID			,
-@Tricode		,
-@PlayerID		,
-@Description	,
-@SubType		,
-@IsFieldGoal	,
-@ShotResult		,
-@ShotValue		,
-@ActionType		,
-@ShotDistance	,
-@Xlegacy		,
-@Ylegacy		,
-@Location			
-)
-~~~
 
 
 create procedure BuildLogCheck
@@ -1109,7 +665,7 @@ Source			varchar(15),
 MissingData		varchar(100),
 Note			varchar(999),
 Primary Key(SeasonID, GameID, Source, MissingData),
-Foreign Key (SeasonID, GameID) references Game(SeasonID, GameID))
+Foreign Key (SeasonID) references Season(SeasonID))
 ~~~
 */
 
