@@ -23,13 +23,13 @@ delete from Player
 delete from Official
 delete from Arena
 delete from Team
+delete from util.MissingData
 
 
 
 
 
-
-select * from PlayByPlay p
+select * from util.MissingData p
 order by GameID
 
 select * from Game p
@@ -93,17 +93,17 @@ select * from Team					where SeasonID = 2019
 select * from util.MissingData
 
 
-delete from StartingLineups		where SeasonID = 2022 --7
-delete from TeamBoxLineups		where SeasonID = 2022 --10
-delete from PlayByPlay			where SeasonID = 2022 --4
-delete from PlayerBox			where SeasonID = 2022 --6
-delete from TeamBox				where SeasonID = 2022 --9
-delete from GameExt 			where SeasonID = 2022 --2
-delete from Game 				where SeasonID = 2022 --2
-delete from Player				where SeasonID = 2022 --5
-delete from Official 			where SeasonID = 2022 --3
-delete from Arena 				where SeasonID = 2022 --1
-delete from Team				where SeasonID = 2022 --8
+delete from StartingLineups		where SeasonID != 2019 --7
+delete from TeamBoxLineups		where SeasonID != 2019 --10
+delete from PlayByPlay			where SeasonID != 2019 --4
+delete from PlayerBox			where SeasonID != 2019 --6
+delete from TeamBox				where SeasonID != 2019 --9
+delete from GameExt 			where SeasonID != 2019 --2
+delete from Game 				where SeasonID != 2019 --2
+delete from Player				where SeasonID != 2019 --5
+delete from Official 			where SeasonID != 2019 --3
+delete from Arena 				where SeasonID != 2019 --1
+delete from Team				where SeasonID != 2019 --8
 
 
 
