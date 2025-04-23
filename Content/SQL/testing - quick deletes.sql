@@ -25,33 +25,6 @@ delete from Arena
 delete from Team
 
 
-/*
-Tables to update for new data
-	TeamBox
-		SeasonID, GameID, TeamID, MatchupID
-		FieldGoalsEffectiveAdjusted, SecondChancePointsMade, SecondChancePointsAttempted, SecondChancePointsPercentage, TrueShootingAttempts, TrueShootingPercentage, PointsFromTurnovers, PointsSecondChance, PointsInThePaint, PointsInThePaintMade, PointsInThePaintAttempted, PointsInThePaintPercentage, 
-		PointsFastBreak, FastBreakPointsMade, FastBreakPointsAttempted, FastBreakPointsPercentage, BenchPoints, ReboundsPersonal, ReboundsTeam, ReboundsTeamDefensive, ReboundsTeamOffensive, 
-		BiggestLead, BiggestLeadScore, BiggestScoringRun, BiggestScoringRunScore, TimeLeading, TimesTied, LeadChanges, 
-		TurnoversTeam, TurnoversTotal, BlocksReceived, FoulsDrawn, FoulsOffensive, FoulsTeam, FoulsTeamTechnical, FoulsTechnical
-	StartingLineups
-		SeasonID, GameID, TeamID, MatchupID, PlayerID
-		Unit, Position
-	PlayerBox
-		SeasonID, GameID, TeamID, MatchupID, PlayerID
-		Status, Starter, Position, MinutesCalculated, BlocksReceived, Plus, Minus, PlusMinusPoints, PointsFastBreak, PointsInThePaint, PointsSecondChance, 
-		FoulsOffensive, FoulsDrawn, FoulsTechnical, StatusReason, StatusDescription
-	Player			
-		SeasonID, PlayerID	
-		Position **Maybe
-			honestly if i figure out a way to get the update working after the insert, i dont think i need
-			Update after insert being like find all the different position a player has started at for the season, then update Player
-				Maybe sort by most starts at or something idk. Like if Bron has 50 starts at PF, 20 at C, and 12 at SF, display as PF/C/SF
-	PlayByPlay
-		SeasonID, GameID, ActionID, ActionNumber
-		TimeActual, ScoreHome, ScoreAway, Possession, SubType, ActionType, ShotDistance, 
-		X, Y, Area, AreaDetail, Side, Descriptor, Qual1, Qual2, Qual3, ShotActionNbr, PlayerIDAst, PlayerIDBlk, PlayerIDStl, 
-		PlayerIDFoulDrawn, PlayerIDJumpW, PlayerIDJumpL, OfficialID, QtrType
-*/
 
 
 

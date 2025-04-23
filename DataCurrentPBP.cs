@@ -37,6 +37,10 @@ namespace NBAdbToolboxCurrentPBP
                 {
 
                 }
+                catch (TaskCanceledException thread)
+                {
+
+                }
             }
             return root;
         }
