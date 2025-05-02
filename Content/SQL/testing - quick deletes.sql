@@ -32,9 +32,6 @@ delete from util.MissingData
 select * from util.MissingData p
 order by GameID
 
-select * from Game p
-order by GameID
-
 
 
 select * from Season

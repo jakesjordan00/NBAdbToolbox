@@ -88,3 +88,10 @@ from util.MissingData
 
 select *, Games + PlayoffGames Total
 from Season
+
+
+
+
+select *
+from Game g 
+order by g.Date
