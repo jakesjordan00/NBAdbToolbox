@@ -1943,7 +1943,7 @@ namespace NBAdbToolbox
             string filePath = Path.Combine(projectRoot, "Content\\", "dbconfig.json");              //Line 1568 is TESTing data, 1567 normal
             filePath = filePath.Replace("dbconfig.json", "Historic Data\\");
             //filePath = filePath.Replace("dbconfig.json", "Historic Data\\test\\");
-            int iter = (season == 2012 || season == 2019 || season == 2020 || season == 2024) ? 3 : 4;      //No Selection
+            int iter = (season == 2012 || season == 2019 || season == 2020) ? 3 : 4;      //No Selection
             root = await historic.ReadFile(season, iter, filePath);                                         //Season before 2019
 
         }
