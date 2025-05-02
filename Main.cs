@@ -394,7 +394,7 @@ namespace NBAdbToolbox
             btnPopulate.Top = listSeasons.Bottom; //subject to change
 
 
-
+            #region Populate Database
             btnPopulate.Click += async (s, e) =>
             {
                 int selectedSeasons = listSeasons.SelectedItems.Count;
@@ -865,6 +865,8 @@ namespace NBAdbToolbox
 
                 }
             };
+            #endregion
+
             //Panel Formatting
             #region Panel Formatting
             pnlLoad.Top = pnlWelcome.Bottom;
@@ -1314,9 +1316,6 @@ namespace NBAdbToolbox
 
                             fontSize = ((float)((pnlSeason.Height * .08)) / (96 / 12)) * (72 / 12);
                             TableLabels(pnlSeason, lblSeasonSub, fontSize, "Subhead", lblSeason);
-
-
-
                             if (sdr["Rows"].ToString() == "13")
                             {
                                 imagePath = Path.Combine(projectRoot, "Content", "Success.png");
