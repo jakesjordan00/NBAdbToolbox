@@ -36,6 +36,7 @@ order by GameID desc
 
 select *
 from util.MissingData
+
 select t.SeasonID, count(t.TeamID) Teams
 from Team t
 group by t.SeasonID
@@ -76,8 +77,6 @@ select t.SeasonID, count(distinct t.GameID) Games
 from StartingLineups t
 group by t.SeasonID
 
-
-
 select t.SeasonID, count(distinct t.GameID) Games
 from TeamBoxLineups t
 group by t.SeasonID
@@ -85,6 +84,9 @@ group by t.SeasonID
 
 select *
 from util.MissingData
+
+select *
+from BuildLog
 
 select *, Games + PlayoffGames Total
 from Season
@@ -95,3 +97,7 @@ from Season
 select *
 from Game g 
 order by g.Date
+
+
+
+

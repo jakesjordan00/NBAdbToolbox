@@ -324,7 +324,40 @@ Foreign Key (SeasonID, PlayerID) references Player(SeasonID, PlayerID),
 Foreign Key (SeasonID, GameID, TeamID, MatchupID, PlayerID) references PlayerBox(SeasonID, GameID, TeamID, MatchupID, PlayerID))
 
 
-create table BuildLog(
+
+/*
+--The below section will be used to create a new string for procedure creation
+~create procedure SeasonInsert
+as
+insert into Season values(2012, 1610612748, 1229, 85, 0, 0)
+insert into Season values(2013, 1610612759, 1230, 89, 0, 0)
+insert into Season values(2014, 1610612744, 1230, 81, 0, 0)
+insert into Season values(2015, 1610612739, 1230, 86, 0, 0)
+insert into Season values(2016, 1610612744, 1230, 79, 0, 0)
+insert into Season values(2017, 1610612744, 1230, 81, 0, 0)
+insert into Season values(2018, 1610612761, 1230, 82, 0, 0)
+insert into Season values(2019, 1610612747, 1059, 83, 0, 0)
+insert into Season values(2020, 1610612749, 1080, 91, 0, 0)
+insert into Season values(2021, 1610612744, 1230, 93, 0, 0)
+insert into Season values(2022, 1610612743, 1230, 90, 0, 0)
+insert into Season values(2023, 1610612738, 1230, 88, 0, 0)
+insert into Season values(2024, null, 1230, 47, 0, 0)
+~~~
+
+create schema util
+~~~
+
+create table util.MissingData(
+SeasonID		int,
+GameID			int,
+Source			varchar(15),
+MissingData		varchar(100),
+Note			varchar(999),
+Primary Key(SeasonID, GameID, Source, MissingData),
+Foreign Key (SeasonID) references Season(SeasonID))
+~~~
+
+create table util.BuildLog(
 BuildID int,
 RunID INT IDENTITY(1,1),
 SeasonID int,
@@ -348,28 +381,7 @@ DatetimeStarted datetime,
 DatetimeComplete datetime,
 Primary Key (BuildID, RunID),
 Foreign Key (SeasonID) references Season(SeasonID))
-
-
-
-/*
---The below section will be used to create a new string for procedure creation
-~create procedure SeasonInsert
-as
-insert into Season values(2012, 1610612748, 1229, 85, 0, 0)
-insert into Season values(2013, 1610612759, 1230, 89, 0, 0)
-insert into Season values(2014, 1610612744, 1230, 81, 0, 0)
-insert into Season values(2015, 1610612739, 1230, 86, 0, 0)
-insert into Season values(2016, 1610612744, 1230, 79, 0, 0)
-insert into Season values(2017, 1610612744, 1230, 81, 0, 0)
-insert into Season values(2018, 1610612761, 1230, 82, 0, 0)
-insert into Season values(2019, 1610612747, 1059, 83, 0, 0)
-insert into Season values(2020, 1610612749, 1080, 91, 0, 0)
-insert into Season values(2021, 1610612744, 1230, 93, 0, 0)
-insert into Season values(2022, 1610612743, 1230, 90, 0, 0)
-insert into Season values(2023, 1610612738, 1230, 88, 0, 0)
-insert into Season values(2024, null, 1230, 0, 0, 0)
 ~~~
-
 
 create procedure Tables
 as
@@ -552,7 +564,7 @@ group by p.SeasonID, p.GameID
 create procedure BuildLogCheck
 as
 Select case when max(BuildID) is null then 1 else max(BuildID) + 1 end BuildID
-from BuildLog
+from util.BuildLog
 ~~~
 
 
@@ -581,7 +593,7 @@ create procedure BuildLogInsert
 @Current int,
 @Source varchar(30)
 as
-insert into BuildLog(
+insert into util.BuildLog(
 BuildID, 
 SeasonID, 
 Hr, 
@@ -653,19 +665,6 @@ create procedure SelectGamesDeletePBP @Season int
 as
 select distinct GameID from Game where SeasonID = @Season 
 delete from PlayByPlay where SeasonID = @Season
-~~~
-
-create schema util
-~~~
-
-create table util.MissingData(
-SeasonID		int,
-GameID			int,
-Source			varchar(15),
-MissingData		varchar(100),
-Note			varchar(999),
-Primary Key(SeasonID, GameID, Source, MissingData),
-Foreign Key (SeasonID) references Season(SeasonID))
 ~~~
 */
 

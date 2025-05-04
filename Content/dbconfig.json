@@ -1,8 +1,8 @@
 {
-  "Server": "LAZARUS",
+  "Server": "DESKTOP-F7FN836",
   "Create": false,
   "UseWindowsAuth": true,
-  "Database": "LazarusNBAdb1",
+  "Database": "KawhiNBAdbDefaultSelect",
   "Username": "",
   "Password": ""
 }
