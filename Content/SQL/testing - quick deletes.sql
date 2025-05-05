@@ -38,9 +38,9 @@ select * from Season
 
 select distinct SeasonID from Team
 
-select * from buildlog
+select * from util.buildlog
 
-delete from util.MissingData
+delete from util.MissingData	
 delete from StartingLineups
 delete from TeamBoxLineups
 delete from PlayByPlay
@@ -137,7 +137,7 @@ from util.MissingData
 order by GameID desc
 go
 
-select * from BuildLog
+select * from util.BuildLog
 
 delete from PlayByPlay where GameID = 21900193
 

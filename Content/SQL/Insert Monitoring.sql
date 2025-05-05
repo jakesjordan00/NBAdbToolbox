@@ -44,3 +44,7 @@ order by SeasonID desc
 
 
 
+
+
+
+select * from util.BuildLog

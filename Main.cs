@@ -27,6 +27,7 @@ namespace NBAdbToolbox
 {
     public partial class Main : Form
     {
+        #region Global Declarations
         NBAdbToolboxHistoric.Root root = new NBAdbToolboxHistoric.Root();
         NBAdbToolboxCurrent.Root rootC = new NBAdbToolboxCurrent.Root();
         NBAdbToolboxCurrentPBP.Root rootCPBP = new NBAdbToolboxCurrentPBP.Root();
@@ -95,14 +96,8 @@ namespace NBAdbToolbox
         public int dimH = 0;
         public int dimH2 = 0;
         //pnlDbUtil Options section
-        public Label lblDbOptions = new Label
-        {
-            Text = "Options",
-        };
-        public Label lblDbSelectSeason = new Label
-        {
-            Text = "Season Select"
-        };
+        public Label lblDbOptions = new Label();
+        public Label lblDbSelectSeason = new Label();
         public ListBox listSeasons = new ListBox();
         public Button btnPopulate = new Button();
         public static DataHistoric historic = new DataHistoric();
@@ -189,6 +184,15 @@ namespace NBAdbToolbox
         public Stopwatch stopwatchRead = new Stopwatch();
         public TimeSpan timeElapsedRead = new TimeSpan(0);
         public string elapsedStringRead = "";
+
+
+
+        public int currentIterator = 0;
+        public int currentImageIterator = 0;
+        public bool currentReverse = false;
+        public string currentBoxUpdate = "";
+        #endregion
+
         public Main()
         {
             InitializeComponent();
@@ -372,18 +376,14 @@ namespace NBAdbToolbox
             dimH = (int)(fullHeight * .25);
             dimH2 = (int)(fullHeight * .5);
 
-            lblDbOptions.Height = (int)(lblDbUtil.Height * .9);
-            lblDbOptions.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, pnlDbUtil, lblDbOptions);
-            //Auto-size and center
-            lblDbOptions.Top = fullHeight + (int)(lblDbOptions.Height * .85);
-            lblDbOptions.AutoSize = true;
+
+
+            ChangeLabel(lblDbOptions, pnlDbUtil, new List<string> { "Options", "Bold", fontSize.ToString(), ".", "true", ".", (fullHeight + (int)(((int)(lblDbUtil.Height * .9)) * .85)).ToString(), ".", "true", ((int)(lblDbUtil.Height * .9)).ToString() });
+            //....................................................Text,  FontStyle, FontSize,             Width, AutoSize, Left, Top,                                                        Color, Visible, Height
             CenterElement(pnlDbUtil, lblDbOptions);
 
-            lblDbSelectSeason.Height = (int)(lblDbUtil.Height * .8);
-            lblDbSelectSeason.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, lblDbOptions, lblDbSelectSeason);
-            lblDbSelectSeason.Top = lblDbOptions.Bottom;
-            lblDbSelectSeason.Left = pnlDbUtil.Left;
-            lblDbSelectSeason.AutoSize = true;
+
+            ChangeLabel(lblDbSelectSeason, lblDbOptions, new List<string> { "Season Select", "Bold", fontSize.ToString(), ".", "true", pnlDbUtil.Left.ToString(), lblDbOptions.Bottom.ToString(), ".", "true", ((int)(lblDbUtil.Height * .8)).ToString() });
             AlignLeft(pnlDbUtil, lblDbSelectSeason, lblDbOptions);
 
 
@@ -435,9 +435,9 @@ namespace NBAdbToolbox
                     lblCurrentGameCount.Visible = true;
                     lblSeasonStatusLoadInfo.Visible = true;
                     picLoad.Visible = true;
-                    ChangeLabel(lblCurrentGame, pnlLoad, new List<string>{ "Current game: ", "Regular", ((float)(pnlLoad.Height * .05) / (96 / 12) * (72 / 12)).ToString(), ".", "true", "4", ".",Color.Black.ToString(), "true"});
-                    ChangeLabel(lblSeasonStatusLoad, pnlLoad, new List<string>{"Currently loading: ","Regular",((float)(pnlLoad.Height * .08) / (96 / 12) * (72 / 12)).ToString(),".","true","0",".",Color.Black.ToString(),"true"});
-                    ChangeLabel(lblWorkingOn, pnlLoad, new List<string>{".", "Regular", ((float)(pnlLoad.Height * .04) / (96 / 12) * (72 / 12)).ToString(), ".", "true", (picLoad.Right - (int)(picLoad.Width / 6)).ToString(), lblSeasonStatusLoadInfo.Bottom.ToString(),Color.Black.ToString(),"true"});
+                    ChangeLabel(lblCurrentGame, pnlLoad, new List<string>{ "Current game: ", "Regular", ((float)(pnlLoad.Height * .05) / (96 / 12) * (72 / 12)).ToString(), ".", "true", "4", ".",Color.Black.ToString(), "true", "."});
+                    ChangeLabel(lblSeasonStatusLoad, pnlLoad, new List<string>{"Currently loading: ","Regular",((float)(pnlLoad.Height * .08) / (96 / 12) * (72 / 12)).ToString(),".","true","0",".",Color.Black.ToString(),"true", "." });
+                    ChangeLabel(lblWorkingOn, pnlLoad, new List<string>{".", "Regular", ((float)(pnlLoad.Height * .04) / (96 / 12) * (72 / 12)).ToString(), ".", "true", (picLoad.Right - (int)(picLoad.Width / 6)).ToString(), lblSeasonStatusLoadInfo.Bottom.ToString(),Color.Black.ToString(),"true", "." });
                     #endregion
 
                     int buildID = 0;
@@ -814,7 +814,8 @@ namespace NBAdbToolbox
              /*Left*/       (pnlLoad.Width - lblWorkingOn.Width).ToString(),
              /*Top*/        lblSeasonStatusLoadInfo.Bottom.ToString(),
              /*Color*/      ".",
-             /*Visible*/    "true"
+             /*Visible*/    "true",
+             /*Height*/     "."
                         });
                         if (lblLeft == 0)
                         {
@@ -842,31 +843,8 @@ namespace NBAdbToolbox
                     };
                     string elapsedString = CheckTime(timeUnits);
 
-
-                    //lblCurrentGame.Text = "Total time elapsed: " + elapsedString;
-                    //font style is regular, see next line
-                    //lblCurrentGame.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Regular, pnlLoad, lblCurrentGame);
-                    //fontSize = ((float)(pnlLoad.Height * .05) / (96 / 12)) * (72 / 12);
-                    //width will be == "."
-                    //lblCurrentGame.AutoSize = true;
-                    //left will be == "."
-                    //top will be == "."
-                    //lblCurrentGame.ForeColor = Color.Green;
-                    //visible will be == "true"
-
                     //Total Time Elapsed
-                    ChangeLabel(lblCurrentGame, pnlLoad, new List<string>
-                        {
-             /*Text*/       "Total time elapsed: " + elapsedString,
-             /*FontStyle*/  "Regular",
-             /*FontSize*/   ((float)(pnlLoad.Height * .05) / (96 / 12) * (72 / 12)).ToString(),
-             /*Width*/      ".",
-             /*Autosize*/   "true",
-             /*Left*/       ".",
-             /*Top*/        ".",
-             /*Color*/      Color.Green.ToString(),
-             /*Visible*/    "true"
-                        });
+                    ChangeLabel(lblCurrentGame, pnlLoad, new List<string>{"Total time elapsed: " + elapsedString,"Regular",((float)(pnlLoad.Height * .05) / (96 / 12) * (72 / 12)).ToString(),".","true",".",".",Color.Green.ToString(),"true", "." });
                     #endregion
 
 
@@ -877,11 +855,11 @@ namespace NBAdbToolbox
 
                     lblStatus.Text = "Welcome Back!";
                     CenterElement(pnlWelcome, lblStatus);                    
-                    ChangeLabel(lblSeasonStatusLoadInfo, pnlLoad, new List<string> { "",    ".",       ".",      "." ,  ".",      ".",  ".", ".",  "false"});
-                    //...............................................................Text,  FontStyle, FontSize, Width, AutoSize, Left, Top, Color, Visible
-                    ChangeLabel(lblCurrentGameCount, pnlLoad, new List<string> { "",    ".",       ".",      ".",   ".",      ".",  ".", ".",   "false" });
-                    //...........................................................Text,  FontStyle, FontSize, Width, AutoSize, Left, Top, Color, Visible
-                    ChangeLabel(lblSeasonStatusLoad, pnlLoad, new List<string> { "Done! Check your SQL db", "Regular", ((float)(pnlLoad.Height * .08) / (96 / 12) * (72 / 12)).ToString(), ".", "true", ".", ".", Color.Green.ToString(), "true" });
+                    ChangeLabel(lblSeasonStatusLoadInfo, pnlLoad, new List<string> { "",    ".",       ".",      "." ,  ".",      ".",  ".", ".",  "false",  "." });
+                    //...............................................................Text,  FontStyle, FontSize, Width, AutoSize, Left, Top, Color, Visible, Height
+                    ChangeLabel(lblCurrentGameCount, pnlLoad, new List<string> { "",    ".",       ".",      ".",   ".",      ".",  ".", ".",   "false", "." });
+                    //...........................................................Text,  FontStyle, FontSize, Width, AutoSize, Left, Top, Color, Visible, Height
+                    ChangeLabel(lblSeasonStatusLoad, pnlLoad, new List<string> { "Done! Check your SQL db", "Regular", ((float)(pnlLoad.Height * .08) / (96 / 12) * (72 / 12)).ToString(), ".", "true", ".", ".", Color.Green.ToString(), "true", "." });
 
                     //Clear out image if it exists
                     if (picLoad.Image != null)
@@ -889,7 +867,7 @@ namespace NBAdbToolbox
                         picLoad.Image.Dispose();
                         picLoad.Image = null;
                     }
-                    ChangeLabel(lblWorkingOn, pnlLoad, new List<string> { ".", "Regular", ((float)(pnlLoad.Height * .035) / (96 / 12) * (72 / 12)).ToString(), ".", "true", (pnlLoad.Width - lblWorkingOn.Width).ToString(), "0", ".", "true" });
+                    ChangeLabel(lblWorkingOn, pnlLoad, new List<string> { ".", "Regular", ((float)(pnlLoad.Height * .035) / (96 / 12) * (72 / 12)).ToString(), ".", "true", (pnlLoad.Width - lblWorkingOn.Width).ToString(), "0", ".", "true", "." });
                     //Text, FontStyle, FontSize                                                            Width, AutoSize, Left,                                         Top,   Color, Visible 
 
                     //Show Success image
@@ -1096,10 +1074,6 @@ namespace NBAdbToolbox
             btnBuild.Top = btnEdit.Bottom + 10; //subject to change
             #endregion
 
-
-
-
-
             #region Edit Connection & Build DB
             //Edit Button Actions
             btnEdit.Click += (s, e) =>
@@ -1144,13 +1118,14 @@ namespace NBAdbToolbox
                 }
             };
             #endregion
+
+            #region Table Panel click behavior
             //If we have a database built, load the Table panels
             if (dbConnection)
             {
                 GetTablePanelInfo(bob.ToString());
             }
             List<Panel> panels = new List<Panel> { pnlSeason, pnlTeam, pnlPlayer, pnlGame, pnlPlayerBox, pnlTeamBox, pnlPbp, pnlTeamBoxLineups };
-
             //Mid Start
             pnlTeam.Click += (s, e) =>
             {
@@ -1261,89 +1236,8 @@ namespace NBAdbToolbox
 
                 }
             };
-        }
-        public void ChangeLabel(Label label, Control parent, List<string> structions)
-        {
-            float fontSize = 0;
-            FontStyle style = FontStyle.Regular;
-            /*Text*/
-            if (structions[0] != ".")
-            {
-                label.Text = structions[0];
-            }
-            else
-            {
-                label.Text = label.Text;
-            }
-            /*FontStyle*/
-            if (structions[1] == "Bold")
-            {
-                style = FontStyle.Bold;
-            }
-            else if (structions[1] == "Italic")
-            {
-                style = FontStyle.Italic;
-            }
-            else if (structions[1] == "Strikeout")
-            {
-                style = FontStyle.Strikeout;
-            }
-            else if (structions[1] == "Underline")
-            {
-                style = FontStyle.Underline;
-            }
-            /*FontSize*/
-            if (structions[2] != ".")
-            {
-                fontSize = float.Parse(structions[2]);
-                label.Font = SetFontSize("Segoe UI", fontSize, style, parent, label);
-            }
+            #endregion
 
-            /*Width*/
-            if (structions[3] != ".")
-            {
-                label.Width = Int32.Parse(structions[3]);
-            }
-            else
-            {
-                label.Width = label.Width;
-            }
-
-            /*Autosize*/
-            if (structions[4] == "true")
-            {
-                label.AutoSize = true;
-            }
-            else if (structions[4] == "false")
-            {
-                label.AutoSize = false;
-            }
-            /*Left*/
-            if (structions[5] != ".")
-            {
-                label.Left = Int32.Parse(structions[5]);
-            }
-            /*Top*/
-            if (structions[6] != ".")
-            {
-                label.Top = Int32.Parse(structions[6]);
-            }
-
-
-            /*Color*/
-            if (structions[7] != ".")
-            {
-                label.ForeColor = Color.FromName(structions[7]);
-            }
-            /*Visiblity*/
-            if (structions[8] == "true")
-            {
-                label.Visible = true;
-            }
-            else if(structions[8] == "false")
-            {
-                label.Visible = false;
-            }
         }
 
 
@@ -1599,7 +1493,6 @@ namespace NBAdbToolbox
         }
         #endregion
 
-
         #region Database and Server Methods
         //Refresh connection after connection update
         private void RefreshConnectionUI()
@@ -1829,7 +1722,7 @@ namespace NBAdbToolbox
         }
         #endregion
 
-        #region Misc Utilities
+        #region Utility Functions
         //Formats Time elapsed string for season load
         public string CheckTime(Dictionary<string, (int, string)> timeUnits)
         {
@@ -1875,6 +1768,114 @@ namespace NBAdbToolbox
 
             return base.ProcessCmdKey(ref msg, keyData);
         }
+        public void ChangeLabel(Label label, Control parent, List<string> structions)
+        {
+            float fontSize = 0;
+            FontStyle style = FontStyle.Regular;
+            /*Text*/
+            if (structions[0] != ".")
+            {
+                label.Text = structions[0];
+            }
+            else
+            {
+                label.Text = label.Text;
+            }
+            /*FontStyle*/
+            if (structions[1] == "Bold")
+            {
+                style = FontStyle.Bold;
+            }
+            else if (structions[1] == "Italic")
+            {
+                style = FontStyle.Italic;
+            }
+            else if (structions[1] == "Strikeout")
+            {
+                style = FontStyle.Strikeout;
+            }
+            else if (structions[1] == "Underline")
+            {
+                style = FontStyle.Underline;
+            }
+            /*FontSize*/
+            if (structions[2] != ".")
+            {
+                fontSize = float.Parse(structions[2]);
+                label.Font = SetFontSize("Segoe UI", fontSize, style, parent, label);
+            }
+
+            /*Width*/
+            if (structions[3] != ".")
+            {
+                label.Width = Int32.Parse(structions[3]);
+            }
+            else
+            {
+                label.Width = label.Width;
+            }
+
+            /*Autosize*/
+            if (structions[4] == "true")
+            {
+                label.AutoSize = true;
+            }
+            else if (structions[4] == "false")
+            {
+                label.AutoSize = false;
+            }
+            /*Left*/
+            if (structions[5] != ".")
+            {
+                label.Left = Int32.Parse(structions[5]);
+            }
+            /*Top*/
+            if (structions[6] != ".")
+            {
+                label.Top = Int32.Parse(structions[6]);
+            }
+
+
+            /*Color*/
+            if (structions[7] != ".")
+            {
+                label.ForeColor = Color.FromName(structions[7]);
+            }
+            /*Visiblity*/
+            if (structions[8] == "true")
+            {
+                label.Visible = true;
+            }
+            else if (structions[8] == "false")
+            {
+                label.Visible = false;
+            }
+            /*Height*/
+            if (structions[9] != ".")
+            {
+                label.Height = Int32.Parse(structions[9]);
+            }
+        }
+        public void ImageDriver(int stop)
+        {
+            if (currentReverse)
+            {
+                currentImageIterator--;
+            }
+            else
+            {
+                currentImageIterator++;
+            }
+            if (currentImageIterator == stop)
+            {
+                currentReverse = true;
+            }
+            if (currentImageIterator == 1)
+            {
+                currentReverse = false;
+            }
+        }
+
         #endregion
 
         //Scoreboard
@@ -4635,32 +4636,9 @@ namespace NBAdbToolbox
 
 
 
-        public int currentIterator = 0;
-        public int currentImageIterator = 0;
-        public bool currentReverse = false;
-        public void ImageDriver(int stop)
-        {
-            if (currentReverse)
-            {
-                currentImageIterator--;
-            }
-            else
-            {
-                currentImageIterator++;
-            }
-            if (currentImageIterator == stop)
-            {
-                currentReverse = true;
-            }
-            if (currentImageIterator == 1)
-            {
-                currentReverse = false;
-            }
-        }
 
 
 
-        public string currentBoxUpdate = "";
 
 
 
