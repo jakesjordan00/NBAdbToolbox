@@ -1,0 +1,63 @@
+Database Notes
+	KawhiNBAdbCurrentHistoric
+	  First run:
+		2024, 2023, 2022. No selection on source
+			Should hit current data
+	  Second run:
+		2021, 2020, 2019. No selection on source
+			Should hit current data
+	  Third run:
+		2018-2012. No selection on source
+			Should hit historic data
+		There's an issue with the "Currenly" Label and the Label that 
+		displays "season Regular Season", "season Postseason", or "season Historic Data FIle" and "Done!..."
+	KawhiNBAdbDefaultSelect SERIES
+		KawhiNBAdbDefaultSelect
+			Load all seasons in one go. Built DB, then immediately populated
+			Threw 'System.OutOfMemoryException' when getting 2022 GameIDs
+	KawhiNBAdbHistoric - Success
+	  Accidentally deleted everything.........
+	  Built Database, closed, then Populated
+	  First Run:
+		2012 - 2018: Historic selection for Source
+	  Did not close program
+	  Second Run:
+		2019 - 2024: Historic selection for Source
+		
+		
+		
+		
+		
+ChangeLabels Instruction Priority
+0	Text
+1	FontStyle
+2	FontSize
+3	Width
+4	AutoSize
+5	Left
+6	Top
+7	Color
+8	Visible
+9 	Height
+
+
+ChangeLabel(lblWorkingOn, new Dictionary<string, string> 
+	{ 
+		{"Text", completionMessage}, 
+        /*FontStyle*/  "Regular",
+		{"FontSize", ((float)(pnlLoad.Height * .03) / (96 / 12) * (72 / 12)).ToString()},
+		{"Width", "."},
+		{"Autosize", "true"},
+		{"Left", (pnlLoad.Width - lblWorkingOn.Width).ToString()},
+		{"Top", lblSeasonStatusLoadInfo.Bottom.ToString()},
+		{"Color", "."},
+		{"Visible", "true"}
+	});
+	
+	
+	
+
+            ChangeLabel(lblCurrentGameCount, pnlLoad, new List<string> { ".",    ".",      ".",     ".",   ".",       ".",  ".", ".",   "false", "." });
+            //...........................................................Text,  FontStyle, FontSize, Width, AutoSize, Left, Top, Color, Visible, Height
+			
+			

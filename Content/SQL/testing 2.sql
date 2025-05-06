@@ -1,37 +1,4 @@
 
-select distinct t.SeasonID, t.GameID
-from Game t
-order by GameID desc
-
-select distinct t.SeasonID, t.GameID
-from PlayByPlay t
-order by seasonID, GameID desc
-
-select distinct t.SeasonID, t.GameID
-from GameExt t
-order by seasonID, GameID desc
-
-select distinct t.SeasonID, t.GameID
-from TeamBox t
-order by GameID desc
-
-select distinct t.SeasonID, t.GameID
-from PlayerBox t
-order by GameID desc
-
-select distinct t.SeasonID, t.GameID
-from PlayByPlay t
-order by GameID desc
-
-select distinct t.SeasonID, t.GameID
-from StartingLineups t
-order by GameID desc
-
-
-
-select distinct t.SeasonID, t.GameID
-from TeamBoxLineups t
-order by GameID desc
 
 
 select *
@@ -82,11 +49,15 @@ from TeamBoxLineups t
 group by t.SeasonID
 
 
+
+
+
+
 select *
 from util.MissingData
 
 select *
-from BuildLog
+from util.BuildLog
 
 select *, Games + PlayoffGames Total
 from Season
@@ -94,9 +65,39 @@ from Season
 
 
 
-select *
-from Game g 
-order by g.Date
+
+
+select distinct t.SeasonID, t.GameID
+from Game t
+order by GameID desc
+
+select distinct t.SeasonID, t.GameID
+from PlayByPlay t
+order by seasonID, GameID desc
+
+select distinct t.SeasonID, t.GameID
+from GameExt t
+order by seasonID, GameID desc
+
+select distinct t.SeasonID, t.GameID
+from TeamBox t
+order by GameID desc
+
+select distinct t.SeasonID, t.GameID
+from PlayerBox t
+order by GameID desc
+
+select distinct t.SeasonID, t.GameID
+from PlayByPlay t
+order by GameID desc
+
+select distinct t.SeasonID, t.GameID
+from StartingLineups t
+order by GameID desc
+
+select distinct t.SeasonID, t.GameID
+from TeamBoxLineups t
+order by GameID desc
 
 
 

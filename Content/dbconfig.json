@@ -2,7 +2,7 @@
   "Server": "DESKTOP-F7FN836",
   "Create": false,
   "UseWindowsAuth": true,
-  "Database": "KawhiNBAdbDefaultSelect",
+  "Database": "GameCompNBAdb_CH",
   "Username": "",
   "Password": ""
 }
