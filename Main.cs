@@ -1123,9 +1123,9 @@ namespace NBAdbToolbox
             //If we have a database built, load the Table panels
             if (dbConnection)
             {
-                GetTablePanelInfo(bob.ToString());
+                //GetTablePanelInfo(bob.ToString());
             }
-            List<Panel> panels = new List<Panel> { pnlSeason, pnlTeam, pnlPlayer, pnlGame, pnlPlayerBox, pnlTeamBox, pnlPbp, pnlTeamBoxLineups };
+            //List<Panel> panels = new List<Panel> { pnlSeason, pnlTeam, pnlPlayer, pnlGame, pnlPlayerBox, pnlTeamBox, pnlPbp, pnlTeamBoxLineups };
             //Mid Start
             pnlTeam.Click += (s, e) =>
             {
@@ -1413,6 +1413,8 @@ namespace NBAdbToolbox
                 }
             }
         }
+
+
         //Add Status picture to Table panel
         public void AddTablePic(Panel panel, PictureBox pic, string path, string sender, Label header)
         {
