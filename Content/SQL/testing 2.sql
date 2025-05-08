@@ -21,11 +21,11 @@ from Player t
 group by t.SeasonID
 
 select t.SeasonID, count(t.GameID) Games
-from Game t
+from GameExt t
 group by t.SeasonID
 
 select t.SeasonID, count(t.GameID) Games
-from GameExt t
+from Game t
 group by t.SeasonID
 
 select t.SeasonID, count(distinct t.GameID) Games

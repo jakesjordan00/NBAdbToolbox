@@ -666,6 +666,22 @@ as
 select distinct GameID from Game where SeasonID = @Season 
 delete from PlayByPlay where SeasonID = @Season
 ~~~
+
+create procedure DeleteBeforePopulate @SeasonID int
+as
+delete from util.MissingData	where SeasonID = @SeasonID
+delete from StartingLineups		where SeasonID = @SeasonID
+delete from TeamBoxLineups		where SeasonID = @SeasonID
+delete from PlayByPlay			where SeasonID = @SeasonID
+delete from PlayerBox			where SeasonID = @SeasonID
+delete from TeamBox				where SeasonID = @SeasonID
+delete from GameExt				where SeasonID = @SeasonID
+delete from Game				where SeasonID = @SeasonID
+delete from Player				where SeasonID = @SeasonID
+delete from Official			where SeasonID = @SeasonID
+delete from Arena				where SeasonID = @SeasonID
+delete from Team				where SeasonID = @SeasonID
+~~~
 */
 
 

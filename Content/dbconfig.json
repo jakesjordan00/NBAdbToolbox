@@ -1,8 +1,8 @@
 {
-  "Server": "71.251.236.14",
+  "Server": "DESKTOP-F7FN836",
   "Create": false,
-  "UseWindowsAuth": false,
-  "Database": "GameCompNBAdb_CH",
+  "UseWindowsAuth": true,
+  "Database": "GameCompNBAdb_Def",
   "Username": "test",
   "Password": "test123"
 }

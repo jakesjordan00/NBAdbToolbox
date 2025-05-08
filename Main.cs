@@ -79,14 +79,7 @@ namespace NBAdbToolbox
         public Label lblDbUtil = new Label {
             Text = "Database Utilities",
         };
-        public Panel pnlSeason = new Panel(); public Label lblSeason = new Label(); public PictureBox picSeason = new PictureBox(); public Label lblSeasonSub = new Label();
-        public Panel pnlTeam = new Panel(); public Label lblTeam = new Label(); public PictureBox picTeam = new PictureBox(); public Label lblTeamSub = new Label();
-        public Panel pnlGame = new Panel(); public Label lblGame = new Label(); public PictureBox picGame = new PictureBox(); public Label lblGameSub = new Label();
-        public Panel pnlPlayerBox = new Panel(); public Label lblPlayerBox = new Label(); public PictureBox picPlayerBox = new PictureBox(); public Label lblPlayerBoxSub = new Label();
-        public Panel pnlTeamBox = new Panel(); public Label lblTeamBox = new Label(); public PictureBox picTeamBox = new PictureBox(); public Label lblTeamBoxSub = new Label();
-        public Panel pnlPlayer = new Panel(); public Label lblPlayer = new Label(); public PictureBox picPlayer = new PictureBox(); public Label lblPlayerSub = new Label();
-        public Panel pnlPbp = new Panel(); public Label lblPbp = new Label(); public PictureBox picPbp = new PictureBox(); public Label lblPbpSub = new Label();
-        public Panel pnlTeamBoxLineups = new Panel(); public Label lblTeamBoxLineups = new Label(); public PictureBox picTeamBoxLineups = new PictureBox(); public Label lblTeamBoxLineupsSub = new Label();
+        
         //pnlDbUtil sub panel Positions and sizes
         public int leftPanelPos = 0;
         public int midPanelPos = 0;
@@ -96,6 +89,11 @@ namespace NBAdbToolbox
         public int dimH = 0;
         public int dimH2 = 0;
         //pnlDbUtil Options section
+        public Panel pnlDbOverview = new Panel();
+        public Label lblDbOverview = new Label();
+        public int overviewHeight = 0;
+
+        public Label lblDbOvExpand = new Label();
         public Label lblDbOptions = new Label();
         public Label lblDbSelectSeason = new Label();
         public ListBox listSeasons = new ListBox();
@@ -210,11 +208,12 @@ namespace NBAdbToolbox
             this.MinimizeBox = false; // optional
             #endregion
 
-            //Server Connection status variable
-            bool isConnected = false;
-
-            // Create Background image
-            PictureBox bgCourt = new PictureBox
+            #region Set and declare variables
+            //Declarations       
+            lblServer.Text = "Server: ";
+            lblDB.Text = "Database: ";
+            bool isConnected = false; //Server Connection status variable            
+            PictureBox bgCourt = new PictureBox //Create Background image
             {
                 Image = Image.FromFile(Path.Combine(projectRoot, "Content", "Court.png")),
                 SizeMode = PictureBoxSizeMode.StretchImage,
@@ -224,6 +223,9 @@ namespace NBAdbToolbox
             };
 
 
+            #endregion
+
+            #region Set Welcome and Database Utilities panel sizes
             pnlWelcome.BorderStyle = BorderStyle.FixedSingle;
             pnlWelcome.Width = (int)(this.ClientSize.Width / 2.5);
             pnlWelcome.Height = (int)(this.ClientSize.Height / 2.5);
@@ -231,13 +233,15 @@ namespace NBAdbToolbox
             pnlWelcome.Top = (this.ClientSize.Height - pnlWelcome.Height) / 2;
             pnlWelcome.BackColor = Color.Transparent;
 
-
+            //DbUtil
             pnlDbUtil.Height = this.Height;
             pnlDbUtil.Dock = DockStyle.Left;
             pnlDbUtil.Width = pnlWelcome.Left;
+            #endregion
 
-            lblServer.Text = "Server: ";
-            lblDB.Text = "Database: ";
+
+            //Check for dbconfig
+            #region Verify Server/Database Connectivity
             if (!File.Exists(configPath)) //If our file doesnt exist
             {
                 lblStatus.Text = "Set Database Configuration";
@@ -306,13 +310,7 @@ namespace NBAdbToolbox
                 }
                 CheckServer(cString, "main");
             }
-
-
-
-
-
-
-
+            #endregion
 
             #region Add Elements
             //This should be second to last i believe.
@@ -329,6 +327,9 @@ namespace NBAdbToolbox
             AddPanelElement(pnlDbUtil, listSeasons);
             AddPanelElement(pnlDbUtil, lblDbSelectSeason);
             AddPanelElement(pnlDbUtil, lblDbOptions);
+            AddPanelElement(pnlDbUtil, lblDbOvExpand);
+            AddPanelElement(pnlDbUtil, lblDbOverview);
+            AddPanelElement(pnlDbUtil, pnlDbOverview);
             AddPanelElement(pnlDbUtil, lblDbUtil);
             AddPanelElement(pnlWelcome, lblDbStat);
             AddPanelElement(pnlWelcome, btnBuild);
@@ -349,9 +350,8 @@ namespace NBAdbToolbox
             AddMainElement(this, bgCourt); //Ading background image
             #endregion
 
-            //Set Panel Properties ***************************************************************************
+            #region dbUtilProperties
             //DbUtil
-            //Draws border without messing up the background image alignment
             pnlDbUtil.BorderStyle = BorderStyle.None;
             pnlDbUtil.Paint += (s, e) =>
             {
@@ -361,12 +361,10 @@ namespace NBAdbToolbox
                     e.Graphics.DrawLine(pen, p.Width - 1, 0, p.Width - 1, p.Height);
                 }
             };
-            //End Border drawing section
             pnlDbUtil.Parent = bgCourt;
             lblDbUtil.Height = (int)(pnlWelcome.Height * .1);
             float fontSize = ((float)(pnlWelcome.Height * .08) / (96 / 12)) * (72 / 12);
             lblDbUtil.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, pnlDbUtil, lblDbUtil);
-            //Auto-size and center
             lblDbUtil.AutoSize = true;
             CenterElement(pnlDbUtil, lblDbUtil);
 
@@ -377,13 +375,61 @@ namespace NBAdbToolbox
             dimH2 = (int)(fullHeight * .5);
 
 
+            ChangeLabel(lblDbOverview, pnlDbUtil, new List<string> { 
+                "Database Overview", 
+                "Bold", 
+                (((float)(pnlWelcome.Height * .05) / (96 / 12)) * (72 / 12)).ToString(), 
+                ".", 
+                "true", 
+                pnlDbUtil.Left.ToString(), 
+                (lblDbUtil.Bottom + (int)(lblDbUtil.Height * .3)).ToString(), 
+                ".", 
+                "true", 
+                ((int)(lblDbUtil.Height * .8)).ToString() 
+            });           
+            ChangeLabel(lblDbOvExpand, pnlDbUtil, new List<string> { 
+                "+", 
+                "Bold", 
+                (((float)(pnlWelcome.Height * .05) / (96 / 12)) * (72 / 12)).ToString(), 
+                ".", 
+                "true", 
+                ".", 
+                lblDbOverview.Top.ToString(), 
+                ".", 
+                "true", 
+                ((int)(lblDbUtil.Height * .8)).ToString() 
+            });
+            lblDbOvExpand.Left = (pnlDbUtil.Left + pnlDbUtil.Width - lblDbOvExpand.Width);
+            lblDbOvExpand.Height = lblDbOverview.Height;
+            overviewHeight = lblDbOverview.Height;
 
-            ChangeLabel(lblDbOptions, pnlDbUtil, new List<string> { "Options", "Bold", fontSize.ToString(), ".", "true", ".", (fullHeight + (int)(((int)(lblDbUtil.Height * .9)) * .85)).ToString(), ".", "true", ((int)(lblDbUtil.Height * .9)).ToString() });
-            //....................................................Text,  FontStyle, FontSize,             Width, AutoSize, Left, Top,                                                        Color, Visible, Height
+            ChangeLabel(lblDbOptions, pnlDbUtil, new List<string> { 
+                "Options", 
+                "Bold", 
+                fontSize.ToString(), 
+                ".", 
+                "true", 
+                ".", 
+                (lblDbOverview.Bottom + lblDbUtil.Height).ToString(), 
+                ".", 
+                "true", 
+                ((int)(lblDbUtil.Height * .9)).ToString() 
+            });
             CenterElement(pnlDbUtil, lblDbOptions);
 
 
-            ChangeLabel(lblDbSelectSeason, lblDbOptions, new List<string> { "Season Select", "Bold", fontSize.ToString(), ".", "true", pnlDbUtil.Left.ToString(), lblDbOptions.Bottom.ToString(), ".", "true", ((int)(lblDbUtil.Height * .8)).ToString() });
+            ChangeLabel(lblDbSelectSeason, lblDbOptions, new List<string> { 
+                "Season Select", 
+                "Bold", 
+                fontSize.ToString(), 
+                ".", 
+                "true", 
+                pnlDbUtil.Left.ToString(), 
+                lblDbOptions.Bottom.ToString(), 
+                ".", 
+                "true", 
+                ((int)(lblDbUtil.Height * .8)).ToString() 
+            });
             AlignLeft(pnlDbUtil, lblDbSelectSeason, lblDbOptions);
 
 
@@ -395,6 +441,8 @@ namespace NBAdbToolbox
             btnPopulate.Font = SetFontSize("Segoe UI", 6.5F, FontStyle.Bold, pnlWelcome, btnPopulate);
             btnPopulate.Width = (int)(listSeasons.Width * .8);
             btnPopulate.Top = listSeasons.Bottom; //subject to change
+            #endregion
+
 
 
             #region Populate Database
@@ -435,9 +483,42 @@ namespace NBAdbToolbox
                     lblCurrentGameCount.Visible = true;
                     lblSeasonStatusLoadInfo.Visible = true;
                     picLoad.Visible = true;
-                    ChangeLabel(lblCurrentGame, pnlLoad, new List<string>{ "Current game: ", "Regular", ((float)(pnlLoad.Height * .05) / (96 / 12) * (72 / 12)).ToString(), ".", "true", "4", ".",Color.Black.ToString(), "true", "."});
-                    ChangeLabel(lblSeasonStatusLoad, pnlLoad, new List<string>{"Currently loading: ","Regular",((float)(pnlLoad.Height * .08) / (96 / 12) * (72 / 12)).ToString(),".","true","0",".",Color.Black.ToString(),"true", "." });
-                    ChangeLabel(lblWorkingOn, pnlLoad, new List<string>{".", "Regular", ((float)(pnlLoad.Height * .04) / (96 / 12) * (72 / 12)).ToString(), ".", "true", (picLoad.Right - (int)(picLoad.Width / 6)).ToString(), lblSeasonStatusLoadInfo.Bottom.ToString(),Color.Black.ToString(),"true", "." });
+                    ChangeLabel(lblCurrentGame, pnlLoad, new List<string> { 
+                        "Current game: ", //Text
+                        "Regular", //FontStyle
+                        ((float)(pnlLoad.Height * .05) / (96 / 12) * (72 / 12)).ToString(), //FontSize
+                        ".", //Width
+                        "true", //AutoSize
+                        "4", //Left
+                        ".", //Top
+                        Color.Black.ToString(), //Color
+                        "true", //Visible
+                        "." //Height
+                    }); //Current game: 
+                    ChangeLabel(lblSeasonStatusLoad, pnlLoad, new List<string> { 
+                        "Currently loading: ", //Text
+                        "Regular", //FontStyle
+                        ((float)(pnlLoad.Height * .08) / (96 / 12) * (72 / 12)).ToString(), //FontSize
+                        ".", //Width
+                        "true", //AutoSize
+                        "0", //Left
+                        ".", //Top
+                        Color.Black.ToString(), //Color
+                        "true", //Visible
+                        "." //Height
+                    }); //Currently Loading: 
+                    ChangeLabel(lblWorkingOn, pnlLoad, new List<string> { 
+                        ".", //Text
+                        "Regular", //FontStyle
+                        ((float)(pnlLoad.Height * .04) / (96 / 12) * (72 / 12)).ToString(), //FontSize
+                        ".", //Width
+                        "true", //AutoSize
+                        (picLoad.Right - (int)(picLoad.Width / 6)).ToString(), //Left
+                        lblSeasonStatusLoadInfo.Bottom.ToString(), //Top
+                        Color.Black.ToString(), //Color
+                        "true", //Visible
+                        "." //Height
+                    }); //No text yet
                     #endregion
 
                     int buildID = 0;
@@ -458,7 +539,6 @@ namespace NBAdbToolbox
                             }
                             SQLdb.Close();
                         }
-
                     }
 
                     Stopwatch stopwatchFull = Stopwatch.StartNew();
@@ -471,6 +551,10 @@ namespace NBAdbToolbox
                         currentOfficialList.Clear();
                         currentPlayerList.Clear();
                         currentTeamList.Clear();
+                        arenaList.Clear();
+                        officialList.Clear();
+                        playerList.Clear();
+                        teamList.Clear();
 
                         btnPopulate.Enabled = false;
                         btnEdit.Enabled = false;
@@ -493,11 +577,16 @@ namespace NBAdbToolbox
 
                         //Historic Data
                         #region Historic Data
-                        if (((popup.historic || (!popup.historic && !popup.current)) && season < 2019)
-                              || (popup.historic && !popup.current))
+                        if (popup.historic || (!popup.historic && !popup.current && season < 2019))
                         {
                             source = "Historic";
                             historic = 1;
+
+                            Task DeleteSeasonData = Task.Run(() =>
+                            {
+                                DeleteExisting(season);
+                            });
+
                             lblSeasonStatusLoadInfo.Text = season + " historic data file";
                             stopwatchRead.Start();
                             await Task.Run(async () =>      //This sets the root variable to our big file
@@ -515,11 +604,12 @@ namespace NBAdbToolbox
                             };
                             string elapsedStringRead = CheckTime(timeUnitsRead);
                             //End season read
-
+                            lblStatus.Text = "Deleting existing " + season + " data...";
+                            CenterElement(pnlWelcome, lblStatus);
+                            DeleteSeasonData.Wait();
                             lblStatus.Text = season + " parsed. Inserting data...";
                             CenterElement(pnlWelcome, lblStatus);
                             lblSeasonStatusLoadInfo.Text = season + " Regular Season";
-
                             stopwatchInsert.Restart();
                             //int totalGames = seasonGames.First(g => g.SeasonID == season).Games;
                             int totalGamesCount = root.season.games.regularSeason.Count + root.season.games.playoffs.Count;
@@ -673,63 +763,6 @@ namespace NBAdbToolbox
 
 
 
-                        //Updates
-                        #region Need to fix
-                        //List<int> currentGames = new List<int>();
-                        //var match = seasonInfo.FirstOrDefault(x => x.Item1 == season);
-                        //int historicCheck = 0;
-                        //if (!match.Equals(default))
-                        //{
-                        //    historicCheck = match.Item2.Item3;
-                        //    // use thirdValue here
-                        //}
-                        ////If historic exists
-                        //if (!popup.historic && popup.current && season > 2018 && historicCheck == 1)
-                        //{
-                        //    source = "Current";
-                        //    current = 1;                                                                                                 //Line below is for testing
-                        //    using (SqlCommand SelectGamesDeletePBP = new SqlCommand("SelectGamesDeletePBP")) ///GameID >= 21900194 and 
-                        //    {
-                        //        SqlConnection conn = new SqlConnection(bob.ToString());
-                        //        SelectGamesDeletePBP.Connection = conn;
-                        //        SelectGamesDeletePBP.CommandType = CommandType.StoredProcedure;
-                        //        SelectGamesDeletePBP.Parameters.AddWithValue("@Season", season);
-                        //        conn.Open();
-                        //        using (SqlDataReader sdr = SelectGamesDeletePBP.ExecuteReader())
-                        //        {
-                        //            while (sdr.Read())
-                        //            {
-                        //                currentGames.Add(sdr.GetInt32(0));
-                        //            }
-                        //        }
-                        //    }
-
-                        //    currentIterator = 0;
-                        //    currentImageIterator = 0;
-                        //    currentReverse = false;
-                        //    stopwatchInsert.Restart();
-                        //    foreach (int game in currentGames)
-                        //    {
-                        //        await Task.Run(async () =>      //This sets the root variable to our big file
-                        //        {
-                        //            await ReadCurrentGameData(game, season, "Existing");
-                        //        });
-                        //        iterator++;
-                        //        int gamesLeft = currentGames.Count - iterator;
-                        //        double gamesPerSec = iterator / stopwatchInsert.Elapsed.TotalSeconds;
-                        //        double gamesPerMin = Math.Round(gamesPerSec * 60, 2);
-                        //        double estimatedSeconds = gamesLeft / gamesPerSec;
-                        //        TimeSpan timeRemaining = TimeSpan.FromSeconds(estimatedSeconds);
-                        //        string time = timeRemaining.ToString();
-                        //        time = time.Remove(time.Length - 3);
-                        //        gpmValue.Invoke((MethodInvoker)(() =>
-                        //        {
-                        //            gpmValue.Text = gamesPerMin + "\n" + time;
-                        //        }));
-                        //    }
-                        //}
-                        #endregion
-
 
                         //Measures time taken to Read and Insert data, by season and in total
                         #region All Time Tracking operations
@@ -803,8 +836,8 @@ namespace NBAdbToolbox
 
                         completionMessage += elapsedStringSeason + ". ";
                         completionMessage += iterator + " games, " + regGames + "/" + (iterator - regGames) + "\n";
-                                                int lblLeft = lblWorkingOn.Width;
-                        ChangeLabel(lblWorkingOn, pnlLoad, new List<string> 
+                        int lblLeft = lblWorkingOn.Width;
+                        ChangeLabel(lblWorkingOn, pnlLoad, new List<string>
                         {
              /*Text*/       completionMessage,
              /*FontStyle*/  "Regular",
@@ -844,7 +877,18 @@ namespace NBAdbToolbox
                     string elapsedString = CheckTime(timeUnits);
 
                     //Total Time Elapsed
-                    ChangeLabel(lblCurrentGame, pnlLoad, new List<string>{"Total time elapsed: " + elapsedString,"Regular",((float)(pnlLoad.Height * .05) / (96 / 12) * (72 / 12)).ToString(),".","true",".",".",Color.Green.ToString(),"true", "." });
+                    ChangeLabel(lblCurrentGame, pnlLoad, new List<string> { 
+                        "Total time elapsed: " + elapsedString, //Text         
+                        "Regular", //FontStyle
+                        ((float)(pnlLoad.Height * .05) / (96 / 12) * (72 / 12)).ToString(), //FontSize
+                        ".", //Width
+                        "true", //AutoSize
+                        ".", //Left
+                        ".", //Top
+                        Color.Green.ToString(), //Color
+                        "true", "" + //Visible
+                        "." }
+                    ); 
                     #endregion
 
 
@@ -854,12 +898,23 @@ namespace NBAdbToolbox
                     listSeasons.Enabled = true;
 
                     lblStatus.Text = "Welcome Back!";
-                    CenterElement(pnlWelcome, lblStatus);                    
-                    ChangeLabel(lblSeasonStatusLoadInfo, pnlLoad, new List<string> { "",    ".",       ".",      "." ,  ".",      ".",  ".", ".",  "false",  "." });
+                    CenterElement(pnlWelcome, lblStatus);
+                    ChangeLabel(lblSeasonStatusLoadInfo, pnlLoad, new List<string> { "", ".", ".", ".", ".", ".", ".", ".", "false", "." });
                     //...............................................................Text,  FontStyle, FontSize, Width, AutoSize, Left, Top, Color, Visible, Height
-                    ChangeLabel(lblCurrentGameCount, pnlLoad, new List<string> { "",    ".",       ".",      ".",   ".",      ".",  ".", ".",   "false", "." });
+                    ChangeLabel(lblCurrentGameCount, pnlLoad, new List<string> { "", ".", ".", ".", ".", ".", ".", ".", "false", "." });
                     //...........................................................Text,  FontStyle, FontSize, Width, AutoSize, Left, Top, Color, Visible, Height
-                    ChangeLabel(lblSeasonStatusLoad, pnlLoad, new List<string> { "Done! Check your SQL db", "Regular", ((float)(pnlLoad.Height * .08) / (96 / 12) * (72 / 12)).ToString(), ".", "true", ".", ".", Color.Green.ToString(), "true", "." });
+                    ChangeLabel(lblSeasonStatusLoad, pnlLoad, new List<string> { 
+                        "Done! Check your SQL db", 
+                        "Regular", 
+                        ((float)(pnlLoad.Height * .08) / (96 / 12) * (72 / 12)).ToString(), 
+                        ".", 
+                        "true", 
+                        ".", 
+                        ".", 
+                        Color.Green.ToString(), 
+                        "true", 
+                        "." }
+                    );
 
                     //Clear out image if it exists
                     if (picLoad.Image != null)
@@ -867,8 +922,19 @@ namespace NBAdbToolbox
                         picLoad.Image.Dispose();
                         picLoad.Image = null;
                     }
-                    ChangeLabel(lblWorkingOn, pnlLoad, new List<string> { ".", "Regular", ((float)(pnlLoad.Height * .035) / (96 / 12) * (72 / 12)).ToString(), ".", "true", (pnlLoad.Width - lblWorkingOn.Width).ToString(), "0", ".", "true", "." });
-                    //Text, FontStyle, FontSize                                                            Width, AutoSize, Left,                                         Top,   Color, Visible 
+
+                    ChangeLabel(lblWorkingOn, pnlLoad, new List<string> { 
+                        ".", //Text
+                        "Regular", //FontStyle
+                        ((float)(pnlLoad.Height * .035) / (96 / 12) * (72 / 12)).ToString(), //FontSize
+                        ".", //Width
+                        "true", //AutoSize
+                        (pnlLoad.Width - lblWorkingOn.Width).ToString(), //Left
+                        "0", //Top
+                        ".", //Color
+                        "true",//Visible
+                        "." } //Height
+                    );
 
                     //Show Success image
                     using (var img = Image.FromFile(Path.Combine(projectRoot, "Content", "Success.png")))
@@ -884,6 +950,8 @@ namespace NBAdbToolbox
                 }
             };
             #endregion
+
+
 
             //Panel Formatting
             #region Panel Formatting
@@ -962,22 +1030,10 @@ namespace NBAdbToolbox
             pnlScoreboard.Parent = bgCourt;
             pnlScoreboard.Top = pnlNav.Bottom;
             pnlScoreboard.Left = pnlDbUtil.Right;
-            //GetScoreboardGames();
-            //pnlScoreboard.Paint += (s, e) =>
-            //{
-            //    Control p = (Control)s;
-            //    using (Pen pen = new Pen(Color.Black, 3))
-            //    {
-            //        e.Graphics.DrawLine(pen, 0, p.Height - 1, p.Width, p.Height - 1);
-            //    }
-            //};
-
 
 
 
             //Set Label Properties ***************************************************************************
-
-
 
             //To set font, i'll need the name, ideal size or pt, and its Style.
             //In addition, i also need the parent element and the child or the element we're working with
@@ -1075,6 +1131,11 @@ namespace NBAdbToolbox
             #endregion
 
             #region Edit Connection & Build DB
+            if (dbConnection)
+            {
+                GetSeasons(bob.ToString());
+            }
+
             //Edit Button Actions
             btnEdit.Click += (s, e) =>
             {
@@ -1119,127 +1180,107 @@ namespace NBAdbToolbox
             };
             #endregion
 
-            #region Table Panel click behavior
-            //If we have a database built, load the Table panels
-            if (dbConnection)
-            {
-                //GetTablePanelInfo(bob.ToString());
-            }
-            //List<Panel> panels = new List<Panel> { pnlSeason, pnlTeam, pnlPlayer, pnlGame, pnlPlayerBox, pnlTeamBox, pnlPbp, pnlTeamBoxLineups };
-            //Mid Start
-            pnlTeam.Click += (s, e) =>
-            {
-                if (pnlTeam.Focused)
-                {
-                    this.ActiveControl = null;
-                    pnlTeam.Left = pnlSeason.Right;
-                    pnlTeam.Width = dimW;
-                    pnlTeam.Height = dimH;
-                    fontSize = ((float)((pnlTeam.Height * .15)) / (96 / 12)) * (72 / 12);
-                    TableLabels(pnlTeam, lblTeam, fontSize, "Header", lblTeam);
-                    pnlTeam.Left = midPanelPos;
-                }
-                else
-                {
-                    midPanelPos = pnlTeam.Left;
-                    pnlTeam.Focus();
-                    pnlDbUtil.Controls.SetChildIndex(pnlTeam, 1);
-                    pnlTeam.Left = pnlDbUtil.Left;
-                    pnlTeam.Width = pnlDbUtil.Width;
-                    pnlTeam.Height = fullHeight;
-                    fontSize = ((float)((pnlTeam.Height * .15)) / (96 / 12)) * (72 / 12);
-                    TableLabels(pnlTeam, lblTeam, fontSize, "Header", lblTeam);
 
+            #region Database Overview
+            pnlDbOverview.Parent = pnlDbUtil;
+            pnlDbOverview.Width = pnlDbUtil.Width;
+            pnlDbOverview.Top = lblDbOverview.Top;
+            pnlDbOverview.Height = (int)(lblDbOverview.Height * 1.3);
+            pnlDbOverview.BorderStyle = BorderStyle.None;
+            pnlDbOverview.Paint += (s, e) =>
+            {
+                Control p = (Control)s;
+                using (Pen pen = new Pen(Color.White, 2))
+                {
+                    e.Graphics.DrawLine(pen, 0, p.Height - 1, p.Width, p.Height - 1);
                 }
             };
-            lblTeam.Click += (s, e) =>
-            {
-                if (pnlTeam.Focused)
-                {
-                    this.ActiveControl = null;
-                    pnlTeam.Left = pnlSeason.Right;
-                    pnlTeam.Width = dimW;
-                    pnlTeam.Height = dimH;
-                    fontSize = ((float)((pnlTeam.Height * .15)) / (96 / 12)) * (72 / 12);
-                    TableLabels(pnlTeam, lblTeam, fontSize, "Header", lblTeam);
-                    pnlTeam.Left = midPanelPos;
-                }
-                else
-                {
-                    midPanelPos = pnlTeam.Left;
-                    pnlTeam.Focus();
-                    pnlDbUtil.Controls.SetChildIndex(pnlTeam, 1);
-                    pnlTeam.Left = pnlDbUtil.Left;
-                    pnlTeam.Width = pnlDbUtil.Width;
-                    pnlTeam.Height = fullHeight;
-                    fontSize = ((float)((pnlTeam.Height * .15)) / (96 / 12)) * (72 / 12);
-                    TableLabels(pnlTeam, lblTeam, fontSize, "Header", lblTeam);
 
-                }
-            };
-            //Left start
-            pnlSeason.Click += (s, e) =>
-            {
-                if (pnlSeason.Focused)
-                {
-                    this.ActiveControl = null;
-                    pnlSeason.Width = dimW;
-                    pnlSeason.Height = dimH;
-                    fontSize = ((float)((pnlSeason.Height * .15)) / (96 / 12)) * (72 / 12);
-                    TableLabels(pnlSeason, lblSeason, fontSize, "Header", lblSeason);
-                    fontSize = ((float)((pnlSeason.Height * .08)) / (96 / 12)) * (72 / 12);
-                    TableLabels(pnlSeason, lblSeasonSub, fontSize, "Subhead", lblSeason);
-                    AddTablePic(pnlSeason, picSeason, imagePath, "contract", lblSeason);
-                    pnlSeason.Left = leftPanelPos;
-                }
-                else
-                {
-                    leftPanelPos = pnlSeason.Left;
-                    pnlSeason.Focus();
-                    pnlDbUtil.Controls.SetChildIndex(pnlSeason, 1);
-                    pnlSeason.Width = pnlDbUtil.Width;
-                    pnlSeason.Height = fullHeight;
-                    fontSize = ((float)((pnlSeason.Height * .15)) / (96 / 12)) * (72 / 12);
-                    TableLabels(pnlSeason, lblSeason, fontSize, "Header", lblSeason);
-                    fontSize = ((float)((pnlSeason.Height * .08)) / (96 / 12)) * (72 / 12);
-                    TableLabels(pnlSeason, lblSeasonSub, fontSize, "Subhead", lblSeason);
-                    AddTablePic(pnlSeason, picSeason, imagePath, "expand", lblSeason);
 
-                }
-            };
-            lblSeason.Click += (s, e) =>
-            {
-                if (pnlSeason.Focused)
-                {
-                    this.ActiveControl = null;
-                    pnlSeason.Width = dimW;
-                    pnlSeason.Height = dimH;
-                    fontSize = ((float)((pnlSeason.Height * .15)) / (96 / 12)) * (72 / 12);
-                    TableLabels(pnlSeason, lblSeason, fontSize, "Header", lblSeason);
-                    fontSize = ((float)((pnlSeason.Height * .08)) / (96 / 12)) * (72 / 12);
-                    TableLabels(pnlSeason, lblSeasonSub, fontSize, "Subhead", lblSeason);
-                    AddTablePic(pnlSeason, picSeason, imagePath, "contract", lblSeason);
-                    pnlSeason.Left = leftPanelPos;
-                }
-                else
-                {
-                    leftPanelPos = pnlSeason.Left;
-                    pnlSeason.Focus();
-                    pnlDbUtil.Controls.SetChildIndex(pnlSeason, 1);
-                    pnlSeason.Width = pnlDbUtil.Width;
-                    pnlSeason.Height = fullHeight;
-                    fontSize = ((float)((pnlSeason.Height * .15)) / (96 / 12)) * (72 / 12);
-                    TableLabels(pnlSeason, lblSeason, fontSize, "Header", lblSeason);
-                    fontSize = ((float)((pnlSeason.Height * .08)) / (96 / 12)) * (72 / 12);
-                    TableLabels(pnlSeason, lblSeasonSub, fontSize, "Subhead", lblSeason);
-                    AddTablePic(pnlSeason, picSeason, imagePath, "expand", lblSeason);
-
-                }
-            };
+            ControlOnClick(pnlDbOverview, lblDbOvExpand, pnlDbOverview);
+            ControlOnClick(lblDbOverview, lblDbOvExpand, pnlDbOverview);
+            ControlOnClick(lblDbOvExpand, lblDbOvExpand, pnlDbOverview);
             #endregion
-
         }
 
+        public void ControlOnClick(Control control, Label growShrink, Control parent)
+        {
+            control.Click += (s, e) =>
+            {
+                if (control.Focused || parent.Focused)
+                {
+                    this.ActiveControl = null;
+                    growShrink.Text = "+";
+                    parent.Height = parent.Height / 4;
+                    pnlDbOverview.Refresh();
+                    lblDbOptions.Top = parent.Bottom;
+                    lblDbSelectSeason.Top = lblDbOptions.Bottom;
+                    listSeasons.Top = lblDbSelectSeason.Bottom;
+                    btnPopulate.Top = listSeasons.Bottom; //subject to change
+                }
+                else
+                {
+                    parent.Focus();
+                    growShrink.Text = "-";
+                    parent.Height = parent.Height * 4;
+                    pnlDbOverview.Refresh();
+                    lblDbOptions.Top = parent.Bottom;
+                    lblDbSelectSeason.Top = lblDbOptions.Bottom;
+                    listSeasons.Top = lblDbSelectSeason.Bottom;
+                    btnPopulate.Top = listSeasons.Bottom; //subject to change
+                }
+            };
+        }
+        public void GetSeasons(string connection)
+        {
+            listSeasons.Items.Clear();
+            seasonInfo.Clear();
+            using (SqlCommand SQLSeasons = new SqlCommand("Seasons"))
+            {
+                SqlConnection conn = new SqlConnection(bob.ToString());
+                SQLSeasons.Connection = conn;
+                SQLSeasons.CommandType = CommandType.StoredProcedure;
+                conn.Open();
+                using (SqlDataReader sdr = SQLSeasons.ExecuteReader())
+                {
+                    while (sdr.Read())
+                    {
+                        //select SeasonID, Games + PlayoffGames Games, HistoricLoaded, CurrentLoaded, Games, PlayoffGames
+                        listSeasons.Items.Add(sdr["SeasonID"].ToString());
+                        seasonInfo.Add((sdr.GetInt32(0), (sdr.GetInt32(1), sdr.GetInt32(2), sdr.GetInt32(3), sdr.GetInt32(4))));
+                    }
+                }
+            }
+        }
+
+
+        public void DeleteExisting(int season)
+        {
+            string delete = "";
+            delete = "delete from util.MissingData where SeasonID = " + season + "\n" +
+            "delete from StartingLineups where SeasonID = " + season + "\n" +
+            "delete from TeamBoxLineups where SeasonID = " + season + "\n" +
+            "delete from PlayByPlay where SeasonID = " + season + "\n" +
+            "delete from PlayerBox where SeasonID = " + season + "\n" +
+            "delete from TeamBox where SeasonID = " + season + "\n" +
+            "delete from GameExt where SeasonID = " + season + "\n" +
+            "delete from Game where SeasonID = " + season + "\n" +
+            "delete from Player where SeasonID = " + season + "\n" +
+            "delete from Official where SeasonID = " + season + "\n" +
+            "delete from Arena where SeasonID = " + season + "\n" +
+            "delete from Team where SeasonID = " + season;
+            using (SqlConnection deleteCon = new SqlConnection(cString))
+            {
+                using (SqlCommand DeleteExisting = new SqlCommand(delete))
+                {
+                    DeleteExisting.Connection = deleteCon;
+                    DeleteExisting.CommandType = CommandType.Text;
+                    deleteCon.Open();
+                    DeleteExisting.ExecuteScalar();
+                    deleteCon.Close();
+                }
+            }
+        }
 
 
         public void LoadStatusLabels(Label label, string text, float fontSize, int left, int top, int height, int width, Color color)
@@ -1267,152 +1308,7 @@ namespace NBAdbToolbox
             control.AutoSize = true;
             control.Left = (panel.ClientSize.Width - control.Width) / 2;
         }
-        //Get Table Information for DBUtil
-        public void GetTablePanelInfo(string connectionString)
-        {
-            List<Panel> panels = new List<Panel> { pnlSeason, pnlTeam, pnlPlayer, pnlGame, pnlTeamBox, pnlPlayerBox, pnlPbp, pnlTeamBoxLineups };
-            fullHeight = (int)(pnlDbUtil.Height * .5);
-            dimW = pnlDbUtil.Width / 3;
-            dimH = (int)(fullHeight * .25);
-            dimH2 = (int)(fullHeight * .5);
-            for (int i = 0; i < panels.Count; i++)
-            {
-                if (i <= 5)
-                {
-                    panels[i].Height = dimH;
-                    panels[i].Width = dimW;
-                }
-                else
-                {
-                    panels[i].Height = dimH2;
-                    panels[i].Width = pnlDbUtil.Width / 2;
-                }
-                if (i == 0)
-                {
-                    pnlScoreboard.Height = this.Height / 18;
-                    panels[i].Top = (int)(pnlScoreboard.Top + (pnlScoreboard.Height * .1));
-                    panels[i].Left = pnlDbUtil.Left;
-                }
-                else if (i == 1 || i == 2)
-                {
-                    panels[i].Top = panels[0].Top;
-                    panels[i].Left = panels[i - 1].Right;
-                }
-                else if (i == 3 || i == 6)
-                {
-                    panels[i].Top = panels[i - 3].Bottom;
-                    panels[i].Left = panels[i - 3].Left;
-                }
-                else if (i == 4 || i == 5)
-                {
-                    panels[i].Top = panels[0].Bottom;
-                    panels[i].Left = panels[i - 1].Right;
-                }
-                else if (i == 7)
-                {
-                    panels[i].Top = panels[i - 1].Top;
-                    panels[i].Left = panels[i - 1].Right;
-                }
-                AddPanelElement(pnlDbUtil, panels[i]);
-                panels[i].BorderStyle = BorderStyle.FixedSingle;
-            }
-            using (SqlCommand GetTables = new SqlCommand("Tables"))
-            {
-                SqlConnection conn = new SqlConnection(bob.ToString());
-                GetTables.Connection = conn;
-                GetTables.CommandType = CommandType.StoredProcedure;
-                conn.Open();
-                using (SqlDataReader sdr = GetTables.ExecuteReader())
-                {
-                    while (sdr.Read())
-                    {
-                        if (sdr.GetString(0) == "Season")   //Season Panel
-                        {
-                            lblSeason.Text = sdr["Name"].ToString();
-                            lblSeasonSub.Text = sdr["Rows"].ToString() + " seasons available";
-                            float fontSize = ((float)((pnlSeason.Height * .15)) / (96 / 12)) * (72 / 12);
 
-                            TableLabels(pnlSeason, lblSeason, fontSize, "Header", lblSeason);
-
-                            fontSize = ((float)((pnlSeason.Height * .08)) / (96 / 12)) * (72 / 12);
-                            TableLabels(pnlSeason, lblSeasonSub, fontSize, "Subhead", lblSeason);
-                            if (sdr["Rows"].ToString() == "13")
-                            {
-                                imagePath = Path.Combine(projectRoot, "Content", "Success.png");
-                            }
-                            else if (sdr["Rows"].ToString() == "0")
-                            {
-                                imagePath = Path.Combine(projectRoot, "Content", "Error.png");
-                            }
-                            else
-                            {
-                                imagePath = Path.Combine(projectRoot, "Content", "Warning.png");
-                            }
-                            AddTablePic(pnlSeason, picSeason, imagePath, "load", lblSeason);
-
-                        }
-                        if (sdr.GetString(0) == "Team")   //Team Panel
-                        {
-                            lblTeam.Text = sdr.GetString(0);
-                            float fontSize = ((float)((pnlTeam.Height * .15)) / (96 / 12)) * (72 / 12);
-                            TableLabels(pnlTeam, lblTeam, fontSize, "Header", lblTeam);
-                        }
-                        if (sdr.GetString(0) == "Player")   //PlayerBox Panel
-                        {
-                            lblPlayer.Text = sdr.GetString(0);
-                            float fontSize = ((float)((pnlPlayer.Height * .15)) / (96 / 12)) * (72 / 12);
-                            TableLabels(pnlPlayer, lblPlayer, fontSize, "Header", lblPlayer);
-                        }
-                        if (sdr.GetString(0) == "Game")   //Game Panel
-                        {
-                            lblGame.Text = sdr.GetString(0);
-                            float fontSize = ((float)((pnlGame.Height * .15)) / (96 / 12)) * (72 / 12);
-                            TableLabels(pnlGame, lblGame, fontSize, "Header", lblGame);
-                        }
-                        if (sdr.GetString(0) == "TeamBox")   //TeamBox Panel
-                        {
-                            lblTeamBox.Text = sdr.GetString(0);
-                            float fontSize = ((float)((pnlTeamBox.Height * .15)) / (96 / 12)) * (72 / 12);
-                            TableLabels(pnlTeamBox, lblTeamBox, fontSize, "Header", lblTeamBox);
-                        }
-                        if (sdr.GetString(0) == "PlayerBox")   //PlayerBox Panel
-                        {
-                            lblPlayerBox.Text = sdr.GetString(0);
-                            float fontSize = ((float)((pnlPlayerBox.Height * .15)) / (96 / 12)) * (72 / 12);
-                            TableLabels(pnlPlayerBox, lblPlayerBox, fontSize, "Header", lblPlayerBox);
-                        }
-                        if (sdr.GetString(0) == "PlayByPlay")   //PlayByPlay Panel
-                        {
-                            lblPbp.Text = sdr.GetString(0);
-                            float fontSize = ((float)((pnlPbp.Height * .1)) / (96 / 12)) * (72 / 12);
-                            TableLabels(pnlPbp, lblPbp, fontSize, "Header", lblPbp);
-                        }
-                        if (sdr.GetString(0) == "TeamBoxLineups")   //PlayByPlay Panel
-                        {
-                            float fontSize = ((float)((pnlTeamBoxLineups.Height * .1)) / (96 / 12)) * (72 / 12);
-                            lblTeamBoxLineups.Text = sdr.GetString(0);
-                            TableLabels(pnlTeamBoxLineups, lblTeamBoxLineups, fontSize, "Header", lblTeamBoxLineups);
-                        }
-                    }
-                }
-            }
-            using (SqlCommand GetTables = new SqlCommand("Seasons"))
-            {
-                SqlConnection conn = new SqlConnection(bob.ToString());
-                GetTables.Connection = conn;
-                GetTables.CommandType = CommandType.StoredProcedure;
-                conn.Open();
-                using (SqlDataReader sdr = GetTables.ExecuteReader())
-                {
-                    while (sdr.Read())
-                    {
-                        //select SeasonID, Games + PlayoffGames Games, HistoricLoaded, CurrentLoaded, Games, PlayoffGames
-                        listSeasons.Items.Add(sdr["SeasonID"].ToString());
-                        seasonInfo.Add((sdr.GetInt32(0), (sdr.GetInt32(1), sdr.GetInt32(2), sdr.GetInt32(3), sdr.GetInt32(4))));
-                    }
-                }
-            }
-        }
 
 
         //Add Status picture to Table panel
@@ -1703,7 +1599,7 @@ namespace NBAdbToolbox
                     }
                     conn.Close();
                 }
-                GetTablePanelInfo(connectionString);
+                GetSeasons(connectionString);
             }
         }
         //Formats procedures from build.sql file
@@ -1880,173 +1776,6 @@ namespace NBAdbToolbox
 
         #endregion
 
-        //Scoreboard
-        #region Scoreboard
-        public class Meta
-        {
-            public int Version { get; set; }
-            public string Request { get; set; }
-            public DateTime Time { get; set; }
-            public int Code { get; set; }
-        }
-
-        public class Period
-        {
-            public int PeriodNumber { get; set; }
-            public string PeriodType { get; set; }
-            public int Score { get; set; }
-        }
-
-        public class Team
-        {
-            public int TeamId { get; set; }
-            public string TeamName { get; set; }
-            public string TeamCity { get; set; }
-            public string TeamTricode { get; set; }
-            public int Wins { get; set; }
-            public int Losses { get; set; }
-            public int Score { get; set; }
-            public int? Seed { get; set; }
-            public int TimeoutsRemaining { get; set; }
-            public List<Period> Periods { get; set; }
-        }
-
-        public class Leaders
-        {
-            public int PersonId { get; set; }
-            public string Name { get; set; }
-            public string JerseyNum { get; set; }
-            public string Position { get; set; }
-            public string TeamTricode { get; set; }
-            public string PlayerSlug { get; set; }
-            public int Points { get; set; }
-            public int Rebounds { get; set; }
-            public int Assists { get; set; }
-        }
-
-        public class GameLeaders
-        {
-            public Leaders HomeLeaders { get; set; }
-            public Leaders AwayLeaders { get; set; }
-        }
-
-        public class PbOdds
-        {
-            public object Team { get; set; }
-            public double Odds { get; set; }
-            public int Suspended { get; set; }
-        }
-
-        public class Game
-        {
-            public string GameId { get; set; }
-            public string GameCode { get; set; }
-            public int GameStatus { get; set; }
-            public string GameStatusText { get; set; }
-            public int Period { get; set; }
-            public string GameClock { get; set; }
-            public DateTime GameTimeUTC { get; set; }
-            public DateTime GameEt { get; set; }
-            public int RegulationPeriods { get; set; }
-            public bool IfNecessary { get; set; }
-            public string SeriesGameNumber { get; set; }
-            public string GameLabel { get; set; }
-            public string GameSubLabel { get; set; }
-            public string SeriesText { get; set; }
-            public string SeriesConference { get; set; }
-            public string PoRoundDesc { get; set; }
-            public string GameSubtype { get; set; }
-            public Team HomeTeam { get; set; }
-            public Team AwayTeam { get; set; }
-            public GameLeaders GameLeaders { get; set; }
-            public PbOdds PbOdds { get; set; }
-        }
-
-        public class Scoreboard
-        {
-            public string GameDate { get; set; }
-            public string LeagueId { get; set; }
-            public string LeagueName { get; set; }
-            public List<Game> Games { get; set; }
-        }
-
-        public class Root
-        {
-            public Meta Meta { get; set; }
-            public Scoreboard Scoreboard { get; set; }
-        }
-
-        public static int postback = 0;
-        public static int games = 0;
-        public int tomorrowGames = 0;
-        public static List<string> gameID = new List<string>();
-        public static List<int> gameStatus = new List<int>();
-        public static List<string> gameStatusText = new List<string>();
-        public static List<string> gameStart = new List<string>();
-        public static List<int> homeID = new List<int>();
-        public static List<string> homeTri = new List<string>();
-        public static List<string> homeCity = new List<string>();
-        public static List<string> homeName = new List<string>();
-        public static List<int> homeScore = new List<int>();
-        public static List<int> awayID = new List<int>();
-        public static List<string> awayTri = new List<string>();
-        public static List<string> awayCity = new List<string>();
-        public static List<string> awayName = new List<string>();
-        public static List<int> awayScore = new List<int>();
-        public static List<DateTime> gameDate = new List<DateTime>();
-        public static List<string> broadcasts = new List<string>();
-
-        public void PopulateScoreboard(string gameId, int i)
-        {
-            Label lbl = new Label();
-
-            lbl.Text = gameID[i];
-
-            pnlScoreboard.Controls.Add(lbl);
-            lbl.Left = i * 10;
-
-        }
-        public void GetScoreboardGames()
-        {
-            var sbClient = new WebClient { Encoding = System.Text.Encoding.UTF8 };
-            string sbEndpoint = "https://cdn.nba.com/static/json/liveData/scoreboard/todaysScoreboard_00.json";
-            try
-            {
-                WebRequest sbReq = WebRequest.Create(sbEndpoint);
-                WebResponse sbResp = sbReq.GetResponse();
-                string sbJson = sbClient.DownloadString(sbEndpoint);
-                Root JSON = JsonConvert.DeserializeObject<Root>(sbJson);
-                games = JSON.Scoreboard.Games.Count;
-                for (int i = 0; i < JSON.Scoreboard.Games.Count; i++)
-                {
-                    gameID.Add(JSON.Scoreboard.Games[i].GameId);
-                    gameStatus.Add(JSON.Scoreboard.Games[i].GameStatus);
-                    gameStatusText.Add(JSON.Scoreboard.Games[i].GameStatusText);
-                    gameStart.Add(JSON.Scoreboard.Games[i].GameEt.ToShortTimeString());
-                    homeID.Add(JSON.Scoreboard.Games[i].HomeTeam.TeamId);
-                    homeTri.Add(JSON.Scoreboard.Games[i].HomeTeam.TeamTricode);
-                    homeCity.Add(JSON.Scoreboard.Games[i].HomeTeam.TeamCity);
-                    homeName.Add(JSON.Scoreboard.Games[i].HomeTeam.TeamName);
-                    homeScore.Add(JSON.Scoreboard.Games[i].HomeTeam.Score);
-                    awayID.Add(JSON.Scoreboard.Games[i].AwayTeam.TeamId);
-                    awayTri.Add(JSON.Scoreboard.Games[i].AwayTeam.TeamTricode);
-                    awayCity.Add(JSON.Scoreboard.Games[i].AwayTeam.TeamCity);
-                    awayName.Add(JSON.Scoreboard.Games[i].AwayTeam.TeamName);
-                    awayScore.Add(JSON.Scoreboard.Games[i].AwayTeam.Score);
-                    broadcasts.Add(string.Empty);
-                    gameDate.Add(DateTime.MinValue);
-                    PopulateScoreboard(gameID[i], i);
-
-                }
-            }
-            catch
-            {
-
-            }
-        }
-
-        #endregion
-
         //Historic Data
         #region Historic Data
 
@@ -2066,6 +1795,9 @@ namespace NBAdbToolbox
         public string gameInsert = "";
         public string teamBoxInsert = "";
         public string startingLineupsInsertString = "";
+        public string playByPlayInsertString = "";
+        public string playerBoxInsertString = "";
+        public int lastSeason = 0; //Used with Players/PlayerBox
         #endregion
         public async Task ReadSeasonFile(int season, bool bHistoric, bool bCurrent)
         {
@@ -2101,6 +1833,8 @@ namespace NBAdbToolbox
                 }
             }));
         }
+
+
         //For each game, this method checks each of our tables and determines what to do, Insert, update, or nothing.
         public void GetGameDetails(NBAdbToolboxHistoric.Game game, int season, string sender)
         {
@@ -2113,22 +1847,18 @@ namespace NBAdbToolbox
             playerBoxInsertString = "";
             playerBoxUpdateString = "";
             startingLineupsInsertString = "";
-            if (season != lastSeason)
-            {
-                playerList.Clear();
-                officialList.Clear();
-                arenaList.Clear();
-            }
+            playByPlayInsertString = "";
             SQLdb = new SqlConnection(cString);
 
             //Check Db and build strings for Inserts & Updates
             #region Check Db and build strings for Inserts & Updates
             //Teams
-            TeamStaging(game, season);
+            TeamStaging(game, season);//5.7 Populate DB Update
             //Arenas
             if (!arenaList.Contains((season, game.box.arena.arenaId)))
             {
-                ArenaCheck(game.box.arena, game.box.homeTeamId, season, "Historical");
+                //ArenaCheck(game.box.arena, game.box.homeTeamId, season, "Historic");
+                HistoricArenaInsert(game.box.arena, game.box.homeTeamId, season, "Historic"); //5.7 Populate DB Update
             }
             //Officials
             List<int> officials = new List<int>();
@@ -2136,23 +1866,27 @@ namespace NBAdbToolbox
             {
                 if (!officialList.Contains((season, official.personId)))
                 {
-                    OfficialCheck(official, season, "Historical");
+                    //OfficialCheck(official, season, "Historic");
+                    HistoricOfficialInsert(official, season, "Historic"); //5.7 Populate DB Update
                 }
                 officials.Add(official.personId);
             }
             //Games
-            GameCheck(game, season, sender, officials);
+            //GameCheck(game, season, sender, officials);
+            HistoricGameInsert(game, season, sender, officials); //5.7 Populate DB Update
             //TeamBox
-            TeamBoxStaging(game, season);
+            TeamBoxStaging(game, season); //5.7 Populate DB Update
             //Players
-            PlayerStaging(game, season);
+            //PlayerStaging(game, season); 
+            HistoricPlayerStaging(game, season); //5.7 Populate DB Update
             //PlayByPlay
-            PlayByPlayStaging(game.playByPlay, season);
+            //PlayByPlayStaging(game.playByPlay, season);
+            HistoricPlayByPlayStaging(game.playByPlay, season); //5.7 Populate DB Update
             #endregion
 
             //Insert data into Main tables and wait for execution
             #region Insert data into Main tables and wait for execution
-            string allInOne = teamInsert + arenaInsert + officialInsert + gameInsert + playerInsert;
+            string allInOne = teamInsert + arenaInsert + officialInsert + gameInsert + playerInsert + teamBoxInsert;
             string hitDb = allInOne;
             allInOne = "";
             SqlConnection bigInserts = new SqlConnection(cString);
@@ -2179,7 +1913,7 @@ namespace NBAdbToolbox
             //After Insert is complete, use multithreading to insert the bulk of our data - PlayByPlay, PlayerBox (+StartingLineups) and TeamBox (+TeamBoxLineups)
             #region Second Insert
 
-            string bigOnesInOne = teamBoxInsert + playerBoxInsertString + startingLineupsInsertString + insertPBPString;
+            string bigOnesInOne = playerBoxInsertString + startingLineupsInsertString + playByPlayInsertString;
             string hitIt = bigOnesInOne;
             bigOnesInOne = "";
             _ = Task.Run(() =>
@@ -2213,22 +1947,29 @@ namespace NBAdbToolbox
         //Reduces GetGameDetails
         public void TeamStaging(NBAdbToolboxHistoric.Game game, int season)
         {
-            if (!teamsDone) //If we don't have 30 teams, check to see if team exists
+            if (!teamList.Contains((season, game.box.homeTeam.teamId)))
             {
-                TeamCheck(game.box.homeTeam, game.box.homeTeam.teamId, season);
-                TeamCheck(game.box.awayTeam, game.box.awayTeam.teamId, season);
+                //TeamCheck(game.box.homeTeam, game.box.homeTeam.teamId, season);
+                HistoricTeamInsert(game.box.homeTeam, game.box.homeTeam.teamId, season); //5.7 Populate DB Update
             }
-            if (game.box.homeTeam.teamWins + game.box.homeTeam.teamLosses == 82 || (season == 2024) ||  //If we've reached the last game of the season (or over 40 for covid shortened 2019) update Team records 
+            if (!teamList.Contains((season, game.box.awayTeam.teamId)))
+            {
+                //TeamCheck(game.box.awayTeam, game.box.awayTeam.teamId, season);
+                HistoricTeamInsert(game.box.awayTeam, game.box.awayTeam.teamId, season); //5.7 Populate DB Update
+            }
+            if (game.box.homeTeam.teamWins + game.box.homeTeam.teamLosses == 82 ||  //If we've reached the last game of the season (or over 40 for covid shortened 2019) update Team records 
             (season == 2019 && (game.box.homeTeam.teamWins + game.box.homeTeam.teamLosses >= 40)) ||
             (season == 2020 && (game.box.homeTeam.teamWins + game.box.homeTeam.teamLosses == 72)))
             {
-                TeamUpdate(game.box.homeTeam, season);
+                //TeamUpdate(game.box.homeTeam, season);
+                HistoricTeamUpdate(game.box.homeTeam, game.box.homeTeamId, season); //5.7 Populate DB Update
             }
-            if (game.box.awayTeam.teamWins + game.box.awayTeam.teamLosses == 82 || (season == 2024) ||  //Same for away team
+            if (game.box.awayTeam.teamWins + game.box.awayTeam.teamLosses == 82 ||  //Same for away team
             (season == 2019 && (game.box.awayTeam.teamWins + game.box.awayTeam.teamLosses >= 40)) ||
             (season == 2020 && (game.box.awayTeam.teamWins + game.box.awayTeam.teamLosses == 72)))
             {
-                TeamUpdate(game.box.awayTeam, season);
+                //TeamUpdate(game.box.awayTeam, season);
+                HistoricTeamUpdate(game.box.awayTeam, game.box.awayTeamId, season); //5.7 Populate DB Update
             }
         }
         //Checks to see if Team exists and if we have 30 Teams posted
@@ -2279,6 +2020,24 @@ namespace NBAdbToolbox
                 SQLdb.Close();
             }
         }
+
+        #region Historic Teams - 5.7 Populate DB Update
+        //5.7 Populate DB Update
+        public void HistoricTeamInsert(NBAdbToolboxHistoric.Team team, int teamID, int season)
+        {
+            teamList.Add((season, team.teamId));
+            teamInsert += "insert into Team values(" + season + ", " + team.teamId + ", '" + team.teamCity + "', '" + team.teamName + "', '" + team.teamTricode + "', " + team.teamWins + ", " + team.teamLosses + ", '(" + team.teamTricode + ") " +
+                team.teamCity + " " + team.teamName + "')\n";
+        }
+        public void HistoricTeamUpdate(NBAdbToolboxHistoric.Team team, int teamID, int season)
+        {
+            teamInsert += "update Team set WIns = " + team.teamWins + ", Losses = " + team.teamLosses + " where TeamID = " + teamID + " and SeasonID = " + season + "\n";
+        }
+        //5.7 Populate DB Update
+        #endregion
+
+
+
         #endregion
 
         //Arena methods
@@ -2317,6 +2076,22 @@ namespace NBAdbToolbox
                 }
             }
         }
+
+        //5.7 Populate DB Update
+        public void HistoricArenaInsert(NBAdbToolboxHistoric.Arena arena, int teamID, int season, string sender)
+        {
+            if (sender == "Historic")
+            {
+                arenaList.Add((season, arena.arenaId));
+            }
+            else if (sender == "Missing")
+            {
+                currentArenaList.Add((season, arena.arenaId));
+            }
+            arenaInsert += "insert into Arena values(" + season + ", " + arena.arenaId + ", " + teamID + ", '" + arena.arenaCity + "', '" + arena.arenaCountry + "', '" + arena.arenaName + "', '" +
+            arena.arenaPostalCode + "', '" + arena.arenaState + "', '" + arena.arenaStreetAddress + "', '" + arena.arenaTimezone + "')\n";
+        }
+
         #endregion
 
         //Official methods
@@ -2354,10 +2129,24 @@ namespace NBAdbToolbox
                 }
             }
         }
+
+        //5.7 Populate DB Update
+        public void HistoricOfficialInsert(NBAdbToolboxHistoric.Official official, int season, string sender)
+        {
+            if (sender == "Historic")
+            {
+                officialList.Add((season, official.personId));
+            }
+            else if (sender == "Missing")
+            {
+                currentOfficialList.Add((season, official.personId));
+            }
+            officialInsert += "insert into Official values(" + season + ", " + official.personId + ", '" + official.name.Replace("'", "''") + "', '" + official.jerseyNum + "')\n";
+        }
         #endregion
 
         //Game methods
-        #region Game Methods
+        #region Game Methods        
         public void GameCheck(NBAdbToolboxHistoric.Game game, int season, string sender, List<int> officials)
         {
             string iExt = "Insert into GameExt(SeasonID, GameID, Status, Attendance, Sellout, ";
@@ -2433,6 +2222,52 @@ namespace NBAdbToolbox
                 }
             }
         }
+
+        //5.7 Populate DB Update
+        public void HistoricGameInsert(NBAdbToolboxHistoric.Game game, int season, string sender, List<int> officials)
+        {
+            string iExt = "Insert into GameExt(SeasonID, GameID, Status, Attendance, Sellout, ";
+            string vExt = ""; SqlDateTime datetime = SqlDateTime.Parse(game.box.gameTimeUTC);
+            string insert = "Insert into Game(SeasonID, GameID, Date, HomeID, HScore, AwayID, AScore, Label, LabelDetail, Datetime, ";
+            string values = ") values(" + season + ", " + game.game_id + ", '" + SqlDateTime.Parse(game.box.gameEt.Remove(game.box.gameEt.IndexOf('T'))) + "', " + game.box.homeTeamId + ", " + game.box.homeTeam.score
+                + ", " + game.box.awayTeamId + ", " + game.box.awayTeam.score + ", '" + game.box.gameLabel + "', '" + game.box.gameSubLabel + "', '" + datetime + "', ";
+            insert += "WinnerID, WScore, LoserID, Lscore, GameType, SeriesID";
+            if (game.box.homeTeam.score > game.box.awayTeam.score)
+            {
+                values += game.box.homeTeamId + ", " + game.box.homeTeam.score + ", " + game.box.awayTeamId + ", " + game.box.awayTeam.score + ", ";
+            }
+            else
+            {
+                values += game.box.awayTeamId + ", " + game.box.awayTeam.score + ", " + game.box.homeTeamId + ", " + game.box.homeTeam.score + ", ";
+            }
+            if (Int32.Parse(game.box.gameId).ToString().Substring(0, 1) == "2")
+            {
+                values += "'RS', null)";
+            }
+            else
+            {
+                values += "'PS', 'placeholder')";
+            }
+            gameInsert = insert + values + "\n";
+            vExt = ") values(" + season + ", " + game.game_id + ", '" + game.box.gameStatusText + "', " + game.box.attendance + ", " + game.box.sellout + ", ";
+            for (int o = 0; o < officials.Count; o++)
+            {
+                if (o == 0)
+                {
+                    iExt += "OfficialID, ";
+                }
+                else if (o != 3)
+                {
+                    iExt += "Official" + (o + 1) + "ID, ";
+                }
+                else
+                {
+                    iExt += "OfficialAlternateID, ";
+                }
+                vExt += officials[o] + ", ";
+            }
+            gameInsert += iExt.Remove(iExt.Length - ", ".Length) + vExt.Remove(vExt.Length - ", ".Length) + ")\n";
+        }
         public void GameUpdate(NBAdbToolboxHistoric.Game game, int season, string sender)
         {
             using (SqlCommand GameUpdate = new SqlCommand("GameUpdate"))
@@ -2469,8 +2304,102 @@ namespace NBAdbToolbox
         //Player & PlayerBox Methods - Includes Inactive Players.Populates Player, PlayerBox and StartingLineups tables
         #region Player & PlayerBox Methods - Includes Inactive Players. Populates Player, PlayerBox and StartingLineups tables
 
-        public string playerBoxInsertString = "";
-        public int lastSeason = 0;
+        #region Historic Players - 5.7 Populate DB Update
+        //5.7 Populate DB Update
+        public void HistoricPlayerStaging(NBAdbToolboxHistoric.Game game, int season)
+        {
+            foreach (NBAdbToolboxHistoric.Player player in game.box.homeTeam.players)
+            {//Home Team
+                if (!playerList.Contains((season, player.personId)))
+                {
+                    int index = game.box.homeTeamPlayers.FindIndex(p => p.personId == player.personId);
+                    if (index == -1)
+                    {
+                        HistoricPlayerInsert(player, season, player.jerseyNum, "Historic");
+                    }
+                    else
+                    {
+                        HistoricPlayerInsert(player, season, game.box.homeTeamPlayers[index].jerseyNum, "Historic");
+                    }
+                }
+                PlayerBoxInsertString(game, player, game.box.homeTeamId, game.box.awayTeamId, season);
+            }
+            foreach (NBAdbToolboxHistoric.Player player in game.box.awayTeam.players)
+            {//Away Team
+                if (!playerList.Contains((season, player.personId)))
+                {
+                    int index = game.box.awayTeamPlayers.FindIndex(p => p.personId == player.personId);
+                    if (index == -1)
+                    {
+                        HistoricPlayerInsert(player, season, player.jerseyNum, "Historic");
+                    }
+                    else
+                    {
+                        HistoricPlayerInsert(player, season, game.box.awayTeamPlayers[index].jerseyNum, "Historic");
+                    }
+                }
+                PlayerBoxInsertString(game, player, game.box.awayTeamId, game.box.homeTeamId, season);
+            }
+            foreach (NBAdbToolboxHistoric.Inactive inactive in game.box.homeTeam.inactives)
+            {
+                if (!playerList.Contains((season, inactive.personId)))
+                {
+                    HistoricInactiveInsert(inactive, season, "Historic");
+                }
+                HistoricInactiveBoxInsert(Int32.Parse(game.game_id), game.box.homeTeamId, game.box.awayTeamId, season, inactive.personId);
+            }
+            foreach (NBAdbToolboxHistoric.Inactive inactive in game.box.awayTeam.inactives)
+            {            
+                if (!playerList.Contains((season, inactive.personId)))
+                {
+                    HistoricInactiveInsert(inactive, season, "Historic");
+                }
+                HistoricInactiveBoxInsert(Int32.Parse(game.game_id), game.box.awayTeamId, game.box.homeTeamId, season, inactive.personId);
+            }
+        }
+        public void HistoricPlayerInsert(NBAdbToolboxHistoric.Player player, int season, string number, string sender)
+        {
+            if (sender == "Historic")
+            {
+                playerList.Add((season, player.personId));
+            }
+            else if (sender == "Missing")
+            {
+                currentPlayerList.Add((season, player.personId));
+            }
+            string pInsert = "Insert into Player values(" + season + ", " + player.personId + ", '" + player.firstName.Replace("'", "''") + " " + player.familyName.Replace("'", "''") + "', '" + number + "', ";
+            if (player.position != null && player.position != "")
+            {
+                pInsert += "'" + player.position + "')\n";
+            }
+            else
+            {
+                pInsert += "null)\n";
+            }
+            playerInsert += pInsert;
+        }
+        public void HistoricInactiveInsert(NBAdbToolboxHistoric.Inactive inactive, int season, string sender)
+        {
+            if (sender == "Historic")
+            {
+                playerList.Add((season, inactive.personId));
+            }
+            else if (sender == "Missing")
+            {
+                currentPlayerList.Add((season, inactive.personId));
+            }
+            playerInsert += "Insert into Player(SeasonID, PlayerID, Name) values(" + season + ", " + inactive.personId + ", '" + 
+            inactive.firstName.Replace("'", "''") + " " + inactive.familyName.Replace("'", "''") + "')\n";
+            
+        }
+        public void HistoricInactiveBoxInsert(int GameID, int TeamID, int MatchupID, int season, int InactiveID)
+        {
+            playerBoxInsertString += "insert into PlayerBox(SeasonID, GameID, TeamID, MatchupID, PlayerID, Status) values(" + 
+            season + ", " + GameID + ", " + TeamID + ", " + MatchupID + ", " + InactiveID + ", 'INACTIVE')\n";
+        }
+        #endregion
+
+
         public void PlayerStaging(NBAdbToolboxHistoric.Game game, int season)
         {
             foreach (NBAdbToolboxHistoric.Player player in game.box.homeTeam.players)
@@ -2504,7 +2433,6 @@ namespace NBAdbToolbox
                     }
                 }
                 PlayerBoxCheck(game, player, game.box.awayTeamId, game.box.homeTeamId, season, "PlayerBoxCheck");
-               
             }
 
             foreach (NBAdbToolboxHistoric.Inactive inactive in game.box.homeTeam.inactives)
@@ -2793,7 +2721,7 @@ namespace NBAdbToolbox
         {
             using (SqlCommand PlayerBoxCheck = new SqlCommand("PlayerBoxCheck"))
             {
-                PlayerBoxCheck.Connection = SQLdb;
+                PlayerBoxCheck.Connection = new SqlConnection(bob.ToString());
                 PlayerBoxCheck.CommandType = CommandType.StoredProcedure;
                 PlayerBoxCheck.Parameters.AddWithValue("@SeasonID", season);
                 PlayerBoxCheck.Parameters.AddWithValue("@GameID", Int32.Parse(game.game_id));
@@ -2802,18 +2730,17 @@ namespace NBAdbToolbox
                 PlayerBoxCheck.Parameters.AddWithValue("@PlayerID", inactive.personId);
                 using (SqlDataAdapter sTeamSearch = new SqlDataAdapter())
                 {
-                    PlayerBoxCheck.Connection = SQLdb;
                     sTeamSearch.SelectCommand = PlayerBoxCheck;
-                    SQLdb.Open();
+                    PlayerBoxCheck.Connection.Open();
                     SqlDataReader reader = PlayerBoxCheck.ExecuteReader();
                     if (!reader.HasRows)
                     {
-                        SQLdb.Close();
+                        PlayerBoxCheck.Connection.Close();
                         InactiveBoxInsertString(Int32.Parse(game.game_id), TeamID, MatchupID, season, inactive.personId);
                     }
                     else
                     {
-                        SQLdb.Close();
+                        PlayerBoxCheck.Connection.Close();
                     }
                 }
             }
@@ -2821,6 +2748,7 @@ namespace NBAdbToolbox
         public void InactiveBoxInsertString(int GameID, int TeamID, int MatchupID, int season, int InactiveID)
         {
             playerBoxInsertString += "insert into PlayerBox(SeasonID, GameID, TeamID, MatchupID, PlayerID, Status) values(" + season + ", " + GameID + ", " + TeamID + ", " + MatchupID + ", " + InactiveID + ", 'INACTIVE')\n";
+            
         }
         #endregion
 
@@ -2830,21 +2758,30 @@ namespace NBAdbToolbox
         #region TeamBox Methods
         public void TeamBoxStaging(NBAdbToolboxHistoric.Game game, int season)
         {
-            TeamBoxCheck(game.box.homeTeam, season, game.game_id, game.box.awayTeamId, game.box.awayTeam.statistics.points, "TeamBoxCheck", game.box.homeTeam.lineups[0]);
-            TeamBoxCheck(game.box.awayTeam, season, game.game_id, game.box.homeTeamId, game.box.homeTeam.statistics.points, "TeamBoxCheck", game.box.awayTeam.lineups[0]);
+            //TeamBoxCheck(game.box.homeTeam, season, game.game_id, game.box.awayTeamId, game.box.awayTeam.statistics.points, "TeamBoxCheck", game.box.homeTeam.lineups[0]);
+            //TeamBoxCheck(game.box.awayTeam, season, game.game_id, game.box.homeTeamId, game.box.homeTeam.statistics.points, "TeamBoxCheck", game.box.awayTeam.lineups[0]);
+            //foreach (NBAdbToolboxHistoric.Lineups lineup in game.box.homeTeam.lineups)
+            //{
+            //    TeamBoxCheck(game.box.homeTeam, season, game.game_id, game.box.awayTeamId, game.box.awayTeam.statistics.points, "TeamBoxLineupCheck", lineup);
+            //}
+            //foreach (NBAdbToolboxHistoric.Lineups lineup in game.box.awayTeam.lineups)
+            //{
+            //    TeamBoxCheck(game.box.awayTeam, season, game.game_id, game.box.homeTeamId, game.box.homeTeam.statistics.points, "TeamBoxLineupCheck", lineup);
+            //}
 
-
+            //5.7 Populate DB Update
+            teamBoxInsert += WriteTeamBoxInsert(game.box.homeTeam, season, game.game_id, game.box.awayTeamId, game.box.awayTeam.statistics.points);
+            teamBoxInsert += WriteTeamBoxInsert(game.box.awayTeam, season, game.game_id, game.box.homeTeamId, game.box.homeTeam.statistics.points);
             foreach (NBAdbToolboxHistoric.Lineups lineup in game.box.homeTeam.lineups)
             {
-                TeamBoxCheck(game.box.homeTeam, season, game.game_id, game.box.awayTeamId, game.box.awayTeam.statistics.points, "TeamBoxLineupCheck", lineup);
+                teamBoxInsert += WriteTeamBoxLineupsInsert(game.box.homeTeam, season, game.game_id, game.box.awayTeamId, game.box.awayTeam.statistics.points, lineup);
             }
             foreach (NBAdbToolboxHistoric.Lineups lineup in game.box.awayTeam.lineups)
             {
-                TeamBoxCheck(game.box.awayTeam, season, game.game_id, game.box.homeTeamId, game.box.homeTeam.statistics.points, "TeamBoxLineupCheck", lineup);
+                teamBoxInsert += WriteTeamBoxLineupsInsert(game.box.awayTeam, season, game.game_id, game.box.homeTeamId, game.box.homeTeam.statistics.points, lineup);
             }
 
         }
-
         public void TeamBoxCheck(NBAdbToolboxHistoric.Team team, int season, string GameID, int MatchupID, int PointsAgainst, string procedure, NBAdbToolboxHistoric.Lineups lineup)
         {
             using (SqlCommand TeamBoxCheck = new SqlCommand(procedure))
@@ -2872,7 +2809,7 @@ namespace NBAdbToolbox
                         if (procedure == "TeamBoxCheck")
                         {
                             //TeamBoxInsert(team, season, GameID, MatchupID, PointsAgainst, "TeamBoxInsertHistoric", lineup);
-                            teamBoxInsert += WriteTeamBoxInsert(team, season, GameID, MatchupID, PointsAgainst, lineup);
+                            teamBoxInsert += WriteTeamBoxInsert(team, season, GameID, MatchupID, PointsAgainst);
                         }
                         else if (procedure == "TeamBoxLineupCheck")
                         {
@@ -2910,7 +2847,7 @@ namespace NBAdbToolbox
                 }
             }
         }
-        public string WriteTeamBoxInsert(NBAdbToolboxHistoric.Team team, int season, string GameID, int MatchupID, int PointsAgainst, NBAdbToolboxHistoric.Lineups lineup)
+        public string WriteTeamBoxInsert(NBAdbToolboxHistoric.Team team, int season, string GameID, int MatchupID, int PointsAgainst)
         {
             string insert = "insert into TeamBox(SeasonID, GameID, TeamID, MatchupID, FGM, FGA, [FG%], FG2M, FG2A, FG3M, FG3A, [FG3%], FTM, FTA, [FT%], ReboundsDefensive, ReboundsOffensive, ReboundsTotal, Assists, Turnovers, Steals, "
                 + "Blocks, Points, FoulsPersonal, PointsAgainst, [FG2%], AssistsTurnoverRatio";
@@ -3115,10 +3052,9 @@ namespace NBAdbToolbox
 
         //PlayByPlay methods
         #region PlayByPlay Methods
-        public string insertPBPString = "";
         public void PlayByPlayStaging(NBAdbToolboxHistoric.PlayByPlay pbp, int season)
         {
-            insertPBPString = "";
+            playByPlayInsertString = "";
             string instructions = PlayByPlayCheck(pbp, season, "PlayByPlayCheckHistorical");
             int actions = pbp.actions.Count;
             int start = 0;
@@ -3129,12 +3065,9 @@ namespace NBAdbToolbox
             }
             for (int i = start; i < actions; i++)
             {
-                if (instructions == "Insert")
-                {
-                    PlayByPlayInsertString(pbp.actions[i], season, Int32.Parse(pbp.gameId));
-                }
+                 PlayByPlayInsertString(pbp.actions[i], season, Int32.Parse(pbp.gameId));                
             }
-            insertPBPString = insertPBPString.Replace("'',", "");
+            playByPlayInsertString = playByPlayInsertString.Replace("'',", "");
         }
         public string PlayByPlayCheck(NBAdbToolboxHistoric.PlayByPlay pbp, int season, string procedure)
         {
@@ -3170,77 +3103,6 @@ namespace NBAdbToolbox
                         }
                     }
                 }
-            }
-        }
-        public void PlayByPlayInsert(NBAdbToolboxHistoric.Action action, int season, int GameID, string procedure)
-        {
-            using (SqlCommand PlayByPlayInsert = new SqlCommand(procedure))
-            {
-                PlayByPlayInsert.Connection = SQLdb;
-                PlayByPlayInsert.CommandType = CommandType.StoredProcedure;
-                PlayByPlayInsert.Parameters.AddWithValue("@SeasonID", season);
-                PlayByPlayInsert.Parameters.AddWithValue("@GameID", GameID);
-                PlayByPlayInsert.Parameters.AddWithValue("@ActionID", action.actionId);
-                PlayByPlayInsert.Parameters.AddWithValue("@ActionNumber", action.actionNumber);
-                PlayByPlayInsert.Parameters.AddWithValue("@Qtr", action.period);
-                PlayByPlayInsert.Parameters.AddWithValue("@Clock", action.clock);
-                if (action.scoreAway == "")                                                          //Away Score
-                {                                                                                   //Away Score
-                    PlayByPlayInsert.Parameters.AddWithValue("@ScoreAway", SqlInt32.Null);          //Away Score
-                }                                                                                   //Away Score
-                else                                                                                //Away Score
-                {                                                                                   //Away Score
-                    PlayByPlayInsert.Parameters.AddWithValue("@ScoreAway", action.scoreAway);       //Away Score
-                }
-                if (action.scoreHome == "")                                                         //Home Score
-                {                                                                                   //Home Score
-                    PlayByPlayInsert.Parameters.AddWithValue("@ScoreHome", SqlInt32.Null);          //Home Score
-                }                                                                                   //Home Score
-                else                                                                                //Home Score
-                {                                                                                   //Home Score
-                    PlayByPlayInsert.Parameters.AddWithValue("@ScoreHome", action.scoreHome);       //Home Score
-                }
-                if (action.teamId != 0)                                                             //TeamID and Tricode
-                {                                                                                   //TeamID and Tricode
-                    PlayByPlayInsert.Parameters.AddWithValue("@TeamID", action.teamId);             //TeamID and Tricode
-                    PlayByPlayInsert.Parameters.AddWithValue("@Tricode", action.teamTricode);       //TeamID and Tricode
-                }                                                                                   //TeamID and Tricode
-                else                                                                                //TeamID and Tricode
-                {                                                                                   //TeamID and Tricode
-                    PlayByPlayInsert.Parameters.AddWithValue("@TeamID", SqlInt32.Null);             //TeamID and Tricode
-                    PlayByPlayInsert.Parameters.AddWithValue("@Tricode", SqlString.Null);           //TeamID and Tricode
-                }
-
-                if (action.personId == 0)                                                           //PlayerID
-                {                                                                                   //PlayerID
-                    PlayByPlayInsert.Parameters.AddWithValue("@PlayerID", SqlInt32.Null);           //PlayerID
-                }                                                                                   //PlayerID
-                else                                                                                //PlayerID
-                {                                                                                   //PlayerID
-                    PlayByPlayInsert.Parameters.AddWithValue("@PlayerID", action.personId);         //PlayerID
-                }
-                PlayByPlayInsert.Parameters.AddWithValue("@Description", action.description);
-                PlayByPlayInsert.Parameters.AddWithValue("@SubType", action.subType);
-                PlayByPlayInsert.Parameters.AddWithValue("@IsFieldGoal", action.isFieldGoal);
-                PlayByPlayInsert.Parameters.AddWithValue("@ShotResult", action.shotResult);
-                PlayByPlayInsert.Parameters.AddWithValue("@ShotValue", action.shotValue);
-                PlayByPlayInsert.Parameters.AddWithValue("@ActionType", action.actionType);
-                PlayByPlayInsert.Parameters.AddWithValue("@ShotDistance", action.shotDistance);
-                if (action.isFieldGoal == 1)
-                {
-                    PlayByPlayInsert.Parameters.AddWithValue("@XLegacy", action.xLegacy);
-                    PlayByPlayInsert.Parameters.AddWithValue("@YLegacy", action.yLegacy);
-                }
-                else
-                {
-                    PlayByPlayInsert.Parameters.AddWithValue("@XLegacy", SqlDouble.Null);
-                    PlayByPlayInsert.Parameters.AddWithValue("@YLegacy", SqlDouble.Null);
-                }
-                PlayByPlayInsert.Parameters.AddWithValue("@Location", action.location);
-
-                SQLdb.Open();
-                PlayByPlayInsert.ExecuteScalar();
-                SQLdb.Close();
             }
         }
         public void PlayByPlayInsertString(NBAdbToolboxHistoric.Action action, int season, int GameID)
@@ -3365,14 +3227,27 @@ namespace NBAdbToolbox
             insert = insert.Remove(insert.Length - ", ".Length);
             values = values.Remove(values.Length - ", ".Length) + ") ";
 
-            insertPBPString += insert + values + "\n";
+            playByPlayInsertString += insert + values + "\n";
         }
 
 
         #endregion
+
+        #region Historic PlayByPlay - 5.7 Populate DB Update
+        public void HistoricPlayByPlayStaging(NBAdbToolboxHistoric.PlayByPlay pbp, int season)
+        {
+            int actions = pbp.actions.Count;
+            int start = 0;
+            for (int i = start; i < actions; i++)
+            {
+                PlayByPlayInsertString(pbp.actions[i], season, Int32.Parse(pbp.gameId));
+            }
+            playByPlayInsertString = playByPlayInsertString.Replace("'',", "");
+        }
         #endregion
 
 
+        #endregion
 
         //Current Data
         #region Current Data Up to Date
@@ -3392,6 +3267,11 @@ namespace NBAdbToolbox
         public string currentTeamBox = "";
         public string currentPlayByPlay = "";
         public string missingData = "";
+        //Used in Game region
+        public string insertExt = "";
+        public string valuesExt = "";
+        public string lastGame = "";
+        public string seriesIDfirst7 = "";
         #endregion
         public async Task CurrentGameData(int GameID, int season, string sender)
         {
@@ -3736,10 +3616,6 @@ namespace NBAdbToolbox
 
         //Current Games
         #region Current Games
-        public string insertExt = "";
-        public string valuesExt = "";
-        public string lastGame = "";
-        public string seriesIDfirst7 = "";
         public string CurrentGameCheck(NBAdbToolboxCurrent.Game game, int season, Dictionary<int, string> officials)
         {
             string insert = "Insert into Game(SeasonID, GameID, Date, HomeID, HScore, AwayID, AScore, Datetime, ";
@@ -4501,7 +4377,7 @@ namespace NBAdbToolbox
             playerBoxInsertString = "";
             playerBoxUpdateString = "";
             startingLineupsInsertString = "";
-            insertPBPString = "";
+            playByPlayInsertString = "";
             SQLdb = new SqlConnection(cString);
 
             ImageDriver(25);
@@ -4540,7 +4416,7 @@ namespace NBAdbToolbox
             }
             #endregion
             
-            string allInOne = teamInsert + arenaInsert + officialInsert + gameInsert + playerInsert + teamBoxInsert + playerBoxInsertString + startingLineupsInsertString + insertPBPString;
+            string allInOne = teamInsert + arenaInsert + officialInsert + gameInsert + playerInsert + teamBoxInsert + playerBoxInsertString + startingLineupsInsertString + playByPlayInsertString;
             string hitDb = allInOne;
             allInOne = "";
             SqlConnection bigInserts = new SqlConnection(cString);

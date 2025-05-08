@@ -1,7 +1,7 @@
 
 select t.SeasonID,
 sum(case when GameType = 'RS' then 1 else 0 end) [Regular Season],
-sum(case when GameType = 'PS' then 1 else 0 end) [Post Season],
+sum(case when GameType = 'PS' then 1 else 0 end) [Post Season],	
 count(t.GameID) [Total Games]
 from Game t
 group by t.SeasonID
@@ -48,3 +48,8 @@ order by SeasonID desc
 
 
 select * from util.BuildLog
+
+
+select Max(cast(right(GameID, 4) as int))/10
+from Game 
+where SeasonID = 2016
