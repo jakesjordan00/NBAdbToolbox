@@ -496,8 +496,8 @@ namespace NBAdbToolbox
                         "." //Height
                     }); //Current game: 
                     ChangeLabel(lblSeasonStatusLoad, pnlLoad, new List<string> { 
-                        "Currently loading: ", //Text
-                        "Regular", //FontStyle
+                        "Checking util.BuildLog", //Text
+                        "Bold", //FontStyle
                         ((float)(pnlLoad.Height * .08) / (96 / 12) * (72 / 12)).ToString(), //FontSize
                         ".", //Width
                         "true", //AutoSize
@@ -587,7 +587,7 @@ namespace NBAdbToolbox
                                 DeleteExisting(season);
                             });
 
-                            lblSeasonStatusLoadInfo.Text = season + " historic data file";
+                            lblSeasonStatusLoad.Text = season + " Historic data file";
                             stopwatchRead.Start();
                             await Task.Run(async () =>      //This sets the root variable to our big file
                             {
@@ -609,7 +609,7 @@ namespace NBAdbToolbox
                             DeleteSeasonData.Wait();
                             lblStatus.Text = season + " parsed. Inserting data...";
                             CenterElement(pnlWelcome, lblStatus);
-                            lblSeasonStatusLoadInfo.Text = season + " Regular Season";
+                            lblSeasonStatusLoad.Text = "Inserting " + season + " Regular Season";
                             stopwatchInsert.Restart();
                             //int totalGames = seasonGames.First(g => g.SeasonID == season).Games;
                             int totalGamesCount = root.season.games.regularSeason.Count + root.season.games.playoffs.Count;
@@ -649,7 +649,7 @@ namespace NBAdbToolbox
                                 }));
                             }
                             regGames = iterator;
-                            lblSeasonStatusLoadInfo.Text = season + " Postseason";
+                            lblSeasonStatusLoad.Text = "Inserting " + season + " Postseason";
                             foreach (NBAdbToolboxHistoric.Game game in root.season.games.playoffs)
                             {
                                 await Task.Run(async () =>      //This inserts the games from season file into db
@@ -690,16 +690,18 @@ namespace NBAdbToolbox
                         #endregion
                         //Current Data
                         #region Current Data
-                        else if ((popup.current || (!popup.historic && !popup.current)) && season > 2018)
+                        else if ((popup.current || (!popup.historic && !popup.current) && season > 2018))
                         {
                             source = "Current";
                             List<int> gamesRS = new List<int>();
                             List<int> gamesPS = new List<int>();
                             current = 1;
-                            lblSeasonStatusLoad.Text = "Currently ";
+                            lblSeasonStatusLoad.Text = "Grabbing " + season + " GameIDs";
                             lblSeasonStatusLoad.AutoSize = true;
-                            lblSeasonStatusLoadInfo.Left = lblSeasonStatusLoad.Right;
-                            lblSeasonStatusLoadInfo.Text = "Getting " + season + " GameIDs";
+                            Task DeleteSeasonData = Task.Run(() =>
+                            {
+                                DeleteExisting(season);
+                            });
                             await Task.Run(async () =>      //We need to read the big file to get our game list
                             {
                                 await ReadSeasonFile(season, popup.historic, popup.current);
@@ -717,15 +719,44 @@ namespace NBAdbToolbox
                             int post = gamesPS.Count;
                             int totalGamesCount = gamesRS.Count + gamesPS.Count;
                             regGames = regular;
-                            stopwatchInsert.Restart();
                             currentIterator = 0;
                             currentImageIterator = 0;
                             currentReverse = false;
+
+                            #region Wait for data to be deleted
+                            lblStatus.Text = "Deleting existing " + season + " data...";
+                            CenterElement(pnlWelcome, lblStatus);
+                            ChangeLabel(lblSeasonStatusLoad, pnlLoad, new List<string> {
+                            "Deleting any  " + season + " data, one sec...", //Text
+                            "Regular", //FontStyle
+                            ((float)(pnlLoad.Height * .075) / (96 / 12) * (72 / 12)).ToString(), //FontSize
+                            ".", //Width
+                            "true", //AutoSize
+                            "0", //Left
+                            ".", //Top
+                            Color.Black.ToString(), //Color
+                            "true", //Visible
+                            "." //Height
+                            }); //Hitting endpoints and inserting 
+                            CenterElement(pnlWelcome, lblStatus);
+                            DeleteSeasonData.Wait();
+                            #endregion
+
                             stopwatchInsert.Restart();
-                            lblSeasonStatusLoadInfo.Text = "Hitting endpoints and inserting " + season + " data";
-                            fontSize = ((float)(pnlLoad.Height * .075) / (96 / 12)) * (72 / 12);
-                            lblSeasonStatusLoadInfo.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Regular, pnlLoad, lblSeasonStatusLoadInfo);
-                            lblSeasonStatusLoadInfo.AutoSize = true;
+                            lblStatus.Text = "Loading " + season + "...";
+                            CenterElement(pnlWelcome, lblStatus);
+                            ChangeLabel(lblSeasonStatusLoad, pnlLoad, new List<string> {
+                            "Hitting endpoints and inserting " + season + " data", //Text
+                            "Regular", //FontStyle
+                            ((float)(pnlLoad.Height * .075) / (96 / 12) * (72 / 12)).ToString(), //FontSize
+                            ".", //Width
+                            "true", //AutoSize
+                            "0", //Left
+                            ".", //Top
+                            Color.Black.ToString(), //Color
+                            "true", //Visible
+                            "." //Height
+                            }); //Hitting endpoints and inserting 
                             for (int i = 0; i < regular; i++)
                             {
                                 await CurrentGameData(gamesRS[i], season, "");
@@ -850,10 +881,9 @@ namespace NBAdbToolbox
              /*Visible*/    "true",
              /*Height*/     "."
                         });
-                        if (lblLeft == 0)
-                        {
-                            lblWorkingOn.Left = pnlLoad.Width - lblWorkingOn.Width;
-                        }
+
+                        lblWorkingOn.Left = pnlLoad.Width - lblWorkingOn.Width;
+                        
 
                         currentTeamsDone = false;
                         teamsDone = false;
@@ -879,7 +909,7 @@ namespace NBAdbToolbox
                     //Total Time Elapsed
                     ChangeLabel(lblCurrentGame, pnlLoad, new List<string> { 
                         "Total time elapsed: " + elapsedString, //Text         
-                        "Regular", //FontStyle
+                        "Bold", //FontStyle
                         ((float)(pnlLoad.Height * .05) / (96 / 12) * (72 / 12)).ToString(), //FontSize
                         ".", //Width
                         "true", //AutoSize
@@ -914,7 +944,7 @@ namespace NBAdbToolbox
                         Color.Green.ToString(), 
                         "true", 
                         "." }
-                    );
+                    );//Done! Check your SQL db
 
                     //Clear out image if it exists
                     if (picLoad.Image != null)
@@ -925,17 +955,17 @@ namespace NBAdbToolbox
 
                     ChangeLabel(lblWorkingOn, pnlLoad, new List<string> { 
                         ".", //Text
-                        "Regular", //FontStyle
-                        ((float)(pnlLoad.Height * .035) / (96 / 12) * (72 / 12)).ToString(), //FontSize
+                        "Bold", //FontStyle
+                        ((float)(pnlLoad.Height * .04) / (96 / 12) * (72 / 12)).ToString(), //FontSize
                         ".", //Width
                         "true", //AutoSize
-                        (pnlLoad.Width - lblWorkingOn.Width).ToString(), //Left
+                        ".", //Left
                         "0", //Top
                         ".", //Color
                         "true",//Visible
                         "." } //Height
-                    );
-
+                    );//No text
+                    lblWorkingOn.Left = pnlLoad.Width - lblWorkingOn.Width;
                     //Show Success image
                     using (var img = Image.FromFile(Path.Combine(projectRoot, "Content", "Success.png")))
                     {
