@@ -2,7 +2,7 @@
   "Server": "DESKTOP-F7FN836",
   "Create": false,
   "UseWindowsAuth": true,
-  "Database": "uiNBAdb_Test",
+  "Database": "NBAdb_Benchmark1",
   "Username": "test",
   "Password": "test123"
 }

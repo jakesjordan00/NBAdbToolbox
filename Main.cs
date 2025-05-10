@@ -215,7 +215,7 @@ namespace NBAdbToolbox
             bool isConnected = false; //Server Connection status variable            
             PictureBox bgCourt = new PictureBox //Create Background image
             {
-                Image = Image.FromFile(Path.Combine(projectRoot, "Content", "Court.png")),
+                Image = Image.FromFile(Path.Combine(projectRoot, "Content", "Court v2.png")),
                 SizeMode = PictureBoxSizeMode.StretchImage,
                 Width = this.Width,
                 Height = this.Height,
@@ -465,19 +465,16 @@ namespace NBAdbToolbox
                 if (popup.ShowDialog() == DialogResult.OK)
                 {
                     #region Set UI status lables and images
-                    Task SwitchImage = Task.Run(() =>
+                    using (var img = Image.FromFile(Path.Combine(projectRoot, "Content", "Loading", "kawhi1" + ".png")))
                     {
-                        using (var img = Image.FromFile(Path.Combine(projectRoot, "Content", "Loading", "kawhi1" + ".png")))
-                        {
-                            picLoad.Image = new Bitmap(img); // clone it so file lock is released
-                            picLoad.SizeMode = PictureBoxSizeMode.Zoom;
-                            picLoad.Width = pnlLoad.Height;
-                            picLoad.Height = pnlLoad.Height;
-                            picLoad.Left = (pnlLoad.ClientSize.Width - picLoad.Width) / 2;
-                            picLoad.BackColor = Color.Transparent;
-                            picLoad.Top = 0;
-                        }
-                    });
+                        picLoad.Image = new Bitmap(img); // clone it so file lock is released
+                        picLoad.SizeMode = PictureBoxSizeMode.Zoom;
+                        picLoad.Width = pnlLoad.Height;
+                        picLoad.Height = pnlLoad.Height;
+                        picLoad.Left = (pnlLoad.ClientSize.Width - picLoad.Width) / 2;
+                        picLoad.BackColor = Color.Transparent;
+                        picLoad.Top = 0;
+                    }
                     int historic = 0;
                     int current = 0;
                     string source = "";
@@ -486,11 +483,7 @@ namespace NBAdbToolbox
                     lblCurrentGameCount.Visible = true;
                     lblSeasonStatusLoadInfo.Visible = true;
                     picLoad.Visible = true;
-
-                    lblCurrentGame.Invoke((MethodInvoker)(() =>
-                    {
-
-                        ChangeLabel(lblCurrentGame, pnlLoad, new List<string> {
+                    ChangeLabel(lblCurrentGame, pnlLoad, new List<string> {
                         "Current game: ", //Text
                         "Regular", //FontStyle
                         ((float)(pnlLoad.Height * .05) / (96 / 12) * (72 / 12)).ToString(), //FontSize
@@ -502,10 +495,7 @@ namespace NBAdbToolbox
                         "true", //Visible
                         "." //Height
                     }); //Current game: 
-                    }));
-                    lblSeasonStatusLoad.Invoke((MethodInvoker)(() =>
-                    {
-                        ChangeLabel(lblSeasonStatusLoad, pnlLoad, new List<string> {
+                    ChangeLabel(lblSeasonStatusLoad, pnlLoad, new List<string> {
                         "Checking util.BuildLog", //Text
                         "Bold", //FontStyle
                         ((float)(pnlLoad.Height * .08) / (96 / 12) * (72 / 12)).ToString(), //FontSize
@@ -517,8 +507,6 @@ namespace NBAdbToolbox
                         "true", //Visible
                         "." //Height
                     }); //Currently Loading: 
-                    }));
-
                     ChangeLabel(lblWorkingOn, pnlLoad, new List<string> {
                         ".", //Text
                         "Regular", //FontStyle
@@ -557,6 +545,10 @@ namespace NBAdbToolbox
                     DateTime startFull = DateTime.Now;
                     foreach (int season in seasons)
                     {
+                        Task DeleteSeasonData = Task.Run(() =>
+                        {
+                            DeleteExisting(season);
+                        });
                         //Clear out any Lists used in the prior season. Disabled any buttons on the UI
                         #region Clear Lists and disable buttons on UI
                         currentArenaList.Clear();
@@ -594,10 +586,6 @@ namespace NBAdbToolbox
                             source = "Historic";
                             historic = 1;
 
-                            Task DeleteSeasonData = Task.Run(() =>
-                            {
-                                DeleteExisting(season);
-                            });
 
                             lblSeasonStatusLoad.Text = season + " Historic data file";
                             stopwatchRead.Start();
@@ -702,7 +690,7 @@ namespace NBAdbToolbox
                         #endregion
                         //Current Data
                         #region Current Data
-                        else if ((popup.current || (!popup.historic && !popup.current) && season > 2018))
+                        else if (popup.current || (!popup.historic && !popup.current && season > 2018))
                         {
                             source = "Current";
                             List<int> gamesRS = new List<int>();
@@ -710,10 +698,6 @@ namespace NBAdbToolbox
                             current = 1;
                             lblSeasonStatusLoad.Text = "Grabbing " + season + " GameIDs";
                             lblSeasonStatusLoad.AutoSize = true;
-                            Task DeleteSeasonData = Task.Run(() =>
-                            {
-                                DeleteExisting(season);
-                            });
                             await Task.Run(async () =>      //We need to read the big file to get our game list
                             {
                                 await ReadSeasonFile(season, popup.historic, popup.current);
@@ -904,6 +888,7 @@ namespace NBAdbToolbox
                         timeElapsedRead = TimeSpan.Zero;
                         elapsedStringRead = "";
                         iterator = 0;
+                        root.Equals(null);
                     }
                     //Measures total time taken for all selected seasons to be imported
                     #region Total Time for all selected Seasons
@@ -1484,7 +1469,15 @@ namespace NBAdbToolbox
         {
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
-                using (SqlCommand InsertData = new SqlCommand("use master create database " + config.Database))     //Create database
+                string createAlter = "use master create database " + config.Database + "; " +
+                               "alter database " + config.Database + " set recovery simple; " +
+                               "alter database " + config.Database + " set auto_shrink off; " +
+                               "alter database " + config.Database + " set auto_update_statistics on; " +
+                               "alter database " + config.Database + " set auto_update_statistics_async on; " +
+                               "alter database " + config.Database + " modify file (name = " + config.Database + "_log, size = 64mb, filegrowth = 64mb); " +
+                               "alter database " + config.Database + " set delayed_durability = forced;";
+
+                using (SqlCommand InsertData = new SqlCommand(createAlter))
                 {
                     InsertData.Connection = conn;
                     InsertData.CommandType = CommandType.Text;
@@ -1497,7 +1490,6 @@ namespace NBAdbToolbox
                     }
                     catch (SqlException ex)
                     {
-
                     }
                     conn.Close();
                 }
@@ -1893,16 +1885,16 @@ namespace NBAdbToolbox
         //For each game, this method checks each of our tables and determines what to do, Insert, update, or nothing.
         public void GetGameDetails(NBAdbToolboxHistoric.Game game, int season, string sender)
         {
-            teamInsert = "";
-            arenaInsert = "";
-            officialInsert = "";
-            playerInsert = "";
-            gameInsert = "";
-            teamBoxInsert = "";
-            playerBoxInsertString = "";
-            playerBoxUpdateString = "";
-            startingLineupsInsertString = "";
-            playByPlayInsertString = "";
+            //teamInsert = "";
+            //arenaInsert = "";
+            //officialInsert = "";
+            //playerInsert = "";
+            //gameInsert = "";
+            //teamBoxInsert = "";
+            //playerBoxInsertString = "";
+            //playerBoxUpdateString = "";
+            //startingLineupsInsertString = "";
+            //playByPlayInsertString = "";
             SQLdb = new SqlConnection(cString);
 
             //Check Db and build strings for Inserts & Updates
@@ -1995,6 +1987,19 @@ namespace NBAdbToolbox
             });
             #endregion
             lastSeason = season;
+            Task ClearVariables = Task.Run(() =>
+            {
+                teamInsert = "";
+                arenaInsert = "";
+                officialInsert = "";
+                playerInsert = "";
+                gameInsert = "";
+                teamBoxInsert = "";
+                playerBoxInsertString = "";
+                playerBoxUpdateString = "";
+                startingLineupsInsertString = "";
+                playByPlayInsertString = "";
+            });
         }
 
         //Team methods
@@ -3523,7 +3528,7 @@ namespace NBAdbToolbox
             }
             catch (Exception e)
             {
-                // Optional: log the error or queue it for retry
+
             }
             await secondInsertTask;
             try
@@ -3546,7 +3551,7 @@ namespace NBAdbToolbox
             }
             catch (Exception e)
             {
-                // Optional: log the error or queue it for retry
+
             }
 
         }
