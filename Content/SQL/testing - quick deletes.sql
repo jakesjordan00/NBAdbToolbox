@@ -12,6 +12,10 @@ select * from Game p order by SeasonID desc, GameID	desc									--1
 select * from Arena p order by SeasonID desc											--1
 select * from Official p order by SeasonID desc											--3
 
+
+
+
+
 delete from StartingLineups
 delete from TeamBoxLineups
 delete from PlayByPlay

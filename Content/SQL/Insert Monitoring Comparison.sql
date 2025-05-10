@@ -40,3 +40,10 @@ count(distinct t.GameID)
 from TeamBoxLineups t inner join
 		Season s on t.SeasonID = s.SeasonID
 group by t.SeasonID, s.Games, s.PlayoffGames
+
+
+
+
+
+
+

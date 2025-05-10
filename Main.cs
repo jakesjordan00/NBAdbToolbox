@@ -465,16 +465,19 @@ namespace NBAdbToolbox
                 if (popup.ShowDialog() == DialogResult.OK)
                 {
                     #region Set UI status lables and images
-                    using (var img = Image.FromFile(Path.Combine(projectRoot, "Content", "Loading", "kawhi1" + ".png")))
+                    Task SwitchImage = Task.Run(() =>
                     {
-                        picLoad.Image = new Bitmap(img); // clone it so file lock is released
-                        picLoad.SizeMode = PictureBoxSizeMode.Zoom;
-                        picLoad.Width = pnlLoad.Height;
-                        picLoad.Height = pnlLoad.Height;
-                        picLoad.Left = (pnlLoad.ClientSize.Width - picLoad.Width) / 2;
-                        picLoad.BackColor = Color.Transparent;
-                        picLoad.Top = 0;
-                    }
+                        using (var img = Image.FromFile(Path.Combine(projectRoot, "Content", "Loading", "kawhi1" + ".png")))
+                        {
+                            picLoad.Image = new Bitmap(img); // clone it so file lock is released
+                            picLoad.SizeMode = PictureBoxSizeMode.Zoom;
+                            picLoad.Width = pnlLoad.Height;
+                            picLoad.Height = pnlLoad.Height;
+                            picLoad.Left = (pnlLoad.ClientSize.Width - picLoad.Width) / 2;
+                            picLoad.BackColor = Color.Transparent;
+                            picLoad.Top = 0;
+                        }
+                    });
                     int historic = 0;
                     int current = 0;
                     string source = "";
@@ -483,7 +486,11 @@ namespace NBAdbToolbox
                     lblCurrentGameCount.Visible = true;
                     lblSeasonStatusLoadInfo.Visible = true;
                     picLoad.Visible = true;
-                    ChangeLabel(lblCurrentGame, pnlLoad, new List<string> { 
+
+                    lblCurrentGame.Invoke((MethodInvoker)(() =>
+                    {
+
+                        ChangeLabel(lblCurrentGame, pnlLoad, new List<string> {
                         "Current game: ", //Text
                         "Regular", //FontStyle
                         ((float)(pnlLoad.Height * .05) / (96 / 12) * (72 / 12)).ToString(), //FontSize
@@ -495,7 +502,10 @@ namespace NBAdbToolbox
                         "true", //Visible
                         "." //Height
                     }); //Current game: 
-                    ChangeLabel(lblSeasonStatusLoad, pnlLoad, new List<string> { 
+                    }));
+                    lblSeasonStatusLoad.Invoke((MethodInvoker)(() =>
+                    {
+                        ChangeLabel(lblSeasonStatusLoad, pnlLoad, new List<string> {
                         "Checking util.BuildLog", //Text
                         "Bold", //FontStyle
                         ((float)(pnlLoad.Height * .08) / (96 / 12) * (72 / 12)).ToString(), //FontSize
@@ -507,7 +517,9 @@ namespace NBAdbToolbox
                         "true", //Visible
                         "." //Height
                     }); //Currently Loading: 
-                    ChangeLabel(lblWorkingOn, pnlLoad, new List<string> { 
+                    }));
+
+                    ChangeLabel(lblWorkingOn, pnlLoad, new List<string> {
                         ".", //Text
                         "Regular", //FontStyle
                         ((float)(pnlLoad.Height * .04) / (96 / 12) * (72 / 12)).ToString(), //FontSize
@@ -883,7 +895,7 @@ namespace NBAdbToolbox
                         });
 
                         lblWorkingOn.Left = pnlLoad.Width - lblWorkingOn.Width;
-                        
+
 
                         currentTeamsDone = false;
                         teamsDone = false;
@@ -907,7 +919,7 @@ namespace NBAdbToolbox
                     string elapsedString = CheckTime(timeUnits);
 
                     //Total Time Elapsed
-                    ChangeLabel(lblCurrentGame, pnlLoad, new List<string> { 
+                    ChangeLabel(lblCurrentGame, pnlLoad, new List<string> {
                         "Total time elapsed: " + elapsedString, //Text         
                         "Bold", //FontStyle
                         ((float)(pnlLoad.Height * .05) / (96 / 12) * (72 / 12)).ToString(), //FontSize
@@ -918,7 +930,7 @@ namespace NBAdbToolbox
                         Color.Green.ToString(), //Color
                         "true", "" + //Visible
                         "." }
-                    ); 
+                    );
                     #endregion
 
 
@@ -933,16 +945,16 @@ namespace NBAdbToolbox
                     //...............................................................Text,  FontStyle, FontSize, Width, AutoSize, Left, Top, Color, Visible, Height
                     ChangeLabel(lblCurrentGameCount, pnlLoad, new List<string> { "", ".", ".", ".", ".", ".", ".", ".", "false", "." });
                     //...........................................................Text,  FontStyle, FontSize, Width, AutoSize, Left, Top, Color, Visible, Height
-                    ChangeLabel(lblSeasonStatusLoad, pnlLoad, new List<string> { 
-                        "Done! Check your SQL db", 
-                        "Regular", 
-                        ((float)(pnlLoad.Height * .08) / (96 / 12) * (72 / 12)).ToString(), 
-                        ".", 
-                        "true", 
-                        ".", 
-                        ".", 
-                        Color.Green.ToString(), 
-                        "true", 
+                    ChangeLabel(lblSeasonStatusLoad, pnlLoad, new List<string> {
+                        "Done! Check your SQL db",
+                        "Regular",
+                        ((float)(pnlLoad.Height * .08) / (96 / 12) * (72 / 12)).ToString(),
+                        ".",
+                        "true",
+                        ".",
+                        ".",
+                        Color.Green.ToString(),
+                        "true",
                         "." }
                     );//Done! Check your SQL db
 
@@ -953,7 +965,7 @@ namespace NBAdbToolbox
                         picLoad.Image = null;
                     }
 
-                    ChangeLabel(lblWorkingOn, pnlLoad, new List<string> { 
+                    ChangeLabel(lblWorkingOn, pnlLoad, new List<string> {
                         ".", //Text
                         "Bold", //FontStyle
                         ((float)(pnlLoad.Height * .04) / (96 / 12) * (72 / 12)).ToString(), //FontSize
@@ -1233,90 +1245,7 @@ namespace NBAdbToolbox
             #endregion
         }
 
-        public void ControlOnClick(Control control, Label growShrink, Control parent)
-        {
-            control.Click += (s, e) =>
-            {
-                if (control.Focused || parent.Focused)
-                {
-                    this.ActiveControl = null;
-                    growShrink.Text = "+";
-                    parent.Height = parent.Height / 4;
-                    pnlDbOverview.Refresh();
-                    lblDbOptions.Top = parent.Bottom;
-                    lblDbSelectSeason.Top = lblDbOptions.Bottom;
-                    listSeasons.Top = lblDbSelectSeason.Bottom;
-                    btnPopulate.Top = listSeasons.Bottom; //subject to change
-                }
-                else
-                {
-                    parent.Focus();
-                    growShrink.Text = "-";
-                    parent.Height = parent.Height * 4;
-                    pnlDbOverview.Refresh();
-                    lblDbOptions.Top = parent.Bottom;
-                    lblDbSelectSeason.Top = lblDbOptions.Bottom;
-                    listSeasons.Top = lblDbSelectSeason.Bottom;
-                    btnPopulate.Top = listSeasons.Bottom; //subject to change
-                }
-            };
-        }
-        public void GetSeasons(string connection)
-        {
-            listSeasons.Items.Clear();
-            seasonInfo.Clear();
-            using (SqlCommand SQLSeasons = new SqlCommand("Seasons"))
-            {
-                SqlConnection conn = new SqlConnection(bob.ToString());
-                SQLSeasons.Connection = conn;
-                SQLSeasons.CommandType = CommandType.StoredProcedure;
-                conn.Open();
-                using (SqlDataReader sdr = SQLSeasons.ExecuteReader())
-                {
-                    while (sdr.Read())
-                    {
-                        //select SeasonID, Games + PlayoffGames Games, HistoricLoaded, CurrentLoaded, Games, PlayoffGames
-                        listSeasons.Items.Add(sdr["SeasonID"].ToString());
-                        seasonInfo.Add((sdr.GetInt32(0), (sdr.GetInt32(1), sdr.GetInt32(2), sdr.GetInt32(3), sdr.GetInt32(4))));
-                    }
-                }
-            }
-        }
-
-
-        public void DeleteExisting(int season)
-        {
-            string delete = "";
-            delete = "delete from util.MissingData where SeasonID = " + season + "\n" +
-            "delete from StartingLineups where SeasonID = " + season + "\n" +
-            "delete from TeamBoxLineups where SeasonID = " + season + "\n" +
-            "delete from PlayByPlay where SeasonID = " + season + "\n" +
-            "delete from PlayerBox where SeasonID = " + season + "\n" +
-            "delete from TeamBox where SeasonID = " + season + "\n" +
-            "delete from GameExt where SeasonID = " + season + "\n" +
-            "delete from Game where SeasonID = " + season + "\n" +
-            "delete from Player where SeasonID = " + season + "\n" +
-            "delete from Official where SeasonID = " + season + "\n" +
-            "delete from Arena where SeasonID = " + season + "\n" +
-            "delete from Team where SeasonID = " + season;
-            using (SqlConnection deleteCon = new SqlConnection(cString))
-            {
-                using (SqlCommand DeleteExisting = new SqlCommand(delete))
-                {
-                    DeleteExisting.Connection = deleteCon;
-                    DeleteExisting.CommandType = CommandType.Text;
-                    deleteCon.Open();
-                    DeleteExisting.ExecuteScalar();
-                    deleteCon.Close();
-                }
-            }
-        }
-
-
-        public void LoadStatusLabels(Label label, string text, float fontSize, int left, int top, int height, int width, Color color)
-        {
-
-        }
+        
 
         #region Panel, Element, Alignment and Font Formatting
         //Add an element to a panel
@@ -1806,6 +1735,102 @@ namespace NBAdbToolbox
 
         #endregion
 
+        #region Need to organize/move or delete
+        public void ControlOnClick(Control control, Label growShrink, Control parent)
+        {
+            control.Click += (s, e) =>
+            {
+                if (control.Focused || parent.Focused)
+                {
+                    this.ActiveControl = null;
+                    growShrink.Text = "+";
+                    parent.Height = parent.Height / 4;
+                    pnlDbOverview.Refresh();
+                    lblDbOptions.Top = parent.Bottom;
+                    lblDbSelectSeason.Top = lblDbOptions.Bottom;
+                    listSeasons.Top = lblDbSelectSeason.Bottom;
+                    btnPopulate.Top = listSeasons.Bottom; //subject to change
+                }
+                else
+                {
+                    parent.Focus();
+                    growShrink.Text = "-";
+                    parent.Height = parent.Height * 4;
+                    pnlDbOverview.Refresh();
+                    lblDbOptions.Top = parent.Bottom;
+                    lblDbSelectSeason.Top = lblDbOptions.Bottom;
+                    listSeasons.Top = lblDbSelectSeason.Bottom;
+                    btnPopulate.Top = listSeasons.Bottom; //subject to change
+                }
+            };
+        }
+        public void GetSeasons(string connection)
+        {
+            listSeasons.Items.Clear();
+            seasonInfo.Clear();
+            using (SqlCommand SQLSeasons = new SqlCommand("Seasons"))
+            {
+                SqlConnection conn = new SqlConnection(bob.ToString());
+                SQLSeasons.Connection = conn;
+                SQLSeasons.CommandType = CommandType.StoredProcedure;
+                conn.Open();
+                using (SqlDataReader sdr = SQLSeasons.ExecuteReader())
+                {
+                    while (sdr.Read())
+                    {
+                        //select SeasonID, Games + PlayoffGames Games, HistoricLoaded, CurrentLoaded, Games, PlayoffGames
+                        listSeasons.Items.Add(sdr["SeasonID"].ToString());
+                        seasonInfo.Add((sdr.GetInt32(0), (sdr.GetInt32(1), sdr.GetInt32(2), sdr.GetInt32(3), sdr.GetInt32(4))));
+                    }
+                }
+            }
+        }
+        public void DeleteExisting(int season)
+        {
+            string delete = "";
+            delete = "delete from util.MissingData where SeasonID = " + season + "\n" +
+            "delete from StartingLineups where SeasonID = " + season + "\n" +
+            "delete from TeamBoxLineups where SeasonID = " + season + "\n" +
+            "delete from PlayByPlay where SeasonID = " + season + "\n" +
+            "delete from PlayerBox where SeasonID = " + season + "\n" +
+            "delete from TeamBox where SeasonID = " + season + "\n" +
+            "delete from GameExt where SeasonID = " + season + "\n" +
+            "delete from Game where SeasonID = " + season + "\n" +
+            "delete from Player where SeasonID = " + season + "\n" +
+            "delete from Official where SeasonID = " + season + "\n" +
+            "delete from Arena where SeasonID = " + season + "\n" +
+            "delete from Team where SeasonID = " + season;
+            using (SqlConnection deleteCon = new SqlConnection(cString))
+            {
+                using (SqlCommand DeleteExisting = new SqlCommand(delete))
+                {
+                    DeleteExisting.Connection = deleteCon;
+                    DeleteExisting.CommandType = CommandType.Text;
+                    deleteCon.Open();
+                    DeleteExisting.ExecuteScalar();
+                    deleteCon.Close();
+                }
+            }
+        }
+
+        //delete maybe idk
+        public void LoadStatusLabels(Label label, string text, float fontSize, int left, int top, int height, int width, Color color)
+        {
+
+        }
+
+
+        #endregion
+
+
+
+
+
+
+        public async void PopulateDatabase()
+        {
+
+        }
         //Historic Data
         #region Historic Data
 
