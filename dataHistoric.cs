@@ -12,6 +12,7 @@ using System.Data.SqlTypes;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Text;
 
 namespace NBAdbToolboxHistoric
 {
@@ -19,16 +20,28 @@ namespace NBAdbToolboxHistoric
     {
         public async Task<Root> ReadFile(int season, int iterations, string filePath)
         {
-            string seasonFile = "";
+            // Pre-allocate close to the expected size (300MB)
+            // This prevents multiple resize operations when dealing with large files
+            StringBuilder seasonFileBuilder = new StringBuilder(320 * 1024 * 1024);
 
-            for (int i = 0; i < iterations; i++)
+            try
             {
-                string path = filePath + season.ToString() + "p" + i.ToString() + ".json";
-                string seasonFilePart = await Task.Run(() => File.ReadAllText(path));
-                seasonFile += seasonFilePart;
-            }
+                for (int i = 0; i < iterations; i++)
+                {
+                    string path = Path.Combine(filePath, $"{season}p{i}.json");
 
-            return JsonConvert.DeserializeObject<Root>(seasonFile);
+                    // Use Task.Run to run synchronous File.ReadAllText on a background thread
+                    string seasonFilePart = await Task.Run(() => File.ReadAllText(path));
+                    seasonFileBuilder.Append(seasonFilePart);
+                }
+                //Parse the complete JSON in one operation
+                return await Task.Run(() => JsonConvert.DeserializeObject<Root>(seasonFileBuilder.ToString()));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error reading season {season}: {ex.Message}");
+                throw; // Re-throw to let caller handle it
+            }
         }
     }
 
