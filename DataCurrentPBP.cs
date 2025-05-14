@@ -23,6 +23,10 @@ namespace NBAdbToolboxCurrentPBP
             {
                 client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0");
                 client.Timeout = TimeSpan.FromSeconds(3);
+                if(season == 2019)
+                {
+                    client.Timeout = TimeSpan.FromSeconds(1);
+                }
                 try
                 {
                     json = await client.GetStringAsync(pbpLink);

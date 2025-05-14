@@ -13,7 +13,8 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Text;
-
+using System.Diagnostics;
+using Microsoft.VisualBasic;
 namespace NBAdbToolboxHistoric
 {
     public class DataHistoric
@@ -22,26 +23,116 @@ namespace NBAdbToolboxHistoric
         {
             // Pre-allocate close to the expected size (300MB)
             // This prevents multiple resize operations when dealing with large files
-            StringBuilder seasonFileBuilder = new StringBuilder(320 * 1024 * 1024);
-
+            StringBuilder seasonFileBuilder = null;
+            string fullJson = "";
             try
             {
+                //seasonFileBuilder = new StringBuilder(630 * 1024 * 1024);
+                seasonFileBuilder = new StringBuilder(); // Default capacity
+            }
+            catch (OutOfMemoryException)
+            {
+                seasonFileBuilder = new StringBuilder(); // Default capacity
+            }
+            Root root = null;
+            try
+            {
+                LogMemory("Before appending to seasonFileBuilder");
                 for (int i = 0; i < iterations; i++)
                 {
                     string path = Path.Combine(filePath, $"{season}p{i}.json");
-
                     // Use Task.Run to run synchronous File.ReadAllText on a background thread
-                    string seasonFilePart = await Task.Run(() => File.ReadAllText(path));
-                    seasonFileBuilder.Append(seasonFilePart);
+                    seasonFileBuilder.Append(await Task.Run(() => File.ReadAllText(path)));
                 }
-                //Parse the complete JSON in one operation
-                return await Task.Run(() => JsonConvert.DeserializeObject<Root>(seasonFileBuilder.ToString()));
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error reading season {season}: {ex.Message}");
                 throw; // Re-throw to let caller handle it
             }
+            try
+            {
+                LogMemory("Before fullJson = seasonFileBuilder.ToString");
+                fullJson = seasonFileBuilder.ToString();
+            }
+
+            catch (OutOfMemoryException MemOut)
+            {
+                LogMemory("After failing to do fullJson = seasonFileBuilder.ToString");
+
+            }
+            try
+            {
+                await Task.Run(() => root = JsonConvert.DeserializeObject<Root>(fullJson));
+            }
+            catch (OutOfMemoryException MemOut)
+            {
+                LogMemory("After failing to deserializing");
+
+            }
+            fullJson = "";
+            try
+            {
+                seasonFileBuilder.Clear(); // Free StringBuilder memory
+                                           //Parse the complete JSON in one operation
+            }
+            catch (OutOfMemoryException MemOut)
+            {
+                LogMemory("After clearing seasonFileBuilder");
+            }
+            return root;
+        }
+        private void LogMemory(string point)
+        {
+            // Get total managed memory being used
+            long managedMemory = GC.GetTotalMemory(false) / (1024 * 1024);
+
+            // Get process information for more detailed memory stats
+            Process currentProcess = Process.GetCurrentProcess();
+
+            // Working set (physical memory used by the process)
+            long workingSet = currentProcess.WorkingSet64 / (1024 * 1024);
+
+            // Private memory (total memory allocated to the process)
+            long privateMemory = currentProcess.PrivateMemorySize64 / (1024 * 1024);
+
+            // Virtual memory
+            long virtualMemory = currentProcess.VirtualMemorySize64 / (1024 * 1024);
+
+            // Estimate available physical memory
+            long availablePhysicalMemory = 0;
+
+            try
+            {
+                // This approach uses Windows Management Instrumentation (WMI)
+                // Note: This is Windows-specific and requires adding System.Management reference
+                using (var searcher = new System.Management.ManagementObjectSearcher("SELECT * FROM Win32_OperatingSystem"))
+                {
+                    foreach (var obj in searcher.Get())
+                    {
+                        availablePhysicalMemory = Convert.ToInt64(obj["FreePhysicalMemory"]) / 1024;
+                    }
+                }
+            }
+            catch
+            {
+                // Fallback if WMI query fails
+                availablePhysicalMemory = -1; // Indicate that it couldn't be determined
+            }
+
+            // Log all memory information
+            Console.WriteLine($"=== Memory {point} ===");
+            Console.WriteLine($"Managed memory: {managedMemory} MB");
+            Console.WriteLine($"Working set: {workingSet} MB");
+            Console.WriteLine($"Private memory: {privateMemory} MB");
+            Console.WriteLine($"Virtual memory: {virtualMemory} MB");
+
+            if (availablePhysicalMemory >= 0)
+            {
+                Console.WriteLine($"Available physical memory: {availablePhysicalMemory} MB");
+            }
+
+            Console.WriteLine();
         }
     }
 

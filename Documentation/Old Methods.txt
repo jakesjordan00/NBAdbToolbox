@@ -542,3 +542,16 @@
             return insert + values + "\n";
 
         }
+        public string StartingLineupString(int season, int GameID, int TeamID, int MatchupID, int PlayerID, string position)
+        {
+            string insert = "insert into StartingLineups values(" + season + ", " + GameID + ", " + TeamID + ", " + MatchupID + ", " + PlayerID + ", '";
+            if (position == "")
+            {
+                insert += "Bench', null)\n";
+            }
+            else
+            {
+                insert += "Starters', '" + position + "')\n";
+            }
+            return insert;
+        }

@@ -1,6 +1,8 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Net;
@@ -12,20 +14,32 @@ namespace NBAdbToolboxCurrent
 {
     public class DataCurrent
     {
+        public int count = 0;
+        public TimeSpan requestDuration = TimeSpan.Zero;
+        public float AvgDuration = 0;
         public async Task<Root>GetJSON(int GameID, int season)
         {
             string boxLink = "https://cdn.nba.com/static/json/liveData/boxscore/boxscore_00" + GameID + ".json";
             string json = "";
+            //TimeSpan requestTime = TimeSpan.Zero;
             Root root = new Root();
             using (HttpClient client = new HttpClient())
             {
                 client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0");
-                client.Timeout = TimeSpan.FromSeconds(3);
-
+                client.Timeout = TimeSpan.FromSeconds(4);
+                if (season == 2019)
+                {
+                    client.Timeout = TimeSpan.FromSeconds(1);
+                }
+                //Stopwatch stopwatch = Stopwatch.StartNew();
                 try
                 {
                     json = await client.GetStringAsync(boxLink);
-                    json = json.Replace("None", "null");
+                    //stopwatch.Stop();
+                    //count++;
+                    //requestTime = stopwatch.Elapsed;
+                    //requestDuration += requestTime;
+                    //json = json.Replace("None", "null");
                     root = JsonConvert.DeserializeObject<Root>(json);
                 }
                 catch (HttpRequestException ex)
@@ -41,6 +55,10 @@ namespace NBAdbToolboxCurrent
 
                 }
             }
+            //if(count % 100 == 0)
+            //{
+            //    AvgDuration = (float)(requestDuration.TotalSeconds/count);
+            //}
             return root;
         }
     }
