@@ -1,8 +1,9 @@
 {
   "Server": "DESKTOP-F7FN836",
+  "Alias": "Home",
   "Create": false,
   "UseWindowsAuth": true,
-  "Database": "NBAdb_H_5_13_1",
-  "Username": "test",
-  "Password": "test123"
+  "Database": "aNBAdb_0514_1",
+  "Username": null,
+  "Password": null
 }

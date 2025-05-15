@@ -13,31 +13,45 @@ namespace NBAdbToolbox
     public partial class EditPopup : Form
     {
         public string Server { get; private set; }
+        public string Alias { get; private set; }
         public bool? CreateDatabase { get; private set; }
         public string Database { get; private set; }
         public string Username { get; private set; }
         public string Password { get; private set; }
         public bool? UseWindowsAuth { get; private set; }
 
-        public EditPopup(string mode, bool fileExists, string initialServer = "", bool? initialCreateDb = true, string initialDb = "", bool? initalWindowsAuth = true, string initialUser = "", string initialPass = "")
+        public EditPopup(string mode, bool fileExists, string initialServer = "", string initialAlias = "", bool? initialCreateDb = true, string initialDb = "", bool? initialWindowsAuth = true, string initialUser = "", string initialPass = "")
         {
             this.Text = "Create or Edit Connection";
             this.Width = 300;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.StartPosition = FormStartPosition.CenterParent;
 
-            int top = 20;
-            int spacing = 30;
+            int top = (int)(this.Height * .1);
+            int spacing = (int)(this.Height * .1);
 
             // Server
+            Label lblReq = new Label()
+            {
+                Text = "*",
+                Left = 10,
+                Top = top,
+                AutoSize = true,
+                ForeColor = Color.Red,
+                Font = new Font(this.Font.FontFamily, this.Font.Size + 2, FontStyle.Bold)
+            };
             Label lblServer = new Label() { Text = "Server:", Left = 20, Top = top, AutoSize = true };
             TextBox txtServer = new TextBox() { Text = initialServer, Left = 20, Top = top + 20, Width = 240 };
+            top += spacing + 20;
+
+            Label lblAlias = new Label() { Text = "Server Alias:", Left = 20, Top = top, AutoSize = true };
+            TextBox txtAlias = new TextBox() { Text = initialAlias, Left = 20, Top = top + 20, Width = 240 };
             top += spacing + 20;
 
             // Create DB
             CheckBox chkCreateDb = new CheckBox() { Text = "Create Database?", Left = 20, Top = top, AutoSize = true };
             chkCreateDb.Checked = !fileExists || initialCreateDb == true;
-            top += spacing + 20;
+            top += (int)(this.Height * .1);
 
             // Database
             Label lblDatabase = new Label() { Text = "Database:", Left = 20, Top = top, AutoSize = true };
@@ -46,7 +60,8 @@ namespace NBAdbToolbox
 
             // Windows Auth
             CheckBox chkWindowsAuth = new CheckBox() { Text = "Use Windows Authentication", Left = 20, Top = top, AutoSize = true };
-            top += spacing + 20;
+            chkWindowsAuth.Checked = initialWindowsAuth == true;
+            top += (int)(this.Height * .1);
 
             // Username
             Label lblUsername = new Label() { Text = "Username:", Left = 20, Top = top, AutoSize = true };
@@ -58,6 +73,11 @@ namespace NBAdbToolbox
             TextBox txtPassword = new TextBox() { Text = initialPass, Left = 20, Top = top + 20, Width = 240, UseSystemPasswordChar = true };
             top += spacing + 20;
 
+            if (initialWindowsAuth == true)
+            {
+                txtUsername.Enabled = false;
+                txtPassword.Enabled = false;
+            }
             // Toggle username/password fields based on checkbox
             chkWindowsAuth.CheckedChanged += (s, e) =>
             {
@@ -73,17 +93,27 @@ namespace NBAdbToolbox
             btnOK.Click += (s, e) =>
             {
                 Server = txtServer.Text;
+                Alias = txtAlias.Text;
                 CreateDatabase = chkCreateDb.Checked;
                 Database = txtDatabase.Text;
-                Username = txtUsername.Text;
-                Password = txtPassword.Text;
                 UseWindowsAuth = chkWindowsAuth.Checked;
+                if (chkWindowsAuth.Checked)
+                {
+                    Username = null;
+                    Password = null;
+                }
+                else
+                {
+                    Username = txtUsername.Text;
+                    Password = txtPassword.Text;
+                }
                 this.Close();
             };
 
             this.Controls.AddRange(new Control[]
             {
-                lblServer, txtServer,
+                lblReq,lblServer, txtServer,
+                lblAlias, txtAlias,
                 chkCreateDb,
                 lblDatabase, txtDatabase,
                 chkWindowsAuth,

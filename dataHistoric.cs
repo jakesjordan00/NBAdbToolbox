@@ -48,7 +48,6 @@ namespace NBAdbToolboxHistoric
             catch (Exception ex)
             {
                 Console.WriteLine($"Error reading season {season}: {ex.Message}");
-                throw; // Re-throw to let caller handle it
             }
             try
             {
