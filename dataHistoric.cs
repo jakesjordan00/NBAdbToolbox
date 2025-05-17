@@ -15,25 +15,35 @@ using System.Windows.Forms;
 using System.Text;
 using System.Diagnostics;
 using Microsoft.VisualBasic;
+using System.IO.MemoryMappedFiles;
 namespace NBAdbToolboxHistoric
 {
     public class DataHistoric
     {
         public async Task<Root> ReadFile(int season, int iterations, string filePath)
         {
-            // Pre-allocate close to the expected size (300MB)
-            // This prevents multiple resize operations when dealing with large files
-            StringBuilder seasonFileBuilder = null;
+
+            Dictionary<int, int> seasonCapacities = new Dictionary<int, int>{
+                { 2012, 297 * 1024 * 1024 }, // ~297 MB in bytes
+                { 2013, 303 * 1024 * 1024 }, // ~303 MB in bytes
+                { 2014, 303 * 1024 * 1024 }, // ~303 MB in bytes
+                { 2015, 309 * 1024 * 1024 }, // ~309 MB in bytes
+                { 2016, 307 * 1024 * 1024 }, // ~307 MB in bytes
+                { 2017, 305 * 1024 * 1024 }, // ~305 MB in bytes
+                { 2018, 318 * 1024 * 1024 }, // ~315 MB in bytes
+                { 2019, 276 * 1024 * 1024 }, // ~276 MB in bytes
+                { 2020, 278 * 1024 * 1024 }, // ~278 MB in bytes
+                { 2021, 314 * 1024 * 1024 }, // ~314 MB in bytes
+                { 2022, 318 * 1024 * 1024 }, // ~315 MB in bytes
+                { 2023, 313 * 1024 * 1024 }, // ~313 MB in bytes
+                { 2024, 314 * 1024 * 1024 }  // ~314 MB in bytes
+            };
+
+            // Get exact capacity for current season (rounded up to nearest MB)
+            int capacity = seasonCapacities.ContainsKey(season) ? seasonCapacities[season] : 318 * 1024 * 1024; // Default to largest if not found
+
+            StringBuilder seasonFileBuilder = new StringBuilder(capacity);
             string fullJson = "";
-            try
-            {
-                //seasonFileBuilder = new StringBuilder(630 * 1024 * 1024);
-                seasonFileBuilder = new StringBuilder(); // Default capacity
-            }
-            catch (OutOfMemoryException)
-            {
-                seasonFileBuilder = new StringBuilder(); // Default capacity
-            }
             Root root = null;
             try
             {
@@ -41,8 +51,7 @@ namespace NBAdbToolboxHistoric
                 for (int i = 0; i < iterations; i++)
                 {
                     string path = Path.Combine(filePath, $"{season}p{i}.json");
-                    // Use Task.Run to run synchronous File.ReadAllText on a background thread
-                    seasonFileBuilder.Append(await Task.Run(() => File.ReadAllText(path)));
+                    await Task.Run(() => seasonFileBuilder.Append(File.ReadAllText(path)));
                 }
             }
             catch (Exception ex)
@@ -51,33 +60,20 @@ namespace NBAdbToolboxHistoric
             }
             try
             {
-                LogMemory("Before fullJson = seasonFileBuilder.ToString");
+                LogMemory("Before converting to string");
                 fullJson = seasonFileBuilder.ToString();
-            }
+                seasonFileBuilder.Clear();
+                seasonFileBuilder.Capacity = 0;
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                LogMemory("After GC, before deserializing");
 
-            catch (OutOfMemoryException MemOut)
-            {
-                LogMemory("After failing to do fullJson = seasonFileBuilder.ToString");
-
-            }
-            try
-            {
                 await Task.Run(() => root = JsonConvert.DeserializeObject<Root>(fullJson));
+                fullJson = null;
             }
             catch (OutOfMemoryException MemOut)
             {
                 LogMemory("After failing to deserializing");
-
-            }
-            fullJson = "";
-            try
-            {
-                seasonFileBuilder.Clear(); // Free StringBuilder memory
-                                           //Parse the complete JSON in one operation
-            }
-            catch (OutOfMemoryException MemOut)
-            {
-                LogMemory("After clearing seasonFileBuilder");
             }
             return root;
         }

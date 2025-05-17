@@ -22,35 +22,36 @@ namespace NBAdbToolboxCurrentPBP
             string pbpLink = "https://cdn.nba.com/static/json/liveData/playbyplay/playbyplay_00" + GameID + ".json";
             string json = "";
             Root root = new Root();
+            if (season == 2019 && Missing2019Games.Contains(GameID))
+            {
+                return root;
+            }
             using (HttpClient client = new HttpClient())
             {
                 client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0");
-                client.Timeout = TimeSpan.FromSeconds(3);
-                if (Missing2019Games.Contains(GameID))
+                client.Timeout = TimeSpan.FromSeconds(3.5); 
+                try
                 {
-                    return root;
-                }
-                else
-                {
-                    try
+                    json = await client.GetStringAsync(pbpLink);
+                    if (season == 2019 && GameID == 21900777)
                     {
-                        json = await client.GetStringAsync(pbpLink);
                         json = json.Replace("None", "null");
-                        root = JsonConvert.DeserializeObject<Root>(json);
                     }
-                    catch (HttpRequestException ex)
-                    {
+                    root = JsonConvert.DeserializeObject<Root>(json);
+                }
+                catch (HttpRequestException ex)
+                {
 
-                    }
-                    catch (NullReferenceException nah)
-                    {
+                }
+                catch (NullReferenceException nah)
+                {
 
-                    }
-                    catch (TaskCanceledException thread)
-                    {
+                }
+                catch (TaskCanceledException thread)
+                {
 
-                    }
-                }                    
+                }
+                                  
             }
             return root;
         }

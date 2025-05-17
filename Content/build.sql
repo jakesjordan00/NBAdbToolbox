@@ -393,8 +393,9 @@ where type_desc = 'USER_TABLE'
 
 create procedure Seasons
 as
-select SeasonID, Games, PlayoffGames, HistoricLoaded, CurrentLoaded
-from Season
+select SeasonID, Games, PlayoffGames, HistoricLoaded, CurrentLoaded, (select count(p.SeasonID) Rows from PlayerBox p where p.seasonID = s.SeasonID) +
+(select count(p.SeasonID) Rows from PlayByPlay p where p.seasonID = s.SeasonID) PBPandBox
+from Season s
 order by SeasonID desc
 ~~~
 
@@ -682,6 +683,42 @@ delete from Official			where SeasonID = @SeasonID
 delete from Arena				where SeasonID = @SeasonID
 delete from Team				where SeasonID = @SeasonID
 ~~~
+
+create procedure DeleteSeasonData @season int
+AS
+BEGIN
+    set nocount on;  
+    delete from StartingLineups with (tablock) where SeasonID = @season;
+    delete from TeamBoxLineups with (tablock) where SeasonID = @season;
+    delete from PlayerBox with (tablock) where SeasonID = @season;
+    delete from TeamBox with (tablock) where SeasonID = @season;
+    delete from GameExt with (tablock) where SeasonID = @season;
+    delete from Game with (tablock) where SeasonID = @season;
+    delete from Player with (tablock) where SeasonID = @season;
+    delete from Official with (tablock) where SeasonID = @season;
+    delete from Arena with (tablock) where SeasonID = @season;
+    delete from Team with (tablock) where SeasonID = @season;
+    delete from util.MissingData with (tablock) where SeasonID = @season;
+    execute sp_MSforeachtable 'ALTER TABLE ? CHECK CONSTRAINT ALL';
+END
+~~~
+
+
+
+
+create procedure AlterTablesDeletePBP @season int
+as
+begin
+   set nocount on;   
+   exec sp_MSforeachtable 'alter table ? nocheck constraint all';   
+   delete top(210000) from PlayByPlay with (tablock) where SeasonID = @season;
+   delete top(210000) from PlayByPlay with (tablock) where SeasonID = @season;
+   delete top(210000) from PlayByPlay with (tablock) where SeasonID = @season;
+   delete top(210000) from PlayByPlay with (tablock) where SeasonID = @season;
+end
+~~~
+
+
 */
 
 

@@ -33,3 +33,6 @@ from Season p
 select r.SeasonID, sum(rows) Rows
 from RowCounts r
 group by r.SeasonID
+
+
+
