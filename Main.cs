@@ -609,15 +609,7 @@ namespace NBAdbToolbox
 
                                 UpdateLoadingImage(imageIteration);
                                 #endregion
-                                ImageDriver();
-                                int gamesLeft = TotalGames - iterator;
-                                double gamesPerSec = iterator / stopwatchInsert.Elapsed.TotalSeconds;
-                                double gamesPerMin = Math.Round(gamesPerSec * 60, 2);
-                                double estimatedSeconds = gamesLeft / gamesPerSec;
-                                TimeSpan timeRemaining = TimeSpan.FromSeconds(estimatedSeconds);
-                                string time = timeRemaining.ToString();
-                                time = time.Remove(time.Length - 3);
-                                gpmValue.Text = gamesPerMin + "\n" + time;
+                                PopulateDb_4_AfterHistoricGame();
                                 game.box = null;
                                 game.playByPlay = null;
                             }
@@ -635,7 +627,6 @@ namespace NBAdbToolbox
                                 {
                                     await InsertGameWithLoading(game, season, imageIteration, "Postseason");
                                 });
-                                //After Insert is complete, use multithreading to insert the bulk of our data - PlayByPlay, PlayerBox (+StartingLineups) and TeamBox (+TeamBoxLineups)
                                 #region Second Insert
                                 Task SecondInsert = Task.Run(async () =>
                                 {
@@ -681,15 +672,7 @@ namespace NBAdbToolbox
                                 UpdateLoadingImage(imageIteration);
 
                                 #endregion
-                                ImageDriver();
-                                int gamesLeft = TotalGames - iterator;
-                                double gamesPerSec = iterator / stopwatchInsert.Elapsed.TotalSeconds;
-                                double gamesPerMin = Math.Round(gamesPerSec * 60, 2);
-                                double estimatedSeconds = gamesLeft / gamesPerSec;
-                                TimeSpan timeRemaining = TimeSpan.FromSeconds(estimatedSeconds);
-                                string time = timeRemaining.ToString();
-                                time = time.Remove(time.Length - 3);
-                                gpmValue.Text = gamesPerMin + "\n" + time;
+                                PopulateDb_4_AfterHistoricGame();
                                 game.box = null;
                                 game.playByPlay = null;
                             }
@@ -702,14 +685,14 @@ namespace NBAdbToolbox
                         {
                             source = "Current";
                             current = 1;
-                            PopulateDb_4_BeforeCurrentRead();
+                            PopulateDb_5_BeforeCurrentRead();
                             await Task.Run(async () =>      //We need to read the big file to get our game list
                             {
                                 await ReadSeasonFile(popup.historic, popup.current);
                             });
-                            PopulateDb_5_AfterCurrentRead();
+                            PopulateDb_6_AfterCurrentRead();
                             await DeleteSeasonData;
-                            PopulateDb_6_AfterCurrentDelete();
+                            PopulateDb_7_AfterCurrentDelete();
 
 
                             for (int i = 0; i < RegularSeasonGames; i++)
@@ -721,7 +704,7 @@ namespace NBAdbToolbox
                                 await CurrentGameData(gamesRS[i], season, "");
                                 root.season.games.regularSeason[i].box = null;
                                 root.season.games.regularSeason[i].playByPlay = null;
-                                PopulateDb_7_AfterCurrentGame(gamesRS[i].ToString());
+                                PopulateDb_8_AfterCurrentGame(gamesRS[i].ToString());
                             }
                             for (int i = 0; i < PostseasonGames; i++)
                             {
@@ -733,7 +716,7 @@ namespace NBAdbToolbox
                                 await CurrentGameData(gamesPS[i], season, "");
                                 root.season.games.playoffs[i].box = null;
                                 root.season.games.playoffs[i].playByPlay = null;
-                                PopulateDb_7_AfterCurrentGame(gamesPS[i].ToString());
+                                PopulateDb_8_AfterCurrentGame(gamesPS[i].ToString());
                             }
                             sqlBuilder.Clear();
                             sqlBuilderParallel.Clear();
@@ -741,10 +724,10 @@ namespace NBAdbToolbox
                         }
                         #endregion
 
-                        PopulateDb_8_AfterSeasonInserts(buildID, current, historic, source, seasonIterator, selectedSeasons);
+                        PopulateDb_9_AfterSeasonInserts(buildID, current, historic, source, seasonIterator, selectedSeasons);
                         //int stop = gameBytes.Count;
                     }
-                    PopulateDb_9_Completion();
+                    PopulateDb_10_Completion();
 
                 }
             };
@@ -1069,10 +1052,22 @@ namespace NBAdbToolbox
             playByPlayBuilder.Clear();
 
         }
+        public void PopulateDb_4_AfterHistoricGame()
+        {
+            ImageDriver();
+            int gamesLeft = TotalGames - iterator;
+            double gamesPerSec = iterator / stopwatchInsert.Elapsed.TotalSeconds;
+            double gamesPerMin = Math.Round(gamesPerSec * 60, 2);
+            double estimatedSeconds = gamesLeft / gamesPerSec;
+            TimeSpan timeRemaining = TimeSpan.FromSeconds(estimatedSeconds);
+            string time = timeRemaining.ToString();
+            time = time.Remove(time.Length - 3);
+            gpmValue.Text = gamesPerMin + "\n" + time;
+        }
         #endregion
 
         #region Current
-        public void PopulateDb_4_BeforeCurrentRead()
+        public void PopulateDb_5_BeforeCurrentRead()
         {
             gamesRS = new List<int>();
             gamesPS = new List<int>();
@@ -1080,7 +1075,7 @@ namespace NBAdbToolbox
             lblSeasonStatusLoad.AutoSize = true;
             stopwatchRead.Restart();
         }
-        public void PopulateDb_5_AfterCurrentRead()
+        public void PopulateDb_6_AfterCurrentRead()
         {
             stopwatchRead.Stop();
             timeElapsedRead = stopwatchRead.Elapsed;
@@ -1124,7 +1119,7 @@ namespace NBAdbToolbox
                             "." //Height
                             }); //Hitting endpoints and inserting 
         }
-        public void PopulateDb_6_AfterCurrentDelete()
+        public void PopulateDb_7_AfterCurrentDelete()
         {
             stopwatchInsert.Restart();
             lblStatus.Text = "Loading " + SeasonID + "...";
@@ -1142,7 +1137,7 @@ namespace NBAdbToolbox
             "." //Height
             }); //Hitting endpoints and inserting
         }
-        public void PopulateDb_7_AfterCurrentGame(string currentGame)
+        public void PopulateDb_8_AfterCurrentGame(string currentGame)
         {
             UpdateLoadingImage(imageIteration);
             ImageDriver();
@@ -1157,7 +1152,7 @@ namespace NBAdbToolbox
             gpmValue.Text = gamesPerMin + "\n" + time;
 
         }
-        public void PopulateDb_8_AfterSeasonInserts(int BuildID, int current, int historic, string source, int seasonIterator, int selectedSeasons)
+        public void PopulateDb_9_AfterSeasonInserts(int BuildID, int current, int historic, string source, int seasonIterator, int selectedSeasons)
         {
             //Measures time taken to Read and Insert data, by season and in total
             #region All Time Tracking operations
@@ -1193,8 +1188,8 @@ namespace NBAdbToolbox
 
             #endregion
 
-            #region Build Log Insert                  
-            using(SqlConnection Main = new SqlConnection())
+            #region Build Log Insert
+            using(SqlConnection Main = new SqlConnection(cString))
             using (SqlCommand BuildLogInsert = new SqlCommand("BuildLogInsert", Main))
             {
                 BuildLogInsert.CommandType = CommandType.StoredProcedure;
@@ -1272,7 +1267,7 @@ namespace NBAdbToolbox
 
         #endregion
 
-        public void PopulateDb_9_Completion()
+        public void PopulateDb_10_Completion()
         {
             PlayCompletionSound("Run");
             #region Enable buttons and clear label text
