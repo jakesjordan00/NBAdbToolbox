@@ -24,17 +24,14 @@ namespace NBAdbToolboxCurrent
             string boxLink = "https://cdn.nba.com/static/json/liveData/boxscore/boxscore_00" + GameID + ".json";
             string json = "";
             Root root = new Root();
+            if (season == 2019 && Missing2019Games.Contains(GameID))
+            {
+                return root;
+            }
             using (HttpClient client = new HttpClient())
             {
                 client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0");
                 client.Timeout = TimeSpan.FromSeconds(3.5);
-                if (season == 2019)
-                {
-                    if (Missing2019Games.Contains(GameID))
-                    {
-                        return root;
-                    }
-                }
                 try
                 {
                     json = await client.GetStringAsync(boxLink);

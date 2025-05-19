@@ -341,7 +341,7 @@ insert into Season values(2020, 1610612749, 1080, 91, 0, 0)
 insert into Season values(2021, 1610612744, 1230, 93, 0, 0)
 insert into Season values(2022, 1610612743, 1230, 90, 0, 0)
 insert into Season values(2023, 1610612738, 1230, 88, 0, 0)
-insert into Season values(2024, null, 1230, 62, 0, 0)
+insert into Season values(2024, null, 1230, 71, 0, 0)
 ~~~
 
 create schema util
@@ -401,173 +401,11 @@ order by SeasonID desc
 
 
 
-create procedure TeamCheck @TeamID int, @SeasonID int
-as
-select TeamID
-from Team
-where TeamID = @TeamID and SeasonID = @SeasonID
-~~~
-
-
-create procedure TeamUpdate @TeamID int, @SeasonID int, @W int, @L int
-as
-update Team set Wins = @W, Losses = @L where TeamID = @teamID and SeasonID = @SeasonID
-~~~
-
-create procedure ArenaCheck @ArenaID int, @SeasonID int
-as
-select ArenaID, (select count(ArenaID) from Arena where SeasonID = @SeasonID) Arenas
-from Arena
-where ArenaID = @ArenaID and SeasonID = @SeasonID
-~~~
-
-
-create procedure OfficialCheck @OfficialID int, @SeasonID int
-as
-select OfficialID, (select count(OfficialID) from Official where SeasonID = @SeasonID) Officials
-from Official
-where OfficialID = @OfficialID and SeasonID = @SeasonID
-~~~
-
-
-
-create procedure PlayerCheck @PlayerID	int, @SeasonID int
-as
-select * from Player where PlayerID = @PlayerID and SeasonID = @SeasonID
-~~~
-
-create procedure PlayerUpdate 
-@SeasonID			int,
-@PlayerID			int,
-@Name				varchar(255),
-@Number				varchar(3),
-@Position			varchar(100)
-as
-update Player set Name = @Name, Number = @Number, Position = @Position
-where PlayerID = @PlayerID and SeasonID = @SeasonID
-~~~
-
-
-
-
-
-create procedure InactiveInsert
-@SeasonID			int,
-@PlayerID			int,
-@Name				varchar(255)
-as
-Insert into Player(SeasonID, PlayerID, Name) values(
-@SeasonID,
-@PlayerID,
-@Name)
-~~~
-
-create procedure GameCheck @SeasonID int, @GameID int
-as
-select *
-from Game g
-where g.SeasonID = @SeasonID and g.GameID = @GameID
-~~~
-
-
-create procedure GameUpdate @SeasonID int, @GameID int, @HomeID int, @AwayID int, @HScore int, @AScore int,
-@WinnerID int, @LoserID int, @WScore int, @LScore int
-as
-update Game set 
-HomeID = @HomeID, AwayID = @AwayID, HScore = @HScore, AScore = @AScore,
-WinnerID = @WinnerID, LoserID = @LoserID, WScore = @WScore, LScore = @LScore
-where GameID = @GameID and SeasonID = @SeasonID
-~~~
-
-create procedure TeamBoxCheck 
-@SeasonID      int,
-@GameID        int,
-@TeamID        int,
-@MatchupID     int
-as
-select SeasonID, GameID, TeamID, Points, PointsAgainst
-from TeamBox t
-where t.SeasonID = @SeasonID and t.GameID = @GameID and t.TeamID = @TeamID and t.MatchupID = @MatchupID
-~~~
-
-
-
-
-create procedure TeamBoxLineupCheck 
-@SeasonID      int,
-@GameID        int,
-@TeamID        int,
-@MatchupID     int,
-@Unit			varchar(30)
-as
-select SeasonID, GameID, TeamID, Unit, Points
-from TeamBoxLineups t
-where t.SeasonID = @SeasonID and t.GameID = @GameID and t.TeamID = @TeamID and t.MatchupID = @MatchupID and t.Unit = @Unit
-~~~
-
-create procedure PlayerBoxCheck 
-@SeasonID      int,
-@GameID        int,
-@TeamID        int,
-@MatchupID     int,
-@PlayerID      int
-as
-select SeasonID, GameID, TeamID, PlayerID, Minutes
-from PlayerBox p
-where p.SeasonID = @SeasonID and p.GameID = @GameID and p.TeamID = @TeamID and p.MatchupID = @MatchupID and p.PlayerID = @PlayerID
-~~~
-
-
-
-create procedure PlayerBoxUpdateHistoric 
-@SeasonID int, @GameID int, @TeamID int, @PlayerID int, @FGM int, @FGA int, @FGpct float, @FG2M int, @FG2A int, @FG2pct float, 
-@FG3M int, @FG3A int, @FG3pct float, @FTM int, @FTA int, @FTpct float, @RebD int, @RebO int, @RebT int, @Assists int, 
-@Turnovers int, @AtoR float, @Steals int, @Blocks int, @Points int, @FoulsPersonal int, @Minutes varchar(30)
-as
-update PlayerBox set 
-FGM					=	@FGM           ,
-FGA					=	@FGA           ,
-[FG%]				=	@FGpct         ,
-FG2M				=	@FG2M          ,
-FG2A				=	@FG2A          ,
-[FG2%]				=	@FG2pct        ,
-FG3M				=	@FG3M          ,
-FG3A				=	@FG3A          ,
-[FG3%]				=	@FG3pct        ,
-FTM					=	@FTM           ,
-FTA					=	@FTA           ,
-[FT%]				=	@FTpct         ,
-ReboundsDefensive   =	@RebD          ,
-ReboundsOffensive   =	@RebO          ,
-ReboundsTotal       =	@RebT          ,
-Assists				=	@Assists       ,
-Turnovers			=	@Turnovers     ,
-AssistsTurnoverRatio=	@AtoR          ,
-Steals				=	@Steals        ,
-Blocks				=	@Blocks        ,
-Points				=	@Points        ,
-FoulsPersonal		=	@FoulsPersonal ,
-Minutes				=	@Minutes
-where SeasonID = @SeasonID and GameID = @GameID and TeamID = @TeamID and PlayerID = @PlayerID
-~~~
-
-
-create procedure PlayByPlayCheckHistorical @SeasonID int, @GameID int
-as
-select p.SeasonID, p.GameID, count(p.GameID) Actions
-from PlayByPlay p
-where p.SeasonID = @SeasonID and p.GameID = @GameID
-group by p.SeasonID, p.GameID
-~~~
-
-
-
 create procedure BuildLogCheck
 as
 Select case when max(BuildID) is null then 1 else max(BuildID) + 1 end BuildID
 from util.BuildLog
 ~~~
-
 
 
 create procedure BuildLogInsert
@@ -635,24 +473,11 @@ values(
 @InsertTime, 
 @DatetimeStarted, 
 @DatetimeComplete,
-@Source)
-update Season set HistoricLoaded = 1 where SeasonID = @Season and @Historic = 1
-update Season set CurrentLoaded  = 1 where SeasonID = @Season and @Current = 1
+@Source);
+update Season set HistoricLoaded = 1 where SeasonID = @Season and @Historic = 1;
+update Season set CurrentLoaded  = 1 where SeasonID = @Season and @Current = 1;
+exec sp_msforeachtable 'alter table ? with check check constraint all';
 ~~~
-
-
-
-
-
-create procedure NewPlayerCheckHistorical @PlayerID int, @SeasonID int, @TeamID int, @GameID int	   
-as																									   
-select p.PlayerID, b.minutes, s.Position																 
-from Player p left join
-		PlayerBox b on p.PlayerID = b.PlayerID and p.SeasonID = b.SeasonID left join
-		StartingLineups s on b.PlayerID = s.PlayerID and b.GameID = s.GameID and b.TeamID = s.TeamID and b.MatchupID = s.MatchupID and b.SeasonID = s.SeasonID
-where p.PlayerID = @PlayerID and p.SeasonID = @SeasonID and ((b.GameID = @GameID and b.TeamID = @TeamID) or b.PlayerID is null or s.PlayerID is null)
-~~~
-
 
 create procedure PlayByPlayCleanup
 as
@@ -662,27 +487,6 @@ update PlayByPlay set OfficialID = PlayerID, PlayerID = null
 where PlayerID in((select distinct OfficialID from Official o where o.SeasonID = PlayByPlay.SeasonID))
 ~~~
 
-create procedure SelectGamesDeletePBP @Season int
-as
-select distinct GameID from Game where SeasonID = @Season 
-delete from PlayByPlay where SeasonID = @Season
-~~~
-
-create procedure DeleteBeforePopulate @SeasonID int
-as
-delete from util.MissingData	where SeasonID = @SeasonID
-delete from StartingLineups		where SeasonID = @SeasonID
-delete from TeamBoxLineups		where SeasonID = @SeasonID
-delete from PlayByPlay			where SeasonID = @SeasonID
-delete from PlayerBox			where SeasonID = @SeasonID
-delete from TeamBox				where SeasonID = @SeasonID
-delete from GameExt				where SeasonID = @SeasonID
-delete from Game				where SeasonID = @SeasonID
-delete from Player				where SeasonID = @SeasonID
-delete from Official			where SeasonID = @SeasonID
-delete from Arena				where SeasonID = @SeasonID
-delete from Team				where SeasonID = @SeasonID
-~~~
 
 create procedure DeleteSeasonData @season int
 AS
@@ -699,7 +503,6 @@ BEGIN
     delete from Arena with (tablock) where SeasonID = @season;
     delete from Team with (tablock) where SeasonID = @season;
     delete from util.MissingData with (tablock) where SeasonID = @season;
-    execute sp_MSforeachtable 'ALTER TABLE ? CHECK CONSTRAINT ALL';
 END
 ~~~
 
@@ -718,7 +521,21 @@ begin
 end
 ~~~
 
+create procedure TableKeysOff
+as
+begin
+   set nocount on;   
+   exec sp_MSforeachtable 'alter table ? nocheck constraint all';
+end
+~~~
 
+create procedure TableKeysOn
+as
+begin
+   set nocount on;   
+   execute sp_MSforeachtable 'alter table ? check constraint all';
+end
+~~~
 */
 
 

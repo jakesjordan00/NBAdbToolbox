@@ -30,9 +30,13 @@ union
 select p.SeasonID, concat('Season - ', Games + PlayoffGames) Rows, Games + PlayoffGames Rows
 from Season p
 )
-select r.SeasonID, sum(rows) Rows
+select *
 from RowCounts r
-group by r.SeasonID
+where r.SeasonID = 2022
 
 
 
+select SeasonID, Games, PlayoffGames, HistoricLoaded, CurrentLoaded, (select count(p.SeasonID) Rows from PlayerBox p where p.seasonID = s.SeasonID) +
+(select count(p.SeasonID) Rows from PlayByPlay p where p.seasonID = s.SeasonID) PBPandBox
+from Season s
+order by SeasonID desc
