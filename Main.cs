@@ -675,6 +675,10 @@ namespace NBAdbToolbox
                                 PopulateDb_4_AfterHistoricGame();
                                 game.box = null;
                                 game.playByPlay = null;
+                                if(iterator == TotalGames)
+                                {
+                                    await SecondInsert;
+                                }
                             }
                             root.season.games.playoffs = null;
                         }
@@ -697,9 +701,6 @@ namespace NBAdbToolbox
 
                             for (int i = 0; i < RegularSeasonGames; i++)
                             {
-                                sqlBuilder.Clear();
-                                sqlBuilderParallel.Clear();
-                                playByPlayBuilder.Clear();
                                 GameID = gamesRS[i];
                                 await CurrentGameData(gamesRS[i], season, "");
                                 root.season.games.regularSeason[i].box = null;
@@ -708,9 +709,6 @@ namespace NBAdbToolbox
                             }
                             for (int i = 0; i < PostseasonGames; i++)
                             {
-                                sqlBuilder.Clear();
-                                sqlBuilderParallel.Clear();
-                                playByPlayBuilder.Clear();
                                 GameID = gamesPS[i];
                                 lblCurrentGameCount.Text = gamesPS[i].ToString();
                                 await CurrentGameData(gamesPS[i], season, "");
@@ -1650,6 +1648,7 @@ namespace NBAdbToolbox
                     }
                     catch (SqlException ex)
                     {
+
                     }
                     conn.Close();
                 }
@@ -2040,7 +2039,7 @@ namespace NBAdbToolbox
             {
                 imageIteration++;
             }
-            if (imageIteration == 23)
+            if (imageIteration == 22)
             {
                 reverse = true;
             }
@@ -2316,7 +2315,6 @@ namespace NBAdbToolbox
                         AllInOneInsert.CommandType = CommandType.Text;
                         bigInserts.Open();
                         AllInOneInsert.ExecuteNonQuery();
-                        bigInserts.Dispose();
                     }
                 }
             }
@@ -3556,20 +3554,17 @@ namespace NBAdbToolbox
         #region Current Data StringBuilder Update 5.17
         public async Task CurrentDataDriver(NBAdbToolboxCurrent.Game game) //Replacing CurrentInsertStaging
         {
-            sqlBuilderParallel.Clear();
             foreach (NBAdbToolboxCurrent.Team team in new[] { game.homeTeam, game.awayTeam })
             {
                 int MatchupID = (team == game.homeTeam) ? game.awayTeam.teamId : game.homeTeam.teamId;
                 CurrentTeamBox(team, MatchupID);
                 InitiateCurrentPlayerBox(game, team, MatchupID);
             }
-            sqlBuilder.Clear();
             if (!currentTeamsDone)
             {
                 InitiateCurrentTeam(game);
             }
-            if (!arenaList.Contains((SeasonID, game.arena.arenaId)))
-            {
+            if (!arenaList.Contains((SeasonID, game.arena.arenaId)))            {
                 arenaList.Add((SeasonID, game.arena.arenaId));
                 CurrentArena(game.arena, game.homeTeam.teamId);
             }
@@ -3599,13 +3594,20 @@ namespace NBAdbToolbox
         {
             if (sqlStringBuilder.Length == 0)
                 return;
-
-            using (SqlConnection connection = new SqlConnection(cString))
-            using (SqlCommand insert = new SqlCommand("set nocount on;\n" + sqlStringBuilder.ToString(), connection))
+            try
             {
-                insert.CommandType = CommandType.Text;
-                connection.Open();
-                insert.ExecuteNonQuery();
+                string inserts = sqlStringBuilder.ToString();
+                using (SqlConnection connection = new SqlConnection(cString))
+                using (SqlCommand insert = new SqlCommand("set nocount on;\n" + inserts, connection))
+                {
+                    insert.CommandType = CommandType.Text;
+                    connection.Open();
+                    insert.ExecuteNonQuery();
+                }
+            }
+            catch
+            {
+
             }
         }
 
@@ -4061,18 +4063,24 @@ namespace NBAdbToolbox
                 CurrentPlayByPlay(action, Int32.Parse(game.gameId), i);
                 i++;
             }
-            CurrentDataInsert(playByPlayBuilder);
-            // Execute SQL directly (no Task.Run)
-            string pbpSql = "set nocount on;\n" + playByPlayBuilder.ToString();
-            playByPlayBuilder.Clear();
-
-            using (SqlConnection insertPBP = new SqlConnection(cString))
-            using (SqlCommand PBPInsert = new SqlCommand(pbpSql, insertPBP))
+            //CurrentDataInsert(playByPlayBuilder);
+            try
             {
-                PBPInsert.CommandType = CommandType.Text;
-                insertPBP.Open();
-                PBPInsert.ExecuteNonQuery();
+                string inserts = playByPlayBuilder.ToString();
+                playByPlayBuilder.Clear();
+                using (SqlConnection connection = new SqlConnection(cString))
+                using (SqlCommand insert = new SqlCommand("set nocount on;\n" + inserts, connection))
+                {
+                    insert.CommandType = CommandType.Text;
+                    connection.Open();
+                    insert.ExecuteNonQuery();
+                }
             }
+            catch
+            {
+
+            }
+            // Execute SQL directly (no Task.Run)
         }
         public void CurrentPlayByPlay(NBAdbToolboxCurrentPBP.Action action, int GameID, int iteration)
         {

@@ -58,15 +58,12 @@ namespace NBAdbToolboxHistoric
             {
                 Console.WriteLine($"Error reading season {season}: {ex.Message}");
             }
+            fullJson = seasonFileBuilder.ToString();
+            seasonFileBuilder.Clear();
+            seasonFileBuilder.Capacity = 0;
             try
             {
                 LogMemory("Before converting to string");
-                fullJson = seasonFileBuilder.ToString();
-                seasonFileBuilder.Clear();
-                seasonFileBuilder.Capacity = 0;
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-                LogMemory("After GC, before deserializing");
 
                 await Task.Run(() => root = JsonConvert.DeserializeObject<Root>(fullJson));
                 fullJson = null;
