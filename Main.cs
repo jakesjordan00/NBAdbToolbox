@@ -4169,48 +4169,57 @@ namespace NBAdbToolbox
                 CurrentPlayByPlay(action, Int32.Parse(game.gameId), i);
                 i++;
             }
-            string insertRetry = "";
-            Task DoPbp = Task.Run(() =>
+            Task DoPbp = Task.Run(async () =>
             {
+                int retryAttempts = 3;
+                int currentAttempt = 0;
+                bool success = false;
                 string inserts = playByPlayBuilder.ToString();
                 playByPlayBuilder.Clear();
-                try
+
+                while (!success && currentAttempt < retryAttempts)
                 {
-                    using (SqlConnection connection = new SqlConnection(cString))
-                    using (SqlCommand insert = new SqlCommand("set nocount on;\n" + inserts, connection))
+                    try
                     {
-                        insert.CommandType = CommandType.Text;
-                        connection.Open();
-                        insert.ExecuteNonQuery();
+                        currentAttempt++;
+                        using (SqlConnection connection = new SqlConnection(cString))
+                        using (SqlCommand insert = new SqlCommand("set nocount on;\n" + inserts, connection))
+                        {
+                            insert.CommandType = CommandType.Text;
+                            insert.CommandTimeout = 120; // 2 minutes
+                            connection.Open();
+                            insert.ExecuteNonQuery();
+                            success = true;
+                        }
                     }
-                }
-                catch (Exception e)
-                {
-                    ErrorOutput(e);
-                    i = 0;
-                    insertRetry = inserts;
+                    catch (SqlException ex) when (ex.Number == 1205) // Deadlock victim error code
+                    {
+                        Console.WriteLine($"Deadlock detected (attempt {currentAttempt}/{retryAttempts}): {ex.Message}");
+                        // Wait a bit before retrying to allow other transactions to complete
+                        await Task.Delay(500 * currentAttempt);
+                    }
+                    catch (Exception e)
+                    {
+                        ErrorOutput(e);
+                        if (currentAttempt < retryAttempts)
+                        {
+                            // For other exceptions, also retry but log the error
+                            Console.WriteLine($"Error in DoPbp (attempt {currentAttempt}/{retryAttempts}): {e.Message}");
+                            await Task.Delay(500 * currentAttempt);
+                        }
+                        else
+                        {
+                            // Final error handling for when all retries have failed
+                            i = 0;
+                        }
+                    }
                 }
             });
-            if((iterator == TotalGames || iterator == TotalGames - 1) && i == 0)
+
+            if (iterator == TotalGames || (iterator == TotalGames - 1 && i == 0))
             {
                 await DoPbp;
-                try
-                {
-                    using (SqlConnection connection = new SqlConnection(cString))
-                    using (SqlCommand insert = new SqlCommand("set nocount on;\n" + insertRetry, connection))
-                    {
-                        insert.CommandType = CommandType.Text;
-                        connection.Open();
-                        insert.ExecuteNonQuery();
-                    }
-                }
-                catch (Exception e)
-                {
-                    ErrorOutput(e);
-                }
-
             }
-            // Execute SQL directly (no Task.Run)
         }
         public void CurrentPlayByPlay(NBAdbToolboxCurrentPBP.Action action, int GameID, int iteration)
         {

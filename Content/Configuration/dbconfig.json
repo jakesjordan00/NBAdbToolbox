@@ -1,9 +1,9 @@
 {
   "Server": "DESKTOP-F7FN836",
   "Alias": "Home",
-  "Create": false,
+  "Create": true,
   "UseWindowsAuth": true,
-  "Database": "NBAadb_0520DefLast",
+  "Database": "KawhiDB_0521_Def2",
   "Username": null,
   "Password": null
 }
