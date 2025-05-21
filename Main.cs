@@ -702,7 +702,7 @@ namespace NBAdbToolbox
                             for (int i = 0; i < RegularSeasonGames; i++)
                             {
                                 GameID = gamesRS[i];
-                                await CurrentGameData(gamesRS[i], season, "");
+                                await CurrentGameGPS(gamesRS[i], "");
                                 root.season.games.regularSeason[i].box = null;
                                 root.season.games.regularSeason[i].playByPlay = null;
                                 PopulateDb_8_AfterCurrentGame(gamesRS[i].ToString());
@@ -711,7 +711,7 @@ namespace NBAdbToolbox
                             {
                                 GameID = gamesPS[i];
                                 lblCurrentGameCount.Text = gamesPS[i].ToString();
-                                await CurrentGameData(gamesPS[i], season, "");
+                                await CurrentGameGPS(gamesPS[i], "");
                                 root.season.games.playoffs[i].box = null;
                                 root.season.games.playoffs[i].playByPlay = null;
                                 PopulateDb_8_AfterCurrentGame(gamesPS[i].ToString());
@@ -1908,9 +1908,6 @@ namespace NBAdbToolbox
             gameBytes.Add((GameID, builder, mb, len));
 
         }
-
-
-
         private void FormResize(object sender, EventArgs e)
         {
             //Maintain aspect ratio when user finishes resizing
@@ -2099,6 +2096,33 @@ namespace NBAdbToolbox
             }
         }
 
+        public void ErrorOutput(Exception e)
+        {
+            var st = new System.Diagnostics.StackTrace(e, true);
+            var frame = st.GetFrame(0); // Get the top stack frame where the exception occurred
+
+            // Output file name, method name, and line number
+            if (frame != null)
+            {
+                string fileName = frame.GetFileName();
+                int lineNumber = frame.GetFileLineNumber();
+                string methodName = frame.GetMethod().Name;
+
+                Console.WriteLine($"Exception in file: {fileName}");
+                Console.WriteLine($"Method: {methodName}");
+                Console.WriteLine($"Line: {lineNumber}");
+            }
+
+            Console.WriteLine($"Error message: {e.Message}");
+            Console.WriteLine($"Stack trace: {e.StackTrace}");
+
+            // If there's an inner exception, show that too
+            if (e.InnerException != null)
+            {
+                Console.WriteLine($"Inner exception: {e.InnerException.Message}");
+            }
+
+        }
 
 
         public void ControlOnClick(Control control, Label growShrink, Control parent)
@@ -3423,7 +3447,7 @@ namespace NBAdbToolbox
         public string seriesIDfirst7 = "";
         #endregion
         public int currentGame = 0;
-        public async Task CurrentGameData(int GameID, int season, string sender)
+        public async Task CurrentGameData(int GameID, string sender)
         {
             bool doBox = true;
             bool doPBP = true;
@@ -3438,7 +3462,7 @@ namespace NBAdbToolbox
             #region Try to get Current Data
             try
             {
-                rootCPBP = await currentDataPBP.GetJSON(GameID, season);
+                rootCPBP = await currentDataPBP.GetJSON(GameID, SeasonID);
                 if (rootCPBP.game == null)
                 {
                     doPBP = false;
@@ -3455,7 +3479,7 @@ namespace NBAdbToolbox
 
             try
             {
-                rootC = await currentData.GetJSON(GameID, season);
+                rootC = await currentData.GetJSON(GameID, SeasonID);
                 if (rootC.game == null)
                 {
                     doBox = false;
@@ -3472,34 +3496,38 @@ namespace NBAdbToolbox
             #endregion
             //If it's available, get Boxscore endpoint data ready
             #region Box endpoint data collection
-            if (doBox)
+            Task DoBox = Task.Run(() =>
             {
-                _ = Task.Run(() =>
+                if (doBox)
                 {
                     try
                     {
                         //CurrentInsertStaging(rootC.game, season);
                         CurrentDataDriver(rootC.game);
                     }
-                    catch
+                    catch (Exception e)
                     {
                         useHistoricBox = true;
                         missingNote = "'JSON file formatting - NBA pls fix')\n";
+                        ErrorOutput(e);
                     }
-                });
-            }
-            else
+                }
+                else
+                {
+                    missingData += "insert into util.MissingData values(" + SeasonID + ", " + GameID + ", 'Current', 'Box', " + missingNote + "\n";
+                }
+            });
+            if (iterator == TotalGames)
             {
-                missingData += "insert into util.MissingData values(" + season + ", " + GameID + ", 'Current', 'Box', " + missingNote + "\n";
+                await DoBox;
             }
             #endregion
 
-
             //If it's available, get PlayByPlay endpoint data ready
             #region PlayByPlay endpoint data collection
-            if (doPBP)
+            Task DoPbp = Task.Run(() =>
             {
-                _ = Task.Run(() =>
+                if (doPBP)
                 {
                     try
                     {
@@ -3510,11 +3538,15 @@ namespace NBAdbToolbox
                         useHistoricPBP = true;
                         missingNote = "'JSON file formatting - NBA pls fix')\n";
                     }
-                });
-            }
-            else
+                }
+                else
+                {
+                    missingData += "insert into util.MissingData values(" + SeasonID + ", " + GameID + ", 'Current', 'PlayByPlay', " + missingNote + "\n";
+                }
+            });
+            if (iterator == TotalGames)
             {
-                missingData += "insert into util.MissingData values(" + season + ", " + GameID + ", 'Current', 'PlayByPlay', " + missingNote + "\n";
+                await DoPbp;
             }
             #endregion
 
@@ -3538,21 +3570,94 @@ namespace NBAdbToolbox
                 {
                     game = root.season.games.playoffs.FirstOrDefault(g => Int32.Parse(g.game_id) == GameID);
                 }
-                GetMissingGameDetails(game, missingInstructions);
+                GetMissingDataDetails(game, missingInstructions);
             }
             #endregion
         }
 
         public StringBuilder sqlBuilderParallel = new StringBuilder(220 * 1024); //Start with roughly .225 MB initial capacity
-
-
         #endregion
 
 
-
-
         #region Current Data StringBuilder Update 5.17
-        public async Task CurrentDataDriver(NBAdbToolboxCurrent.Game game) //Replacing CurrentInsertStaging
+        public async Task CurrentGameGPS(int GameID, string sender)
+        {
+            bool doBox = true;
+            bool doPBP = true;
+            bool useHistoricBox = false;
+            bool useHistoricPBP = false;
+            string missingNote = "";
+            missingData = "";
+            //Try to get Current Data
+            #region Try to get Current Data
+            rootCPBP = await currentDataPBP.GetJSON(GameID, SeasonID);
+            if (rootCPBP.game == null)
+            {
+                doPBP = false;
+                useHistoricPBP = true;
+                missingNote = "'No file available from NBA')\n";
+            }
+            rootC = await currentData.GetJSON(GameID, SeasonID);
+            if (rootC.game == null)
+            {
+                doBox = false;
+                useHistoricBox = true;
+                missingNote = "'No file available from NBA')\n";
+            }
+            #endregion
+
+            //If it's available, get Boxscore endpoint data ready
+            #region Box endpoint data collection
+            if (doBox)
+            {
+                try
+                {
+                    //CurrentInsertStaging(rootC.game, season);
+                    CurrentDataDriver(rootC.game);
+                }
+                catch (Exception e)
+                {
+                    useHistoricBox = true;
+                    missingNote = "'JSON file formatting - NBA pls fix')\n";
+                    ErrorOutput(e);
+                }
+            }
+            else
+            {
+                missingData += "insert into util.MissingData values(" + SeasonID + ", " + GameID + ", 'Current', 'Box', " + missingNote + "\n";
+            }
+            #endregion
+
+            //If it's available, get PlayByPlay endpoint data ready
+            #region PlayByPlay endpoint data collection
+            if (doPBP)
+            {
+                try
+                {
+                    InitiateCurrentPlayByPlay(rootCPBP.game);
+                }
+                catch (Exception e)
+                {
+                    useHistoricPBP = true;
+                    missingNote = "'JSON file formatting - NBA pls fix')\n";
+                    ErrorOutput(e);
+                }
+            }
+            else
+            {
+                missingData += "insert into util.MissingData values(" + SeasonID + ", " + GameID + ", 'Current', 'PlayByPlay', " + missingNote + "\n";
+            }
+            #endregion
+
+            #region Getting historic Data for missing data
+
+            if (useHistoricBox || useHistoricPBP)
+            {
+                MissingDataGPS(useHistoricBox, useHistoricPBP);
+            }
+            #endregion
+        }
+        public void CurrentDataDriver(NBAdbToolboxCurrent.Game game) //Replacing CurrentInsertStaging
         {
             foreach (NBAdbToolboxCurrent.Team team in new[] { game.homeTeam, game.awayTeam })
             {
@@ -3564,7 +3669,7 @@ namespace NBAdbToolbox
             {
                 InitiateCurrentTeam(game);
             }
-            if (!arenaList.Contains((SeasonID, game.arena.arenaId)))            {
+            if (!arenaList.Contains((SeasonID, game.arena.arenaId))){
                 arenaList.Add((SeasonID, game.arena.arenaId));
                 CurrentArena(game.arena, game.homeTeam.teamId);
             }
@@ -3588,6 +3693,7 @@ namespace NBAdbToolbox
             sqlBuilder.Append("\n").Append(sqlBuilderParallel.ToString());
             sqlBuilderParallel.Clear();
             CurrentDataInsert(sqlBuilder);
+            
             sqlBuilder.Clear();
         }
         public void CurrentDataInsert(StringBuilder sqlStringBuilder)
@@ -3605,9 +3711,9 @@ namespace NBAdbToolbox
                     insert.ExecuteNonQuery();
                 }
             }
-            catch
+            catch(Exception e) 
             {
-
+                ErrorOutput(e);
             }
         }
 
@@ -4053,7 +4159,7 @@ namespace NBAdbToolbox
         #endregion
 
         #region PlayByPlay
-        public void InitiateCurrentPlayByPlay(NBAdbToolboxCurrentPBP.Game game)
+        public async Task InitiateCurrentPlayByPlay(NBAdbToolboxCurrentPBP.Game game)
         {
             int i = 1;
 
@@ -4063,21 +4169,45 @@ namespace NBAdbToolbox
                 CurrentPlayByPlay(action, Int32.Parse(game.gameId), i);
                 i++;
             }
-            //CurrentDataInsert(playByPlayBuilder);
-            try
+            string insertRetry = "";
+            Task DoPbp = Task.Run(() =>
             {
                 string inserts = playByPlayBuilder.ToString();
                 playByPlayBuilder.Clear();
-                using (SqlConnection connection = new SqlConnection(cString))
-                using (SqlCommand insert = new SqlCommand("set nocount on;\n" + inserts, connection))
+                try
                 {
-                    insert.CommandType = CommandType.Text;
-                    connection.Open();
-                    insert.ExecuteNonQuery();
+                    using (SqlConnection connection = new SqlConnection(cString))
+                    using (SqlCommand insert = new SqlCommand("set nocount on;\n" + inserts, connection))
+                    {
+                        insert.CommandType = CommandType.Text;
+                        connection.Open();
+                        insert.ExecuteNonQuery();
+                    }
                 }
-            }
-            catch
+                catch (Exception e)
+                {
+                    ErrorOutput(e);
+                    i = 0;
+                    insertRetry = inserts;
+                }
+            });
+            if((iterator == TotalGames || iterator == TotalGames - 1) && i == 0)
             {
+                await DoPbp;
+                try
+                {
+                    using (SqlConnection connection = new SqlConnection(cString))
+                    using (SqlCommand insert = new SqlCommand("set nocount on;\n" + insertRetry, connection))
+                    {
+                        insert.CommandType = CommandType.Text;
+                        connection.Open();
+                        insert.ExecuteNonQuery();
+                    }
+                }
+                catch (Exception e)
+                {
+                    ErrorOutput(e);
+                }
 
             }
             // Execute SQL directly (no Task.Run)
@@ -4302,7 +4432,33 @@ namespace NBAdbToolbox
 
         //If Current Data is Missing, use Historic Data
         #region Missing Data Inserts
-        public void GetMissingGameDetails(NBAdbToolboxHistoric.Game game, string sender)
+
+        public void MissingDataGPS(bool box, bool pbp)
+        {
+            string missingInstructions = "";
+            if (box)
+            {
+                missingInstructions += "Box";
+            }
+            if (pbp)
+            {
+                missingInstructions += " PlayByPlay";
+            }
+            if (box || pbp)
+            {
+                NBAdbToolboxHistoric.Game game = null;
+                if (GameID.ToString().Substring(0, 1) == "2")
+                {
+                    game = root.season.games.regularSeason.FirstOrDefault(g => Int32.Parse(g.game_id) == GameID);
+                }
+                else
+                {
+                    game = root.season.games.playoffs.FirstOrDefault(g => Int32.Parse(g.game_id) == GameID);
+                }
+                GetMissingDataDetails(game, missingInstructions);
+            }
+        }
+        public void GetMissingDataDetails(NBAdbToolboxHistoric.Game game, string sender)
         {
 
             string allInOne = "";
@@ -4350,32 +4506,25 @@ namespace NBAdbToolbox
             missingData = "";
             allInOne = "";
             SqlConnection bigInserts = new SqlConnection(cString);
-
-            //_ = Task.Run(() =>
-            //{
-                try
+            try
+            {
+                using (bigInserts)
                 {
-                    using (bigInserts)
+                    using (SqlCommand AllInOneInsert = new SqlCommand(hitDb))
                     {
-                        using (SqlCommand AllInOneInsert = new SqlCommand(hitDb))
-                        {
-                            AllInOneInsert.Connection = bigInserts;
-                            AllInOneInsert.CommandType = CommandType.Text;
-                            bigInserts.Open();
-                            AllInOneInsert.ExecuteNonQuery();
-                            bigInserts.Close();
-                        }
+                        AllInOneInsert.Connection = bigInserts;
+                        AllInOneInsert.CommandType = CommandType.Text;
+                        bigInserts.Open();
+                        AllInOneInsert.ExecuteNonQuery();
+                        bigInserts.Close();
                     }
                 }
-                catch (Exception e)
-                {
-
-                }
-            //});
+            }
+            catch (Exception e)
+            {
+                ErrorOutput(e);
+            }
         }
         #endregion
-
-
-
     }
 }

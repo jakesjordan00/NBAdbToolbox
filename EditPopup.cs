@@ -48,15 +48,15 @@ namespace NBAdbToolbox
             TextBox txtAlias = new TextBox() { Text = initialAlias, Left = 20, Top = top + 20, Width = 240 };
             top += spacing + 20;
 
-            // Create DB
-            CheckBox chkCreateDb = new CheckBox() { Text = "Create Database?", Left = 20, Top = top, AutoSize = true };
-            chkCreateDb.Checked = !fileExists || initialCreateDb == true;
-            top += (int)(this.Height * .1);
-
             // Database
             Label lblDatabase = new Label() { Text = "Database:", Left = 20, Top = top, AutoSize = true };
             TextBox txtDatabase = new TextBox() { Text = initialDb, Left = 20, Top = top + 20, Width = 240 };
             top += spacing + 20;
+
+            // Create DB
+            CheckBox chkCreateDb = new CheckBox() { Text = "Create Database?", Left = 20, Top = top, AutoSize = true };
+            chkCreateDb.Checked = !fileExists || initialCreateDb == true;
+            top += (int)(this.Height * .1);
 
             // Windows Auth
             CheckBox chkWindowsAuth = new CheckBox() { Text = "Use Windows Authentication", Left = 20, Top = top, AutoSize = true };
@@ -114,8 +114,8 @@ namespace NBAdbToolbox
             {
                 lblReq,lblServer, txtServer,
                 lblAlias, txtAlias,
-                chkCreateDb,
                 lblDatabase, txtDatabase,
+                chkCreateDb,
                 chkWindowsAuth,
                 lblUsername, txtUsername,
                 lblPassword, txtPassword,

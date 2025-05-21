@@ -54,9 +54,10 @@ namespace NBAdbToolboxHistoric
                     await Task.Run(() => seasonFileBuilder.Append(File.ReadAllText(path)));
                 }
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                Console.WriteLine($"Error reading season {season}: {ex.Message}");
+                ErrorOutput(e);
+                Console.WriteLine($"Error reading season {season}: {e.Message}");
             }
             fullJson = seasonFileBuilder.ToString();
             seasonFileBuilder.Clear();
@@ -70,6 +71,7 @@ namespace NBAdbToolboxHistoric
             }
             catch (OutOfMemoryException MemOut)
             {
+                ErrorOutput(MemOut);
                 LogMemory("After failing to deserializing");
             }
             return root;
@@ -126,6 +128,34 @@ namespace NBAdbToolboxHistoric
 
             Console.WriteLine();
         }
+        public void ErrorOutput(Exception e)
+        {
+            var st = new System.Diagnostics.StackTrace(e, true);
+            var frame = st.GetFrame(0); // Get the top stack frame where the exception occurred
+
+            // Output file name, method name, and line number
+            if (frame != null)
+            {
+                string fileName = frame.GetFileName();
+                int lineNumber = frame.GetFileLineNumber();
+                string methodName = frame.GetMethod().Name;
+
+                Console.WriteLine($"Exception in file: {fileName}");
+                Console.WriteLine($"Method: {methodName}");
+                Console.WriteLine($"Line: {lineNumber}");
+            }
+
+            Console.WriteLine($"Error message: {e.Message}");
+            Console.WriteLine($"Stack trace: {e.StackTrace}");
+
+            // If there's an inner exception, show that too
+            if (e.InnerException != null)
+            {
+                Console.WriteLine($"Inner exception: {e.InnerException.Message}");
+            }
+
+        }
+
     }
 
 
