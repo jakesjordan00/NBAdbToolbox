@@ -22,9 +22,11 @@ using System.Runtime.ConstrainedExecution;
 using NBAdbToolboxHistoric;
 using NBAdbToolboxCurrent;
 using NBAdbToolboxCurrentPBP;
+using NBAdbToolboxSchedule;
 using System.Media;
 using System.Runtime.InteropServices;
 using System.Collections;
+using System.Runtime;
 
 namespace NBAdbToolbox
 {
@@ -34,21 +36,20 @@ namespace NBAdbToolbox
         NBAdbToolboxHistoric.Root root = new NBAdbToolboxHistoric.Root();
         NBAdbToolboxCurrent.Root rootC = new NBAdbToolboxCurrent.Root();
         NBAdbToolboxCurrentPBP.Root rootCPBP = new NBAdbToolboxCurrentPBP.Root();
-        //Determine whether or not we have a connection to the Database in dbconfig file
-        public bool dbConnection = false;
-        //File path for project
-        static string projectRoot = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\.."));
-        //dbconfig file
-        string configPath = Path.Combine(projectRoot, @"Content\Configuration", "dbconfig.json");
-        private DbConfig config;
-        //Screen size/Display variables
-        public int screenWidth = Screen.PrimaryScreen.WorkingArea.Width;
+        NBAdbToolboxSchedule.ScheduleLeagueV2 schedule = new NBAdbToolboxSchedule.ScheduleLeagueV2();
+        public bool dbConnection = false; //Determine whether or not we have a connection to the Database in dbconfig file
+        public bool isConnected = false; //Server Connection status variable
+        static string projectRoot = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..")); //File path for project        
+        string configPath = Path.Combine(projectRoot, @"Content\Configuration", "dbconfig.json"); //dbconfig file
+        private DbConfig config;        
+        public int screenWidth = Screen.PrimaryScreen.WorkingArea.Width; //Screen size/Display variables
         public int screenHeight = Screen.PrimaryScreen.WorkingArea.Height;
 
         //Connection String items
         public static string cString = "";
-        public SqlConnectionStringBuilder bob = new SqlConnectionStringBuilder();  //This builds connection string
+        public SqlConnectionStringBuilder bob = new SqlConnectionStringBuilder();
         public SqlConnection SQLdb = new SqlConnection(cString);
+
 
         //SQL building items
         public static string buildFile = File.ReadAllText(Path.Combine(projectRoot, "Content", "build.sql"));   //Creates tables
@@ -76,9 +77,13 @@ namespace NBAdbToolbox
             public Button btnBuild = new Button();     //Build Database
             public PictureBox picStatus = new PictureBox();//Connection string icon
             public PictureBox picDbStatus = new PictureBox();//Db Status icon
-            #endregion
-            #region Variables
-            #endregion
+
+
+        public Label lblSettings = new Label();
+        public PictureBox picSettings = new PictureBox();//Db Status icon
+        #endregion
+        #region Variables
+        #endregion
 
 
         #endregion
@@ -102,7 +107,6 @@ namespace NBAdbToolbox
         #endregion
 
 
-            //test
 
         #region PnlLoad
         public Panel pnlLoad = new Panel();
@@ -154,18 +158,27 @@ namespace NBAdbToolbox
                 SizeMode = PictureBoxSizeMode.Zoom,
                 BackColor = Color.Transparent
             };
-            #endregion
-            #region Variables
-
-            #endregion
+        #endregion
 
         #endregion
 
 
 
+        #region Time Tracking
+        public Stopwatch stopwatchInsert = new Stopwatch();
+        public Stopwatch stopwatchRead = new Stopwatch();
+        public Stopwatch stopwatchAlterDelete = new Stopwatch();
+        public TimeSpan timeElapsedRead = new TimeSpan(0);
+        public string elapsedStringRead = "";
+        public Stopwatch stopwatch;
+        public DateTime start = DateTime.Now;
+        public Dictionary<string, (int, string)> timeUnitsRead = new Dictionary<string, (int value, string sep)>();
+        Stopwatch stopwatchFull = Stopwatch.StartNew();
+        DateTime startFull = DateTime.Now;
+
+        #endregion
 
 
-        
         //pnlDbUtil sub panel Positions and sizes
         public int leftPanelPos = 0;
         public int midPanelPos = 0;
@@ -180,6 +193,8 @@ namespace NBAdbToolbox
         public static DataHistoric historic = new DataHistoric();
         public static DataCurrent currentData = new DataCurrent();
         public static DataCurrentPBP currentDataPBP = new DataCurrentPBP();
+        public static Schedule leagueSchedule = new Schedule();
+        public static List<NBAdbToolboxSchedule.Game> scheduleGames = new List<NBAdbToolboxSchedule.Game>();
         public float loadFontSize = 0;
         public string completionMessage = "";
 
@@ -211,12 +226,6 @@ namespace NBAdbToolbox
         public HashSet<(int, (int, int, int, int, int))> seasonInfo = new HashSet<(int, (int, int, int, int, int))>();
 
 
-        public Stopwatch stopwatchInsert = new Stopwatch();
-        public Stopwatch stopwatchRead = new Stopwatch();
-        public TimeSpan timeElapsedRead = new TimeSpan(0);
-        public string elapsedStringRead = "";
-
-        public Stopwatch stopwatchAlterDelete = new Stopwatch();
 
 
         public int currentImageIterator = 0;
@@ -224,13 +233,9 @@ namespace NBAdbToolbox
         public string currentBoxUpdate = "";
 
 
-        private Dictionary<int, Bitmap> _imageCache = new Dictionary<int, Bitmap>();
-        private int _currentLoadedImage = -1; // Track which image is currently displayed
-
 
 
         public string json = "";
-        public bool isConnected = false; //Server Connection status variable
         PictureBox bgCourt = new PictureBox //Create Background image
         {
             Image = Image.FromFile(Path.Combine(projectRoot, @"Content\Images", "Court V2.png")),
@@ -246,20 +251,24 @@ namespace NBAdbToolbox
         public int iterator = 0;
         public bool reverse = false;
         #endregion
-        #endregion
 
-
+        #region Data Load
 
         public int GameID = 0;
         public int SeasonID = 0;
         public int RegularSeasonGames = 0;
         public int PostseasonGames = 0;
         public int TotalGames = 0;
-        public Stopwatch stopwatch;
-        public DateTime start = DateTime.Now;
-        public Dictionary<string, (int, string)> timeUnitsRead = new Dictionary<string, (int value, string sep)>();
+        public int TotalGamesCD = 0;
         public List<int> gamesRS = new List<int>();
         public List<int> gamesPS = new List<int>();
+
+        #endregion
+
+
+        #endregion
+
+
         public Main()
         {
             InitializeComponent();
@@ -407,7 +416,7 @@ namespace NBAdbToolbox
             listSeasons.KeyDown += ListSeasons_SelectAll;
 
             btnPopulate.Text = "Populate Db";
-            btnPopulate.Font = SetFontSize("Segoe UI", 6.5F, FontStyle.Bold, pnlWelcome, btnPopulate);
+            btnPopulate.Font = SetFontSize("Segoe UI", (float)(fontSize / 3.3), FontStyle.Bold, pnlWelcome, btnPopulate); //6.5
             btnPopulate.Width = (int)(listSeasons.Width * .8);
             btnPopulate.Top = listSeasons.Bottom; //subject to change
             #endregion
@@ -448,8 +457,11 @@ namespace NBAdbToolbox
                             oldImage.Dispose();
                         }
                         picLoad.Image = bitmap;
+                        picLoad.Width = pnlLoad.Height;
+                        picLoad.Height = pnlLoad.Height;
+                        picLoad.Left = (pnlLoad.ClientSize.Width - picLoad.Width) / 2;
+                        picLoad.Top = 0;
                     }
-                    picLoad.Top = 0;
                     int historic = 0;
                     int current = 0;
                     string source = "";
@@ -471,6 +483,8 @@ namespace NBAdbToolbox
                         "true", //Visible
                         "." //Height
                     }); //Current game: 
+                    gpm.Top = lblCurrentGame.Bottom;
+                    gpmValue.Top = gpm.Bottom;
                     ChangeLabel(lblSeasonStatusLoad, pnlLoad, new List<string> {
                         "Checking util.BuildLog", //Text
                         "Bold", //FontStyle
@@ -486,11 +500,11 @@ namespace NBAdbToolbox
                     ChangeLabel(lblWorkingOn, pnlLoad, new List<string> {
                         ".", //Text
                         "Regular", //FontStyle
-                        ((float)(pnlLoad.Height * .04) / (96 / 12) * (72 / 12)).ToString(), //FontSize
+                        ((float)(pnlLoad.Height * .03) / (96 / 12) * (72 / 12)).ToString(), //FontSize
                         ".", //Width
                         "true", //AutoSize
                         (pnlLoad.Width - lblWorkingOn.Width).ToString(), //Left
-                        lblSeasonStatusLoadInfo.Bottom.ToString(), //Top
+                        lblSeasonStatusLoadInfo.Top.ToString(), //Top
                         Color.Black.ToString(), //Color
                         "true", //Visible
                         "." //Height
@@ -512,9 +526,7 @@ namespace NBAdbToolbox
                         }
                         MainConnection.Close();
                     }
-
-                    Stopwatch stopwatchFull = Stopwatch.StartNew();
-                    DateTime startFull = DateTime.Now;
+                    stopwatchFull.Restart();
                     int seasonIterator = 0;
                     foreach (int season in seasons)
                     {
@@ -522,8 +534,7 @@ namespace NBAdbToolbox
                         seasonIterator++;
                         Task DeleteSeasonData = Task.Run(() =>
                         {
-                            var tableInfo = seasonInfo.First(s => s.Item1 == season);
-                            AlterDeleteExisting(tableInfo.Item2.Item5);
+                            AlterDeleteExisting();
                             stopwatchAlterDelete.Stop();
                             stopwatchDelete.Stop();
                         });
@@ -535,20 +546,19 @@ namespace NBAdbToolbox
                             source = "Historic";
                             historic = 1;
                             lblSeasonStatusLoad.Text = SeasonID + " Historic data file";
-                            stopwatchRead.Start();
+                            stopwatchRead.Restart();
                             root = null;
                             await Task.Run(async () =>      //This sets the root variable to our big file
                             {
                                 await ReadSeasonFile(popup.historic, popup.current);
                             });
-                            if (root == null)
-                            {
-                                ClearImages();
-                                await Task.Run(async () =>      //This sets the root variable to our big file
-                                {
-                                    await ReadSeasonFile(popup.historic, popup.current);
-                                });
-                            }
+                            //if (root == null)
+                            //{
+                            //    await Task.Run(async () =>      //This sets the root variable to our big file
+                            //    {
+                            //        await ReadSeasonFile(popup.historic, popup.current);
+                            //    });
+                            //}
                             PopulateDb_2_AfterHistoricRead();
                             await DeleteSeasonData;
                             PopulateDb_3_AfterDelete_BeforeGames();
@@ -694,11 +704,9 @@ namespace NBAdbToolbox
                             {
                                 await ReadSeasonFile(popup.historic, popup.current);
                             });
-                            PopulateDb_6_AfterCurrentRead();
+                            PopulateDb_6_AfterCurrentReadRoot();
                             await DeleteSeasonData;
                             PopulateDb_7_AfterCurrentDelete();
-
-
                             for (int i = 0; i < RegularSeasonGames; i++)
                             {
                                 GameID = gamesRS[i];
@@ -716,6 +724,11 @@ namespace NBAdbToolbox
                                 root.season.games.playoffs[i].playByPlay = null;
                                 PopulateDb_8_AfterCurrentGame(gamesPS[i].ToString());
                             }
+                            
+                            await DeleteSeasonData;
+                            PopulateDb_7_AfterCurrentDelete();
+
+
                             sqlBuilder.Clear();
                             sqlBuilderParallel.Clear();
                             playByPlayBuilder.Clear();
@@ -725,6 +738,7 @@ namespace NBAdbToolbox
                         PopulateDb_9_AfterSeasonInserts(buildID, current, historic, source, seasonIterator, selectedSeasons);
                         //int stop = gameBytes.Count;
                     }
+                    stopwatchFull.Stop();
                     PopulateDb_10_Completion();
 
                 }
@@ -875,7 +889,7 @@ namespace NBAdbToolbox
             }
             btnEdit.Height = 30;
             fontSize = ((float)(lblDB.Height) / (96 / 12)) * (72 / 12);
-            btnEdit.Font = SetFontSize("Segoe UI", 12F, FontStyle.Bold, pnlWelcome, btnEdit);
+            btnEdit.Font = SetFontSize("Segoe UI", (float)(fontSize * .67), FontStyle.Bold, pnlWelcome, btnEdit); //12F
             CenterElement(pnlWelcome, btnEdit);
             btnEdit.Top = lblDbStat.Bottom + 10; //subject to change
             btnEdit.TextAlign = ContentAlignment.BottomCenter;
@@ -900,8 +914,8 @@ namespace NBAdbToolbox
             pnlWelcome.Controls.SetChildIndex(picStatus, 1);
 
             //Build Database Button
-            btnBuild.Text = "Build Database";
-            btnBuild.Font = SetFontSize("Segoe UI", 14F, FontStyle.Bold, pnlWelcome, btnBuild);
+            btnBuild.Text = "Build Database"; 
+            btnBuild.Font = SetFontSize("Segoe UI", (float)(fontSize * 1.3), FontStyle.Bold, pnlWelcome, btnBuild);
             btnBuild.AutoSize = true;
             CenterElement(pnlWelcome, btnBuild);
             btnBuild.Top = btnEdit.Bottom + 10; //subject to change
@@ -957,6 +971,8 @@ namespace NBAdbToolbox
                 }
             };
             #endregion
+
+
             #region Database Overview
             pnlDbOverview.Parent = pnlDbUtil;
             pnlDbOverview.Width = pnlDbUtil.Width;
@@ -973,9 +989,27 @@ namespace NBAdbToolbox
             };
 
 
-            ControlOnClick(pnlDbOverview, lblDbOvExpand, pnlDbOverview);
-            ControlOnClick(lblDbOverview, lblDbOvExpand, pnlDbOverview);
-            ControlOnClick(lblDbOvExpand, lblDbOvExpand, pnlDbOverview);
+            DbOverviewClick(pnlDbOverview, lblDbOvExpand, pnlDbOverview);
+            DbOverviewClick(lblDbOverview, lblDbOvExpand, pnlDbOverview);
+            DbOverviewClick(lblDbOvExpand, lblDbOvExpand, pnlDbOverview);
+            #endregion
+
+            #region Settings area
+            lblSettings.Text = "Settings";
+            lblSettings.Top = btnBuild.Bottom + 10; //subject to change
+            lblSettings.Font = SetFontSize("Segoe UI", (float)(fontSize), FontStyle.Bold, pnlWelcome, btnBuild);
+            lblSettings.AutoSize = true;
+            lblSettings.Left = (pnlWelcome.ClientSize.Width - lblSettings.Width) / 2;
+            picSettings.Width = lblSettings.Height;
+            picSettings.Height = lblSettings.Height;
+            picSettings.SizeMode = PictureBoxSizeMode.Zoom;
+            picSettings.Image = Image.FromFile(Path.Combine(projectRoot, @"Content\Images", "Settings.png"));
+            picSettings.Left = lblSettings.Right;
+            picSettings.Top = lblSettings.Top + lblSettings.Height/6;
+            picSettings.BackColor = Color.FromArgb(0, 0, 0, 0);
+
+            SettingsClick(lblSettings, picSettings, fontSize);
+            SettingsClick(picSettings, picSettings, fontSize);
             #endregion
         }
 
@@ -988,6 +1022,7 @@ namespace NBAdbToolbox
             RegularSeasonGames = 0;
             PostseasonGames = 0;
             TotalGames = 0;
+            TotalGamesCD = 0;
             sqlBuilder.Capacity = 4 * 1024;
             playByPlayBuilder.Capacity = 245 * 1024;
             sqlBuilderParallel.Capacity = 40 * 1024;
@@ -1042,7 +1077,6 @@ namespace NBAdbToolbox
             CenterElement(pnlWelcome, lblStatus);
             lblSeasonStatusLoad.Text = "Inserting " + SeasonID + " Regular Season";
             stopwatchInsert.Restart();
-            TotalGames = root.season.games.regularSeason.Count + root.season.games.playoffs.Count;
             RegularSeasonGames = root.season.games.regularSeason.Count;
             PostseasonGames = root.season.games.playoffs.Count;
             TotalGames = RegularSeasonGames + PostseasonGames;
@@ -1073,7 +1107,7 @@ namespace NBAdbToolbox
             lblSeasonStatusLoad.AutoSize = true;
             stopwatchRead.Restart();
         }
-        public void PopulateDb_6_AfterCurrentRead()
+        public void PopulateDb_6_AfterCurrentReadRoot()
         {
             stopwatchRead.Stop();
             timeElapsedRead = stopwatchRead.Elapsed;
@@ -1098,6 +1132,63 @@ namespace NBAdbToolbox
                 gamesPS.Add(GameID);
             }
             TotalGames = RegularSeasonGames + PostseasonGames;
+            TotalGamesCD = TotalGames - 1;
+            iterator = 0;
+            imageIteration = 1;
+            reverse = false;
+
+            lblStatus.Text = "Deleting existing " + SeasonID + " data...";
+            CenterElement(pnlWelcome, lblStatus);
+            ChangeLabel(lblSeasonStatusLoad, pnlLoad, new List<string> {
+                            "Deleting any " + SeasonID + " data, one sec...", //Text
+                            "Bold", //FontStyle
+                            ((float)(pnlLoad.Height * .075) / (96 / 12) * (72 / 12)).ToString(), //FontSize
+                            ".", //Width
+                            "true", //AutoSize
+                            "0", //Left
+                            ".", //Top
+                            Color.Black.ToString(), //Color
+                            "true", //Visible
+                            "." //Height
+                            }); //Hitting endpoints and inserting 
+        }
+
+        public void PopulateDb_6_AfterCurrentReadSchedule()
+        {
+            stopwatchRead.Stop();
+            timeElapsedRead = stopwatchRead.Elapsed;
+            timeUnitsRead = new Dictionary<string, (int value, string sep)>
+                            {
+                                { "h", (timeElapsedRead.Hours, ":") },
+                                { "m", (timeElapsedRead.Minutes, ":") },
+                                { "s", (timeElapsedRead.Seconds, ".") },
+                                { "ms", (timeElapsedRead.Milliseconds, "") }
+                            };
+            elapsedStringRead = CheckTime(timeUnitsRead);
+            foreach (NBAdbToolboxSchedule.Game game in scheduleGames)
+            {
+                if(game.GameId.Substring(2, 1) == "2")
+                {
+                    RegularSeasonGames++;
+                    GameID = Int32.Parse(game.GameId);
+                    gamesRS.Add(GameID);
+                }
+                else if(game.GameId.Substring(2, 1) != "1" && game.GameId.Substring(2, 1) != "3" && game.GameId.Substring(2, 1) != "6")
+                {
+                    PostseasonGames++;
+                    GameID = Int32.Parse(game.GameId);
+                    gamesPS.Add(GameID);
+                }
+                if (game.GameId.Substring(2, 1) == "6")
+                {
+                    RegularSeasonGames++;
+                    GameID = Int32.Parse(game.GameId);
+                    gamesRS.Add(GameID);
+                }
+
+            }
+            TotalGames = RegularSeasonGames + PostseasonGames;
+            TotalGamesCD = TotalGames - 1;
             iterator = 0;
             imageIteration = 1;
             reverse = false;
@@ -1261,12 +1352,22 @@ namespace NBAdbToolbox
             RegularSeasonGames = 0;
             PostseasonGames = 0;
             TotalGames = 0;
+            TotalGamesCD = 0;
         }
 
         #endregion
 
         public void PopulateDb_10_Completion()
         {
+            TimeSpan timeElapsedFull = stopwatchFull.Elapsed;
+            Dictionary<string, (int, string)> timeUnitsFull = new Dictionary<string, (int value, string sep)>
+                        {
+                        { "h", (timeElapsedFull.Hours, ":") },
+                        { "m", (timeElapsedFull.Minutes, ":") },
+                        { "s", (timeElapsedFull.Seconds, ".") },
+                        { "ms", (timeElapsedFull.Milliseconds, "") }
+                        };
+            string elapsedStringFull = CheckTime(timeUnitsFull);
             PlayCompletionSound("Run");
             #region Enable buttons and clear label text
             btnPopulate.Enabled = true;
@@ -1275,10 +1376,27 @@ namespace NBAdbToolbox
 
             lblStatus.Text = "Welcome Back!";
             CenterElement(pnlWelcome, lblStatus);
+
+            //lblCurrentGame
+
             ChangeLabel(lblSeasonStatusLoadInfo, pnlLoad, new List<string> { "", ".", ".", ".", ".", ".", ".", ".", "false", "." });
             //...............................................................Text,  FontStyle, FontSize, Width, AutoSize, Left, Top, Color, Visible, Height
             ChangeLabel(lblCurrentGameCount, pnlLoad, new List<string> { "", ".", ".", ".", ".", ".", ".", ".", "false", "." });
             //...........................................................Text,  FontStyle, FontSize, Width, AutoSize, Left, Top, Color, Visible, Height
+            ChangeLabel(lblCurrentGame, pnlLoad, new List<string> {
+                        "Full Load: " + elapsedStringFull,
+                        "Bold",
+                        ((float)(pnlLoad.Height * .06) / (96 / 12) * (72 / 12)).ToString(),
+                        ".",
+                        "true",
+                        ".",
+                        ".",
+                        Color.Green.ToString(),
+                        "true",
+                        "." }
+            );//Done! Check your SQL db
+            gpm.Top = lblCurrentGame.Bottom;
+            gpmValue.Top = gpm.Bottom;
             ChangeLabel(lblSeasonStatusLoad, pnlLoad, new List<string> {
                         "Done! Check your SQL db",
                         "Regular",
@@ -1365,6 +1483,8 @@ namespace NBAdbToolbox
             AddPanelElement(pnlDbUtil, lblDbOverview);
             AddPanelElement(pnlDbUtil, pnlDbOverview);
             AddPanelElement(pnlDbUtil, lblDbUtil);
+            AddPanelElement(pnlWelcome, picSettings);
+            AddPanelElement(pnlWelcome, lblSettings);
             AddPanelElement(pnlWelcome, lblDbStat);
             AddPanelElement(pnlWelcome, btnBuild);
             AddPanelElement(pnlWelcome, lblCStatus);
@@ -2125,7 +2245,7 @@ namespace NBAdbToolbox
         }
 
 
-        public void ControlOnClick(Control control, Label growShrink, Control parent)
+        public void DbOverviewClick(Control control, Label growShrink, Control parent)
         {
             control.Click += (s, e) =>
             {
@@ -2150,6 +2270,35 @@ namespace NBAdbToolbox
                     lblDbSelectSeason.Top = lblDbOptions.Bottom;
                     listSeasons.Top = lblDbSelectSeason.Bottom;
                     btnPopulate.Top = listSeasons.Bottom; //subject to change
+                }
+            };
+        }
+
+        public void SettingsClick(Control control, PictureBox picture, float fontSize)
+        {
+            control.Click += (s, e) =>
+            {
+                if (lblSettings.Focused)
+                {
+                    this.ActiveControl = null;
+                    if (picture.Image != null)
+                    {
+                        picture.Image.RotateFlip(RotateFlipType.RotateNoneFlipY);
+                        picture.Refresh();
+                    }
+                    lblSettings.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, pnlWelcome, btnBuild);
+                    lblSettings.Left = (pnlWelcome.ClientSize.Width - lblSettings.Width) / 2;
+                }
+                else
+                {
+                    lblSettings.Focus();
+                    if (picture.Image != null)
+                    {
+                        picture.Image.RotateFlip(RotateFlipType.RotateNoneFlipY);
+                        picture.Refresh();
+                    }
+                    lblSettings.Font = SetFontSize("Segoe UI", (float)(fontSize * 1.05), FontStyle.Bold | FontStyle.Underline, pnlWelcome, btnBuild);
+                    lblSettings.Left = (pnlWelcome.ClientSize.Width - lblSettings.Width) / 2;
                 }
             };
         }
@@ -2192,22 +2341,27 @@ namespace NBAdbToolbox
             }
         }
         public Stopwatch stopwatchDelete = new Stopwatch();
-        public void AlterDeleteExisting(int rows)
+        public void AlterDeleteExisting()
         {
+            int rows = 0;
             try
             {
                 using (SqlConnection connection = new SqlConnection(cString))
                 {
                     connection.Open();
-                    if (rows == 0)
+                    using (SqlCommand keysOff = new SqlCommand("TableKeysOff", connection))
                     {
-                        using (SqlCommand keysOff = new SqlCommand("TableKeysOff", connection))
+                        keysOff.CommandType = CommandType.StoredProcedure;
+                        keysOff.Parameters.AddWithValue("@SeasonID", SeasonID);
+                        using (SqlDataReader reader = keysOff.ExecuteReader())
                         {
-                            keysOff.CommandType = CommandType.StoredProcedure;
-                            keysOff.ExecuteNonQuery();
+                            if (reader.Read())
+                            {
+                                rows = Convert.ToInt32(reader[1]);
+                            }
                         }
-                    }
-                    else
+                    }                    
+                    if (rows != 0)
                     {
                         using (SqlCommand alterDeletePbp = new SqlCommand("AlterTablesDeletePBP", connection))
                         {
@@ -2239,6 +2393,12 @@ namespace NBAdbToolbox
 
 
 
+        public async Task GetSchedule()
+        {
+            schedule = null;
+            List<Games> games = new List<Games>();
+            scheduleGames = await leagueSchedule.GetJSON();
+        }
 
 
         //Historic Data
@@ -3428,7 +3588,6 @@ namespace NBAdbToolbox
 
         //Current Data
         #region Current Data Up to Date
-
         //Declarations
         #region Declarations
         public bool currentTeamsDone = false;
@@ -4060,6 +4219,10 @@ namespace NBAdbToolbox
             {
                 gameInsertSB.Append("'PS', null)");
             }
+            else if (gameType == "6")
+            {
+                gameInsertSB.Append("'RS', null)");
+            }
 
             // Add newline
             gameInsertSB.Append("\n");
@@ -4216,7 +4379,7 @@ namespace NBAdbToolbox
                 }
             });
 
-            if (iterator == TotalGames || (iterator == TotalGames - 1 && i == 0))
+            if (iterator == TotalGamesCD)
             {
                 await DoPbp;
             }

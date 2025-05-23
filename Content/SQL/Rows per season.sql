@@ -32,7 +32,6 @@ from Season p
 )
 select *
 from RowCounts r
-where r.SeasonID = 2022
 
 
 
