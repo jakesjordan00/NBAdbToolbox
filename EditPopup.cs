@@ -15,12 +15,13 @@ namespace NBAdbToolbox
         public string Server { get; private set; }
         public string Alias { get; private set; }
         public bool? CreateDatabase { get; private set; }
+        public bool? DefaultDb { get; private set; }
         public string Database { get; private set; }
         public string Username { get; private set; }
         public string Password { get; private set; }
         public bool? UseWindowsAuth { get; private set; }
 
-        public EditPopup(string mode, bool fileExists, string initialServer = "", string initialAlias = "", bool? initialCreateDb = true, string initialDb = "", bool? initialWindowsAuth = true, string initialUser = "", string initialPass = "")
+        public EditPopup(string mode, bool fileExists, string initialServer = "", string initialAlias = "", bool? initialCreateDb = true, bool? initialDefaultDb = true, string initialDb = "", bool? initialWindowsAuth = true, string initialUser = "", string initialPass = "")
         {
             this.Text = "Create or Edit Connection";
             this.Width = 300;
@@ -30,7 +31,7 @@ namespace NBAdbToolbox
             int top = (int)(this.Height * .1);
             int spacing = (int)(this.Height * .1);
 
-            // Server
+            //Server
             Label lblReq = new Label()
             {
                 Text = "*",
@@ -48,27 +49,32 @@ namespace NBAdbToolbox
             TextBox txtAlias = new TextBox() { Text = initialAlias, Left = 20, Top = top + 20, Width = 240 };
             top += spacing + 20;
 
-            // Database
+            //Database
             Label lblDatabase = new Label() { Text = "Database:", Left = 20, Top = top, AutoSize = true };
             TextBox txtDatabase = new TextBox() { Text = initialDb, Left = 20, Top = top + 20, Width = 240 };
             top += spacing + 20;
 
-            // Create DB
+            //Create DB
             CheckBox chkCreateDb = new CheckBox() { Text = "Create Database?", Left = 20, Top = top, AutoSize = true };
             chkCreateDb.Checked = !fileExists || initialCreateDb == true;
             top += (int)(this.Height * .1);
 
-            // Windows Auth
+            //Default DB
+            CheckBox chkDefaultDb = new CheckBox() { Text = "Set as Default Db", Left = 20, Top = top, AutoSize = true };
+            chkDefaultDb.Checked = !fileExists || initialDefaultDb == true;
+            top += (int)(this.Height * .1);
+
+            //Windows Auth
             CheckBox chkWindowsAuth = new CheckBox() { Text = "Use Windows Authentication", Left = 20, Top = top, AutoSize = true };
             chkWindowsAuth.Checked = initialWindowsAuth == true;
             top += (int)(this.Height * .1);
 
-            // Username
+            //Username
             Label lblUsername = new Label() { Text = "Username:", Left = 20, Top = top, AutoSize = true };
             TextBox txtUsername = new TextBox() { Text = initialUser, Left = 20, Top = top + 20, Width = 240 };
             top += spacing + 20;
 
-            // Password
+            //Password
             Label lblPassword = new Label() { Text = "Password:", Left = 20, Top = top, AutoSize = true };
             TextBox txtPassword = new TextBox() { Text = initialPass, Left = 20, Top = top + 20, Width = 240, UseSystemPasswordChar = true };
             top += spacing + 20;
@@ -78,7 +84,7 @@ namespace NBAdbToolbox
                 txtUsername.Enabled = false;
                 txtPassword.Enabled = false;
             }
-            // Toggle username/password fields based on checkbox
+            //Toggle username/password fields based on checkbox
             chkWindowsAuth.CheckedChanged += (s, e) =>
             {
                 bool useAuth = chkWindowsAuth.Checked;
@@ -86,7 +92,7 @@ namespace NBAdbToolbox
                 txtPassword.Enabled = !useAuth;
             };
 
-            // Buttons
+            //Buttons
             Button btnOK = new Button() { Text = "OK", Left = 80, Top = top, Width = 60, DialogResult = DialogResult.OK };
             Button btnCancel = new Button() { Text = "Cancel", Left = 150, Top = top, Width = 70, DialogResult = DialogResult.Cancel };
 
@@ -95,6 +101,7 @@ namespace NBAdbToolbox
                 Server = txtServer.Text;
                 Alias = txtAlias.Text;
                 CreateDatabase = chkCreateDb.Checked;
+                DefaultDb = chkDefaultDb.Checked;
                 Database = txtDatabase.Text;
                 UseWindowsAuth = chkWindowsAuth.Checked;
                 if (chkWindowsAuth.Checked)
@@ -116,6 +123,7 @@ namespace NBAdbToolbox
                 lblAlias, txtAlias,
                 lblDatabase, txtDatabase,
                 chkCreateDb,
+                chkDefaultDb,
                 chkWindowsAuth,
                 lblUsername, txtUsername,
                 lblPassword, txtPassword,

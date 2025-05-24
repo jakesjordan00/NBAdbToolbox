@@ -9,9 +9,9 @@ namespace NBAdbToolbox
     class DbConfig
     {
         public string Server { get; set; }
-
         public string Alias { get; set; }
         public bool ?Create { get; set; }
+        public bool? Default { get; set; }
         public bool? UseWindowsAuth { get; set; }
         public string Database { get; set; }
         public string Username { get; set; }
