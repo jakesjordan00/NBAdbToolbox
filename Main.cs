@@ -27,6 +27,9 @@ using System.Media;
 using System.Runtime.InteropServices;
 using System.Collections;
 using System.Runtime;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
+using System.Xml.Linq;
+using System.Runtime.InteropServices.ComTypes;
 
 namespace NBAdbToolbox
 {
@@ -41,11 +44,13 @@ namespace NBAdbToolbox
         public bool isConnected = false; //Server Connection status variable
         static string projectRoot = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..")); //File path for project
 
-        string settingsPath = Path.Combine(projectRoot, @"Content", "settings.json");
+        public string settingsPath = Path.Combine(projectRoot, @"Content", "settings.json");
         private Settings settings;
+        private Settings settingsControl;
 
-        string configPath = Path.Combine(projectRoot, @"Content\Configuration", "dbconfig.json"); //dbconfig file
-        private DbConfig config;        
+        public string configPath = ""; //dbconfig file
+        private DbConfig config;
+        private DbConfig configControl;
 
 
         public int screenWidth = Screen.PrimaryScreen.WorkingArea.Width; //Screen size/Display variables
@@ -92,7 +97,35 @@ namespace NBAdbToolbox
 
         public Label lblSettings = new Label();
         public PictureBox picSettings = new PictureBox();//Db Status icon
-        public FolderBrowserDialog dlgDefualtPath = new FolderBrowserDialog();
+        public FolderBrowserDialog dlgDefaultPath = new FolderBrowserDialog();
+        public Label lblBrowseConfig = new Label
+        {
+            Text = "Change Config Folder:",
+            Visible = false
+        };
+        public Button btnBrowseConfig = new Button
+        {
+            Text = "Browse...",
+            Visible = false
+        };
+        public Label lblChangeConfig = new Label
+        {
+            Text = "Change Connection/Db:",
+            Visible = false
+        };
+        public ComboBox boxChangeConfig = new ComboBox
+        {
+            Visible = false
+        };
+        public Label lblConfigFiles= new Label
+        {
+            Text = "Default Connection:",
+            Visible = false
+        };
+        public ComboBox boxConfigFiles = new ComboBox
+        {
+            Visible = false
+        };
         #endregion
         #region Variables
         #endregion
@@ -280,45 +313,39 @@ namespace NBAdbToolbox
         #endregion
 
         public string settingsJSON = "";
-
-
+        public bool defaultConfig = false;
+        public bool isBuildEnabled = true;
         //Settings
-        public void GetConfig()
+        #region Settings
+        private bool ConfigChanged()
         {
-
-        }
-        public void WriteConfig()
-        {
-            string name = "";
-            string db = "";
-            if(config.Database != null)
+            if(configControl == null)
             {
-                db = " - " + config.Database;
-            }
-            if (config.Alias != null)
-            {
-                name = config.Alias + db + ".json";
+                return false;
             }
             else
             {
-                name = config.Server + db + ".json";
+                return config.Server != configControl.Server ||
+                       config.Alias != configControl.Alias ||
+                       config.Database != configControl.Database ||
+                       config.Create != configControl.Create ||
+                       config.Default != configControl.Default ||
+                       config.UseWindowsAuth != configControl.UseWindowsAuth ||
+                       config.Username != configControl.Username ||
+                       config.Password != configControl.Password;
             }
-            if (config.Default == true)
-            {
-                settings.DefaultConfig = name;
-            }
-            File.WriteAllText(Path.Combine(settings.ConfigPath, name), JsonConvert.SerializeObject(config, Formatting.Indented));
-            configPath = Path.Combine(settings.ConfigPath, name);
-            File.WriteAllText(settingsPath, JsonConvert.SerializeObject(settings, Formatting.Indented));
-
         }
-        public void GetSettings()
+        public void GetSettings(string sender) //Gets settings file values. If file doesnt exist, set defaults and create
         {
-            if (File.Exists(settingsPath)) //If our file does exist
+            if (File.Exists(settingsPath)) //If our file exists
             {
-                settingsJSON = "";
-                settingsJSON = File.ReadAllText(settingsPath);
-                settings = JsonConvert.DeserializeObject<Settings>(settingsJSON);
+                if (sender == "Main")
+                {
+                    settingsJSON = "";
+                    settingsJSON = File.ReadAllText(settingsPath);
+                    settings = JsonConvert.DeserializeObject<Settings>(settingsJSON);
+                }
+                settingsControl = JsonConvert.DeserializeObject<Settings>(settingsJSON);
                 DefaultSettings();
                 //Set Background Image
                 bgCourt.Image = Image.FromFile(Path.Combine(projectRoot, @"Content\Images", settings.BackgroundImage + ".png"));
@@ -327,44 +354,631 @@ namespace NBAdbToolbox
                 {
                     configPath = Path.Combine(settings.ConfigPath, settings.DefaultConfig);
                 }
+                else
+                {
+                    defaultConfig = true;
+                }
             }
             else if (!File.Exists(settingsPath)) //If our file doesnt exist, just set to defaults
             {
                 DefaultSettings();
+                defaultConfig = true;
             }
-            File.WriteAllText(settingsPath, JsonConvert.SerializeObject(settings, Formatting.Indented));
+            if (SettingsChanged()) //If the settings have changed, write update to file
+            {
+                WriteSettings();
+            }
+                
         }
         public void DefaultSettings()
         {
-            if (settings.ConfigPath == "")
+            if (settings.ConfigPath == null)
             {
                 settings.ConfigPath = Path.Combine(projectRoot, @"Content\Configuration");
             }
-            if (settings.DefaultConfig == "")
+            if (settings.DefaultConfig == null)
             {
                 settings.DefaultConfig = "dbconfig.json";
             }
-            if (settings.BackgroundImage == "")
+            if (settings.BackgroundImage == null)
             {
                 settings.BackgroundImage = "Court Default";
             }
-            if (settings.WindowSize == "")
+            if (settings.WindowSize == null)
             {
                 settings.WindowSize = "Default";
             }
-            if (settings.Sound == "")
+            if (settings.Sound == null)
             {
                 settings.Sound = "Default";
             }
 
         }
+        public void WriteSettings()
+        {
+            File.WriteAllText(settingsPath, JsonConvert.SerializeObject(settings, Formatting.Indented));
+            settingsControl = JsonConvert.DeserializeObject<Settings>(JsonConvert.SerializeObject(settings));            
+        }
+        private bool SettingsChanged()
+        {
+            return settings.ConfigPath != settingsControl.ConfigPath ||
+                   settings.DefaultConfig != settingsControl.DefaultConfig ||
+                   settings.BackgroundImage != settingsControl.BackgroundImage ||
+                   settings.WindowSize != settingsControl.WindowSize ||
+                   settings.Sound != settingsControl.Sound;
+        }
+        #endregion
+
+        public void InitializeDbConfig(string sender)
+        {
+            if (!File.Exists(configPath) || defaultConfig) //If our file doesnt exist
+            {
+                NoConnection();
+            }
+            else if (File.Exists(configPath)) //If our file does exist
+            {
+                GetConfig(sender);
+                lblStatus.Text = "Welcome Back!";
+                lblStatus.ForeColor = Color.Black;
+                btnEdit.Text = "Edit Server/Db connection";
+                btnEdit.Width = (int)(lblStatus.Width / 1.5);
+
+                //Set label text
+                if (config.Alias != null)
+                {
+                    lblServerName.Text = config.Alias;
+                }
+                else
+                {
+                    lblServerName.Text = config.Server;
+                }
+                lblDbName.Text = config.Database;
+
+                ClearImage(picStatus);
+                if (isConnected)
+                {
+                    lblCStatus.Text = "Connected";
+                    lblCStatus.ForeColor = Color.Green;
+                    // Load image
+                    imagePath = Path.Combine(projectRoot, @"Content\Images", "Success.png");
+                    picStatus.Image = Image.FromFile(imagePath);
+                }
+                else
+                {
+                    lblCStatus.Text = "Disconnected";
+                    lblCStatus.ForeColor = Color.Red;
+                    // Load image
+                    imagePath = Path.Combine(projectRoot, @"Content\Images", "Error.png");
+                    picStatus.Image = Image.FromFile(imagePath);
+                }
+            }
+
+        }
+        public void NoConnection()
+        {
+            lblStatus.Text = "Set Connection Configuration";
+            btnEdit.Text = "Create Server/Db connection";
+            lblServerName.Text = "Not Connected.";
+            lblCStatus.Text = "Disconnected";
+            lblDbName.Text = "";
+            lblDbStat.Text = "Could not connect using master or Db.";
+            imagePath = Path.Combine(projectRoot, @"Content\Images", "Error.png");
+            picStatus.Image = Image.FromFile(imagePath);
+            UIController("NoConnection");
+
+        }
+        public string configName = "";
+        public void GetConfig(string sender) //Gets config file
+        {
+            if(sender == "Main")
+            {
+                json = "";
+                json = File.ReadAllText(configPath);
+                config = JsonConvert.DeserializeObject<DbConfig>(json);
+            }
+            configControl = JsonConvert.DeserializeObject<DbConfig>(json);
+
+            configName = "";
+            string db = "";
+            if (config.Database != null)
+            {
+                db = " - " + config.Database;
+            }
+            if (config.Alias != null)
+            {
+                configName = config.Alias + db;
+            }
+            else
+            {
+                configName = config.Server + db;
+            }
+            //Build connection string
+            bob.DataSource = config.Server;
+            if (config.UseWindowsAuth == true)
+            {
+                bob.IntegratedSecurity = true;
+            }
+            else
+            {
+                bob.UserID = config.Username;
+                bob.Password = config.Password;
+                bob.IntegratedSecurity = false;
+            }
+            cString = bob.ToString();
+            if (config.Server != "" && ((config.Username != "" && config.Password != "") || config.UseWindowsAuth == true))
+            {
+                isConnected = TestConnectionString(cString);
+            }
+            if (isConnected) //If the connection string works for master
+            {
+                if (config.Create == false) //and if the config file says we dont need to create database, 
+                {
+                    bob.InitialCatalog = config.Database; //have the connection string use the database
+                }
+                dbConnection = TestConnectionString(bob.ToString());
+            }
+            else //If the connection string doesnt work on master for whatever reason and our config file says we have a db, double check the db only connection string to make sure.
+            {
+                if (config.Create == false) //same as above
+                {
+                    bob.InitialCatalog = config.Database; //same as above
+                }
+                dbConnection = TestConnectionString(bob.ToString());
+            }
+            if(config.Create == true)
+            {
+                dbConnection = false;
+            }
+
+            if (isConnected && dbConnection) //If both server and db connectionstrings work
+            {
+                DbExists();
+            }
+            else if (isConnected && !dbConnection) //If ONLY server connection string works
+            {
+                DbMissing();
+            }
+            else if (!isConnected && !dbConnection) //If neither work
+            {
+                BadConnection();
+            }
+            WriteConfig(sender);
+            
+            UIController("GetConfig");
+        }
+        public bool TestConnectionString(string connectionString) //Test Server connection
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(connectionString))
+                {
+                    conn.Open();
+                    btnBuild.Enabled = true;
+                    lblServerName.ForeColor = Color.Green;
+                    btnEdit.Text = "Edit Server/Db connection";
+                    return true; // Connected successfully
+                }
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+        public void DbExists() //If the Database exists: Set variables, disable build btn, enable populate
+        {
+            config.Create = false;
+            lblDbName.Text = config.Database;
+            lblDbStat.Text = "Database connected";
+            imagePathDb = Path.Combine(projectRoot, @"Content\Images", "Success.png");
+            ClearImage(picDbStatus);
+            picDbStatus.Image = Image.FromFile(imagePathDb);
+            cString = bob.ToString();
+            GetSeasons(cString);
+            UIController("DbExists");
+        }
+        public void DbMissing()
+        {
+            config.Create = true;
+            lblDbName.Text = config.Database;
+            lblDbStat.Text = "Need to create Database";
+            imagePathDb = Path.Combine(projectRoot, @"Content\Images", "Warning.png");
+            ClearImage(picDbStatus);
+            picDbStatus.Image = Image.FromFile(imagePathDb);
+            UIController("DbMissing");
+        }
+        public void BadConnection()
+        {
+            lblStatus.Text = "Invalid Connection!";
+            lblStatus.ForeColor = Color.Red;
+            UIController("BadConnection");
+        }
+        public void WriteConfig(string sender) //Writes Config File and Settings file
+        {
+            if (config.Default == true && sender != "boxChangeConfig")
+            {
+                settings.DefaultConfig = configName + ".json";
+            }
+            if (SettingsChanged()) //If the settings have changed, write update to file
+            {
+                WriteSettings();
+            }
+            if (ConfigChanged() || settings.ConfigPath != settingsControl.ConfigPath) //If the config file has changed, write update to file
+            {
+                configPath = Path.Combine(settings.ConfigPath, configName + ".json");
+                File.WriteAllText(Path.Combine(settings.ConfigPath, configName + ".json"), JsonConvert.SerializeObject(config, Formatting.Indented));
+                configControl = JsonConvert.DeserializeObject<DbConfig>(JsonConvert.SerializeObject(config));
+            }
+        }
+
+
+        public void UIController(string sender)//If an event occurs that will change the state of the UI, it must run through here
+        {
+            float fontSize = ((float)(pnlWelcome.Height * .08) / (96 / 12)) * (72 / 12);
+            if (sender == "NoConnection")
+            {
+                btnBuild.Enabled = false;
+                isBuildEnabled = false;
+                btnPopulate.Enabled = false;
+                listSeasons.Items.Clear();
+
+                lblStatus.ForeColor = Color.Black;
+                lblServerName.ForeColor = Color.Red;
+                lblCStatus.ForeColor = Color.Red;
+                lblDbName.ForeColor = Color.Red;
+                lblDbName.BackColor = Color.Transparent;
+                lblDbStat.ForeColor = Color.Red;
+                lblDbStat.BackColor = Color.Transparent;
+            }
+            else if (sender == "GetConfig")
+            {
+                lblCStatus.Text = isConnected ? "Connected" : "Disconnected";
+                lblCStatus.ForeColor = isConnected ? Color.Green : Color.Red;
+                iconFile = isConnected ? "Success.png" : "Error.png";
+                imagePath = Path.Combine(projectRoot, @"Content\Images", iconFile);
+                ClearImage(picStatus);
+                picStatus.Image = Image.FromFile(imagePath);
+            }
+
+            else if (sender == "DbExists")
+            {
+                btnBuild.Enabled = false;
+                isBuildEnabled = false;
+                btnPopulate.Enabled = true;
+
+                lblDbName.ForeColor = Color.Green;
+                lblDbName.BackColor = Color.Transparent;
+                lblDbStat.ForeColor = Color.Green;
+                lblDbStat.BackColor = Color.Transparent;
+                picDbStatus.BackColor = Color.Transparent;
+            }
+            else if (sender == "DbMissing")
+            {
+                btnBuild.Enabled = true;
+                isBuildEnabled = true;
+                btnPopulate.Enabled = false;
+                listSeasons.Items.Clear();
+
+                lblDbName.ForeColor = Color.FromArgb(255, 204, 0);
+                lblDbName.BackColor = Color.FromArgb(100, 0, 0, 0);
+                lblDbName.AutoSize = true;
+                lblDbStat.ForeColor = Color.FromArgb(255, 204, 0);
+                lblDbStat.BackColor = Color.FromArgb(100, 0, 0, 0);
+                lblDbStat.AutoSize = true;
+                picDbStatus.BackColor = Color.FromArgb(100, 0, 0, 0);
+                picDbStatus.Left = lblDbName.Right;
+            }
+            else if (sender == "BadConnection")
+            {
+                btnBuild.Enabled = true;
+                isBuildEnabled = true;
+                btnPopulate.Enabled = false;
+                listSeasons.Items.Clear();
+
+                lblStatus.ForeColor = Color.Red;
+                CenterElement(pnlWelcome, lblStatus);
+                lblDbName.ForeColor = Color.Red; 
+                lblDbName.BackColor = Color.Transparent;
+                lblDbName.AutoSize = true;
+                lblDbStat.ForeColor = Color.Red;
+                lblDbStat.BackColor = Color.Transparent;
+                lblDbName.AutoSize = true;
+                picDbStatus.BackColor = Color.Red;
+                picDbStatus.Left = lblDbName.Right;
+            }
+
+            //Do big Status label first
+            //lblStatus.Height = (int)(pnlWelcome.Height * .1);
+            //lblStatus.Font = SetFontSize("Segoe UI", ((float)(lblStatus.Height) / (96 / 12)) * (72 / 12), FontStyle.Bold, pnlWelcome, lblStatus);
+            //If CStatus = Disconnected, make font smaller
+            if (!isConnected)
+            {
+                lblStatus.Height = (int)(pnlWelcome.Height * .1);
+                lblCStatus.Font = SetFontSize("Segoe UI", ((float)(lblServer.Height * .9) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, pnlWelcome, lblCStatus);
+            }
+            else //If we're connected, use normal sized font
+            {
+                lblStatus.Height = (int)(pnlWelcome.Height * .1);
+                lblCStatus.Font = SetFontSize("Segoe UI", ((float)(lblServer.Height) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, pnlWelcome, lblCStatus);
+            }
+            lblDbName.AutoSize = true;
+            lblDbName.AutoSize = true;
+            picDbStatus.Left = lblDbName.Right;
+            lblCStatus.AutoSize = true;
+            lblStatus.Left = (pnlWelcome.ClientSize.Width - lblStatus.Width) / 2;
+            lblCStatus.Left = pnlWelcome.Width - (lblCStatus.Width + picStatus.Width);
+            picStatus.Left = lblCStatus.Right;
+            lblDbName.AutoSize = true;
+            lblDbStat.AutoSize = true;
+            picDbStatus.Left = lblDbName.Right;
+            lblDbUtil.Text = "Database Utilities";
+            lblDbUtil.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, pnlDbUtil, lblDbUtil);
+            lblDbUtil.AutoSize = true;
+            lblDbUtil.Left = (pnlDbUtil.Width - lblDbUtil.Width) / 2;
+
+
+        }
+
+
+        #region Database and Server Methods
+        //Refresh connection after connection update
+        private void RefreshConnectionUI()
+        {
+            // Reload the config from file
+            config = JsonConvert.DeserializeObject<DbConfig>(File.ReadAllText(configPath));
+
+            if (picStatus.Image != null)
+            {
+                picStatus.Image.Dispose();
+                picStatus.Image = null;
+            }
+            if (picDbStatus.Image != null)
+            {
+                picDbStatus.Image.Dispose();
+                picDbStatus.Image = null;
+            }
+            // Update server/database labels
+            lblServer.Text = "Server: ";
+            if (config.Alias != null)
+            {
+                lblServerName.Text = config.Alias;
+            }
+            else
+            {
+                lblServerName.Text = config.Server;
+            }
+            lblDB.Text = "Database: ";
+            lblDbName.Text = config.Database;
+
+            //Build connection string
+            bob.DataSource = config.Server;
+            if (config.Create == false)
+            {
+                bob.InitialCatalog = config.Database;
+            }
+            if (config.UseWindowsAuth == true)
+            {
+                bob.IntegratedSecurity = true;
+            }
+            else
+            {
+                bob.UserID = config.Username;
+                bob.Password = config.Password;
+                bob.IntegratedSecurity = false;
+            }
+            cString = bob.ToString();
+
+            bool isConnected = TestConnectionString(bob.ToString());
+
+            lblCStatus.Text = isConnected ? "Connected" : "Disconnected";
+            lblCStatus.ForeColor = isConnected ? Color.Green : Color.Red;
+
+            iconFile = isConnected ? "Success.png" : "Error.png";
+            imagePath = Path.Combine(projectRoot, @"Content\Images", iconFile);
+
+            if (File.Exists(imagePath))
+                picStatus.Image = Image.FromFile(imagePath);
+            else
+                picStatus.Image = null;
+
+            if (config.Create == true && isConnected)
+            {
+                lblDbStat.Text = "Need to create Database";
+                lblDbStat.ForeColor = Color.FromArgb(255, 204, 0);
+                lblDbName.ForeColor = Color.FromArgb(255, 204, 0);
+                lblDbName.BackColor = Color.FromArgb(100, 0, 0, 0);
+                lblDbStat.BackColor = Color.FromArgb(100, 0, 0, 0);
+                // Load image
+                imagePathDb = Path.Combine(projectRoot, @"Content\Images", "Warning.png");
+                picDbStatus.Image = Image.FromFile(imagePathDb);
+                picDbStatus.Left = lblDbName.Right;
+                picDbStatus.BackColor = Color.FromArgb(100, 0, 0, 0);
+            }
+
+
+        }
+        //Checks server for database
+        public void CheckServer(string connectionString, string sender)
+        {
+            if (picDbStatus.Image != null)
+            {
+                picDbStatus.Image.Dispose();
+                picDbStatus.Image = null;
+            }
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                string name = "";
+                using (SqlCommand dbCheck = new SqlCommand("use master select Name from sys.databases where Name = '" + config.Database + "'"))
+                {
+                    dbCheck.Connection = conn;
+                    dbCheck.CommandType = CommandType.Text;
+                    conn.Open();
+                    SqlDataReader reader = dbCheck.ExecuteReader();
+                    if (reader.Read())
+                    {
+                        lblDbStat.Text = "Database created";
+                        lblDbStat.ForeColor = Color.Green;
+                        lblDbStat.BackColor = Color.Transparent;
+
+                        conn.Close();
+                        dbConnection = true;
+                        bob.InitialCatalog = config.Database;
+                        btnBuild.Enabled = false;
+                        config.Create = false;
+
+                        WriteConfig("");
+                        lblDbName.ForeColor = Color.Green;
+                        lblDbName.BackColor = Color.Transparent;
+                        imagePathDb = Path.Combine(projectRoot, @"Content\Images", "Success.png");
+                        picDbStatus.Image = Image.FromFile(imagePathDb);
+                        picDbStatus.BackColor = Color.Transparent;
+                        btnPopulate.Enabled = true;
+                    }
+                    else
+                    {
+                        btnPopulate.Enabled = false;
+                        dbConnection = false;
+                        btnBuild.Enabled = true;
+                        config.Create = true;
+                        WriteConfig("");
+                        lblDbStat.Text = "Need to create Database";
+                        lblDbStat.ForeColor = Color.FromArgb(255, 204, 0);
+                        lblDbStat.BackColor = Color.FromArgb(100, 0, 0, 0);
+                        // Load image
+                        lblDbName.ForeColor = Color.FromArgb(255, 204, 0);
+                        lblDbName.BackColor = Color.FromArgb(100, 0, 0, 0);
+                        imagePathDb = Path.Combine(projectRoot, @"Content\Images", "Warning.png");
+                        picDbStatus.BackColor = Color.FromArgb(100, 0, 0, 0);
+                        picDbStatus.Image = Image.FromFile(imagePathDb);
+                    }
+                }
+            }
+
+        }
+        //Create Database using build.sql file
+        public void CreateDB(string connectionString)
+        {
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                string createAlter = "use master create database " + config.Database + "; " +
+                "alter database " + config.Database + " set auto_shrink off; " +
+                "alter database " + config.Database + " set auto_update_statistics on; " +
+                "alter database " + config.Database + " set auto_update_statistics_async on; " +
+                "alter database " + config.Database + " set recovery simple; " +
+                "alter database " + config.Database + " modify file (name = " + config.Database + ", size = 1024mb, filegrowth = 256mb); " +
+                "alter database " + config.Database + " modify file (name = " + config.Database + "_log, size = 1024mb, filegrowth = 256mb);";
+
+
+                using (SqlCommand InsertData = new SqlCommand(createAlter))
+                {
+                    InsertData.Connection = conn;
+                    InsertData.CommandType = CommandType.Text;
+                    conn.Open();
+                    try
+                    {
+                        InsertData.ExecuteScalar();
+                        config.Create = false;
+                        bob.InitialCatalog = config.Database;
+                    }
+                    catch (SqlException ex)
+                    {
+
+                    }
+                    conn.Close();
+                }
+                connectionString = bob.ToString();
+            }
+            if (TestConnectionString(connectionString))
+            {
+                if (ConfigChanged()) //If the config file has changed, write update to file
+                {
+                    WriteConfig("FirstDbConTest");
+                }
+            }
+            //CheckServer(connectionString, "create");
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                using (SqlCommand CreateTables = new SqlCommand(buildFile))
+                {
+                    CreateTables.Connection = conn;
+                    CreateTables.CommandType = CommandType.Text;
+                    conn.Open();
+                    try
+                    {
+                        CreateTables.ExecuteScalar();
+                        config.Create = false;
+                        btnBuild.Enabled = false;
+                        FormatProcedures();
+                    }
+                    catch (SqlException ex)
+                    {
+
+                    }
+                    conn.Close();
+                }
+                for (int i = 0; i < procs.Count; i++)
+                {
+                    using (SqlCommand CreateProcedures = new SqlCommand(procs[i]))
+                    {
+                        CreateProcedures.Connection = conn;
+                        CreateProcedures.CommandType = CommandType.Text;
+                        conn.Open();
+                        try
+                        {
+                            CreateProcedures.ExecuteScalar();
+                        }
+                        catch (SqlException ex)
+                        {
+
+                        }
+                        conn.Close();
+                    }
+                }
+                using (SqlCommand InsertSeasons = new SqlCommand("SeasonInsert"))
+                {
+                    InsertSeasons.Connection = conn;
+                    InsertSeasons.CommandType = CommandType.StoredProcedure;
+                    conn.Open();
+                    try
+                    {
+                        InsertSeasons.ExecuteScalar();
+                    }
+                    catch (SqlException ex)
+                    {
+
+                    }
+                    conn.Close();
+                }
+                if (ConfigChanged()) //If the config file has changed, write update to file
+                {
+                    WriteConfig("After SeasonInsert");
+                }
+                DbExists();
+            }
+        }
+        //Formats procedures from build.sql file
+        public void FormatProcedures()
+        {
+            string search = "~~~";
+            List<int> indices = new List<int>();
+            int startIndex = 0;
+            for (int i = 0; i <= procedures.Length - search.Length; i++)
+            {
+                if (procedures.Substring(i, search.Length) == search)
+                {
+                    indices.Add(i);
+                    procs.Add(procedures.Substring(startIndex, i - startIndex));
+                    startIndex = i + search.Length;
+                }
+            }
+        }
+        #endregion
 
 
 
         public Main()
         {
             InitializeComponent();
-            GetSettings();
+            GetSettings("Main");
             //Set screen size
             #region Set screen size
             screenWidth = Screen.PrimaryScreen.WorkingArea.Width;
@@ -382,34 +996,12 @@ namespace NBAdbToolbox
             this.ResizeEnd += FormResize;
             #endregion
 
-            #region Set and declare variables
-            //Declarations       
-            lblServer.Text = "Server: ";
-            lblDB.Text = "Database: "; 
-            isConnected = false;
-            bgCourt.Width = this.Width;
-            bgCourt.Height = this.Height;
 
-            #endregion
-
-            #region Set Welcome and Database Utilities panel sizes
-            pnlWelcome.BorderStyle = BorderStyle.FixedSingle;
-            pnlWelcome.Width = (int)(this.ClientSize.Width / 2.5);
-            pnlWelcome.Height = (int)(this.ClientSize.Height / 2.5);
-            pnlWelcome.Left = (this.ClientSize.Width - pnlWelcome.Width) / 2;
-            pnlWelcome.Top = (this.ClientSize.Height - pnlWelcome.Height) / 2;
-            pnlWelcome.BackColor = Color.Transparent;
-
-            //DbUtil
-            pnlDbUtil.Height = this.Height;
-            pnlDbUtil.Dock = DockStyle.Left;
-            pnlDbUtil.Width = pnlWelcome.Left;
-            #endregion
-
+            AddControls();
 
             //Check for dbconfig - Verify Server/Database Connectivity
             #region Verify Server/Database Connectivity
-            InitializeDbConfig();
+            InitializeDbConfig("Main");
             #endregion
 
             #region Add Elements - Adding Labels/Panels etc to Window
@@ -419,100 +1011,15 @@ namespace NBAdbToolbox
 
 
 
+            float fontSize = ((float)(pnlWelcome.Height * .08) / (96 / 12)) * (72 / 12);
 
             #region dbUtilProperties
             //DbUtil
-            pnlDbUtil.BorderStyle = BorderStyle.None;
-            pnlDbUtil.Paint += (s, e) =>
-            {
-                Control p = (Control)s;
-                using (Pen pen = new Pen(Color.White, 1))
-                {
-                    e.Graphics.DrawLine(pen, p.Width - 1, 0, p.Width - 1, p.Height);
-                }
-            };
             pnlDbUtil.Parent = bgCourt;
-            lblDbUtil.Height = (int)(pnlWelcome.Height * .1);
-            float fontSize = ((float)(pnlWelcome.Height * .08) / (96 / 12)) * (72 / 12);
-            lblDbUtil.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, pnlDbUtil, lblDbUtil);
-            lblDbUtil.AutoSize = true;
-            CenterElement(pnlDbUtil, lblDbUtil);
-
-            //Will be used primarily for table panel expansion later, but need for DbOptions
-            fullHeight = (int)(pnlDbUtil.Height * .5);
-            dimW = pnlDbUtil.Width / 3;
-            dimH = (int)(fullHeight * .25);
-            dimH2 = (int)(fullHeight * .5);
-
-
-            ChangeLabel(lblDbOverview, pnlDbUtil, new List<string> { 
-                "Database Overview", 
-                "Bold", 
-                (((float)(pnlWelcome.Height * .05) / (96 / 12)) * (72 / 12)).ToString(), 
-                ".", 
-                "true", 
-                pnlDbUtil.Left.ToString(), 
-                (lblDbUtil.Bottom + (int)(lblDbUtil.Height * .3)).ToString(), 
-                ".", 
-                "true", 
-                ((int)(lblDbUtil.Height * .8)).ToString() 
-            });           
-            ChangeLabel(lblDbOvExpand, pnlDbUtil, new List<string> { 
-                "+", 
-                "Bold", 
-                (((float)(pnlWelcome.Height * .05) / (96 / 12)) * (72 / 12)).ToString(), 
-                ".", 
-                "true", 
-                ".", 
-                lblDbOverview.Top.ToString(), 
-                ".", 
-                "true", 
-                ((int)(lblDbUtil.Height * .8)).ToString() 
-            });
-            lblDbOvExpand.Left = (pnlDbUtil.Left + pnlDbUtil.Width - lblDbOvExpand.Width);
-            lblDbOvExpand.Height = lblDbOverview.Height;
-            overviewHeight = lblDbOverview.Height;
-
-            ChangeLabel(lblDbOptions, pnlDbUtil, new List<string> { 
-                "Options", 
-                "Bold", 
-                fontSize.ToString(), 
-                ".", 
-                "true", 
-                ".", 
-                (lblDbOverview.Bottom + lblDbUtil.Height).ToString(), 
-                ".", 
-                "true", 
-                ((int)(lblDbUtil.Height * .9)).ToString() 
-            });
-            CenterElement(pnlDbUtil, lblDbOptions);
-
-
-            ChangeLabel(lblDbSelectSeason, lblDbOptions, new List<string> { 
-                "Season Select", 
-                "Bold", 
-                fontSize.ToString(), 
-                ".", 
-                "true", 
-                pnlDbUtil.Left.ToString(), 
-                lblDbOptions.Bottom.ToString(), 
-                ".", 
-                "true", 
-                ((int)(lblDbUtil.Height * .8)).ToString() 
-            });
-            AlignLeft(pnlDbUtil, lblDbSelectSeason, lblDbOptions);
-
-
-            listSeasons.SelectionMode = SelectionMode.MultiExtended;
-            listSeasons.Top = lblDbSelectSeason.Bottom;
-            listSeasons.Left = pnlDbUtil.Left; 
-            listSeasons.KeyDown += ListSeasons_SelectAll;
-
-            btnPopulate.Text = "Populate Db";
-            btnPopulate.Font = SetFontSize("Segoe UI", (float)(fontSize / 3.3), FontStyle.Bold, pnlWelcome, btnPopulate); //6.5
-            btnPopulate.Width = (int)(listSeasons.Width * .8);
-            btnPopulate.Top = listSeasons.Bottom; //subject to change
             #endregion
+
+
+
             #region Populate Database
             btnPopulate.Click += async (s, e) =>
             {
@@ -853,6 +1360,11 @@ namespace NBAdbToolbox
             picLoad.BackColor = Color.Transparent;
 
 
+            lblDbUtil.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, pnlDbUtil, lblDbUtil);
+            lblDbUtil.AutoSize = true;
+            lblDbUtil.Left = (pnlDbUtil.Width - lblDbUtil.Width) / 2;
+
+
 
             //lblSeasonStatusLoadInfo
             lblSeasonStatusLoad.Left = 0;
@@ -922,8 +1434,7 @@ namespace NBAdbToolbox
             //To set font, i'll need the name, ideal size or pt, and its Style.
             //In addition, i also need the parent element and the child or the element we're working with
             lblStatus.Height = (int)(pnlWelcome.Height * .1);
-            fontSize = ((float)(lblStatus.Height) / (96 / 12)) * (72 / 12); //Formula is picking the correct Pt, as determined by the height of the label
-            lblStatus.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, pnlWelcome, lblStatus);
+            lblStatus.Font = SetFontSize("Segoe UI", ((float)(lblStatus.Height) / (96 / 12)) * (72 / 12), FontStyle.Bold, pnlWelcome, lblStatus);
             //Auto-size and center
             CenterElement(pnlWelcome, lblStatus);
 
@@ -991,8 +1502,17 @@ namespace NBAdbToolbox
 
 
 
+
+
             fontSize = ((float)(lblServer.Height) / (96 / 12)) * (72 / 12) / 2;
-            lblCStatus.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, pnlWelcome, lblCStatus);
+            if (!isConnected)
+            {
+                lblCStatus.Font = SetFontSize("Segoe UI", ((float)(lblServer.Height * .9) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, pnlWelcome, lblCStatus);
+            }
+            else //If we're connected, use normal sized font
+            {
+                lblCStatus.Font = SetFontSize("Segoe UI", ((float)(lblServer.Height) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, pnlWelcome, lblCStatus);
+            }
             lblCStatus.Height = lblServer.Height / 2;
             picStatus.SizeMode = PictureBoxSizeMode.Zoom;
             int topY = lblDB.Bottom + 20; //Vertical position            
@@ -1012,6 +1532,15 @@ namespace NBAdbToolbox
             btnBuild.AutoSize = true;
             CenterElement(pnlWelcome, btnBuild);
             btnBuild.Top = btnEdit.Bottom + 10; //subject to change
+            if (!isBuildEnabled)
+            {
+                btnBuild.Enabled = false;
+            }
+            else
+            {
+                btnBuild.Enabled = true;
+            }
+
             #endregion
             #region Edit Connection & Build DB
             if (dbConnection)
@@ -1050,8 +1579,10 @@ namespace NBAdbToolbox
                         Username = popup.Username,
                         Password = popup.Password
                     };
-                    WriteConfig();
-                    RefreshConnectionUI();
+                    defaultConfig = false;
+                    //configPath = Path.Combine(settings.ConfigPath, 
+                    InitializeDbConfig("btnEdit");
+                    RefreshDefaultConfigPath("Edit");
                 }
             };
 
@@ -1062,6 +1593,7 @@ namespace NBAdbToolbox
                     CreateDB(cString);
                     bob.InitialCatalog = config.Database;
                     cString = bob.ToString();
+                    btnPopulate.Enabled = true;
                 }
             };
             #endregion
@@ -1088,6 +1620,7 @@ namespace NBAdbToolbox
             DbOverviewClick(lblDbOvExpand, lblDbOvExpand, pnlDbOverview);
             #endregion
 
+
             #region Settings area
             lblSettings.Text = "Settings";
             lblSettings.Top = btnBuild.Bottom + 10; //subject to change
@@ -1101,14 +1634,152 @@ namespace NBAdbToolbox
             picSettings.Left = lblSettings.Right;
             picSettings.Top = lblSettings.Top + lblSettings.Height/6;
             picSettings.BackColor = Color.FromArgb(0, 0, 0, 0);
+            lblBrowseConfig.Font = SetFontSize("Segoe UI", (float)(fontSize * .9), FontStyle.Bold, pnlWelcome, lblBrowseConfig);
+            lblBrowseConfig.Top = lblSettings.Bottom + 10;
+            lblBrowseConfig.Left = 0;
+            btnBrowseConfig.Font = SetFontSize("Segoe UI", (float)(fontSize * .8), FontStyle.Bold, pnlWelcome, btnBrowseConfig);
+            btnBrowseConfig.Width = btnEdit.Width/2;
+            btnBrowseConfig.Top = lblSettings.Bottom + 10;
+            lblBrowseConfig.Top = btnBrowseConfig.Top + (btnBrowseConfig.Height / 5);
+            lblBrowseConfig.AutoSize = true;
+            btnBrowseConfig.AutoSize = true;
+            btnBrowseConfig.Left = lblBrowseConfig.Right;
+
+            btnBrowseConfig.Click += (s, e) =>
+            {
+                dlgDefaultPath.Description = "Select folder for configuration files";
+                dlgDefaultPath.SelectedPath = settings.ConfigPath;
+
+                if (dlgDefaultPath.ShowDialog() == DialogResult.OK)
+                {
+                    settings.ConfigPath = dlgDefaultPath.SelectedPath;
+                    File.WriteAllText(settingsPath, JsonConvert.SerializeObject(settings, Formatting.Indented));
+                }
+                lblSettings.Focus();
+            };
+
+            RefreshDefaultConfigPath("Main");
+            boxChangeConfig.SelectedIndexChanged += (s, e) =>
+            {
+                if (boxChangeConfig.SelectedItem != null)
+                {
+                    string selectedFile = boxChangeConfig.SelectedItem.ToString() + ".json";
+                    configPath = Path.Combine(settings.ConfigPath, selectedFile);
+                    //Load the selected config
+                    config = JsonConvert.DeserializeObject<DbConfig>(File.ReadAllText(configPath));
+                    defaultConfig = false;
+                    InitializeDbConfig("boxChangeConfig");
+                }
+                lblSettings.Focus();
+            };
+            boxChangeConfig.DropDownClosed += (s, e) =>
+            {
+                lblSettings.Focus();
+            };
+
+            boxChangeConfig.DropDownStyle = ComboBoxStyle.DropDownList; //Makes it non-editable
+            boxChangeConfig.Font = SetFontSize("Segoe UI", (int)(fontSize * .7), FontStyle.Regular, pnlWelcome, boxChangeConfig);
+            boxChangeConfig.Top = btnBrowseConfig.Bottom + 10;
+            boxChangeConfig.Width = (int)(btnEdit.Width * .7);
+
+            lblChangeConfig.Left = 0;
+            lblChangeConfig.Top = boxChangeConfig.Top;
+            lblChangeConfig.AutoSize = true;
+            lblChangeConfig.Font = SetFontSize("Segoe UI", (int)(fontSize * .9), FontStyle.Bold, pnlWelcome, lblChangeConfig);
+            boxChangeConfig.Left = lblChangeConfig.Right;
+
+
+
+
+
+
+
+
+
+
+            boxConfigFiles.SelectedIndexChanged += (s, e) =>
+            {
+                if (isRefreshing) return;
+                if (boxConfigFiles.SelectedItem != null)
+                {
+                    string selectedFile = boxConfigFiles.SelectedItem.ToString() + ".json";
+                    configPath = Path.Combine(settings.ConfigPath, selectedFile);
+                    //Load the selected config
+                    config = JsonConvert.DeserializeObject<DbConfig>(File.ReadAllText(configPath));
+                    defaultConfig = false;
+                    InitializeDbConfig("boxDefaultConfig");
+                }
+                RefreshDefaultConfigPath("Change");
+                lblSettings.Focus();
+            };
+            boxConfigFiles.DropDownClosed += (s, e) =>
+            {                
+                lblSettings.Focus();
+            };
+
+            boxConfigFiles.DropDownStyle = ComboBoxStyle.DropDownList; //Makes it non-editable
+            boxConfigFiles.Font = SetFontSize("Segoe UI", (int)(fontSize * .7), FontStyle.Regular, pnlWelcome, boxConfigFiles);
+            boxConfigFiles.Top = boxChangeConfig.Bottom + 10;
+            boxConfigFiles.Width = (int)(btnEdit.Width * .7);
+
+            lblConfigFiles.Left = 0;
+            lblConfigFiles.Top = boxConfigFiles.Top ;
+            lblConfigFiles.AutoSize = true;
+            lblConfigFiles.Font = SetFontSize("Segoe UI", (int)(fontSize * .9), FontStyle.Bold, pnlWelcome, lblConfigFiles);
+            boxConfigFiles.Left = lblConfigFiles.Right;
+
+
+
 
             SettingsClick(lblSettings, picSettings, fontSize);
             SettingsClick(picSettings, picSettings, fontSize);
+
             #endregion
         }
 
-        #region Populate Database
+        private bool isRefreshing = false;
+        public void RefreshDefaultConfigPath(string sender)
+        {
+            isRefreshing = true;
+            boxConfigFiles.Items.Clear();
+            boxChangeConfig.Items.Clear();
+            string[] configFiles = Directory.GetFiles(settings.ConfigPath, "*.json");
+            string settingsDefConfig = "";
+            int intSettingsDefConfig = 0;
+            for (int i = 0; i < configFiles.Length; i++)
+            {
+                string currentFileName = Path.GetFileName(configFiles[i]).Replace(".json", "");
+                boxConfigFiles.Items.Add(Path.GetFileName(configFiles[i]).Replace(".json", ""));
+                boxChangeConfig.Items.Add(Path.GetFileName(configFiles[i]).Replace(".json", ""));
+                //select if it's the default
+                if (currentFileName == settings.DefaultConfig.Replace(".json", ""))
+                {
+                    if(sender == "Main")
+                    {
+                        boxConfigFiles.SelectedIndex = i;
+                    }
+                    settingsDefConfig = settings.DefaultConfig.Replace(".json", "");
+                    intSettingsDefConfig = i;
+                }
+                if (sender != "Main" && currentFileName == configName)
+                {
+                    if(config.Default == true)
+                    {
+                        boxConfigFiles.SelectedIndex = i;
+                    }
+                    else
+                    {
+                        boxConfigFiles.SelectedIndex = intSettingsDefConfig;
+                    }
+                }
+            }
+            boxChangeConfig.SelectedIndex = boxConfigFiles.SelectedIndex;
+            isRefreshing = false;
+        }
 
+
+
+        #region Populate Database
         public void PopulateDb_1_PreSelection()
         {
             RegularSeasonGames = 0;
@@ -1132,7 +1803,6 @@ namespace NBAdbToolbox
             timeElapsedRead = TimeSpan.Zero;
             elapsedStringRead = "";
         }
-
         #region Historic
         public void PopulateDb_2_AfterHistoricRead()
         {
@@ -1189,7 +1859,6 @@ namespace NBAdbToolbox
             gpmValue.Text = gamesPerMin + "\n" + time;
         }
         #endregion
-
         #region Current
         public void PopulateDb_5_BeforeCurrentRead()
         {
@@ -1244,7 +1913,6 @@ namespace NBAdbToolbox
                             "." //Height
                             }); //Hitting endpoints and inserting 
         }
-
         public void PopulateDb_6_AfterCurrentReadSchedule()
         {
             stopwatchRead.Stop();
@@ -1425,7 +2093,6 @@ namespace NBAdbToolbox
             {
                 PlayCompletionSound("Season");
             }
-            currentTeamsDone = false;
             teamsDone = false;
             arenasDone = false;
             playersDone = false;
@@ -1553,6 +2220,119 @@ namespace NBAdbToolbox
         #endregion
 
         #region Initializations
+
+        public void AddControls()
+        {
+            #region Set and declare variables
+            lblServer.Text = "Server: ";
+            lblDB.Text = "Database: ";
+            isConnected = false;
+            bgCourt.Width = this.Width;
+            bgCourt.Height = this.Height;
+            #endregion
+
+            #region Set Welcome and Database Utilities panel sizes
+            pnlWelcome.BorderStyle = BorderStyle.FixedSingle;
+            pnlWelcome.Width = (int)(this.ClientSize.Width / 2.5);
+            pnlWelcome.Height = (int)(this.ClientSize.Height / 2.5);
+            pnlWelcome.Left = (this.ClientSize.Width - pnlWelcome.Width) / 2;
+            pnlWelcome.Top = (this.ClientSize.Height - pnlWelcome.Height) / 2;
+            pnlWelcome.BackColor = Color.Transparent;
+
+            //DbUtil
+            pnlDbUtil.Height = this.Height;
+            pnlDbUtil.Dock = DockStyle.Left;
+            pnlDbUtil.Width = pnlWelcome.Left;
+            #endregion
+
+            float fontSize = ((float)(pnlWelcome.Height * .08) / (96 / 12)) * (72 / 12);
+            pnlDbUtil.BorderStyle = BorderStyle.None;
+            pnlDbUtil.Paint += (s, e) =>
+            {
+                Control p = (Control)s;
+                using (Pen pen = new Pen(Color.White, 1))
+                {
+                    e.Graphics.DrawLine(pen, p.Width - 1, 0, p.Width - 1, p.Height);
+                }
+            };
+            lblDbUtil.Height = (int)(pnlWelcome.Height * .1);
+            //Will be used primarily for table panel expansion later, but need for DbOptions
+            fullHeight = (int)(pnlDbUtil.Height * .5);
+            dimW = pnlDbUtil.Width / 3;
+            dimH = (int)(fullHeight * .25);
+            dimH2 = (int)(fullHeight * .5);
+
+
+
+            ChangeLabel(lblDbOverview, pnlDbUtil, new List<string> {
+                "Database Overview",
+                "Bold",
+                (((float)(pnlWelcome.Height * .05) / (96 / 12)) * (72 / 12)).ToString(),
+                ".",
+                "true",
+                pnlDbUtil.Left.ToString(),
+                (lblDbUtil.Bottom + (int)(lblDbUtil.Height * .3)).ToString(),
+                ".",
+                "true",
+                ((int)(lblDbUtil.Height * .8)).ToString()
+            });
+            ChangeLabel(lblDbOvExpand, pnlDbUtil, new List<string> {
+                "+",
+                "Bold",
+                (((float)(pnlWelcome.Height * .05) / (96 / 12)) * (72 / 12)).ToString(),
+                ".",
+                "true",
+                ".",
+                lblDbOverview.Top.ToString(),
+                ".",
+                "true",
+                ((int)(lblDbUtil.Height * .8)).ToString()
+            });
+            lblDbOvExpand.Left = (pnlDbUtil.Left + pnlDbUtil.Width - lblDbOvExpand.Width);
+            lblDbOvExpand.Height = lblDbOverview.Height;
+            overviewHeight = lblDbOverview.Height;
+
+            ChangeLabel(lblDbOptions, pnlDbUtil, new List<string> {
+                "Options",
+                "Bold",
+                fontSize.ToString(),
+                ".",
+                "true",
+                ".",
+                (lblDbOverview.Bottom + lblDbUtil.Height).ToString(),
+                ".",
+                "true",
+                ((int)(lblDbUtil.Height * .9)).ToString()
+            });
+            lblDbOptions.Left = (pnlDbUtil.ClientSize.Width - lblDbOptions.Width) / 2;
+
+
+            ChangeLabel(lblDbSelectSeason, lblDbOptions, new List<string> {
+                "Season Select",
+                "Bold",
+                fontSize.ToString(),
+                ".",
+                "true",
+                pnlDbUtil.Left.ToString(),
+                lblDbOptions.Bottom.ToString(),
+                ".",
+                "true",
+                "."
+            });
+            lblDbSelectSeason.Left = 0;
+            listSeasons.Top = lblDbSelectSeason.Bottom - (int)(lblDbSelectSeason.Height / 3);
+
+            listSeasons.SelectionMode = SelectionMode.MultiExtended;
+            listSeasons.Left = pnlDbUtil.Left;
+            listSeasons.KeyDown += ListSeasons_SelectAll;
+
+            btnPopulate.Text = "Populate Db";
+            btnPopulate.Font = SetFontSize("Segoe UI", (float)(fontSize / 3.3), FontStyle.Bold, pnlWelcome, btnPopulate); //6.5
+            btnPopulate.Width = (int)(listSeasons.Width * .8);
+            btnPopulate.Top = listSeasons.Bottom; //subject to change
+
+
+        }
         public void InitializeElements()
         {
             //Children elements should go above the parents, background image should be last added. 
@@ -1571,7 +2351,13 @@ namespace NBAdbToolbox
             AddPanelElement(pnlDbUtil, lblDbOvExpand);
             AddPanelElement(pnlDbUtil, lblDbOverview);
             AddPanelElement(pnlDbUtil, pnlDbOverview);
-            AddPanelElement(pnlDbUtil, lblDbUtil);
+            AddPanelElement(pnlDbUtil, lblDbUtil); 
+            AddPanelElement(pnlWelcome, boxConfigFiles);
+            AddPanelElement(pnlWelcome, lblConfigFiles);
+            AddPanelElement(pnlWelcome, boxChangeConfig);
+            AddPanelElement(pnlWelcome, lblChangeConfig);
+            AddPanelElement(pnlWelcome, btnBrowseConfig);
+            AddPanelElement(pnlWelcome, lblBrowseConfig);
             AddPanelElement(pnlWelcome, picSettings);
             AddPanelElement(pnlWelcome, lblSettings);
             AddPanelElement(pnlWelcome, lblDbStat);
@@ -1592,352 +2378,7 @@ namespace NBAdbToolbox
             AddMainElement(this, pnlDbUtil);   //Adding Database Utilities panel
             AddMainElement(this, bgCourt); //Ading background image
         }
-        public void InitializeDbConfig()
-        {
-            if (!File.Exists(configPath)) //If our file doesnt exist
-            {
-                lblStatus.Text = "Set Database Configuration";
-                btnEdit.Text = "Create Server connection";
-                //lblServer.Text += "Not Connected.";
-                lblServerName.Text = "Not Connected.";
-                lblServerName.ForeColor = Color.Red;
-                lblCStatus.Text = "Disconnected";
-                lblCStatus.ForeColor = Color.Red;
-                // Load image
-                imagePath = Path.Combine(projectRoot, @"Content\Images", "Error.png");
-                picStatus.Image = Image.FromFile(imagePath);
-                btnBuild.Enabled = false;
-                btnPopulate.Enabled = false;
-            }
-            else if (File.Exists(configPath)) //If our file does exist
-            {
-                json = "";
-                lblStatus.Text = "Welcome Back!";
-                btnEdit.Text = "Edit Server connection";
-                btnEdit.Width = (int)(lblStatus.Width / 1.5);
-                json = File.ReadAllText(configPath);
-                config = JsonConvert.DeserializeObject<DbConfig>(json);
-                //Set label text
-                if(config.Alias != null)
-                {
-                    lblServerName.Text = config.Alias;
-                }
-                else
-                {
-                    lblServerName.Text = config.Server;
-                }
-                lblDbName.Text = config.Database;
 
-                //Build connection string
-                bob.DataSource = config.Server;
-                if (config.Create == false)
-                {
-                    bob.InitialCatalog = config.Database;
-                }
-                if (config.UseWindowsAuth == true)
-                {
-                    bob.IntegratedSecurity = true;
-                }
-                else
-                {
-                    bob.UserID = config.Username;
-                    bob.Password = config.Password;
-                    bob.IntegratedSecurity = false;
-                }
-                cString = bob.ToString();
-                if (config.Server != "" && ((config.Username != "" && config.Password != "") || config.UseWindowsAuth == true))
-                {
-                    isConnected = TestDbConnection(cString);
-                }
-                if (picStatus.Image != null)
-                {
-                    picStatus.Image.Dispose();
-                    picStatus.Image = null;
-                }
-                if (isConnected)
-                {
-                    lblCStatus.Text = "Connected";
-                    lblCStatus.ForeColor = Color.Green;
-                    // Load image
-                    imagePath = Path.Combine(projectRoot, @"Content\Images", "Success.png");
-                    picStatus.Image = Image.FromFile(imagePath);
-                    btnBuild.Enabled = true;
-                }
-                else
-                {
-                    lblCStatus.Text = "Disconnected";
-                    lblCStatus.ForeColor = Color.Red;
-                    // Load image
-                    imagePath = Path.Combine(projectRoot, @"Content\Images", "Error.png");
-                    picStatus.Image = Image.FromFile(imagePath);
-                    btnBuild.Enabled = false;
-                }
-                CheckServer(cString, "main");
-            }
-
-        }
-
-        #endregion
-
-        #region Database and Server Methods
-        //Refresh connection after connection update
-        private void RefreshConnectionUI()
-        {
-            // Reload the config from file
-            config = JsonConvert.DeserializeObject<DbConfig>(File.ReadAllText(configPath));
-
-            if (picStatus.Image != null)
-            {
-                picStatus.Image.Dispose();
-                picStatus.Image = null;
-            }
-            if (picDbStatus.Image != null)
-            {
-                picDbStatus.Image.Dispose();
-                picDbStatus.Image = null;
-            }
-            // Update server/database labels
-            lblServer.Text = "Server: ";
-            if (config.Alias != null)
-            {
-                lblServerName.Text = config.Alias;
-            }
-            else
-            {
-                lblServerName.Text = config.Server;
-            }
-            lblDB.Text = "Database: ";
-            lblDbName.Text = config.Database;
-
-            //Build connection string
-            bob.DataSource = config.Server;
-            if (config.Create == false)
-            {
-                bob.InitialCatalog = config.Database;
-            }
-            if (config.UseWindowsAuth == true)
-            {
-                bob.IntegratedSecurity = true;
-            }
-            else
-            {
-                bob.UserID = config.Username;
-                bob.Password = config.Password;
-                bob.IntegratedSecurity = false;
-            }
-            cString = bob.ToString();
-
-            bool isConnected = TestDbConnection(bob.ToString());
-
-            lblCStatus.Text = isConnected ? "Connected" : "Disconnected";
-            lblCStatus.ForeColor = isConnected ? Color.Green : Color.Red;
-
-            iconFile = isConnected ? "Success.png" : "Error.png";
-            imagePath = Path.Combine(projectRoot, @"Content\Images", iconFile);
-
-            if (File.Exists(imagePath))
-                picStatus.Image = Image.FromFile(imagePath);
-            else
-                picStatus.Image = null;
-
-            if (config.Create == true && isConnected)
-            {
-                lblDbStat.Text = "Need to create Database";
-                lblDbStat.ForeColor = Color.FromArgb(255, 204, 0);
-                lblDbName.ForeColor = Color.FromArgb(255, 204, 0);
-                lblDbName.BackColor = Color.FromArgb(100, 0, 0, 0);
-                lblDbStat.BackColor = Color.FromArgb(100, 0, 0, 0);
-                // Load image
-                imagePathDb = Path.Combine(projectRoot, @"Content\Images", "Warning.png");
-                picDbStatus.Image = Image.FromFile(imagePathDb);
-                picDbStatus.Left = lblDbName.Right;
-                picDbStatus.BackColor = Color.FromArgb(100, 0, 0, 0);
-            }
-
-
-        }
-        //Test Server connection
-        public bool TestDbConnection(string connectionString)
-        {
-            try
-            {
-                using (SqlConnection conn = new SqlConnection(connectionString))
-                {
-                    conn.Open();
-                    btnBuild.Enabled = true;
-                    lblServerName.ForeColor = Color.Green;
-                    btnEdit.Text = "Edit Server connection";
-                    return true; // Connected successfully
-                }
-            }
-            catch (Exception ex)
-            {
-                return false;
-            }
-        }
-        //Checks server for database
-        public void CheckServer(string connectionString, string sender)
-        {
-            if (picDbStatus.Image != null)
-            {
-                picDbStatus.Image.Dispose();
-                picDbStatus.Image = null;
-            }
-            using (SqlConnection conn = new SqlConnection(connectionString))
-            {
-                string name = "";
-                using (SqlCommand dbCheck = new SqlCommand("use master select Name from sys.databases where Name = '" + config.Database + "'"))
-                {
-                    dbCheck.Connection = conn;
-                    dbCheck.CommandType = CommandType.Text;
-                    conn.Open();
-                    SqlDataReader reader = dbCheck.ExecuteReader();
-                    if (reader.Read())
-                    {
-                        lblDbStat.Text = "Database created";
-                        lblDbStat.ForeColor = Color.Green;
-                        lblDbStat.BackColor = Color.Transparent;
-                        conn.Close();
-                        dbConnection = true;
-                        bob.InitialCatalog = config.Database;
-                        btnBuild.Enabled = false;
-                        config.Create = false;
-                        WriteConfig();
-                        lblDbName.ForeColor = Color.Green;
-                        lblDbName.BackColor = Color.Transparent;
-                        imagePathDb = Path.Combine(projectRoot, @"Content\Images", "Success.png");
-                        picDbStatus.Image = Image.FromFile(imagePathDb);
-                        picDbStatus.BackColor = Color.Transparent;
-                        btnPopulate.Enabled = true;
-                    }
-                    else
-                    {
-                        btnPopulate.Enabled = false;
-                        dbConnection = false;
-                        btnBuild.Enabled = true;
-                        config.Create = true;
-                        WriteConfig();
-                        lblDbStat.Text = "Need to create Database";
-                        lblDbStat.ForeColor = Color.FromArgb(255, 204, 0);
-                        lblDbStat.BackColor = Color.FromArgb(100, 0, 0, 0);
-                        // Load image
-                        lblDbName.ForeColor = Color.FromArgb(255, 204, 0);
-                        lblDbName.BackColor = Color.FromArgb(100, 0, 0, 0);
-                        imagePathDb = Path.Combine(projectRoot, @"Content\Images", "Warning.png");
-                        picDbStatus.BackColor = Color.FromArgb(100, 0, 0, 0);
-                        picDbStatus.Image = Image.FromFile(imagePathDb);
-                    }
-                }
-            }
-
-        }
-        //Create Database using build.sql file
-        public void CreateDB(string connectionString)
-        {
-            using (SqlConnection conn = new SqlConnection(connectionString))
-            {
-                string createAlter = "use master create database " + config.Database + "; " +
-                "alter database " + config.Database + " set auto_shrink off; " +
-                "alter database " + config.Database + " set auto_update_statistics on; " +
-                "alter database " + config.Database + " set auto_update_statistics_async on; " +
-                "alter database " + config.Database + " set recovery simple; " +
-                "alter database " + config.Database + " modify file (name = " + config.Database + ", size = 1024mb, filegrowth = 256mb); " +
-                "alter database " + config.Database + " modify file (name = " + config.Database + "_log, size = 1024mb, filegrowth = 256mb);";
-
-
-                using (SqlCommand InsertData = new SqlCommand(createAlter))
-                {
-                    InsertData.Connection = conn;
-                    InsertData.CommandType = CommandType.Text;
-                    conn.Open();
-                    try
-                    {
-                        InsertData.ExecuteScalar();
-                        config.Create = false;
-                        bob.InitialCatalog = config.Database;
-                    }
-                    catch (SqlException ex)
-                    {
-
-                    }
-                    conn.Close();
-                }
-                connectionString = bob.ToString();
-            }
-            CheckServer(connectionString, "create");
-            using (SqlConnection conn = new SqlConnection(connectionString))
-            {
-                using (SqlCommand CreateTables = new SqlCommand(buildFile))
-                {
-                    CreateTables.Connection = conn;
-                    CreateTables.CommandType = CommandType.Text;
-                    conn.Open();
-                    try
-                    {
-                        CreateTables.ExecuteScalar();
-                        config.Create = false;
-                        WriteConfig();
-                        btnBuild.Enabled = false;
-                        FormatProcedures();
-                    }
-                    catch (SqlException ex)
-                    {
-
-                    }
-                    conn.Close();
-                }
-                for (int i = 0; i < procs.Count; i++)
-                {
-                    using (SqlCommand CreateProcedures = new SqlCommand(procs[i]))
-                    {
-                        CreateProcedures.Connection = conn;
-                        CreateProcedures.CommandType = CommandType.Text;
-                        conn.Open();
-                        try
-                        {
-                            CreateProcedures.ExecuteScalar();
-                        }
-                        catch (SqlException ex)
-                        {
-
-                        }
-                        conn.Close();
-                    }
-                }
-                using (SqlCommand InsertSeasons = new SqlCommand("SeasonInsert"))
-                {
-                    InsertSeasons.Connection = conn;
-                    InsertSeasons.CommandType = CommandType.StoredProcedure;
-                    conn.Open();
-                    try
-                    {
-                        InsertSeasons.ExecuteScalar();
-                    }
-                    catch (SqlException ex)
-                    {
-
-                    }
-                    conn.Close();
-                }
-                GetSeasons(connectionString);
-            }
-        }
-        //Formats procedures from build.sql file
-        public void FormatProcedures()
-        {
-            string search = "~~~";
-            List<int> indices = new List<int>();
-            int startIndex = 0;
-            for (int i = 0; i <= procedures.Length - search.Length; i++)
-            {
-                if (procedures.Substring(i, search.Length) == search)
-                {
-                    indices.Add(i);
-                    procs.Add(procedures.Substring(startIndex, i - startIndex));
-                    startIndex = i + search.Length;
-                }
-            }
-        }
         #endregion
 
 
@@ -1965,43 +2406,6 @@ namespace NBAdbToolbox
             control.Left = (panel.ClientSize.Width - control.Width) / 2;
         }
 
-
-
-        //Add Status picture to Table panel
-        public void AddTablePic(Panel panel, PictureBox pic, string path, string sender, Label header)
-        {
-            AddPanelElement(panel, pic);
-            pic.Image = Image.FromFile(path);
-            pic.Height = header.Height - (int)(header.Height * .1);
-            pic.Width = header.Height - (int)(header.Height * .1);
-            pic.Left = header.Right - (int)(header.Height * .1);
-            pic.Top = header.Top + (int)(header.Height * .15);
-            pic.SizeMode = PictureBoxSizeMode.Zoom;
-            if (sender == "expand")
-            {
-                pic.Height = header.Height - (int)(header.Height * .15);
-                pic.Width = header.Height - (int)(header.Height * .15);
-                pic.Left = header.Right - (int)(header.Height * .2);
-
-            }
-            panel.Controls.SetChildIndex(pic, 0);
-
-        }
-        //Add Label to Table panels
-        public void TableLabels(Panel pnl, Label lbl, float fontSize, string labelType, Label parent)
-        {
-            lbl.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
-            AddPanelElement(pnl, lbl);
-            if (labelType == "Header")
-            {
-                CenterElement(pnl, lbl);
-            }
-            else if (labelType == "Subhead")
-            {
-                AlignLeft(pnl, lbl, parent);
-            }
-
-        }
         //Align label to left side of panel
         public void AlignLeft(Panel pnl, Label lbl, Label parent)
         {
@@ -2234,8 +2638,7 @@ namespace NBAdbToolbox
             {
                 label.Height = Int32.Parse(structions[9]);
             }
-        }
-   
+        }   
         public void ImageDriver()
         {
             if (reverse)
@@ -2378,6 +2781,7 @@ namespace NBAdbToolbox
                     }
                     lblSettings.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, pnlWelcome, btnBuild);
                     lblSettings.Left = (pnlWelcome.ClientSize.Width - lblSettings.Width) / 2;
+                    SettingsVisibility(false);
                 }
                 else
                 {
@@ -2389,16 +2793,30 @@ namespace NBAdbToolbox
                     }
                     lblSettings.Font = SetFontSize("Segoe UI", (float)(fontSize * 1.05), FontStyle.Bold | FontStyle.Underline, pnlWelcome, btnBuild);
                     lblSettings.Left = (pnlWelcome.ClientSize.Width - lblSettings.Width) / 2;
+                    SettingsVisibility(true);
                 }
             };
         }
-        public void ClearImages()
+
+        public void SettingsVisibility(bool vis)
+        {
+            lblBrowseConfig.Visible = vis;
+            btnBrowseConfig.Visible = vis;
+            lblChangeConfig.Visible = vis;
+            boxChangeConfig.Visible = vis;
+            lblConfigFiles.Visible = vis;
+            boxConfigFiles.Visible = vis;
+
+        }
+
+
+        public void ClearImage(PictureBox pic)
         {
             // Release previous image
-            if (picLoad.Image != null)
+            if (pic.Image != null)
             {
-                picLoad.Image.Dispose();
-                picLoad.Image = null;
+                pic.Image.Dispose();
+                pic.Image = null;
             }
         }
 
@@ -2483,12 +2901,6 @@ namespace NBAdbToolbox
 
 
 
-        public async Task GetSchedule()
-        {
-            schedule = null;
-            List<Games> games = new List<Games>();
-            scheduleGames = await leagueSchedule.GetJSON();
-        }
 
 
         //Historic Data
@@ -2522,7 +2934,7 @@ namespace NBAdbToolbox
             string filePath = Path.Combine(projectRoot, "Content\\", "dbconfig.json");              //Line 2050 is TESTing data, 2049 normal
             filePath = filePath.Replace("dbconfig.json", "Historic Data\\");
             //filePath = filePath.Replace("dbconfig.json", "Historic Data\\test\\");
-            int iter = (SeasonID == 2012 || SeasonID == 2019 || SeasonID == 2020) ? 3 : 4;      //No Selection
+            int iter = (SeasonID <= 2012 || SeasonID == 2019 || SeasonID == 2020) ? 3 : 4;      //No Selection
             root = await historic.ReadFile(SeasonID, iter, filePath);
         }
         public async Task InsertGameWithLoading(NBAdbToolboxHistoric.Game game, int season, int imageIteration, string sender)
@@ -2565,7 +2977,7 @@ namespace NBAdbToolbox
             HistoricGameInsert(game, sender, officials); //5.7 Populate DB Update
 
             //TeamBox
-            TeamBoxStaging(game); //5.7 Populate DB Update
+            HistoricTeamBoxStaging(game); //5.7 Populate DB Update
 
             //Players
             HistoricPlayerStaging(game); //5.7 Populate DB Update
@@ -2819,30 +3231,30 @@ namespace NBAdbToolbox
             }
 
             //GameType
-            if (Int32.Parse(game.box.gameId).ToString().Substring(0, 1) == "2")
+            if (sender == "Regular Season")
             {
                 sqlBuilder.Append("'RS', null)\n");
             }
-            else
+            else if(sender == "Postseason")
             {
-                sqlBuilder.Append("'PS', 'placeholder')\n");
+                sqlBuilder.Append("'PS', '" + GameID.ToString().Substring(0, 7) + "')\n");
             }
 
             //GameExt
             sqlBuilder.Append("Insert into GameExt(SeasonID, GameID, Status, Attendance, Sellout");
 
             //Officials
-            for (int o = 0; o < officials.Count; o++)
+            for (int o = 0; o < officials.Count && o < 4; o++)
             {
                 if (o == 0)
                 {
                     sqlBuilder.Append(", OfficialID");
                 }
-                else if (o != 3)
+                else if (o < 3)
                 {
                     sqlBuilder.Append(", Official").Append(o + 1).Append("ID");
                 }
-                else
+                else if(o == 3)
                 {
                     sqlBuilder.Append(", OfficialAlternateID");
                 }
@@ -2856,7 +3268,7 @@ namespace NBAdbToolbox
                       .Append(game.box.attendance).Append(", ")
                       .Append(game.box.sellout);
             //Add official values
-            for (int o = 0; o < officials.Count; o++)
+            for (int o = 0; o < officials.Count && o < 4; o++)
             {
                 sqlBuilder.Append(", ").Append(officials[o]);
             }
@@ -2896,9 +3308,6 @@ namespace NBAdbToolbox
 
         //Player & PlayerBox Methods - Includes Inactive Players.Populates Player, PlayerBox and StartingLineups tables
         #region Player & PlayerBox Methods - Includes Inactive Players. Populates Player, PlayerBox and StartingLineups tables
-
-        #region Historic Players - 5.7 Populate DB Update
-        //5.7 Populate DB Update
         public void HistoricPlayerStaging(NBAdbToolboxHistoric.Game game)
         {
             //Process home team players
@@ -2916,7 +3325,7 @@ namespace NBAdbToolbox
                         HistoricPlayerInsert(player, game.box.homeTeamPlayers[index].jerseyNum, "Historic");
                     }
                 }
-                PlayerBoxInsertString(game, player, game.box.homeTeamId, game.box.awayTeamId);
+                HistoricPlayerBoxInsert(game, player, game.box.homeTeamId, game.box.awayTeamId);
             }
 
             //Process away team players
@@ -2934,7 +3343,7 @@ namespace NBAdbToolbox
                         HistoricPlayerInsert(player, game.box.awayTeamPlayers[index].jerseyNum, "Historic");
                     }
                 }
-                PlayerBoxInsertString(game, player, game.box.awayTeamId, game.box.homeTeamId);
+                HistoricPlayerBoxInsert(game, player, game.box.awayTeamId, game.box.homeTeamId);
             }
 
             //Process home team inactive players
@@ -2957,7 +3366,6 @@ namespace NBAdbToolbox
                 HistoricInactiveBoxInsert(game.box.awayTeamId, game.box.homeTeamId,inactive.personId);
             }
         }
-
         public void HistoricPlayerInsert(NBAdbToolboxHistoric.Player player, string number, string sender)
         {
             //Add player to appropriate tracking list
@@ -2988,7 +3396,6 @@ namespace NBAdbToolbox
                 sqlBuilder.Append("null)\n");
             }
         }
-
         public void HistoricInactiveInsert(NBAdbToolboxHistoric.Inactive inactive, string sender)
         {
             //Add inactive player to appropriate tracking list
@@ -3008,7 +3415,6 @@ namespace NBAdbToolbox
                       .Append(inactive.firstName.Replace("'", "''")).Append(" ")
                       .Append(inactive.familyName.Replace("'", "''")).Append("')\n");
         }
-
         public void HistoricInactiveBoxInsert(int TeamID, int MatchupID, int InactiveID)
         {
             //Simple insert for inactive player stats
@@ -3019,8 +3425,7 @@ namespace NBAdbToolbox
                       .Append(MatchupID).Append(", ")
                       .Append(InactiveID).Append(", 'INACTIVE')\n");
         }
-
-        public void PlayerBoxInsertString(NBAdbToolboxHistoric.Game game, NBAdbToolboxHistoric.Player player, int TeamID, int MatchupID)
+        public void HistoricPlayerBoxInsert(NBAdbToolboxHistoric.Game game, NBAdbToolboxHistoric.Player player, int TeamID, int MatchupID)
         {
             //Column definitions
             sqlBuilder.Append("insert into PlayerBox(SeasonID, GameID, TeamID, MatchupID, PlayerID, Status, FGM, FGA, [FG%], FG2M, FG2A, FG3M, FG3A, [FG3%], FTM, FTA, [FT%], ")
@@ -3133,246 +3538,27 @@ namespace NBAdbToolbox
                           .Append("')\n");
             }
         }
-        #endregion
 
-        public void PlayerCheck(NBAdbToolboxHistoric.Player player, int season, string number, string sender)
-        {
-            using (SqlCommand PlayerCheck = new SqlCommand("PlayerCheck"))
-            {
-                PlayerCheck.CommandType = CommandType.StoredProcedure;
-                PlayerCheck.Parameters.AddWithValue("@PlayerID", player.personId);
-                PlayerCheck.Parameters.AddWithValue("@SeasonID", season);
-                using (SqlDataAdapter sPlayerSearch = new SqlDataAdapter())
-                {
-                    PlayerCheck.Connection = SQLdb;
-                    sPlayerSearch.SelectCommand = PlayerCheck;
-                    SQLdb.Open();
-                    SqlDataReader reader = PlayerCheck.ExecuteReader();
-                    reader.Read();
-                    if (!reader.HasRows)
-                    {
-                        SQLdb.Close();
-                        if(sender == "Historic")
-                        {
-                            playerList.Add((season, player.personId));
-                        }
-                        else if(sender == "Missing")
-                        {
-                            playerList.Add((season, player.personId));
-                        }
-                        string pInsert = "Insert into Player values(" + season + ", " + player.personId + ", '" + player.firstName.Replace("'", "''") + " " + player.familyName.Replace("'", "''") + "', '" + number + "', ";
-                        if (player.position != null && player.position != "")
-                        {
-                            pInsert += "'" + player.position + "')\n";
-                        }
-                        else
-                        {
-                            pInsert += "null)\n";
-                        }
-                        playerInsert += pInsert;
-                    }
-                    else
-                    {
-                        SQLdb.Close();
-                    }
-                }
-            }
-        }
-        public void InactiveCheck(NBAdbToolboxHistoric.Inactive inactive, int season, string sender)
-        {
-            using (SqlCommand InactiveCheck = new SqlCommand("PlayerCheck"))
-            {
-                InactiveCheck.CommandType = CommandType.StoredProcedure;
-                InactiveCheck.Parameters.AddWithValue("@PlayerID", inactive.personId);
-                InactiveCheck.Parameters.AddWithValue("@SeasonID", season);
-                using (SqlDataAdapter sInactiveCheck = new SqlDataAdapter())
-                {
-                    InactiveCheck.Connection = SQLdb;
-                    sInactiveCheck.SelectCommand = InactiveCheck;
-                    SQLdb.Open();
-                    SqlDataReader reader = InactiveCheck.ExecuteReader();
-                    reader.Read();
-                    if (!reader.HasRows)
-                    {
-                        SQLdb.Close();
-                        if (sender == "Historic")
-                        {
-                            playerList.Add((season, inactive.personId));
-                        }
-                        else if (sender == "Missing")
-                        {
-                            playerList.Add((season, inactive.personId));
-                        }
-                        playerInsert += "Insert into Player(SeasonID, PlayerID, Name) values(" + season + ", " + inactive.personId + ", '" + inactive.firstName.Replace("'", "''") + " " + inactive.familyName.Replace("'", "''") + "')\n";
-                    }
-                    else
-                    {
-                        SQLdb.Close();
-                    }
-                }
-            }
-        }
-
-        //PlayerBox methods with Inactive players
-        #region PlayerBox Methods with Inactive players
-        public string playerBoxUpdateString = "";
-        public void PlayerBoxCheck(NBAdbToolboxHistoric.Game game, NBAdbToolboxHistoric.Player player, int TeamID, int MatchupID, string procedure)
-        {
-            SqlConnection SQLdb = new SqlConnection(cString);
-            using (SqlCommand PlayerBoxCheck = new SqlCommand(procedure))
-            {
-                PlayerBoxCheck.Connection = SQLdb;
-                PlayerBoxCheck.CommandType = CommandType.StoredProcedure;
-                PlayerBoxCheck.Parameters.AddWithValue("@SeasonID", SeasonID);
-                PlayerBoxCheck.Parameters.AddWithValue("@GameID", GameID);
-                PlayerBoxCheck.Parameters.AddWithValue("@TeamID", TeamID);
-                PlayerBoxCheck.Parameters.AddWithValue("@MatchupID", MatchupID);
-                PlayerBoxCheck.Parameters.AddWithValue("@PlayerID", player.personId);
-                using (SqlDataAdapter sTeamSearch = new SqlDataAdapter())
-                {
-                    PlayerBoxCheck.Connection = SQLdb;
-                    sTeamSearch.SelectCommand = PlayerBoxCheck;
-                    SQLdb.Open();
-                    SqlDataReader reader = PlayerBoxCheck.ExecuteReader();
-                    if (!reader.HasRows)
-                    {
-                        SQLdb.Close();
-                        //PlayerBoxInsert(game, player, TeamID, season, "PlayerBoxInsertHistoric");
-                        PlayerBoxInsertString(game, player, TeamID, MatchupID);
-                    }
-                    else
-                    {
-                        reader.Read();
-                        if (reader.GetString(4) != player.statistics.minutes && reader.GetString(4) != "0" && reader.GetString(4) != "")
-                        {
-                            SQLdb.Close();
-                            //PlayerBoxUpdate(game, player, TeamID, season, "PlayerBoxUpdateHistoric");
-                            PlayerBoxUpdateString(game, player, TeamID, MatchupID);
-                        }
-                        else
-                        {
-                            SQLdb.Close();
-                        }
-                    }
-                }
-            }
-        }
-        public void PlayerBoxUpdateString(NBAdbToolboxHistoric.Game game, NBAdbToolboxHistoric.Player player, int TeamID, int MatchupID)
-        {
-            string update = "update PlayerBox set" +
-                " Points = " + player.statistics.points
-                + ", FGM = " + player.statistics.fieldGoalsMade
-                + ", FGA = " + player.statistics.fieldGoalsAttempted
-                + ", [FG%] = " + player.statistics.fieldGoalsPercentage
-                + ", FG3M = " + player.statistics.threePointersMade
-                + ", FG3A = " + player.statistics.threePointersAttempted
-                + ", [FG3%] = " + player.statistics.threePointersPercentage
-                + ", FTM = " + player.statistics.freeThrowsMade
-                + ", FTA = " + player.statistics.freeThrowsAttempted
-                + ", [FT%] = " + player.statistics.freeThrowsPercentage
-                + ", ReboundsDefensive = " + player.statistics.reboundsDefensive
-                + ", ReboundsOffensive = " + player.statistics.reboundsOffensive
-                + ", ReboundsTotal = " + player.statistics.reboundsTotal
-                + ", Assists = " + player.statistics.assists
-                + ", Turnovers = " + player.statistics.turnovers
-                + ", Steals = " + player.statistics.steals
-                + ", Blocks = " + player.statistics.blocks
-                + ", FoulsPersonal = " + player.statistics.foulsPersonal
-                + ", PlusMinusPoints = " + player.statistics.plusMinusPoints
-                + ", FG2M = " + (player.statistics.fieldGoalsMade - player.statistics.threePointersMade)
-                + ", FG2A = " + (player.statistics.fieldGoalsAttempted - player.statistics.threePointersAttempted);
-            double sec = double.Parse(player.statistics.minutes.Substring(player.statistics.minutes.IndexOf("M") + 1, 5));
-            sec = sec / 60;
-            double minCalc = double.Parse(player.statistics.minutes.Substring(2, 2));
-            minCalc = Math.Round(minCalc + sec, 2);
-            update += "MinutesCalculated = " + minCalc + ", ";
-
-
-            if ((double)(player.statistics.fieldGoalsAttempted - player.statistics.threePointersAttempted) != 0)
-            {
-                update += ", [FG2%] = " + Math.Round((double)(player.statistics.fieldGoalsMade - player.statistics.threePointersMade) /
-                    (double)(player.statistics.fieldGoalsAttempted - player.statistics.threePointersAttempted), 4);
-            }
-
-            if (player.statistics.turnovers > 0)
-            {
-                update += ", AssistsTurnoverRatio = " + Math.Round((double)(player.statistics.assists) / (double)(player.statistics.turnovers), 3);
-            }
-            if (player.statistics.minutes != "")
-            {
-                update += ", Minutes = '" + player.statistics.minutes + "'";
-            }
-            string where = " where SeasonID = " + SeasonID + " and GameID = " + GameID + " and TeamID = " + TeamID + " and MatchupID = " + MatchupID + " and PlayerID = " + player.personId;
-
-            playerBoxUpdateString += update + where + "\n";
-        }
-        //PlayerBox and StartingLineups
-        public void InactiveBoxCheck(NBAdbToolboxHistoric.Game game, NBAdbToolboxHistoric.Inactive inactive, int TeamID, int MatchupID)
-        {
-            using (SqlCommand PlayerBoxCheck = new SqlCommand("PlayerBoxCheck"))
-            {
-                PlayerBoxCheck.Connection = new SqlConnection(bob.ToString());
-                PlayerBoxCheck.CommandType = CommandType.StoredProcedure;
-                PlayerBoxCheck.Parameters.AddWithValue("@SeasonID", SeasonID);
-                PlayerBoxCheck.Parameters.AddWithValue("@GameID", GameID);
-                PlayerBoxCheck.Parameters.AddWithValue("@TeamID", TeamID);
-                PlayerBoxCheck.Parameters.AddWithValue("@MatchupID", MatchupID);
-                PlayerBoxCheck.Parameters.AddWithValue("@PlayerID", inactive.personId);
-                using (SqlDataAdapter sTeamSearch = new SqlDataAdapter())
-                {
-                    sTeamSearch.SelectCommand = PlayerBoxCheck;
-                    PlayerBoxCheck.Connection.Open();
-                    SqlDataReader reader = PlayerBoxCheck.ExecuteReader();
-                    if (!reader.HasRows)
-                    {
-                        PlayerBoxCheck.Connection.Close();
-                        InactiveBoxInsertString(TeamID, MatchupID, inactive.personId);
-                    }
-                    else
-                    {
-                        PlayerBoxCheck.Connection.Close();
-                    }
-                }
-            }
-        }
-        public void InactiveBoxInsertString(int TeamID, int MatchupID, int InactiveID)
-        {
-            playerBoxInsertString += "insert into PlayerBox(SeasonID, GameID, TeamID, MatchupID, PlayerID, Status) values(" + SeasonID + ", " + GameID + ", " + TeamID + ", " + MatchupID + ", " + InactiveID + ", 'INACTIVE')\n";
-            
-        }
-        #endregion
 
         #endregion
 
         //TeamBox methods
         #region TeamBox Methods
-        public void TeamBoxStaging(NBAdbToolboxHistoric.Game game)
+        public void HistoricTeamBoxStaging(NBAdbToolboxHistoric.Game game)
         {
-            //TeamBoxCheck(game.box.homeTeam, season, GameID, game.box.awayTeamId, game.box.awayTeam.statistics.points, "TeamBoxCheck", game.box.homeTeam.lineups[0]);
-            //TeamBoxCheck(game.box.awayTeam, season, GameID, game.box.homeTeamId, game.box.homeTeam.statistics.points, "TeamBoxCheck", game.box.awayTeam.lineups[0]);
-            //foreach (NBAdbToolboxHistoric.Lineups lineup in game.box.homeTeam.lineups)
-            //{
-            //    TeamBoxCheck(game.box.homeTeam, season, GameID, game.box.awayTeamId, game.box.awayTeam.statistics.points, "TeamBoxLineupCheck", lineup);
-            //}
-            //foreach (NBAdbToolboxHistoric.Lineups lineup in game.box.awayTeam.lineups)
-            //{
-            //    TeamBoxCheck(game.box.awayTeam, season, GameID, game.box.homeTeamId, game.box.homeTeam.statistics.points, "TeamBoxLineupCheck", lineup);
-            //}
-
             //5.7 Populate DB Update
-            WriteTeamBoxInsert(game.box.homeTeam, game.box.awayTeamId, game.box.awayTeam.statistics.points);
-            WriteTeamBoxInsert(game.box.awayTeam, game.box.homeTeamId, game.box.homeTeam.statistics.points);
+            HistoricTeamBoxInsert(game.box.homeTeam, game.box.awayTeamId, game.box.awayTeam.statistics.points);
+            HistoricTeamBoxInsert(game.box.awayTeam, game.box.homeTeamId, game.box.homeTeam.statistics.points);
             foreach (NBAdbToolboxHistoric.Lineups lineup in game.box.homeTeam.lineups)
             {
-                WriteTeamBoxLineupsInsert(game.box.homeTeam, game.box.awayTeamId, game.box.awayTeam.statistics.points, lineup);
+                HistoricTeamBoxLineupsInsert(game.box.homeTeam, game.box.awayTeamId, game.box.awayTeam.statistics.points, lineup);
             }
             foreach (NBAdbToolboxHistoric.Lineups lineup in game.box.awayTeam.lineups)
             {
-                WriteTeamBoxLineupsInsert(game.box.awayTeam, game.box.homeTeamId, game.box.homeTeam.statistics.points, lineup);
+                HistoricTeamBoxLineupsInsert(game.box.awayTeam, game.box.homeTeamId, game.box.homeTeam.statistics.points, lineup);
             }
         }
-
-        public void WriteTeamBoxInsert(NBAdbToolboxHistoric.Team team, int MatchupID, int PointsAgainst)
+        public void HistoricTeamBoxInsert(NBAdbToolboxHistoric.Team team, int MatchupID, int PointsAgainst)
         {
             //Column names
             sqlBuilder.Append("insert into TeamBox(SeasonID, GameID, TeamID, MatchupID, FGM, FGA, [FG%], FG2M, FG2A, FG3M, FG3A, [FG3%], FTM, FTA, [FT%], ")
@@ -3428,8 +3614,7 @@ namespace NBAdbToolbox
                 sqlBuilder.Append("0)\n");
             }
         }
-
-        public void WriteTeamBoxLineupsInsert(NBAdbToolboxHistoric.Team team, int MatchupID, int PointsAgainst, NBAdbToolboxHistoric.Lineups lineup)
+        public void HistoricTeamBoxLineupsInsert(NBAdbToolboxHistoric.Team team, int MatchupID, int PointsAgainst, NBAdbToolboxHistoric.Lineups lineup)
         {
             int minutes = 0;
             int seconds = 0;
@@ -3514,11 +3699,8 @@ namespace NBAdbToolbox
 
         //PlayByPlay methods StringBuilder
         #region PlayByPlay Methods
-
         public StringBuilder sqlBuilder = new StringBuilder(220 * 1024); //Start with roughly .225 MB initial capacity
         public StringBuilder playByPlayBuilder = new StringBuilder(245 * 1024); //Start with about .25MB capacity
-
-
         public void PlayByPlayInsertString(NBAdbToolboxHistoric.Action action, int GameID)
         {
             StringBuilder insert = new StringBuilder("insert into PlayByPlay (SeasonID, GameID, ActionID, ActionNumber, Qtr, Clock, ");
@@ -3662,7 +3844,6 @@ namespace NBAdbToolbox
                             .Append("\n");
 
         }
-
         public void HistoricPlayByPlayStaging(NBAdbToolboxHistoric.PlayByPlay pbp)
         {
             int actions = pbp.actions.Count;
@@ -3676,159 +3857,22 @@ namespace NBAdbToolbox
 
         #endregion
 
-        //Current Data
-        #region Current Data Up to Date
+
+
+
+
+        #region Current Data StringBuilder Update 5.17
         //Declarations
         #region Declarations
-        public bool currentTeamsDone = false;
-        public string currentBigInsert = "";
-        public string currentFirstInsert = "";
-
-        public string currentPlayer = "";
-        public string currentPlayerBox = "";
-        public string currentTeamBox = "";
-        public string currentPlayByPlay = "";
         public string missingData = "";
         //Used in Game region
         public string insertExt = "";
         public string valuesExt = "";
         public string lastGame = "";
         public string seriesIDfirst7 = "";
-        #endregion
-        public int currentGame = 0;
-        public async Task CurrentGameData(int GameID, string sender)
-        {
-            bool doBox = true;
-            bool doPBP = true;
-            bool useHistoricBox = false;
-            bool useHistoricPBP = false;
-            string missingInstructions = "";
-            string missingNote = "";
-            missingData = "";
-
-
-            //Try to get Current Data
-            #region Try to get Current Data
-            try
-            {
-                rootCPBP = await currentDataPBP.GetJSON(GameID, SeasonID);
-                if (rootCPBP.game == null)
-                {
-                    doPBP = false;
-                    useHistoricPBP = true;
-                    missingNote = "'No file available from NBA')\n";
-                }
-            }
-            catch (WebException ex)
-            {
-                doPBP = false;
-                useHistoricPBP = true;
-                missingNote = "'No file available from NBA')\n";
-            }
-
-            try
-            {
-                rootC = await currentData.GetJSON(GameID, SeasonID);
-                if (rootC.game == null)
-                {
-                    doBox = false;
-                    useHistoricBox = true;
-                    missingNote = "'No file available from NBA')\n";
-                }
-            }
-            catch (WebException ex)
-            {
-                doBox = false;
-                useHistoricBox = true;
-                missingNote = "'No file available from NBA')\n";
-            }
-            #endregion
-            //If it's available, get Boxscore endpoint data ready
-            #region Box endpoint data collection
-            Task DoBox = Task.Run(() =>
-            {
-                if (doBox)
-                {
-                    try
-                    {
-                        //CurrentInsertStaging(rootC.game, season);
-                        CurrentDataDriver(rootC.game);
-                    }
-                    catch (Exception e)
-                    {
-                        useHistoricBox = true;
-                        missingNote = "'JSON file formatting - NBA pls fix')\n";
-                        ErrorOutput(e);
-                    }
-                }
-                else
-                {
-                    missingData += "insert into util.MissingData values(" + SeasonID + ", " + GameID + ", 'Current', 'Box', " + missingNote + "\n";
-                }
-            });
-            if (iterator == TotalGames)
-            {
-                await DoBox;
-            }
-            #endregion
-
-            //If it's available, get PlayByPlay endpoint data ready
-            #region PlayByPlay endpoint data collection
-            Task DoPbp = Task.Run(() =>
-            {
-                if (doPBP)
-                {
-                    try
-                    {
-                        InitiateCurrentPlayByPlay(rootCPBP.game);
-                    }
-                    catch
-                    {
-                        useHistoricPBP = true;
-                        missingNote = "'JSON file formatting - NBA pls fix')\n";
-                    }
-                }
-                else
-                {
-                    missingData += "insert into util.MissingData values(" + SeasonID + ", " + GameID + ", 'Current', 'PlayByPlay', " + missingNote + "\n";
-                }
-            });
-            if (iterator == TotalGames)
-            {
-                await DoPbp;
-            }
-            #endregion
-
-            #region Getting historic Data for missing data
-            if (useHistoricBox)
-            {
-                missingInstructions += "Box";
-            }
-            if (useHistoricPBP)
-            {
-                missingInstructions += " PlayByPlay";
-            }
-            if(useHistoricBox || useHistoricPBP)
-            {
-                NBAdbToolboxHistoric.Game game = null;
-                if(GameID.ToString().Substring(0, 1) == "2")
-                {
-                    game = root.season.games.regularSeason.FirstOrDefault(g => Int32.Parse(g.game_id) == GameID);
-                }
-                else
-                {
-                    game = root.season.games.playoffs.FirstOrDefault(g => Int32.Parse(g.game_id) == GameID);
-                }
-                GetMissingDataDetails(game, missingInstructions);
-            }
-            #endregion
-        }
-
         public StringBuilder sqlBuilderParallel = new StringBuilder(220 * 1024); //Start with roughly .225 MB initial capacity
         #endregion
 
-
-        #region Current Data StringBuilder Update 5.17
         public async Task CurrentGameGPS(int GameID, string sender)
         {
             bool doBox = true;
@@ -3914,7 +3958,7 @@ namespace NBAdbToolbox
                 CurrentTeamBox(team, MatchupID);
                 InitiateCurrentPlayerBox(game, team, MatchupID);
             }
-            if (!currentTeamsDone)
+            if (!teamsDone)
             {
                 InitiateCurrentTeam(game);
             }
@@ -3976,7 +4020,7 @@ namespace NBAdbToolbox
 
                 if (teamList.Count == 30)
                 {
-                    currentTeamsDone = true;
+                    teamsDone = true;
                 }
             }
 
@@ -3987,7 +4031,7 @@ namespace NBAdbToolbox
 
                 if (teamList.Count == 30)
                 {
-                    currentTeamsDone = true;
+                    teamsDone = true;
                 }
             }
         }
@@ -4750,7 +4794,7 @@ namespace NBAdbToolbox
                 //Games
                 HistoricGameInsert(game, sender, officials); //5.7 Populate DB Update
                 //TeamBox
-                TeamBoxStaging(game);
+                HistoricTeamBoxStaging(game);
                 //Players
                 HistoricPlayerStaging(game);
                 string sqlBuilderStr = sqlBuilder.ToString() + "\n";
@@ -4788,5 +4832,22 @@ namespace NBAdbToolbox
             }
         }
         #endregion
+
+
+
+
+
+
+
+
+
+
+
+        public async Task GetSchedule()
+        {
+            schedule = null;
+            List<Games> games = new List<Games>();
+            scheduleGames = await leagueSchedule.GetJSON();
+        }
     }
 }
