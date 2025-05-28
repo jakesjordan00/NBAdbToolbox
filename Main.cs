@@ -607,9 +607,34 @@ namespace NBAdbToolbox
                 configPath = Path.Combine(settings.ConfigPath, configName + ".json");
                 File.WriteAllText(Path.Combine(settings.ConfigPath, configName + ".json"), JsonConvert.SerializeObject(config, Formatting.Indented));
                 configControl = JsonConvert.DeserializeObject<DbConfig>(JsonConvert.SerializeObject(config));
+                ClearLoadInfo();
             }
         }
 
+        public void ClearLoadInfo()
+        {
+            if (picLoad.Image != null)
+            {
+                picLoad.Image.Dispose();
+                picLoad.Image = null;
+            }
+            gpmValue.Visible = false;
+            gpm.Visible = false;
+            lblWorkingOn.Visible = false;
+            lblCurrentGameCount.Visible = false;
+            lblCurrentGame.Visible = false;
+            lblSeasonStatusLoadInfo.Visible = false;
+            lblSeasonStatusLoad.Visible = false;
+
+            AddPanelElement(pnlLoad, gpmValue);
+            AddPanelElement(pnlLoad, gpm);
+            AddPanelElement(pnlLoad, lblWorkingOn);
+            AddPanelElement(pnlLoad, lblCurrentGameCount);
+            AddPanelElement(pnlLoad, lblCurrentGame);
+            AddPanelElement(pnlLoad, lblSeasonStatusLoadInfo);
+            AddPanelElement(pnlLoad, lblSeasonStatusLoad);
+            AddPanelElement(pnlLoad, picLoad);
+        }
 
         public void UIController(string sender)//If an event occurs that will change the state of the UI, it must run through here
         {
@@ -1071,6 +1096,7 @@ namespace NBAdbToolbox
                     lblSeasonStatusLoadInfo.Visible = true;
                     picLoad.Visible = true;
                     #region ChangeLabel
+
                     ChangeLabel(lblCurrentGame, pnlLoad, new List<string> {
                         "Current game: ", //Text
                         "Regular", //FontStyle
@@ -2038,34 +2064,41 @@ namespace NBAdbToolbox
             #endregion
 
             #region Build Log Insert
-            using(SqlConnection Main = new SqlConnection(cString))
-            using (SqlCommand BuildLogInsert = new SqlCommand("BuildLogInsert", Main))
+            try
             {
-                BuildLogInsert.CommandType = CommandType.StoredProcedure;
-                BuildLogInsert.Parameters.AddWithValue("@BuildID", BuildID);
-                BuildLogInsert.Parameters.AddWithValue("@Season", SeasonID);
-                BuildLogInsert.Parameters.AddWithValue("@Hr", timeElapsedSeason.Hours);
-                BuildLogInsert.Parameters.AddWithValue("@Min", timeElapsedSeason.Minutes);
-                BuildLogInsert.Parameters.AddWithValue("@Sec", timeElapsedSeason.Seconds);
-                BuildLogInsert.Parameters.AddWithValue("@Ms", timeElapsedSeason.Milliseconds);
-                BuildLogInsert.Parameters.AddWithValue("@FullTime", elapsedStringSeason);
-                BuildLogInsert.Parameters.AddWithValue("@HrR", timeElapsedRead.Hours);
-                BuildLogInsert.Parameters.AddWithValue("@MinR", timeElapsedRead.Minutes);
-                BuildLogInsert.Parameters.AddWithValue("@SecR", timeElapsedRead.Seconds);
-                BuildLogInsert.Parameters.AddWithValue("@MsR", timeElapsedRead.Milliseconds);
-                BuildLogInsert.Parameters.AddWithValue("@ReadTime", elapsedStringRead);
-                BuildLogInsert.Parameters.AddWithValue("@HrI", timeElapsedInsert.Hours);
-                BuildLogInsert.Parameters.AddWithValue("@MinI", timeElapsedInsert.Minutes);
-                BuildLogInsert.Parameters.AddWithValue("@SecI", timeElapsedInsert.Seconds);
-                BuildLogInsert.Parameters.AddWithValue("@MsI", timeElapsedInsert.Milliseconds);
-                BuildLogInsert.Parameters.AddWithValue("@InsertTime", elapsedStringInsert);
-                BuildLogInsert.Parameters.AddWithValue("@DatetimeStarted", start);
-                BuildLogInsert.Parameters.AddWithValue("@DatetimeComplete", end);
-                BuildLogInsert.Parameters.AddWithValue("@Historic", historic);
-                BuildLogInsert.Parameters.AddWithValue("@Current", current);
-                BuildLogInsert.Parameters.AddWithValue("@Source", source);
-                Main.Open();
-                BuildLogInsert.ExecuteNonQuery();
+                using (SqlConnection Main = new SqlConnection(cString))
+                using (SqlCommand BuildLogInsert = new SqlCommand("BuildLogInsert", Main))
+                {
+                    BuildLogInsert.CommandType = CommandType.StoredProcedure;
+                    BuildLogInsert.Parameters.AddWithValue("@BuildID", BuildID);
+                    BuildLogInsert.Parameters.AddWithValue("@Season", SeasonID);
+                    BuildLogInsert.Parameters.AddWithValue("@Hr", timeElapsedSeason.Hours);
+                    BuildLogInsert.Parameters.AddWithValue("@Min", timeElapsedSeason.Minutes);
+                    BuildLogInsert.Parameters.AddWithValue("@Sec", timeElapsedSeason.Seconds);
+                    BuildLogInsert.Parameters.AddWithValue("@Ms", timeElapsedSeason.Milliseconds);
+                    BuildLogInsert.Parameters.AddWithValue("@FullTime", elapsedStringSeason);
+                    BuildLogInsert.Parameters.AddWithValue("@HrR", timeElapsedRead.Hours);
+                    BuildLogInsert.Parameters.AddWithValue("@MinR", timeElapsedRead.Minutes);
+                    BuildLogInsert.Parameters.AddWithValue("@SecR", timeElapsedRead.Seconds);
+                    BuildLogInsert.Parameters.AddWithValue("@MsR", timeElapsedRead.Milliseconds);
+                    BuildLogInsert.Parameters.AddWithValue("@ReadTime", elapsedStringRead);
+                    BuildLogInsert.Parameters.AddWithValue("@HrI", timeElapsedInsert.Hours);
+                    BuildLogInsert.Parameters.AddWithValue("@MinI", timeElapsedInsert.Minutes);
+                    BuildLogInsert.Parameters.AddWithValue("@SecI", timeElapsedInsert.Seconds);
+                    BuildLogInsert.Parameters.AddWithValue("@MsI", timeElapsedInsert.Milliseconds);
+                    BuildLogInsert.Parameters.AddWithValue("@InsertTime", elapsedStringInsert);
+                    BuildLogInsert.Parameters.AddWithValue("@DatetimeStarted", start);
+                    BuildLogInsert.Parameters.AddWithValue("@DatetimeComplete", end);
+                    BuildLogInsert.Parameters.AddWithValue("@Historic", historic);
+                    BuildLogInsert.Parameters.AddWithValue("@Current", current);
+                    BuildLogInsert.Parameters.AddWithValue("@Source", source);
+                    Main.Open();
+                    BuildLogInsert.ExecuteNonQuery();
+                }
+            }
+            catch(Exception ex)
+            {
+
             }
 
             #endregion
@@ -3237,11 +3270,15 @@ namespace NBAdbToolbox
             }
             else if(sender == "Postseason")
             {
-                sqlBuilder.Append("'PS', '" + GameID.ToString().Substring(0, 7) + "')\n");
+                sqlBuilder.Append("'PS', '" + GameID.ToString().Remove(7) + "')\n");
+            }
+            else
+            {
+                sqlBuilder.Append("null, null)\n");
             }
 
-            //GameExt
-            sqlBuilder.Append("Insert into GameExt(SeasonID, GameID, Status, Attendance, Sellout");
+                //GameExt
+                sqlBuilder.Append("Insert into GameExt(SeasonID, GameID, Status, Attendance, Sellout");
 
             //Officials
             for (int o = 0; o < officials.Count && o < 4; o++)
@@ -4309,7 +4346,7 @@ namespace NBAdbToolbox
             // Build the Game insert statement
             gameInsertSB.Append("Insert into Game(SeasonID, GameID, Date, HomeID, HScore, AwayID, AScore, Datetime, WinnerID, WScore, LoserID, Lscore, GameType, SeriesID) values(")
                         .Append(SeasonID).Append(", ")
-                        .Append(game.gameId).Append(", '")
+                        .Append(GameID).Append(", '")
                         .Append(gameDate).Append("', ")
                         .Append(game.homeTeam.teamId).Append(", ")
                         .Append(game.homeTeam.score).Append(", ")
@@ -4341,13 +4378,8 @@ namespace NBAdbToolbox
             }
             else if (gameType == "4")
             {
-                string SeriesID = game.gameId.Substring(2);
-                SeriesID = SeriesID.Remove(SeriesID.Length - 1) + "-";
+                string SeriesID = GameID.ToString().Remove(7);
                 gameInsertSB.Append("'PS', '").Append(SeriesID).Append("')");
-
-                // Update tracking variables
-                lastGame = Int32.Parse(game.gameId).ToString();
-                seriesIDfirst7 = lastGame.Remove(lastGame.Length - 1);
             }
             else if (gameType == "5")
             {
@@ -4792,7 +4824,16 @@ namespace NBAdbToolbox
                     officials.Add(official.personId);
                 }
                 //Games
-                HistoricGameInsert(game, sender, officials); //5.7 Populate DB Update
+                string gameType = "";
+                if(GameID.ToString().Substring(0) == "2" || GameID.ToString().Substring(0) == "6")
+                {
+                    gameType = "Regular Season";
+                }
+                else if (GameID.ToString().Substring(0) == "4" || GameID.ToString().Substring(0) == "5")
+                {
+                    gameType = "Postseason";
+                }
+                HistoricGameInsert(game, gameType, officials); //5.7 Populate DB Update
                 //TeamBox
                 HistoricTeamBoxStaging(game);
                 //Players
