@@ -45,7 +45,3 @@ group by t.SeasonID, s.Games, s.PlayoffGames
 
 order by SeasonID desc, [Game Discrepancy] desc
 
-
-select *
-from Season
-where SeasonID = 2024

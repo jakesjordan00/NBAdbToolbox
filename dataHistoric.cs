@@ -264,7 +264,7 @@ namespace NBAdbToolboxHistoric
     {
         public int personId { get; set; }
         public string name { get; set; }
-        public int jerseyNum { get; set; }
+        public int? jerseyNum { get; set; }
     }
 
     public class Broadcasters

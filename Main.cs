@@ -1201,53 +1201,55 @@ namespace NBAdbToolbox
                                 //After Insert is complete, use multithreading to insert the bulk of our data - PlayByPlay, PlayerBox (+StartingLineups) and TeamBox (+TeamBoxLineups)
                                 #region Second Insert
 
-                                Task SecondInsert = Task.Run(async () =>
+                                if (GameID == 20600975 || GameID == 20700753 || GameID == 20300778)
                                 {
-                                    int retryAttempts = 3;
-                                    int currentAttempt = 0;
-                                    bool success = false;
-
-                                    while (!success && currentAttempt < retryAttempts)
+                                    game.box = null;
+                                    game.playByPlay = null;
+                                }
+                                else
+                                {
+                                    Task SecondInsert = Task.Run(async () =>
                                     {
-                                        try
+                                        int retryAttempts = 3;
+                                        int currentAttempt = 0;
+                                        bool success = false;
+                                        string pbpInsert = "";
+                                        while (!success && currentAttempt < retryAttempts)
                                         {
-                                            currentAttempt++;
-                                            // Store the query before clearing the StringBuilder
-                                            string pbpInsert = playByPlayBuilder.ToString();
-                                            playByPlayBuilder.Clear();
-
-                                            using SqlConnection bigInsertsPBP = new SqlConnection(cString);
-                                            using SqlCommand PBPInsert = new SqlCommand(pbpInsert, bigInsertsPBP);
-                                            PBPInsert.CommandType = CommandType.Text;
-
-                                            // Set a longer command timeout to give the operation more time
-                                            PBPInsert.CommandTimeout = 120; // 2 minutes
-
-                                            await bigInsertsPBP.OpenAsync();
-                                            await PBPInsert.ExecuteNonQueryAsync();
-                                            success = true;
+                                            try
+                                            {
+                                                currentAttempt++;
+                                                pbpInsert = playByPlayBuilder.ToString();
+                                                playByPlayBuilder.Clear();
+                                                using SqlConnection bigInsertsPBP = new SqlConnection(cString);
+                                                using SqlCommand PBPInsert = new SqlCommand(pbpInsert, bigInsertsPBP);
+                                                PBPInsert.CommandType = CommandType.Text;
+                                                PBPInsert.CommandTimeout = 120;
+                                                await bigInsertsPBP.OpenAsync();
+                                                await PBPInsert.ExecuteNonQueryAsync();
+                                                success = true;
+                                            }
+                                            catch (SqlException ex) when (ex.Number == 1205)
+                                            {
+                                                Console.WriteLine($"Deadlock detected (attempt {currentAttempt}/{retryAttempts}): {ex.Message}");
+                                                await Task.Delay(500 * currentAttempt);
+                                            }
+                                            catch (Exception e)
+                                            {
+                                                Console.WriteLine($"Error in SecondInsert: {e.Message}");
+                                                pbpInsert += "";
+                                                await Task.Delay(500 * currentAttempt);
+                                            }
                                         }
-                                        catch (SqlException ex) when (ex.Number == 1205) // Deadlock victim error code
-                                        {
-                                            Console.WriteLine($"Deadlock detected (attempt {currentAttempt}/{retryAttempts}): {ex.Message}");
-
-                                            // Wait a bit before retrying to allow other transactions to complete
-                                            await Task.Delay(500 * currentAttempt);
-                                        }
-                                        catch (Exception e)
-                                        {
-                                            Console.WriteLine($"Error in SecondInsert: {e.Message}");
-                                            break; // Don't retry on other errors
-                                        }
-                                    }
-                                });
+                                        game.box = null;
+                                        game.playByPlay = null;
+                                    });
+                                }
                                 lastSeason = season;
 
                                 UpdateLoadingImage(imageIteration);
                                 #endregion
                                 PopulateDb_4_AfterHistoricGame();
-                                game.box = null;
-                                game.playByPlay = null;
                             }
 
                             root.season.games.regularSeason = null;
@@ -1264,53 +1266,60 @@ namespace NBAdbToolbox
                                     await InsertGameWithLoading(game, season, imageIteration, "Postseason");
                                 });
                                 #region Second Insert
-                                Task SecondInsert = Task.Run(async () =>
+                                Task SecondInsert;
+                                if (GameID == 20600975 || GameID == 20700753) //No Pbp data
                                 {
-                                    int retryAttempts = 3;
-                                    int currentAttempt = 0;
-                                    bool success = false;
-
-                                    while (!success && currentAttempt < retryAttempts)
+                                    game.box = null;
+                                    game.playByPlay = null;
+                                    SecondInsert = Task.CompletedTask; // No-op task
+                                }
+                                else
+                                {
+                                    SecondInsert = Task.Run(async () =>
                                     {
-                                        try
+                                        int retryAttempts = 3;
+                                        int currentAttempt = 0;
+                                        bool success = false;
+                                        string pbpInsert = "";
+
+                                        while (!success && currentAttempt < retryAttempts)
                                         {
-                                            currentAttempt++;
-                                            // Store the query before clearing the StringBuilder
-                                            string pbpInsert = playByPlayBuilder.ToString();
-                                            playByPlayBuilder.Clear();
+                                            try
+                                            {
+                                                currentAttempt++;
+                                                pbpInsert = playByPlayBuilder.ToString();
+                                                playByPlayBuilder.Clear();
 
-                                            using SqlConnection bigInsertsPBP = new SqlConnection(cString);
-                                            using SqlCommand PBPInsert = new SqlCommand(pbpInsert, bigInsertsPBP);
-                                            PBPInsert.CommandType = CommandType.Text;
+                                                using SqlConnection bigInsertsPBP = new SqlConnection(cString);
+                                                using SqlCommand PBPInsert = new SqlCommand(pbpInsert, bigInsertsPBP);
+                                                PBPInsert.CommandType = CommandType.Text;
+                                                PBPInsert.CommandTimeout = 120;
 
-                                            // Set a longer command timeout to give the operation more time
-                                            PBPInsert.CommandTimeout = 120; // 2 minutes
-
-                                            await bigInsertsPBP.OpenAsync();
-                                            await PBPInsert.ExecuteNonQueryAsync();
-                                            success = true;
+                                                await bigInsertsPBP.OpenAsync();
+                                                await PBPInsert.ExecuteNonQueryAsync();
+                                                success = true;
+                                            }
+                                            catch (SqlException ex) when (ex.Number == 1205)
+                                            {
+                                                Console.WriteLine($"Deadlock detected (attempt {currentAttempt}/{retryAttempts}): {ex.Message}");
+                                                await Task.Delay(500 * currentAttempt);
+                                            }
+                                            catch (Exception e)
+                                            {
+                                                Console.WriteLine($"Error in SecondInsert: {e.Message}");
+                                                pbpInsert += "";
+                                                await Task.Delay(500 * currentAttempt);
+                                            }
                                         }
-                                        catch (SqlException ex) when (ex.Number == 1205) // Deadlock victim error code
-                                        {
-                                            Console.WriteLine($"Deadlock detected (attempt {currentAttempt}/{retryAttempts}): {ex.Message}");
-
-                                            // Wait a bit before retrying to allow other transactions to complete
-                                            await Task.Delay(500 * currentAttempt);
-                                        }
-                                        catch (Exception e)
-                                        {
-                                            Console.WriteLine($"Error in SecondInsert: {e.Message}");
-                                            break; // Don't retry on other errors
-                                        }
-                                    }
-                                });
+                                        game.box = null;
+                                        game.playByPlay = null;
+                                    });
+                                }
 
                                 UpdateLoadingImage(imageIteration);
 
                                 #endregion
                                 PopulateDb_4_AfterHistoricGame();
-                                game.box = null;
-                                game.playByPlay = null;
                                 if(iterator == TotalGames)
                                 {
                                     await SecondInsert;
@@ -2202,11 +2211,11 @@ namespace NBAdbToolbox
                         "." }
             );//Done! Check your SQL db
 
-
+            float workingOnTop = ((float)(pnlLoad.Height * .033) / (96 / 12) * (72 / 12));
             ChangeLabel(lblWorkingOn, pnlLoad, new List<string> {
                         ".", //Text
                         "Bold", //FontStyle
-                        ((float)(pnlLoad.Height * .04) / (96 / 12) * (72 / 12)).ToString(), //FontSize
+                        workingOnTop.ToString(), //FontSize
                         ".", //Width
                         "true", //AutoSize
                         ".", //Left
@@ -2216,6 +2225,25 @@ namespace NBAdbToolbox
                         "." } //Height
             );//No text
             lblWorkingOn.Left = pnlLoad.Width - lblWorkingOn.Width;
+            //working on top = 8.3655 with 2001 as last season
+            if (pnlLoad.Height - lblWorkingOn.Height <= 0)
+            {
+                workingOnTop = ((float)(pnlLoad.Height * .032) / (96 / 12) * (72 / 12));
+            }
+            //working on top = 8.11199951
+            ChangeLabel(lblWorkingOn, pnlLoad, new List<string> {
+                        ".", //Text
+                        "Bold", //FontStyle
+                        workingOnTop.ToString(), //FontSize
+                        ".", //Width
+                        "true", //AutoSize
+                        ".", //Left
+                        "0", //Top
+                        ".", //Color
+                        "true",//Visible
+                        "." } //Height
+            );//No text
+
             //Clear out image if it exists
             if (picLoad.Image != null)
             {

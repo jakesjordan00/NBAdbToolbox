@@ -330,10 +330,10 @@ Foreign Key (SeasonID, GameID, TeamID, MatchupID, PlayerID) references PlayerBox
 ~create procedure SeasonInsert
 as
 --insert into Season values(2000, 1610612747, 1230, , 0, 0)
---insert into Season values(2001, 1610612747, 1230, , 0, 0)
---insert into Season values(2002, 1610612759, 1230, , 0, 0)
---insert into Season values(2003, 1610612765, 1230, 82, 0, 0)
---insert into Season values(2004, 1610612759, 1230, 84, 0, 0)
+insert into Season values(2001, 1610612747, 1230, 70, 0, 0)
+insert into Season values(2002, 1610612759, 1189, 88, 0, 0)
+insert into Season values(2003, 1610612765, 1189, 82, 0, 0)
+insert into Season values(2004, 1610612759, 1230, 84, 0, 0)
 insert into Season values(2005, 1610612748, 1230, 89, 0, 0)
 insert into Season values(2006, 1610612759, 1230, 79, 0, 0)
 insert into Season values(2007, 1610612738, 1230, 86, 0, 0)
