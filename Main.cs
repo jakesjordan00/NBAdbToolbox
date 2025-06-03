@@ -1062,7 +1062,7 @@ namespace NBAdbToolbox
                 {
                     dialog = dialog.Remove(dialog.Length - 2);
                 }
-                var popup = new PopulatePopup(dialog);
+                var popup = new PopulatePopup(dialog, seasons);
                 if (popup.ShowDialog() == DialogResult.OK)
                 {
                     //Task.Run(() => LoadImages());
@@ -2123,7 +2123,7 @@ namespace NBAdbToolbox
              /*Width*/      ".",
              /*Autosize*/   "true",
              /*Left*/       (pnlLoad.Width - lblWorkingOn.Width).ToString(),
-             /*Top*/        lblSeasonStatusLoadInfo.Bottom.ToString(),
+             /*Top*/        "0",
              /*Color*/      ".",
              /*Visible*/    "true",
              /*Height*/     "."
@@ -2243,7 +2243,7 @@ namespace NBAdbToolbox
                         "true",//Visible
                         "." } //Height
             );//No text
-
+            // 8.11199951 works for 99
             //Clear out image if it exists
             if (picLoad.Image != null)
             {
@@ -3724,8 +3724,17 @@ namespace NBAdbToolbox
                 {
                     if (team.players[i].position == "" && team.players[i].statistics.minutes != "")
                     {
-                        minutes += Int32.Parse(team.players[i].statistics.minutes.Remove(team.players[i].statistics.minutes.IndexOf(":")));
-                        seconds += Int32.Parse(team.players[i].statistics.minutes.Substring(team.players[i].statistics.minutes.IndexOf(":") + 1));
+                        try
+                        {
+                            minutes += Int32.Parse(team.players[i].statistics.minutes.Remove(team.players[i].statistics.minutes.IndexOf(":")));
+                            seconds += Int32.Parse(team.players[i].statistics.minutes.Substring(team.players[i].statistics.minutes.IndexOf(":") + 1));
+                        }
+                        catch(ArgumentOutOfRangeException e)
+                        {
+                            minutes += Int32.Parse(team.players[i].statistics.minutes);
+                            seconds += 0;
+
+                        }
                     }
                 }
                 double secondsDiv = (double)seconds % 60;

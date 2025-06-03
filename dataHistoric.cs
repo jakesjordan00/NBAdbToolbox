@@ -59,8 +59,7 @@ namespace NBAdbToolboxHistoric
                 ErrorOutput(e);
                 Console.WriteLine($"Error reading season {season}: {e.Message}");
             }
-            fullJson = seasonFileBuilder.ToString();
-            seasonFileBuilder.Clear();
+            fullJson = seasonFileBuilder.ToString();            seasonFileBuilder.Clear();
             seasonFileBuilder.Capacity = 0;
             try
             {

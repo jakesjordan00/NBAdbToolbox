@@ -1,4 +1,4 @@
-use nba2002
+--use nba2002
 
 
 select t.SeasonID, concat('Game - ', (s.Games + s.PlayoffGames) - count(t.GameID)) [Table - Game Discrepancy], (s.Games + s.PlayoffGames) - count(t.GameID) [Game Discrepancy],
