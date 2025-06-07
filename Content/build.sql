@@ -409,10 +409,20 @@ where type_desc = 'USER_TABLE'
 
 create procedure Seasons
 as
-select SeasonID, Games, PlayoffGames, HistoricLoaded, CurrentLoaded, (select count(p.SeasonID) Rows from PlayerBox p where p.seasonID = s.SeasonID) +
-(select count(p.SeasonID) Rows from PlayByPlay p where p.seasonID = s.SeasonID) PBPandBox
-from Season s
-order by SeasonID desc
+select s.SeasonID, s.Games + s.PlayoffGames Games, case when s.HistoricLoaded = 1 or s.CurrentLoaded = 1 then 1 else 0 end Loaded
+	 , (select COUNT(distinct TeamID) from Team t where s.SeasonID = t.SeasonID) Teams
+	 , (select COUNT(distinct ArenaID) from Arena a where s.SeasonID = a.SeasonID) Arenas
+	 , (select COUNT(distinct PlayerID) from Player p where s.SeasonID = p.SeasonID) Players
+	 , (select COUNT(distinct OfficialID) from Official o where s.SeasonID = o.SeasonID) Officials
+     , COUNT(distinct g.GameID) Game
+	 , (select COUNT(distinct pb.GameID) from PlayerBox pb where s.SeasonID = pb.SeasonID) PlayerBox
+	 , (select COUNT(distinct Tb.GameID) from TeamBox Tb where s.SeasonID = Tb.SeasonID) TeamBox
+	 , (select COUNT(distinct pbp.GameID) from PlayByPlay pbp where s.SeasonID = pbp.SeasonID) PlayByPlay
+
+from Season s left join
+		Game g on s.SeasonID = g.SeasonID 
+group by s.SeasonID, s.Games, s.PlayoffGames,  case when s.HistoricLoaded = 1 or s.CurrentLoaded = 1 then 1 else 0 end
+Order by SeasonID desc
 ~~~
 
 

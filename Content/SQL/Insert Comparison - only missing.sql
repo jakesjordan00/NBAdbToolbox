@@ -58,3 +58,10 @@ having (s.Games + s.PlayoffGames) - count(distinct t.GameID) > 0
 
 order by SeasonID desc, [Game Discrepancy] desc
 
+
+
+--select distinct g.SeasonID, right(g.GameID, 4) Game
+--from PlayByPlay g 
+--where g.SeasonID = 1998
+--order by Game
+--2006, 2003, 1998, 1996

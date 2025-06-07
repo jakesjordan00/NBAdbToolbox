@@ -7,7 +7,6 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -160,10 +159,54 @@ namespace NBAdbToolbox
 
         #region pnlDbUtil - Database Utilities
         public Panel pnlDbUtil = new Panel();
+        public Label lblGameUtil = new Label { Text = "Game", Visible = false, Tag = "Table"};
+        public Label lblTeamUtil = new Label { Text = "Team", Visible = false, Tag = "Table" };
+        public Label lblArenaUtil = new Label { Text = "Arena", Visible = false, Tag = "Table" };
+        public Label lblPlayerUtil = new Label { Text = "Player", Visible = false, Tag = "Table" };
+        public Label lblOfficialUtil = new Label { Text = "Official", Visible = false, Tag = "Table" };
+        public Label lblTbUtil = new Label { Text = "TeamBox", Visible = false, Tag = "Table" };
+        public Label lblPbUtil = new Label { Text = "PlayerBox", Visible = false, Tag = "Table" };
+        public Label lblPbpUtil = new Label { Text = "PlayByPlay", Visible = false, Tag = "Table" };
+        public Label lbl25 = new Label{Text = "2025", Visible = false, Tag = "Year"};
+        public Label lbl24 = new Label{Text = "2024", Visible = false, Tag = "Year"};
+        public Label lbl23 = new Label{Text = "2023", Visible = false, Tag = "Year"};
+        public Label lbl22 = new Label{Text = "2022", Visible = false, Tag = "Year"};
+        public Label lbl21 = new Label{Text = "2021", Visible = false, Tag = "Year"};
+        public Label lbl20 = new Label{Text = "2020", Visible = false, Tag = "Year"};
+        public Label lbl19 = new Label{Text = "2019", Visible = false, Tag = "Year"};
+        public Label lbl18 = new Label{Text = "2018", Visible = false, Tag = "Year"};
+        public Label lbl17 = new Label{Text = "2017", Visible = false, Tag = "Year"};
+        public Label lbl16 = new Label{Text = "2016", Visible = false, Tag = "Year"};
+        public Label lbl15 = new Label{Text = "2015", Visible = false, Tag = "Year"};
+        public Label lbl14 = new Label{Text = "2014", Visible = false, Tag = "Year"};
+        public Label lbl13 = new Label{Text = "2013", Visible = false, Tag = "Year"};
+        public Label lbl12 = new Label{Text = "2012", Visible = false, Tag = "Year"};
+        public Label lbl11 = new Label{Text = "2011", Visible = false, Tag = "Year"};
+        public Label lbl10 = new Label{Text = "2010", Visible = false, Tag = "Year"};
+        public Label lbl09 = new Label{Text = "2009", Visible = false, Tag = "Year"};
+        public Label lbl08 = new Label{Text = "2008", Visible = false, Tag = "Year"};
+        public Label lbl07 = new Label{Text = "2007", Visible = false, Tag = "Year"};
+        public Label lbl06 = new Label{Text = "2006", Visible = false, Tag = "Year"};
+        public Label lbl05 = new Label{Text = "2005", Visible = false, Tag = "Year"};
+        public Label lbl04 = new Label{Text = "2004", Visible = false, Tag = "Year"};
+        public Label lbl03 = new Label{Text = "2003", Visible = false, Tag = "Year"};
+        public Label lbl02 = new Label{Text = "2002", Visible = false, Tag = "Year"};
+        public Label lbl01 = new Label{Text = "2001", Visible = false, Tag = "Year"};
+        public Label lbl00 = new Label{Text = "2000", Visible = false, Tag = "Year"};
+        public Label lbl99 = new Label{Text = "1999", Visible = false, Tag = "Year"};
+        public Label lbl98 = new Label{Text = "1998", Visible = false, Tag = "Year"};
+        public Label lbl97 = new Label{Text = "1997", Visible = false, Tag = "Year"};
+        public Label lbl96 = new Label{Text = "1996", Visible = false, Tag = "Year"};
+
+        public Label lblEmpty = new Label { Text = "Unpopulated", Visible = false, Tag = "Year", Name = "Unpopulated"};
+
+
+
         public Panel pnlDbOverview = new Panel();
             #region Labels and Controls
             public Label lblDbUtil = new Label {Text = "Database Utilities"};
             public Label lblDbOverview = new Label();
+            public Label lblDbOvName = new Label();
             public Label lblDbOvExpand = new Label();
             public Label lblDbOptions = new Label();
             public Label lblDbSelectSeason = new Label();
@@ -291,7 +334,8 @@ namespace NBAdbToolbox
             (2023, 1318),
             (2024, 1230)
         };
-        public HashSet<(int, (int, int, int, int, int))> seasonInfo = new HashSet<(int, (int, int, int, int, int))>();
+        public HashSet<(int SeasonID, (int Games, int Loaded, int Teams, int Arenas, int Players, int Officials, int Game, int PlayerBox, int TeamBox, int PlayByPlay))> seasonInfo
+            = new HashSet<(int, (int, int, int, int, int, int, int, int, int, int))>();
 
 
 
@@ -361,6 +405,7 @@ namespace NBAdbToolbox
             this.MinimizeBox = true;
             this.ResizeEnd += FormResize;
             #endregion
+            lblDbUtil.ForeColor = ThemeColor;
 
 
             AddControls();
@@ -373,6 +418,7 @@ namespace NBAdbToolbox
             #region Add Elements - Adding Labels/Panels etc to Window
             //This should be second to last i believe.
             InitializeElements();
+            SetTheme("Main");
             #endregion
 
 
@@ -438,7 +484,7 @@ namespace NBAdbToolbox
                     picLoad.Visible = true;
                     #region ChangeLabel
 
-                    ChangeLabel(lblCurrentGame, pnlLoad, new List<string> {
+                    ChangeLabel(ThemeColor, lblCurrentGame, pnlLoad, new List<string> {
                         "Current game: ", //Text
                         "Regular", //FontStyle
                         ((float)(pnlLoad.Height * .05) / (96 / 12) * (72 / 12)).ToString(), //FontSize
@@ -452,7 +498,7 @@ namespace NBAdbToolbox
                     }); //Current game: 
                     gpm.Top = lblCurrentGame.Bottom;
                     gpmValue.Top = gpm.Bottom;
-                    ChangeLabel(lblSeasonStatusLoad, pnlLoad, new List<string> {
+                    ChangeLabel(ThemeColor, lblSeasonStatusLoad, pnlLoad, new List<string> {
                         "Checking util.BuildLog", //Text
                         "Bold", //FontStyle
                         ((float)(pnlLoad.Height * .08) / (96 / 12) * (72 / 12)).ToString(), //FontSize
@@ -464,7 +510,7 @@ namespace NBAdbToolbox
                         "true", //Visible
                         "." //Height
                     }); //Currently Loading: 
-                    ChangeLabel(lblWorkingOn, pnlLoad, new List<string> {
+                    ChangeLabel(ThemeColor, lblWorkingOn, pnlLoad, new List<string> {
                         "", //Text
                         "Regular", //FontStyle
                         ((float)(pnlLoad.Height * .03) / (96 / 12) * (72 / 12)).ToString(), //FontSize
@@ -534,7 +580,6 @@ namespace NBAdbToolbox
                                 });
                                 //After Insert is complete, use multithreading to insert the bulk of our data - PlayByPlay, PlayerBox (+StartingLineups) and TeamBox (+TeamBoxLineups)
                                 #region Second Insert
-
                                 if (GameID == 20600975 || GameID == 20700753 || GameID == 20300778 || GameID == 29800661 || GameID == 29600332 || GameID == 29600370)
                                 {
                                     game.box = null;
@@ -709,7 +754,11 @@ namespace NBAdbToolbox
                     }
                     stopwatchFull.Stop();
                     PopulateDb_10_Completion();
-
+                    GetSeasons(cString);
+                    if (dbOverviewOpened)
+                    {
+                        DbOverviewVisibility(dbOverviewOpened, "Populate");
+                    }
                 }
             };
             #endregion
@@ -766,7 +815,7 @@ namespace NBAdbToolbox
             gpmValue.AutoSize = true;
             gpmValue.Top = gpm.Bottom;
             gpmValue.Left = 4;
-            gpmValue.ForeColor = Color.White;
+            gpmValue.ForeColor = ThemeColor;
 
 
 
@@ -982,12 +1031,30 @@ namespace NBAdbToolbox
                     e.Graphics.DrawLine(pen, 0, p.Height - 1, p.Width, p.Height - 1);
                 }
             };
-
+            pnlDbOverview.AutoScroll = true;
 
             DbOverviewClick(pnlDbOverview, lblDbOvExpand, pnlDbOverview);
             DbOverviewClick(lblDbOverview, lblDbOvExpand, pnlDbOverview);
             DbOverviewClick(lblDbOvExpand, lblDbOvExpand, pnlDbOverview);
+            DbOverviewClick(lblDbOvName, lblDbOvExpand, pnlDbOverview);
             #endregion
+
+            ChangeLabel(ThemeColor, lblDbOvName, pnlDbUtil, new List<string> {
+                config.Database,
+                "Bold",
+                (((float)(pnlWelcome.Height * .05) / (96 / 12)) * (72 / 12)).ToString(),
+                ".",
+                "true",
+                lblDbOverview.Left.ToString(),
+                lblDbOverview.Top.ToString(),
+                ".",
+                "true",
+                ((int)(lblDbUtil.Height * .8)).ToString()
+            });
+            lblDbOvName.Left = lblDbOverview.Right;
+
+
+
 
 
             #region Settings area
@@ -1013,6 +1080,7 @@ namespace NBAdbToolbox
             lblBrowseConfig.AutoSize = true;
             btnBrowseConfig.AutoSize = true;
             btnBrowseConfig.Left = lblBrowseConfig.Right;
+            lblBrowseConfig.ForeColor = ThemeColor;
 
             btnBrowseConfig.Click += (s, e) =>
             {
@@ -1038,6 +1106,10 @@ namespace NBAdbToolbox
                     config = JsonConvert.DeserializeObject<DbConfig>(File.ReadAllText(configPath));
                     defaultConfig = false;
                     InitializeDbConfig("boxChangeConfig");
+                    if (dbOverviewOpened)
+                    {
+                        DbOverviewVisibility(dbOverviewOpened, "Change");
+                    }
                 }
                 lblSettings.Focus();
             };
@@ -1055,6 +1127,7 @@ namespace NBAdbToolbox
             lblChangeConfig.Top = boxChangeConfig.Top;
             lblChangeConfig.AutoSize = true;
             lblChangeConfig.Font = SetFontSize("Segoe UI", (int)(fontSize * .9), FontStyle.Bold, pnlWelcome, lblChangeConfig);
+            lblChangeConfig.ForeColor = ThemeColor;
             boxChangeConfig.Left = lblChangeConfig.Right;
 
 
@@ -1095,6 +1168,7 @@ namespace NBAdbToolbox
             lblConfigFiles.Top = boxConfigFiles.Top ;
             lblConfigFiles.AutoSize = true;
             lblConfigFiles.Font = SetFontSize("Segoe UI", (int)(fontSize * .9), FontStyle.Bold, pnlWelcome, lblConfigFiles);
+            lblConfigFiles.ForeColor = ThemeColor;
             boxConfigFiles.Left = lblConfigFiles.Right;
 
 
@@ -1113,7 +1187,10 @@ namespace NBAdbToolbox
                     ClearImage(bgCourt);
                     bgCourt.Image = Image.FromFile(Path.Combine(projectRoot, @"Content\Images", settings.BackgroundImage + ".png"));
                     WriteSettings();
+                    GetThemeColors();
                     SetTheme("Change");
+                    DbOverviewVisibility(dbOverviewOpened, "Background");
+                    
                 }
                 lblSettings.Focus();
             };
@@ -1130,6 +1207,7 @@ namespace NBAdbToolbox
             lblBackground.Top = boxConfigFiles.Bottom + 10;
             lblBackground.AutoSize = true;
             lblBackground.Font = SetFontSize("Segoe UI", (int)(fontSize * .9), FontStyle.Bold, pnlWelcome, lblBackground);
+            lblBackground.ForeColor = ThemeColor;
             boxBackground.Left = lblBackground.Right;
             boxBackground.SelectedItem = settings.BackgroundImage;
 
@@ -1144,6 +1222,7 @@ namespace NBAdbToolbox
             lblSound.Top = boxBackground.Bottom + 10;
             lblSound.AutoSize = true;
             lblSound.Font = SetFontSize("Segoe UI", (int)(fontSize * .9), FontStyle.Bold, pnlWelcome, lblSound);
+            lblSound.ForeColor = ThemeColor;
             boxSoundOptions.Left = lblSound.Right;
             boxSoundOptions.SelectedItem = settings.Sound;
 
@@ -1160,32 +1239,40 @@ namespace NBAdbToolbox
 
 
 
-            SetTheme("Main");
-
+            lblDbOvName.FlatStyle = FlatStyle.Flat;
         }
 
         public Color ThemeColor = new Color();
-        public void SetTheme(string sender)
+        public Color SubThemeColor = new Color();
+        public Color SuccessColor = new Color();
+        public Color LastSuccessColor = new Color();
+        public void GetThemeColors()
         {
-            Color subTheme = new Color();
             if (settings.BackgroundImage == "Court Dark")
             {
                 Theme = "Dark";
                 ThemeColor = Color.Ivory;
-                subTheme = Color.Black;
+                SubThemeColor = Color.Black;
+                SuccessColor = Color.FromArgb(255, 100, 220, 100);
+                LastSuccessColor = Color.FromArgb(255, 20, 100, 20);
             }
             else if (settings.BackgroundImage == "Court Default")
             {
                 Theme = "Default";
                 ThemeColor = Color.Black;
-                subTheme = Color.Ivory;
+                SubThemeColor = Color.Ivory;
+                SuccessColor = Color.FromArgb(255, 20, 100, 20);
+                LastSuccessColor = Color.FromArgb(255, 100, 220, 100);
             }
             else
             {
                 Theme = "Default";
                 ThemeColor = Color.Black;
-                subTheme = Color.Ivory;
+                SubThemeColor = Color.Ivory;
             }
+        }
+        public void SetTheme(string sender)
+        {
 
             //get controls by type
             List<Label> labels = GetAllControlsOfType<Label>(this);
@@ -1200,13 +1287,21 @@ namespace NBAdbToolbox
                 {
                     lbl.ForeColor = ThemeColor;
                 }
+                else if (lbl.ForeColor == SuccessColor || lbl.ForeColor == LastSuccessColor)
+                {
+                    lbl.ForeColor = SuccessColor;
+                }
+                if (lbl.Tag != null)
+                {
+                    lbl.BackColor = SubThemeColor;
+                }
             }
 
             //update comboboxes
             foreach (ComboBox combo in comboBoxes)
             {
                 combo.ForeColor = ThemeColor;
-                combo.BackColor = subTheme;
+                combo.BackColor = SubThemeColor;
             }
 
             //update buttons
@@ -1216,21 +1311,21 @@ namespace NBAdbToolbox
                 {
 
                 }
-                else if (btn.Text == "Populate Db" || btn.Text == "Build Database")
+                else if (btn.Text == "Populate Db" || btn.Text == "Build Database" || btn.Text == "Edit Server/Db connection")
                 {
 
                 }
                 else
                 {
                     btn.ForeColor = ThemeColor;
-                    btn.BackColor = subTheme;
+                    btn.BackColor = SubThemeColor;
                 }
             }
             //update buttons
             foreach (ListBox lb in listBoxes)
             {
                 lb.ForeColor = ThemeColor;
-                lb.BackColor = subTheme;
+                lb.BackColor = SubThemeColor;
             }
         }
 
@@ -1255,25 +1350,6 @@ namespace NBAdbToolbox
             return controls;
         }
 
-        public List<ComboBox> GetAllBoxes(Control parent)
-        {
-            List<ComboBox> comboBox = new List<ComboBox>();
-
-            foreach (Control control in parent.Controls)
-            {
-                if (control is ComboBox)
-                {
-                    comboBox.Add((ComboBox)control);
-                }
-
-                //recursively check child controls (panels, etc)
-                if (control.HasChildren)
-                {
-                    comboBox.AddRange(GetAllBoxes(control));
-                }
-            }
-            return comboBox;
-        }
 
 
 
@@ -1329,7 +1405,7 @@ namespace NBAdbToolbox
             {
                 WriteSettings();
             }
-
+            GetThemeColors();
         }
         public void DefaultSettings()
         {
@@ -1369,7 +1445,7 @@ namespace NBAdbToolbox
                    settings.Sound != settingsControl.Sound;
         }
         #endregion
-
+        #region Config
         public void InitializeDbConfig(string sender)
         {
             if (!File.Exists(configPath) || defaultConfig) //If our file doesnt exist
@@ -1399,7 +1475,7 @@ namespace NBAdbToolbox
                 if (isConnected)
                 {
                     lblCStatus.Text = "Connected";
-                    lblCStatus.ForeColor = Color.Green;
+                    lblCStatus.ForeColor = SuccessColor;
                     // Load image
                     imagePath = Path.Combine(projectRoot, @"Content\Images", "Success.png");
                     picStatus.Image = Image.FromFile(imagePath);
@@ -1515,7 +1591,7 @@ namespace NBAdbToolbox
                 {
                     conn.Open();
                     btnBuild.Enabled = true;
-                    lblServerName.ForeColor = Color.Green;
+                    lblServerName.ForeColor = SuccessColor;
                     btnEdit.Text = "Edit Server/Db connection";
                     return true; // Connected successfully
                 }
@@ -1528,6 +1604,8 @@ namespace NBAdbToolbox
         public void DbExists() //If the Database exists: Set variables, disable build btn, enable populate
         {
             config.Create = false;
+            lblDbOverview.Text = "Database Overview";
+            lblDbOvName.Text = config.Database;
             lblDbName.Text = config.Database;
             lblDbStat.Text = "Database connected";
             imagePathDb = Path.Combine(projectRoot, @"Content\Images", "Success.png");
@@ -1539,6 +1617,8 @@ namespace NBAdbToolbox
         }
         public void DbMissing()
         {
+            listSeasons.Items.Clear();
+            seasonInfo.Clear();
             config.Create = true;
             lblDbName.Text = config.Database;
             lblDbStat.Text = "Need to create Database";
@@ -1549,6 +1629,8 @@ namespace NBAdbToolbox
         }
         public void BadConnection()
         {
+            listSeasons.Items.Clear();
+            seasonInfo.Clear();
             lblStatus.Text = "Invalid Connection!";
             lblStatus.ForeColor = Color.Red;
             UIController("BadConnection");
@@ -1571,6 +1653,7 @@ namespace NBAdbToolbox
                 ClearLoadInfo();
             }
         }
+        #endregion
 
         public void ClearLoadInfo()
         {
@@ -1717,7 +1800,6 @@ namespace NBAdbToolbox
             }
         }
 
-
         private bool isRefreshing = false;
         public void UIController(string sender)//If an event occurs that will change the state of the UI, it must run through here
         {
@@ -1728,7 +1810,7 @@ namespace NBAdbToolbox
                 isBuildEnabled = false;
                 btnPopulate.Enabled = false;
                 listSeasons.Items.Clear();
-
+                
                 lblStatus.ForeColor = ThemeColor;
                 lblServerName.ForeColor = Color.Red;
                 lblCStatus.ForeColor = Color.Red;
@@ -1740,7 +1822,7 @@ namespace NBAdbToolbox
             else if (sender == "GetConfig")
             {
                 lblCStatus.Text = isConnected ? "Connected" : "Disconnected";
-                lblCStatus.ForeColor = isConnected ? Color.Green : Color.Red;
+                lblCStatus.ForeColor = isConnected ? SuccessColor : Color.Red;
                 iconFile = isConnected ? "Success.png" : "Error.png";
                 imagePath = Path.Combine(projectRoot, @"Content\Images", iconFile);
                 ClearImage(picStatus);
@@ -1752,10 +1834,12 @@ namespace NBAdbToolbox
                 btnBuild.Enabled = false;
                 isBuildEnabled = false;
                 btnPopulate.Enabled = true;
+                lblDbOvName.Visible = true;
 
-                lblDbName.ForeColor = Color.Green;
+                lblDbOvName.ForeColor = SuccessColor;
+                lblDbName.ForeColor = SuccessColor;
                 lblDbName.BackColor = Color.Transparent;
-                lblDbStat.ForeColor = Color.Green;
+                lblDbStat.ForeColor = SuccessColor;
                 lblDbStat.BackColor = Color.Transparent;
                 picDbStatus.BackColor = Color.Transparent;
             }
@@ -1764,6 +1848,7 @@ namespace NBAdbToolbox
                 btnBuild.Enabled = true;
                 isBuildEnabled = true;
                 btnPopulate.Enabled = false;
+                lblDbOvName.Visible = false;
                 listSeasons.Items.Clear();
 
                 lblDbName.ForeColor = Color.FromArgb(255, 204, 0);
@@ -1780,6 +1865,7 @@ namespace NBAdbToolbox
                 btnBuild.Enabled = true;
                 isBuildEnabled = true;
                 btnPopulate.Enabled = false;
+                lblDbOvName.Visible = false;
                 listSeasons.Items.Clear();
 
                 lblStatus.ForeColor = Color.Red;
@@ -1867,7 +1953,6 @@ namespace NBAdbToolbox
 
 
 
-
         #region Populate Database
         public void PopulateDb_1_PreSelection()
         {
@@ -1908,7 +1993,7 @@ namespace NBAdbToolbox
             //End season read
             lblStatus.Text = "Deleting existing " + SeasonID + " data...";
             CenterElement(pnlWelcome, lblStatus);
-            ChangeLabel(lblSeasonStatusLoad, pnlLoad, new List<string> {
+            ChangeLabel(ThemeColor, lblSeasonStatusLoad, pnlLoad, new List<string> {
             "Deleting any " + SeasonID + " data, one sec...", //Text
             "Bold", //FontStyle
             ((float)(pnlLoad.Height * .075) / (96 / 12) * (72 / 12)).ToString(), //FontSize
@@ -1989,7 +2074,7 @@ namespace NBAdbToolbox
 
             lblStatus.Text = "Deleting existing " + SeasonID + " data...";
             CenterElement(pnlWelcome, lblStatus);
-            ChangeLabel(lblSeasonStatusLoad, pnlLoad, new List<string> {
+            ChangeLabel(ThemeColor, lblSeasonStatusLoad, pnlLoad, new List<string> {
                             "Deleting any " + SeasonID + " data, one sec...", //Text
                             "Bold", //FontStyle
                             ((float)(pnlLoad.Height * .075) / (96 / 12) * (72 / 12)).ToString(), //FontSize
@@ -2044,7 +2129,7 @@ namespace NBAdbToolbox
 
             lblStatus.Text = "Deleting existing " + SeasonID + " data...";
             CenterElement(pnlWelcome, lblStatus);
-            ChangeLabel(lblSeasonStatusLoad, pnlLoad, new List<string> {
+            ChangeLabel(ThemeColor, lblSeasonStatusLoad, pnlLoad, new List<string> {
                             "Deleting any " + SeasonID + " data, one sec...", //Text
                             "Bold", //FontStyle
                             ((float)(pnlLoad.Height * .075) / (96 / 12) * (72 / 12)).ToString(), //FontSize
@@ -2062,7 +2147,7 @@ namespace NBAdbToolbox
             stopwatchInsert.Restart();
             lblStatus.Text = "Loading " + SeasonID + "...";
             CenterElement(pnlWelcome, lblStatus);
-            ChangeLabel(lblSeasonStatusLoad, pnlLoad, new List<string> {
+            ChangeLabel(ThemeColor, lblSeasonStatusLoad, pnlLoad, new List<string> {
             "Hitting endpoints and inserting " + SeasonID + " data", //Text
             "Bold", //FontStyle
             ((float)(pnlLoad.Height * .075) / (96 / 12) * (72 / 12)).ToString(), //FontSize
@@ -2169,7 +2254,7 @@ namespace NBAdbToolbox
             completionMessage += elapsedStringSeason + ". ";
             completionMessage += iterator + " games, " + RegularSeasonGames + "/" + PostseasonGames + "\n";
             int lblLeft = lblWorkingOn.Width;
-            ChangeLabel(lblWorkingOn, pnlLoad, new List<string>
+            ChangeLabel(ThemeColor, lblWorkingOn, pnlLoad, new List<string>
                         {
              /*Text*/       completionMessage,
              /*FontStyle*/  "Regular",
@@ -2178,7 +2263,7 @@ namespace NBAdbToolbox
              /*Autosize*/   "true",
              /*Left*/       (pnlLoad.Width - lblWorkingOn.Width).ToString(),
              /*Top*/        "0",
-             /*Color*/      ".",
+             /*Color*/      ThemeColor.ToString(),
              /*Visible*/    "true",
              /*Height*/     "."
                         });
@@ -2234,11 +2319,11 @@ namespace NBAdbToolbox
 
             //lblCurrentGame
 
-            ChangeLabel(lblSeasonStatusLoadInfo, pnlLoad, new List<string> { "", ".", ".", ".", ".", ".", ".", ".", "false", "." });
+            ChangeLabel(ThemeColor, lblSeasonStatusLoadInfo, pnlLoad, new List<string> { "", ".", ".", ".", ".", ".", ".", ".", "false", "." });
             //...............................................................Text,  FontStyle, FontSize, Width, AutoSize, Left, Top, Color, Visible, Height
-            ChangeLabel(lblCurrentGameCount, pnlLoad, new List<string> { "", ".", ".", ".", ".", ".", ".", ".", "false", "." });
+            ChangeLabel(ThemeColor, lblCurrentGameCount, pnlLoad, new List<string> { "", ".", ".", ".", ".", ".", ".", ".", "false", "." });
             //...........................................................Text,  FontStyle, FontSize, Width, AutoSize, Left, Top, Color, Visible, Height
-            ChangeLabel(lblCurrentGame, pnlLoad, new List<string> {
+            ChangeLabel(SuccessColor, lblCurrentGame, pnlLoad, new List<string> {
                         "Full Load: " + elapsedStringFull,
                         "Bold",
                         ((float)(pnlLoad.Height * .06) / (96 / 12) * (72 / 12)).ToString(),
@@ -2246,13 +2331,13 @@ namespace NBAdbToolbox
                         "true",
                         ".",
                         ".",
-                        Color.Green.ToString(),
+                        SuccessColor.ToString(),
                         "true",
                         "." }
             );//Done! Check your SQL db
             gpm.Top = lblCurrentGame.Bottom;
             gpmValue.Top = gpm.Bottom;
-            ChangeLabel(lblSeasonStatusLoad, pnlLoad, new List<string> {
+            ChangeLabel(SuccessColor, lblSeasonStatusLoad, pnlLoad, new List<string> {
                         "Done! Check your SQL db",
                         "Regular",
                         ((float)(pnlLoad.Height * .08) / (96 / 12) * (72 / 12)).ToString(),
@@ -2260,13 +2345,13 @@ namespace NBAdbToolbox
                         "true",
                         ".",
                         ".",
-                        Color.Green.ToString(),
+                        SuccessColor.ToString(),
                         "true",
                         "." }
             );//Done! Check your SQL db
 
             float workingOnTop = ((float)(pnlLoad.Height * .033) / (96 / 12) * (72 / 12));
-            ChangeLabel(lblWorkingOn, pnlLoad, new List<string> {
+            ChangeLabel(ThemeColor, lblWorkingOn, pnlLoad, new List<string> {
                         ".", //Text
                         "Bold", //FontStyle
                         workingOnTop.ToString(), //FontSize
@@ -2285,7 +2370,7 @@ namespace NBAdbToolbox
                 workingOnTop = ((float)(pnlLoad.Height * .03) / (96 / 12) * (72 / 12));
             }
             //working on top = 8.11199951 = .032
-            ChangeLabel(lblWorkingOn, pnlLoad, new List<string> {
+            ChangeLabel(ThemeColor, lblWorkingOn, pnlLoad, new List<string> {
                         ".", //Text
                         "Bold", //FontStyle
                         workingOnTop.ToString(), //FontSize
@@ -2335,7 +2420,6 @@ namespace NBAdbToolbox
         #endregion
 
         #region Initializations
-
         public void AddControls()
         {
             #region Set and declare variables
@@ -2378,8 +2462,7 @@ namespace NBAdbToolbox
             dimH2 = (int)(fullHeight * .5);
 
 
-
-            ChangeLabel(lblDbOverview, pnlDbUtil, new List<string> {
+            ChangeLabel(ThemeColor, lblDbOverview, pnlDbUtil, new List<string> {
                 "Database Overview",
                 "Bold",
                 (((float)(pnlWelcome.Height * .05) / (96 / 12)) * (72 / 12)).ToString(),
@@ -2387,11 +2470,11 @@ namespace NBAdbToolbox
                 "true",
                 pnlDbUtil.Left.ToString(),
                 (lblDbUtil.Bottom + (int)(lblDbUtil.Height * .3)).ToString(),
-                ".",
+                ThemeColor.ToString(),
                 "true",
                 ((int)(lblDbUtil.Height * .8)).ToString()
             });
-            ChangeLabel(lblDbOvExpand, pnlDbUtil, new List<string> {
+            ChangeLabel(ThemeColor, lblDbOvExpand, pnlDbUtil, new List<string> {
                 "+",
                 "Bold",
                 (((float)(pnlWelcome.Height * .05) / (96 / 12)) * (72 / 12)).ToString(),
@@ -2399,7 +2482,7 @@ namespace NBAdbToolbox
                 "true",
                 ".",
                 lblDbOverview.Top.ToString(),
-                ".",
+                ThemeColor.ToString(),
                 "true",
                 ((int)(lblDbUtil.Height * .8)).ToString()
             });
@@ -2407,7 +2490,7 @@ namespace NBAdbToolbox
             lblDbOvExpand.Height = lblDbOverview.Height;
             overviewHeight = lblDbOverview.Height;
 
-            ChangeLabel(lblDbOptions, pnlDbUtil, new List<string> {
+            ChangeLabel(ThemeColor, lblDbOptions, pnlDbUtil, new List<string> {
                 "Options",
                 "Bold",
                 fontSize.ToString(),
@@ -2415,14 +2498,14 @@ namespace NBAdbToolbox
                 "true",
                 ".",
                 (lblDbOverview.Bottom + lblDbUtil.Height).ToString(),
-                ".",
+                ThemeColor.ToString(),
                 "true",
                 ((int)(lblDbUtil.Height * .9)).ToString()
             });
             lblDbOptions.Left = (pnlDbUtil.ClientSize.Width - lblDbOptions.Width) / 2;
 
 
-            ChangeLabel(lblDbSelectSeason, lblDbOptions, new List<string> {
+            ChangeLabel(ThemeColor, lblDbSelectSeason, lblDbOptions, new List<string> {
                 "Season Select",
                 "Bold",
                 fontSize.ToString(),
@@ -2430,7 +2513,7 @@ namespace NBAdbToolbox
                 "true",
                 pnlDbUtil.Left.ToString(),
                 lblDbOptions.Bottom.ToString(),
-                ".",
+                ThemeColor.ToString(),
                 "true",
                 "."
             });
@@ -2450,7 +2533,45 @@ namespace NBAdbToolbox
         }
         public void InitializeElements()
         {
-            //Children elements should go above the parents, background image should be last added. 
+            //Children elements should go above the parents, background image should be last added. AddPanelElement(pnlDbOverview, lblGameUtil);
+            AddPanelElement(pnlDbOverview, lblTeamUtil);
+            AddPanelElement(pnlDbOverview, lblArenaUtil);
+            AddPanelElement(pnlDbOverview, lblPlayerUtil);
+            AddPanelElement(pnlDbOverview, lblOfficialUtil);
+            AddPanelElement(pnlDbOverview, lblTbUtil);
+            AddPanelElement(pnlDbOverview, lblPbUtil);
+            AddPanelElement(pnlDbOverview, lblPbpUtil);
+            AddPanelElement(pnlDbOverview, lbl25);
+            AddPanelElement(pnlDbOverview, lbl24);
+            AddPanelElement(pnlDbOverview, lbl23);
+            AddPanelElement(pnlDbOverview, lbl22);
+            AddPanelElement(pnlDbOverview, lbl21);
+            AddPanelElement(pnlDbOverview, lbl20);
+            AddPanelElement(pnlDbOverview, lbl19);
+            AddPanelElement(pnlDbOverview, lbl18);
+            AddPanelElement(pnlDbOverview, lbl17);
+            AddPanelElement(pnlDbOverview, lbl16);
+            AddPanelElement(pnlDbOverview, lbl15);
+            AddPanelElement(pnlDbOverview, lbl14);
+            AddPanelElement(pnlDbOverview, lbl13);
+            AddPanelElement(pnlDbOverview, lbl12);
+            AddPanelElement(pnlDbOverview, lbl11);
+            AddPanelElement(pnlDbOverview, lbl10);
+            AddPanelElement(pnlDbOverview, lbl09);
+            AddPanelElement(pnlDbOverview, lbl08);
+            AddPanelElement(pnlDbOverview, lbl07);
+            AddPanelElement(pnlDbOverview, lbl06);
+            AddPanelElement(pnlDbOverview, lbl05);
+            AddPanelElement(pnlDbOverview, lbl04);
+            AddPanelElement(pnlDbOverview, lbl03);
+            AddPanelElement(pnlDbOverview, lbl02);
+            AddPanelElement(pnlDbOverview, lbl01);
+            AddPanelElement(pnlDbOverview, lbl00);
+            AddPanelElement(pnlDbOverview, lbl99);
+            AddPanelElement(pnlDbOverview, lbl98);
+            AddPanelElement(pnlDbOverview, lbl97);
+            AddPanelElement(pnlDbOverview, lbl96);
+            AddPanelElement(pnlDbOverview, lblEmpty);
             AddPanelElement(pnlLoad, gpmValue);
             AddPanelElement(pnlLoad, gpm);
             AddPanelElement(pnlLoad, lblWorkingOn);
@@ -2464,6 +2585,7 @@ namespace NBAdbToolbox
             AddPanelElement(pnlDbUtil, lblDbSelectSeason);
             AddPanelElement(pnlDbUtil, lblDbOptions);
             AddPanelElement(pnlDbUtil, lblDbOvExpand);
+            AddPanelElement(pnlDbUtil, lblDbOvName);
             AddPanelElement(pnlDbUtil, lblDbOverview);
             AddPanelElement(pnlDbUtil, pnlDbOverview);
             AddPanelElement(pnlDbUtil, lblDbUtil);
@@ -2499,10 +2621,6 @@ namespace NBAdbToolbox
         }
 
         #endregion
-
-
-
-
 
         #region Panel, Element, Alignment and Font Formatting
         //Add an element to a panel
@@ -2572,6 +2690,7 @@ namespace NBAdbToolbox
 
 
         #region Utility Functions
+        #region Utility (just putting this region here to save space. delete the two lines but keep code
         //Formats Time elapsed string for season load
         public string CheckTime(Dictionary<string, (int, string)> timeUnits)
         {
@@ -2670,7 +2789,7 @@ namespace NBAdbToolbox
 
             isResizing = false;
         }
-        public void ChangeLabel(Label label, Control parent, List<string> structions)
+        public void ChangeLabel(Color color, Label label, Control parent, List<string> structions)
         {
             float fontSize = 0;
             FontStyle style = FontStyle.Regular;
@@ -2741,7 +2860,8 @@ namespace NBAdbToolbox
             /*Color*/
             if (structions[7] != ".")
             {
-                label.ForeColor = Color.FromName(structions[7]);
+                label.ForeColor = color;
+                
             }
             /*Visiblity*/
             if (structions[8] == "true")
@@ -2855,17 +2975,20 @@ namespace NBAdbToolbox
             }
 
         }
+        #endregion
 
-
+        public bool dbOverviewOpened = false;
         public void DbOverviewClick(Control control, Label growShrink, Control parent)
         {
             control.Click += (s, e) =>
             {
-                if (control.Focused || parent.Focused)
+                if (control.Focused || parent.Focused || dbOverviewOpened)
                 {
                     this.ActiveControl = null;
                     growShrink.Text = "+";
-                    parent.Height = parent.Height / 4;
+                    dbOverviewOpened = false;
+                    DbOverviewVisibility(false, "Click Close");
+                    parent.Height = (int)(lblDbOverview.Height * 1.3);
                     pnlDbOverview.Refresh();
                     lblDbOptions.Top = parent.Bottom;
                     lblDbSelectSeason.Top = lblDbOptions.Bottom;
@@ -2876,7 +2999,9 @@ namespace NBAdbToolbox
                 {
                     parent.Focus();
                     growShrink.Text = "-";
-                    parent.Height = parent.Height * 4;
+                    dbOverviewOpened = true;
+                    DbOverviewVisibility(true, "Click Open");
+                    parent.Height = (int)(pnlDbUtil.Height / 2);
                     pnlDbOverview.Refresh();
                     lblDbOptions.Top = parent.Bottom;
                     lblDbSelectSeason.Top = lblDbOptions.Bottom;
@@ -2885,7 +3010,174 @@ namespace NBAdbToolbox
                 }
             };
         }
+        private List<Panel> verticalLines = new List<Panel>();
+        private List<Panel> horizontalLines = new List<Panel>();
+        public int unpopCount = 0;
+        public int popCount = 0;
+        public void DbOverviewVisibility(bool vis, string sender)
+        {
+            popCount = 0;
+            unpopCount = 0;
+            List<Label> allControls = GetAllControlsOfType<Label>(pnlDbOverview);
+            int topTable = lblDbOverview.Height;
+            int leftTable = pnlDbUtil.Width / 7;
+            int topYear = 0;
+            float fontSize = ((float)(lblDbOverview.Height * .6) / (96 / 12)) * (72 / 12);
+            int yearWidth = 0;
+            lblEmpty.Text = "Unpopulated";
+            // Clear existing lines if recreating
+            if (vis)
+            {
+                pnlDbOverview.BackColor = SubThemeColor;
+                lblDbOverview.BackColor = SubThemeColor;
+                lblDbOvExpand.BackColor = SubThemeColor;
+                lblDbOvName.BackColor = SubThemeColor;
+                if(sender == "Change")
+                {
+                    ClearGridLines();
+                }
+            }
+            else
+            {
+                pnlDbOverview.BackColor = Color.Transparent;
+                lblDbOverview.BackColor = Color.Transparent;
+                lblDbOvExpand.BackColor = Color.Transparent;
+                lblDbOvName.BackColor = Color.Transparent;
+                ClearGridLines();
+            }
+            lblDbOvName.ForeColor = SuccessColor;
+            lblDbOverview.ForeColor = ThemeColor;
+            lblDbOvExpand.ForeColor = ThemeColor;
+            List<int> columnPositions = new List<int>();
+            List<int> rowPositions = new List<int>();
+            string unpopulated = "";
+            allControls.Remove(lbl25);
+            foreach (Label label in allControls)
+            {
+                label.Visible = vis;
+                label.Font = SetFontSize("Segoe UI", (float)(fontSize * 1.2), FontStyle.Bold, pnlDbUtil, label);
+                label.ForeColor = ThemeColor;
+                label.BackColor = SubThemeColor;
+                if (label.Tag.ToString() == "Table")
+                {
+                    label.Left = leftTable;
+                    label.AutoSize = true;
+                    label.Top = topTable;
+                    if (vis) columnPositions.Add(leftTable + label.Width);
 
+                    leftTable += label.Width;
+                    topYear = label.Bottom + (int)(label.Height * .3);
+                }
+                if (label.Tag.ToString() == "Year")
+                {
+                    int year = 0;
+                    if(label.Name != "Unpopulated")
+                    {
+                        year = Int32.Parse(label.Text);
+                    }
+                    bool exists = seasonInfo.Any(s => s.SeasonID == year && s.Item2.Loaded == 1);
+                    if (exists || year == 0)
+                    {
+                        if(year != 0)
+                        {
+                            if(popCount == 0)
+                            {
+                                label.AutoSize = true;
+                                yearWidth = label.Width;
+                                columnPositions.Add(((pnlDbUtil.Width / 7) + yearWidth) / 2);
+                            }
+                            popCount++;
+                        }
+                        label.Left = 0;
+                        label.AutoSize = true;
+                        label.Top = topYear;
+                    }
+                    else
+                    {
+                        unpopCount++;
+                        unpopulated += label.Text + ", ";
+                        if (unpopCount % 11 == 0)
+                        {
+                            unpopulated += "\n";
+                        }
+                        label.Visible = false;
+                    }
+                    if (vis && label.Visible && label.Name != "Unpopulated")
+                    {
+                        rowPositions.Add(topYear + label.Height);
+                        topYear += label.Height + (int)(label.Height * .25);
+                    }
+                }
+            }
+            lblEmpty.Text = "Unpopulated:\n" + unpopulated.Remove(unpopulated.Length - 2);
+            rowPositions.Add(lblTeamUtil.Bottom);
+            if (vis)
+            {
+                CreateGridLines(columnPositions, rowPositions, topTable, leftTable, topYear);
+            }
+        }
+
+
+
+
+
+
+        private void CreateGridLines(List<int> columnPositions, List<int> rowPositions, int topTable, int leftTable, int topYear)
+        {
+            // Create vertical lines
+            int height = lblEmpty.Top  - (int)(lblEmpty.Height * .4);
+            if(popCount == 0)
+            {
+                height = rowPositions[0] - (int)(lblEmpty.Height * .25);
+            }
+            foreach (int x in columnPositions)
+            {
+                Panel line = new Panel
+                {
+                    Width = 1,
+                    Height = height,
+                    Left = x,
+                    Top = topTable,
+                    BackColor = ThemeColor,
+                    Visible = true,
+                    TabIndex = 0
+                };
+                pnlDbOverview.Controls.Add(line);
+                pnlDbOverview.Controls.SetChildIndex(line, 0);
+                verticalLines.Add(line);
+            }
+            // Create horizontal lines
+            foreach (int y in rowPositions)
+            {
+                Panel line = new Panel
+                {
+                    Width = lblPbpUtil.Right,
+                    Height = 1,
+                    Left = 0,
+                    Top = y,
+                    BackColor = ThemeColor,
+                    Visible = true
+                };
+                pnlDbOverview.Controls.Add(line);
+                horizontalLines.Add(line);
+            }
+            
+        }
+        private void ClearGridLines()
+        {
+            foreach (Panel line in verticalLines)
+            {
+                pnlDbOverview.Controls.Remove(line);
+                line.Dispose();
+            }
+            foreach (Panel line in horizontalLines)
+            {
+                pnlDbOverview.Controls.Remove(line);
+                line.Dispose();
+            }
+            verticalLines.Clear();
+            horizontalLines.Clear();
+        }
         public void SettingsClick(Control control, PictureBox picture, float fontSize)
         {
             control.Click += (s, e) =>
@@ -2898,7 +3190,7 @@ namespace NBAdbToolbox
                         picture.Image.RotateFlip(RotateFlipType.RotateNoneFlipY);
                         picture.Refresh();
                     }
-                    lblSettings.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, pnlWelcome, btnBuild);
+                    lblSettings.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, pnlWelcome, lblSettings);
                     lblSettings.Left = (pnlWelcome.ClientSize.Width - lblSettings.Width) / 2;
                     SettingsVisibility(false);
                 }
@@ -2910,13 +3202,12 @@ namespace NBAdbToolbox
                         picture.Image.RotateFlip(RotateFlipType.RotateNoneFlipY);
                         picture.Refresh();
                     }
-                    lblSettings.Font = SetFontSize("Segoe UI", (float)(fontSize * 1.05), FontStyle.Bold | FontStyle.Underline, pnlWelcome, btnBuild);
+                    lblSettings.Font = SetFontSize("Segoe UI", (float)(fontSize * 1.05), FontStyle.Bold | FontStyle.Underline, pnlWelcome, lblSettings);
                     lblSettings.Left = (pnlWelcome.ClientSize.Width - lblSettings.Width) / 2;
                     SettingsVisibility(true);
                 }
             };
         }
-
         public void SettingsVisibility(bool vis)
         {
             lblBrowseConfig.Visible = vis;
@@ -2930,8 +3221,6 @@ namespace NBAdbToolbox
             lblSound.Visible = vis;
             boxSoundOptions.Visible = vis;
         }
-
-
         public void ClearImage(PictureBox pic)
         {
             // Release previous image
@@ -2965,7 +3254,8 @@ namespace NBAdbToolbox
                     while (sdr.Read())
                     {
                         listSeasons.Items.Add(sdr["SeasonID"].ToString());
-                        seasonInfo.Add((sdr.GetInt32(0), (sdr.GetInt32(1), sdr.GetInt32(2), sdr.GetInt32(3), sdr.GetInt32(4), sdr.GetInt32(5))));
+                        seasonInfo.Add((sdr.GetInt32(0), (sdr.GetInt32(1), sdr.GetInt32(2), sdr.GetInt32(3), sdr.GetInt32(4), sdr.GetInt32(5), sdr.GetInt32(6), sdr.GetInt32(7)
+                            , sdr.GetInt32(8), sdr.GetInt32(9), sdr.GetInt32(10))));
                     }
                 }
             }
@@ -3675,13 +3965,17 @@ namespace NBAdbToolbox
             //5.7 Populate DB Update
             HistoricTeamBoxInsert(game.box.homeTeam, game.box.awayTeamId, game.box.awayTeam.statistics.points);
             HistoricTeamBoxInsert(game.box.awayTeam, game.box.homeTeamId, game.box.homeTeam.statistics.points);
-            foreach (NBAdbToolboxHistoric.Lineups lineup in game.box.homeTeam.lineups)
+
+            if (GameID != 20300778 && GameID != 29800661 && GameID != 29600332 && GameID != 29600370)
             {
-                HistoricTeamBoxLineupsInsert(game.box.homeTeam, game.box.awayTeamId, game.box.awayTeam.statistics.points, lineup);
-            }
-            foreach (NBAdbToolboxHistoric.Lineups lineup in game.box.awayTeam.lineups)
-            {
-                HistoricTeamBoxLineupsInsert(game.box.awayTeam, game.box.homeTeamId, game.box.homeTeam.statistics.points, lineup);
+                foreach (NBAdbToolboxHistoric.Lineups lineup in game.box.homeTeam.lineups)
+                {
+                    HistoricTeamBoxLineupsInsert(game.box.homeTeam, game.box.awayTeamId, game.box.awayTeam.statistics.points, lineup);
+                }
+                foreach (NBAdbToolboxHistoric.Lineups lineup in game.box.awayTeam.lineups)
+                {
+                    HistoricTeamBoxLineupsInsert(game.box.awayTeam, game.box.homeTeamId, game.box.homeTeam.statistics.points, lineup);
+                }
             }
         }
         public void HistoricTeamBoxInsert(NBAdbToolboxHistoric.Team team, int MatchupID, int PointsAgainst)
