@@ -1626,6 +1626,7 @@ namespace NBAdbToolbox
             ClearImage(picDbStatus);
             picDbStatus.Image = Image.FromFile(imagePathDb);
             UIController("DbMissing");
+            DbOverviewVisibility(false, "DbMissing");
         }
         public void BadConnection()
         {
@@ -2978,6 +2979,11 @@ namespace NBAdbToolbox
         #endregion
 
         public bool dbOverviewOpened = false;
+        private Dictionary<int, Label> yearLabels = new Dictionary<int, Label>();
+        private List<Label> tableHeaders = new List<Label>();
+        private Label lblUnpopulated;
+        private List<Panel> gridLines = new List<Panel>();
+
         public void DbOverviewClick(Control control, Label growShrink, Control parent)
         {
             control.Click += (s, e) =>
@@ -2989,11 +2995,6 @@ namespace NBAdbToolbox
                     dbOverviewOpened = false;
                     DbOverviewVisibility(false, "Click Close");
                     parent.Height = (int)(lblDbOverview.Height * 1.3);
-                    pnlDbOverview.Refresh();
-                    lblDbOptions.Top = parent.Bottom;
-                    lblDbSelectSeason.Top = lblDbOptions.Bottom;
-                    listSeasons.Top = lblDbSelectSeason.Bottom;
-                    btnPopulate.Top = listSeasons.Bottom; //subject to change
                 }
                 else
                 {
@@ -3002,140 +3003,227 @@ namespace NBAdbToolbox
                     dbOverviewOpened = true;
                     DbOverviewVisibility(true, "Click Open");
                     parent.Height = (int)(pnlDbUtil.Height / 2);
-                    pnlDbOverview.Refresh();
-                    lblDbOptions.Top = parent.Bottom;
-                    lblDbSelectSeason.Top = lblDbOptions.Bottom;
-                    listSeasons.Top = lblDbSelectSeason.Bottom;
-                    btnPopulate.Top = listSeasons.Bottom; //subject to change
                 }
+
             };
         }
-        private List<Panel> verticalLines = new List<Panel>();
-        private List<Panel> horizontalLines = new List<Panel>();
-        public int unpopCount = 0;
-        public int popCount = 0;
+
         public void DbOverviewVisibility(bool vis, string sender)
         {
-            popCount = 0;
-            unpopCount = 0;
-            List<Label> allControls = GetAllControlsOfType<Label>(pnlDbOverview);
-            int topTable = lblDbOverview.Height;
-            int leftTable = pnlDbUtil.Width / 7;
-            int topYear = 0;
-            float fontSize = ((float)(lblDbOverview.Height * .6) / (96 / 12)) * (72 / 12);
-            int yearWidth = 0;
-            lblEmpty.Text = "Unpopulated";
-            // Clear existing lines if recreating
-            if (vis)
+            ClearOverview();
+            pnlDbOverview.Refresh();
+            if (!vis)
             {
-                pnlDbOverview.BackColor = SubThemeColor;
-                lblDbOverview.BackColor = SubThemeColor;
-                lblDbOvExpand.BackColor = SubThemeColor;
-                lblDbOvName.BackColor = SubThemeColor;
-                if(sender == "Change")
-                {
-                    ClearGridLines();
-                }
-            }
-            else
-            {
+                dbOverviewOpened = false;
+                //hide everything and clean up
                 pnlDbOverview.BackColor = Color.Transparent;
                 lblDbOverview.BackColor = Color.Transparent;
                 lblDbOvExpand.BackColor = Color.Transparent;
                 lblDbOvName.BackColor = Color.Transparent;
-                ClearGridLines();
+                this.ActiveControl = null;
+                pnlDbOverview.Height = (int)(lblDbOverview.Height * 1.3);
+                lblDbOptions.Top = pnlDbOverview.Bottom;
+                lblDbSelectSeason.Top = lblDbOptions.Bottom;
+                listSeasons.Top = lblDbSelectSeason.Bottom;
+                btnPopulate.Top = listSeasons.Bottom;
+                return;
             }
+            else
+            {
+                dbOverviewOpened = true;
+                pnlDbOverview.Height = (int)(pnlDbUtil.Height / 2);
+                lblDbOptions.Top = pnlDbOverview.Bottom;
+                lblDbSelectSeason.Top = lblDbOptions.Bottom;
+                listSeasons.Top = lblDbSelectSeason.Bottom;
+                btnPopulate.Top = listSeasons.Bottom;
+            }
+
+            //show and build overview
+            pnlDbOverview.BackColor = SubThemeColor;
+            lblDbOverview.BackColor = SubThemeColor;
+            lblDbOvExpand.BackColor = SubThemeColor;
+            lblDbOvName.BackColor = SubThemeColor;
             lblDbOvName.ForeColor = SuccessColor;
             lblDbOverview.ForeColor = ThemeColor;
             lblDbOvExpand.ForeColor = ThemeColor;
-            List<int> columnPositions = new List<int>();
-            List<int> rowPositions = new List<int>();
-            string unpopulated = "";
-            allControls.Remove(lbl25);
-            foreach (Label label in allControls)
-            {
-                label.Visible = vis;
-                label.Font = SetFontSize("Segoe UI", (float)(fontSize * 1.2), FontStyle.Bold, pnlDbUtil, label);
-                label.ForeColor = ThemeColor;
-                label.BackColor = SubThemeColor;
-                if (label.Tag.ToString() == "Table")
-                {
-                    label.Left = leftTable;
-                    label.AutoSize = true;
-                    label.Top = topTable;
-                    if (vis) columnPositions.Add(leftTable + label.Width);
 
-                    leftTable += label.Width;
-                    topYear = label.Bottom + (int)(label.Height * .3);
-                }
-                if (label.Tag.ToString() == "Year")
-                {
-                    int year = 0;
-                    if(label.Name != "Unpopulated")
-                    {
-                        year = Int32.Parse(label.Text);
-                    }
-                    bool exists = seasonInfo.Any(s => s.SeasonID == year && s.Item2.Loaded == 1);
-                    if (exists || year == 0)
-                    {
-                        if(year != 0)
-                        {
-                            if(popCount == 0)
-                            {
-                                label.AutoSize = true;
-                                yearWidth = label.Width;
-                                columnPositions.Add(((pnlDbUtil.Width / 7) + yearWidth) / 2);
-                            }
-                            popCount++;
-                        }
-                        label.Left = 0;
-                        label.AutoSize = true;
-                        label.Top = topYear;
-                    }
-                    else
-                    {
-                        unpopCount++;
-                        unpopulated += label.Text + ", ";
-                        if (unpopCount % 11 == 0)
-                        {
-                            unpopulated += "\n";
-                        }
-                        label.Visible = false;
-                    }
-                    if (vis && label.Visible && label.Name != "Unpopulated")
-                    {
-                        rowPositions.Add(topYear + label.Height);
-                        topYear += label.Height + (int)(label.Height * .25);
-                    }
-                }
-            }
-            lblEmpty.Text = "Unpopulated:\n" + unpopulated.Remove(unpopulated.Length - 2);
-            rowPositions.Add(lblTeamUtil.Bottom);
-            if (vis)
+            if (sender == "Change")
             {
-                CreateGridLines(columnPositions, rowPositions, topTable, leftTable, topYear);
+                ClearGridLines();
             }
+
+            BuildOverview();
         }
 
-
-
-
-
-
-        private void CreateGridLines(List<int> columnPositions, List<int> rowPositions, int topTable, int leftTable, int topYear)
+        public int popCount = 0;
+        private void BuildOverview()
         {
-            // Create vertical lines
-            int height = lblEmpty.Top  - (int)(lblEmpty.Height * .4);
-            if(popCount == 0)
+            popCount = 0;
+            float fontSize = ((float)(lblDbOverview.Height * .6) / (96 / 12)) * (72 / 12);
+            int leftTable = pnlDbUtil.Width / 7;
+            int topTable = lblDbOverview.Height;
+            List<int> columnPositions = new List<int>();
+            List<int> rowPositions = new List<int>();
+
+            //create table headers if needed
+            if (tableHeaders.Count == 0)
+            {
+                string[] tables = { "Game", "Team", "Arena", "Player", "Official", "TeamBox", "PlayerBox", "PlayByPlay" };
+                foreach (string table in tables)
+                {
+                    Label header = new Label
+                    {
+                        Text = table,
+                        Tag = "Table",
+                        ForeColor = ThemeColor,
+                        BackColor = SubThemeColor,
+                        Left = leftTable,
+                        Top = topTable,
+                        Visible = true
+                    };
+                    header.Font = SetFontSize("Segoe UI", (float)(fontSize * 1.2), FontStyle.Bold, pnlDbUtil, header);
+                    header.AutoSize = true;
+                    tableHeaders.Add(header);
+                    pnlDbOverview.Controls.Add(header);
+                    columnPositions.Add(leftTable + header.Width);
+                    leftTable += header.Width;
+                    lineHeight += header.Height;
+                    lineWidth = leftTable;
+                }
+            }
+            else
+            {
+                //reposition existing headers
+                foreach (Label header in tableHeaders)
+                {
+                    header.Font = SetFontSize("Segoe UI", fontSize * 1.2f, FontStyle.Bold, pnlDbUtil, header);
+                    header.Left = leftTable;
+                    header.Top = topTable;
+                    header.Visible = true;
+                    columnPositions.Add(leftTable + header.Width);
+                    leftTable += header.Width;
+                }
+                lineWidth = leftTable;
+            }
+
+            //build year rows
+            int topYear = tableHeaders[0].Bottom + (int)(tableHeaders[0].Height * .3);
+            List<int> populatedYears = new List<int>();
+            List<int> unpopulatedYears = new List<int>();
+
+            //check which years have data
+            for (int year = 2024; year >= 1996; year--)
+            {
+                if (seasonInfo.Any(s => s.SeasonID == year && s.Item2.Loaded == 1))
+                {
+                    populatedYears.Add(year);
+                    popCount++;
+                }
+                else
+                {
+                    lineHeight = 0;
+                    unpopulatedYears.Add(year);
+                }
+            }
+            //add first column position for years
+            if (populatedYears.Count > 0)
+            {
+                Label firstYear = GetOrCreateYearLabel(populatedYears[0], fontSize);
+                firstYear.Top = topYear;
+                columnPositions.Insert(0, ((pnlDbUtil.Width / 7) + firstYear.Width) / 2);
+            }
+
+            //create/show populated year labels
+            int singleLineHeight = 0;
+            foreach (int year in populatedYears)
+            {
+                Label yearLabel = GetOrCreateYearLabel(year, fontSize);
+                yearLabel.Top = topYear;
+                yearLabel.Visible = true;
+                rowPositions.Add(topYear + yearLabel.Height);
+                topYear += yearLabel.Height + (int)(yearLabel.Height * .25);
+                singleLineHeight = yearLabel.Height + (int)(yearLabel.Height * .25);
+            }
+            lineHeight = topYear;
+
+            //handle unpopulated years
+            if (unpopulatedYears.Count > 0)
+            {
+                string unpopText = "Unpopulated:\n";
+                for (int i = 0; i < unpopulatedYears.Count; i++)
+                {
+                    unpopText += unpopulatedYears[i];
+                    if (i < unpopulatedYears.Count - 1) unpopText += ", ";
+                    if ((i + 1) % 11 == 0) unpopText += "\n";
+                }
+
+                if (lblUnpopulated == null)
+                {
+                    lblUnpopulated = new Label
+                    {
+                        Tag = "Year",
+                        Name = "Unpopulated",
+                        ForeColor = ThemeColor,
+                        BackColor = SubThemeColor,
+                        Left = 0
+                    };
+                    lblUnpopulated.Font = SetFontSize("Segoe UI", fontSize * 1.2f, FontStyle.Bold, pnlDbUtil, lblUnpopulated);
+                    lblUnpopulated.AutoSize = true;
+                    pnlDbOverview.Controls.Add(lblUnpopulated);
+                }
+
+                lblUnpopulated.Text = unpopText;
+                lblUnpopulated.Top = topYear;
+                lblUnpopulated.Visible = true;
+                lineHeight = lblUnpopulated.Top - singleLineHeight;
+            }
+
+            //add final row position
+            rowPositions.Add(tableHeaders[0].Bottom);
+
+            //create grid lines
+            CreateGridLines(columnPositions, rowPositions, topTable);
+        }
+
+        public int lineHeight = 0;
+        public int lineWidth = 0;
+        private Label GetOrCreateYearLabel(int year, float fontSize)
+        {
+            if (!yearLabels.ContainsKey(year))
+            {
+                Label yearLabel = new Label
+                {
+                    Text = year.ToString(),
+                    Tag = "Year",
+                    ForeColor = ThemeColor,
+                    BackColor = SubThemeColor,
+                    Left = 0
+                };
+                yearLabel.Font = SetFontSize("Segoe UI", fontSize * 1.2f, FontStyle.Bold, pnlDbUtil, yearLabel);
+                yearLabel.AutoSize = true;
+                yearLabels[year] = yearLabel;
+                pnlDbOverview.Controls.Add(yearLabel);
+            }
+            return yearLabels[year];
+        }
+        private void CreateGridLines(List<int> columnPositions, List<int> rowPositions, int topTable)
+        {
+            ClearGridLines();
+
+            //calculate height for vertical lines
+            int height = lblEmpty.Top - (int)(lblEmpty.Height * .4);
+            if (popCount == 0)
             {
                 height = rowPositions[0] - (int)(lblEmpty.Height * .25);
             }
+
+            //create vertical lines
             foreach (int x in columnPositions)
             {
                 Panel line = new Panel
                 {
                     Width = 1,
-                    Height = height,
+                    Height = lineHeight,
                     Left = x,
                     Top = topTable,
                     BackColor = ThemeColor,
@@ -3144,14 +3232,15 @@ namespace NBAdbToolbox
                 };
                 pnlDbOverview.Controls.Add(line);
                 pnlDbOverview.Controls.SetChildIndex(line, 0);
-                verticalLines.Add(line);
+                gridLines.Add(line);
             }
-            // Create horizontal lines
+
+            //create horizontal lines
             foreach (int y in rowPositions)
             {
                 Panel line = new Panel
                 {
-                    Width = lblPbpUtil.Right,
+                    Width = lineWidth,
                     Height = 1,
                     Left = 0,
                     Top = y,
@@ -3159,24 +3248,41 @@ namespace NBAdbToolbox
                     Visible = true
                 };
                 pnlDbOverview.Controls.Add(line);
-                horizontalLines.Add(line);
+                gridLines.Add(line);
             }
-            
+            lineHeight = 0; 
+            lineWidth = 0;
         }
+
         private void ClearGridLines()
         {
-            foreach (Panel line in verticalLines)
+            foreach (Panel line in gridLines)
             {
                 pnlDbOverview.Controls.Remove(line);
                 line.Dispose();
             }
-            foreach (Panel line in horizontalLines)
+            gridLines.Clear();
+        }
+
+        private void ClearOverview()
+        {
+            //hide all controls
+            foreach (Label header in tableHeaders)
             {
-                pnlDbOverview.Controls.Remove(line);
-                line.Dispose();
+                header.Visible = false;
             }
-            verticalLines.Clear();
-            horizontalLines.Clear();
+
+            foreach (Label yearLabel in yearLabels.Values)
+            {
+                yearLabel.Visible = false;
+            }
+
+            if (lblUnpopulated != null)
+            {
+                lblUnpopulated.Visible = false;
+            }
+
+            ClearGridLines();
         }
         public void SettingsClick(Control control, PictureBox picture, float fontSize)
         {
