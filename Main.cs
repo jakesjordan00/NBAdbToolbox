@@ -904,17 +904,18 @@ namespace NBAdbToolbox
 
 
             //Edit Button properties
-            btnEdit.Width = lblStatus.Width / 2;
-            if (File.Exists(configPath)) //If our file exists, set width proper
-            {
-                btnEdit.Width = (int)(lblStatus.Width / 1.5);
-            }
-            btnEdit.Height = 30;
+            //btnEdit.Width = lblStatus.Width / 2;
+            //if (File.Exists(configPath)) //If our file exists, set width proper
+            //{
+            //    btnEdit.Width = (int)(lblStatus.Width / 1.5);
+            //}
             fontSize = ((float)(lblDB.Height) / (96 / 12)) * (72 / 12);
             btnEdit.Font = SetFontSize("Segoe UI", (float)(fontSize * .67), FontStyle.Bold, pnlWelcome, btnEdit); //12F
             CenterElement(pnlWelcome, btnEdit);
             btnEdit.Top = lblDbStat.Bottom + 10; //subject to change
             btnEdit.TextAlign = ContentAlignment.BottomCenter;
+            btnEdit.AutoSize = true;
+            //btnEdit.Height = 30;
 
 
 
