@@ -390,15 +390,15 @@ namespace NBAdbToolbox
             }
             else if(screenFontSize >= 1536 && screenWidth < 1920)
             {
-                screenFontSize = 1.3f;
+                screenFontSize = 2f;
             }
             else if (screenFontSize >= 1366 && screenWidth < 1536)
             {
-                screenFontSize = 1.5f;
+                screenFontSize = 2.5f;
             }
             else if (screenFontSize >= 1280 && screenWidth < 1366)
             {
-                screenFontSize = 2;
+                screenFontSize = 3;
             }
             #endregion
             lblDbUtil.ForeColor = ThemeColor;
