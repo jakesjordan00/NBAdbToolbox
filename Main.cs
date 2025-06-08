@@ -1016,7 +1016,7 @@ namespace NBAdbToolbox
             };
             #endregion
 
-
+            
             #region Database Overview
             pnlDbOverview.Parent = pnlDbUtil;
             pnlDbOverview.Width = pnlDbUtil.Width;
@@ -1039,8 +1039,9 @@ namespace NBAdbToolbox
             DbOverviewClick(lblDbOvName, lblDbOvExpand, pnlDbOverview);
             #endregion
 
+            string database = config?.Database ?? "";
             ChangeLabel(ThemeColor, lblDbOvName, pnlDbUtil, new List<string> {
-                config.Database,
+                database,
                 "Bold",
                 (((float)(pnlWelcome.Height * .05) / (96 / 12)) * (72 / 12)).ToString(),
                 ".",
@@ -1386,10 +1387,30 @@ namespace NBAdbToolbox
                 DefaultSettings();
                 //Set Background Image
                 bgCourt.Image = Image.FromFile(Path.Combine(projectRoot, @"Content\Images", settings.BackgroundImage + ".png"));
+                string backupDir = Path.Combine(projectRoot, @"Content\Configuration");
+                string backupPath = Path.Combine(projectRoot, @"Content\Configuration\", settings.DefaultConfig);
+
                 //Set Default dbconfig.json filepath
                 if (File.Exists(Path.Combine(settings.ConfigPath, settings.DefaultConfig)))
                 {
                     configPath = Path.Combine(settings.ConfigPath, settings.DefaultConfig);
+                }
+                else if (Directory.Exists(backupDir))
+                {
+                    string[] backupDirFiles = Directory.GetFiles(backupDir, "*.json").OrderByDescending(f => File.GetLastWriteTime(f)).ToArray();
+                    string[] backupDirFileNames = Directory.GetFiles(backupDir, "*.json").OrderByDescending(f => File.GetLastWriteTime(f))
+                    .Select(f => Path.GetFileName(f)).ToArray();
+                    if (File.Exists(Path.Combine(backupDir, settings.DefaultConfig)))
+                    {
+                        configPath = Path.Combine(backupDir, settings.DefaultConfig);
+                        settings.ConfigPath = Path.Combine(projectRoot, @"Content\Configuration");
+                    }
+                    else if(backupDirFiles.Count() > 0)
+                    {
+                        configPath = backupDirFiles[0];
+                        settings.ConfigPath = backupDir;
+                        settings.DefaultConfig = backupDirFileNames[0] + ".json";
+                    }
                 }
                 else
                 {
@@ -1917,7 +1938,7 @@ namespace NBAdbToolbox
             isRefreshing = true;
             boxConfigFiles.Items.Clear();
             boxChangeConfig.Items.Clear();
-            string[] configFiles = Directory.GetFiles(settings.ConfigPath, "*.json");
+            string[] configFiles = Directory.GetFiles(settings.ConfigPath);
             string settingsDefConfig = "";
             int intSettingsDefConfig = 0;
             for (int i = 0; i < configFiles.Length; i++)
