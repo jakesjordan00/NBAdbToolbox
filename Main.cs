@@ -353,7 +353,7 @@ namespace NBAdbToolbox
 
         #endregion
 
-        public float screenFontSize = 0;
+        public float screenFontSize = 1;
 
         public string settingsJSON = "";
         public bool defaultConfig = false;
