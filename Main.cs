@@ -918,7 +918,7 @@ namespace NBAdbToolbox
             btnBuild.Font = SetFontSize("Segoe UI", (float)(fontSize * 1.3), FontStyle.Bold, pnlWelcome, btnBuild);
             btnBuild.AutoSize = true;
             CenterElement(pnlWelcome, btnBuild);
-            btnBuild.Top = btnEdit.Bottom + 10; //subject to change
+            btnBuild.Top = btnEdit.Bottom + spacer; //subject to change
             if (!isBuildEnabled)
             {
                 btnBuild.Enabled = false;
@@ -1029,7 +1029,7 @@ namespace NBAdbToolbox
 
             #region Settings area
             lblSettings.Text = "Settings";
-            lblSettings.Top = btnBuild.Bottom + 10; //subject to change
+            lblSettings.Top = btnBuild.Bottom + spacer; //subject to change
             lblSettings.Font = SetFontSize("Segoe UI", (float)(fontSize), FontStyle.Bold, pnlWelcome, btnBuild);
             lblSettings.AutoSize = true;
             lblSettings.Left = (pnlWelcome.ClientSize.Width - lblSettings.Width) / 2;
@@ -1043,7 +1043,7 @@ namespace NBAdbToolbox
 
             pnlSettings.Top = lblSettings.Bottom + spacer;
             pnlSettings.Width = pnlWelcome.Width;
-
+            pnlSettings.Height = pnlWelcome.Height - pnlSettings.Top;
             pnlSettings.AutoScroll = true;
 
 
@@ -1100,7 +1100,7 @@ namespace NBAdbToolbox
 
             boxChangeConfig.DropDownStyle = ComboBoxStyle.DropDownList; //Makes it non-editable
             boxChangeConfig.Font = SetFontSize("Segoe UI", (int)(fontSize * .7), FontStyle.Regular, pnlWelcome, boxChangeConfig);
-            boxChangeConfig.Top = btnBrowseConfig.Bottom + 10;
+            boxChangeConfig.Top = btnBrowseConfig.Bottom + spacer;
             boxChangeConfig.Width = (int)(btnEdit.Width * .7);
 
             lblChangeConfig.Left = 0;
@@ -1141,7 +1141,7 @@ namespace NBAdbToolbox
 
             boxConfigFiles.DropDownStyle = ComboBoxStyle.DropDownList; //Makes it non-editable
             boxConfigFiles.Font = SetFontSize("Segoe UI", (int)(fontSize * .7), FontStyle.Regular, pnlWelcome, boxConfigFiles);
-            boxConfigFiles.Top = boxChangeConfig.Bottom + 10;
+            boxConfigFiles.Top = boxChangeConfig.Bottom + spacer;
             boxConfigFiles.Width = (int)(btnEdit.Width * .7);
 
             lblConfigFiles.Left = 0;
@@ -1180,11 +1180,11 @@ namespace NBAdbToolbox
             };
             boxBackground.DropDownStyle = ComboBoxStyle.DropDownList; //Makes it non-editable
             boxBackground.Font = SetFontSize("Segoe UI", (int)(fontSize * .7), FontStyle.Regular, pnlWelcome, boxBackground);
-            boxBackground.Top = boxConfigFiles.Bottom + 10;
+            boxBackground.Top = boxConfigFiles.Bottom + spacer;
             boxBackground.Width = (int)(btnEdit.Width * .4);
 
             lblBackground.Left = 0;
-            lblBackground.Top = boxConfigFiles.Bottom + 10;
+            lblBackground.Top = boxConfigFiles.Bottom + spacer;
             lblBackground.AutoSize = true;
             lblBackground.Font = SetFontSize("Segoe UI", (int)(fontSize * .9), FontStyle.Bold, pnlWelcome, lblBackground);
             lblBackground.ForeColor = ThemeColor;
@@ -1195,11 +1195,11 @@ namespace NBAdbToolbox
 
             boxSoundOptions.DropDownStyle = ComboBoxStyle.DropDownList; //Makes it non-editable
             boxSoundOptions.Font = SetFontSize("Segoe UI", (int)(fontSize * .7), FontStyle.Regular, pnlWelcome, boxSoundOptions);
-            boxSoundOptions.Top = boxBackground.Bottom + 10;
+            boxSoundOptions.Top = boxBackground.Bottom + spacer;
             boxSoundOptions.Width = (int)(btnEdit.Width * .4);
 
             lblSound.Left = 0;
-            lblSound.Top = boxBackground.Bottom + 10;
+            lblSound.Top = boxBackground.Bottom + spacer;
             lblSound.AutoSize = true;
             lblSound.Font = SetFontSize("Segoe UI", (int)(fontSize * .9), FontStyle.Bold, pnlWelcome, lblSound);
             lblSound.ForeColor = ThemeColor;
@@ -1445,7 +1445,9 @@ namespace NBAdbToolbox
                    settings.Sound != settingsControl.Sound;
         }
         #endregion
+
         #region Config
+        public string configName = "";
         public void InitializeDbConfig(string sender)
         {
             if (!File.Exists(configPath) || defaultConfig) //If our file doesnt exist
@@ -1504,7 +1506,6 @@ namespace NBAdbToolbox
             UIController("NoConnection");
 
         }
-        public string configName = "";
         public void GetConfig(string sender) //Gets config file
         {
             if (sender == "Main")
@@ -1681,6 +1682,155 @@ namespace NBAdbToolbox
             AddPanelElement(pnlLoad, picLoad);
         }
 
+        private bool isRefreshing = false;
+        public void UIController(string sender)//If an event occurs that will change the state of the UI, it must run through here
+        {
+            float fontSize = ((float)(pnlWelcome.Height * .08) / (96 / 12)) * (72 / 12);
+            if (sender == "NoConnection")
+            {
+                btnBuild.Enabled = false;
+                isBuildEnabled = false;
+                btnPopulate.Enabled = false;
+                listSeasons.Items.Clear();
+
+                lblStatus.ForeColor = ThemeColor;
+                lblServerName.ForeColor = Color.Red;
+                lblCStatus.ForeColor = Color.Red;
+                lblDbName.ForeColor = Color.Red;
+                lblDbName.BackColor = Color.Transparent;
+                lblDbStat.ForeColor = Color.Red;
+                lblDbStat.BackColor = Color.Transparent;
+            }
+            else if (sender == "GetConfig")
+            {
+                lblCStatus.Text = isConnected ? "Connected" : "Disconnected";
+                lblCStatus.ForeColor = isConnected ? SuccessColor : Color.Red;
+                iconFile = isConnected ? "Success.png" : "Error.png";
+                imagePath = Path.Combine(projectRoot, @"Content\Images", iconFile);
+                ClearImage(picStatus);
+                picStatus.Image = Image.FromFile(imagePath);
+            }
+
+            else if (sender == "DbExists")
+            {
+                btnBuild.Enabled = false;
+                isBuildEnabled = false;
+                btnPopulate.Enabled = true;
+                lblDbOvName.Visible = true;
+
+                lblDbOvName.ForeColor = SuccessColor;
+                lblDbName.ForeColor = SuccessColor;
+                lblDbName.BackColor = Color.Transparent;
+                lblDbStat.ForeColor = SuccessColor;
+                lblDbStat.BackColor = Color.Transparent;
+                picDbStatus.BackColor = Color.Transparent;
+            }
+            else if (sender == "DbMissing")
+            {
+                btnBuild.Enabled = true;
+                isBuildEnabled = true;
+                btnPopulate.Enabled = false;
+                lblDbOvName.Visible = false;
+                listSeasons.Items.Clear();
+
+                lblDbName.ForeColor = Color.FromArgb(255, 204, 0);
+                lblDbName.BackColor = Color.FromArgb(100, 0, 0, 0);
+                lblDbName.AutoSize = true;
+                lblDbStat.ForeColor = Color.FromArgb(255, 204, 0);
+                lblDbStat.BackColor = Color.FromArgb(100, 0, 0, 0);
+                lblDbStat.AutoSize = true;
+                picDbStatus.BackColor = Color.FromArgb(100, 0, 0, 0);
+                picDbStatus.Left = lblDbName.Right;
+            }
+            else if (sender == "BadConnection")
+            {
+                btnBuild.Enabled = true;
+                isBuildEnabled = true;
+                btnPopulate.Enabled = false;
+                lblDbOvName.Visible = false;
+                listSeasons.Items.Clear();
+
+                lblStatus.ForeColor = Color.Red;
+                CenterElement(pnlWelcome, lblStatus);
+                lblDbName.ForeColor = Color.Red;
+                lblDbName.BackColor = Color.Transparent;
+                lblDbName.AutoSize = true;
+                lblDbStat.ForeColor = Color.Red;
+                lblDbStat.BackColor = Color.Transparent;
+                lblDbName.AutoSize = true;
+                picDbStatus.BackColor = Color.Red;
+                picDbStatus.Left = lblDbName.Right;
+            }
+
+            //Do big Status label first
+            //lblStatus.Height = (int)(pnlWelcome.Height * .1);
+            //lblStatus.Font = SetFontSize("Segoe UI", ((float)(lblStatus.Height) / (96 / 12)) * (72 / 12), FontStyle.Bold, pnlWelcome, lblStatus);
+            //If CStatus = Disconnected, make font smaller
+            if (!isConnected)
+            {
+                lblStatus.Height = (int)(pnlWelcome.Height * .1);
+                lblCStatus.Font = SetFontSize("Segoe UI", ((float)(lblServer.Height * .9) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, pnlWelcome, lblCStatus);
+            }
+            else //If we're connected, use normal sized font
+            {
+                lblStatus.Height = (int)(pnlWelcome.Height * .1);
+                lblCStatus.Font = SetFontSize("Segoe UI", ((float)(lblServer.Height) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, pnlWelcome, lblCStatus);
+            }
+            lblDbName.AutoSize = true;
+            lblDbName.AutoSize = true;
+            picDbStatus.Left = lblDbName.Right;
+            lblCStatus.AutoSize = true;
+            lblStatus.Left = (pnlWelcome.ClientSize.Width - lblStatus.Width) / 2;
+            lblCStatus.Left = pnlWelcome.Width - (lblCStatus.Width + picStatus.Width);
+            picStatus.Left = lblCStatus.Right;
+            lblDbName.AutoSize = true;
+            lblDbStat.AutoSize = true;
+            picDbStatus.Left = lblDbName.Right;
+            lblDbUtil.Text = "Database Utilities";
+            lblDbUtil.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, pnlDbUtil, lblDbUtil);
+            lblDbUtil.AutoSize = true;
+            lblDbUtil.Left = (pnlDbUtil.Width - lblDbUtil.Width) / 2;
+
+
+        }
+        public void RefreshDefaultConfigPath(string sender)
+        {
+            isRefreshing = true;
+            boxConfigFiles.Items.Clear();
+            boxChangeConfig.Items.Clear();
+            string[] configFiles = Directory.GetFiles(settings.ConfigPath);
+            string settingsDefConfig = "";
+            int intSettingsDefConfig = 0;
+            for (int i = 0; i < configFiles.Length; i++)
+            {
+                string currentFileName = Path.GetFileName(configFiles[i]).Replace(".json", "");
+                boxConfigFiles.Items.Add(Path.GetFileName(configFiles[i]).Replace(".json", ""));
+                boxChangeConfig.Items.Add(Path.GetFileName(configFiles[i]).Replace(".json", ""));
+                //select if it's the default
+                if (currentFileName == settings.DefaultConfig.Replace(".json", ""))
+                {
+                    if (sender == "Main")
+                    {
+                        boxConfigFiles.SelectedIndex = i;
+                    }
+                    settingsDefConfig = settings.DefaultConfig.Replace(".json", "");
+                    intSettingsDefConfig = i;
+                }
+                if (sender != "Main" && currentFileName == configName)
+                {
+                    if (config.Default == true)
+                    {
+                        boxConfigFiles.SelectedIndex = i;
+                    }
+                    else
+                    {
+                        boxConfigFiles.SelectedIndex = intSettingsDefConfig;
+                    }
+                }
+            }
+            boxChangeConfig.SelectedIndex = boxConfigFiles.SelectedIndex;
+            isRefreshing = false;
+        }
 
 
         //Create Database using build.sql file
@@ -1801,155 +1951,6 @@ namespace NBAdbToolbox
             }
         }
 
-        private bool isRefreshing = false;
-        public void UIController(string sender)//If an event occurs that will change the state of the UI, it must run through here
-        {
-            float fontSize = ((float)(pnlWelcome.Height * .08) / (96 / 12)) * (72 / 12);
-            if (sender == "NoConnection")
-            {
-                btnBuild.Enabled = false;
-                isBuildEnabled = false;
-                btnPopulate.Enabled = false;
-                listSeasons.Items.Clear();
-                
-                lblStatus.ForeColor = ThemeColor;
-                lblServerName.ForeColor = Color.Red;
-                lblCStatus.ForeColor = Color.Red;
-                lblDbName.ForeColor = Color.Red;
-                lblDbName.BackColor = Color.Transparent;
-                lblDbStat.ForeColor = Color.Red;
-                lblDbStat.BackColor = Color.Transparent;
-            }
-            else if (sender == "GetConfig")
-            {
-                lblCStatus.Text = isConnected ? "Connected" : "Disconnected";
-                lblCStatus.ForeColor = isConnected ? SuccessColor : Color.Red;
-                iconFile = isConnected ? "Success.png" : "Error.png";
-                imagePath = Path.Combine(projectRoot, @"Content\Images", iconFile);
-                ClearImage(picStatus);
-                picStatus.Image = Image.FromFile(imagePath);
-            }
-
-            else if (sender == "DbExists")
-            {
-                btnBuild.Enabled = false;
-                isBuildEnabled = false;
-                btnPopulate.Enabled = true;
-                lblDbOvName.Visible = true;
-
-                lblDbOvName.ForeColor = SuccessColor;
-                lblDbName.ForeColor = SuccessColor;
-                lblDbName.BackColor = Color.Transparent;
-                lblDbStat.ForeColor = SuccessColor;
-                lblDbStat.BackColor = Color.Transparent;
-                picDbStatus.BackColor = Color.Transparent;
-            }
-            else if (sender == "DbMissing")
-            {
-                btnBuild.Enabled = true;
-                isBuildEnabled = true;
-                btnPopulate.Enabled = false;
-                lblDbOvName.Visible = false;
-                listSeasons.Items.Clear();
-
-                lblDbName.ForeColor = Color.FromArgb(255, 204, 0);
-                lblDbName.BackColor = Color.FromArgb(100, 0, 0, 0);
-                lblDbName.AutoSize = true;
-                lblDbStat.ForeColor = Color.FromArgb(255, 204, 0);
-                lblDbStat.BackColor = Color.FromArgb(100, 0, 0, 0);
-                lblDbStat.AutoSize = true;
-                picDbStatus.BackColor = Color.FromArgb(100, 0, 0, 0);
-                picDbStatus.Left = lblDbName.Right;
-            }
-            else if (sender == "BadConnection")
-            {
-                btnBuild.Enabled = true;
-                isBuildEnabled = true;
-                btnPopulate.Enabled = false;
-                lblDbOvName.Visible = false;
-                listSeasons.Items.Clear();
-
-                lblStatus.ForeColor = Color.Red;
-                CenterElement(pnlWelcome, lblStatus);
-                lblDbName.ForeColor = Color.Red;
-                lblDbName.BackColor = Color.Transparent;
-                lblDbName.AutoSize = true;
-                lblDbStat.ForeColor = Color.Red;
-                lblDbStat.BackColor = Color.Transparent;
-                lblDbName.AutoSize = true;
-                picDbStatus.BackColor = Color.Red;
-                picDbStatus.Left = lblDbName.Right;
-            }
-
-            //Do big Status label first
-            //lblStatus.Height = (int)(pnlWelcome.Height * .1);
-            //lblStatus.Font = SetFontSize("Segoe UI", ((float)(lblStatus.Height) / (96 / 12)) * (72 / 12), FontStyle.Bold, pnlWelcome, lblStatus);
-            //If CStatus = Disconnected, make font smaller
-            if (!isConnected)
-            {
-                lblStatus.Height = (int)(pnlWelcome.Height * .1);
-                lblCStatus.Font = SetFontSize("Segoe UI", ((float)(lblServer.Height * .9) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, pnlWelcome, lblCStatus);
-            }
-            else //If we're connected, use normal sized font
-            {
-                lblStatus.Height = (int)(pnlWelcome.Height * .1);
-                lblCStatus.Font = SetFontSize("Segoe UI", ((float)(lblServer.Height) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, pnlWelcome, lblCStatus);
-            }
-            lblDbName.AutoSize = true;
-            lblDbName.AutoSize = true;
-            picDbStatus.Left = lblDbName.Right;
-            lblCStatus.AutoSize = true;
-            lblStatus.Left = (pnlWelcome.ClientSize.Width - lblStatus.Width) / 2;
-            lblCStatus.Left = pnlWelcome.Width - (lblCStatus.Width + picStatus.Width);
-            picStatus.Left = lblCStatus.Right;
-            lblDbName.AutoSize = true;
-            lblDbStat.AutoSize = true;
-            picDbStatus.Left = lblDbName.Right;
-            lblDbUtil.Text = "Database Utilities";
-            lblDbUtil.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, pnlDbUtil, lblDbUtil);
-            lblDbUtil.AutoSize = true;
-            lblDbUtil.Left = (pnlDbUtil.Width - lblDbUtil.Width) / 2;
-
-
-        }
-        public void RefreshDefaultConfigPath(string sender)
-        {
-            isRefreshing = true;
-            boxConfigFiles.Items.Clear();
-            boxChangeConfig.Items.Clear();
-            string[] configFiles = Directory.GetFiles(settings.ConfigPath);
-            string settingsDefConfig = "";
-            int intSettingsDefConfig = 0;
-            for (int i = 0; i < configFiles.Length; i++)
-            {
-                string currentFileName = Path.GetFileName(configFiles[i]).Replace(".json", "");
-                boxConfigFiles.Items.Add(Path.GetFileName(configFiles[i]).Replace(".json", ""));
-                boxChangeConfig.Items.Add(Path.GetFileName(configFiles[i]).Replace(".json", ""));
-                //select if it's the default
-                if (currentFileName == settings.DefaultConfig.Replace(".json", ""))
-                {
-                    if(sender == "Main")
-                    {
-                        boxConfigFiles.SelectedIndex = i;
-                    }
-                    settingsDefConfig = settings.DefaultConfig.Replace(".json", "");
-                    intSettingsDefConfig = i;
-                }
-                if (sender != "Main" && currentFileName == configName)
-                {
-                    if(config.Default == true)
-                    {
-                        boxConfigFiles.SelectedIndex = i;
-                    }
-                    else
-                    {
-                        boxConfigFiles.SelectedIndex = intSettingsDefConfig;
-                    }
-                }
-            }
-            boxChangeConfig.SelectedIndex = boxConfigFiles.SelectedIndex;
-            isRefreshing = false;
-        }
 
 
 
@@ -2594,6 +2595,7 @@ namespace NBAdbToolbox
 
         #endregion
 
+
         #region Panel, Element, Alignment and Font Formatting
         //Add an element to a panel
         public void AddPanelElement(Panel panel, Control control)
@@ -2615,13 +2617,6 @@ namespace NBAdbToolbox
             control.Left = (panel.ClientSize.Width - control.Width) / 2;
         }
 
-        //Align label to left side of panel
-        public void AlignLeft(Panel pnl, Label lbl, Label parent)
-        {
-            lbl.Left = pnl.Left;
-            lbl.Top = parent.Bottom;
-            lbl.AutoSize = true;
-        }
         //Set Dynamic Font size
         public Font SetFontSize(string font, Single size, FontStyle style, Control parent, Control child)
         {
@@ -2697,8 +2692,8 @@ namespace NBAdbToolbox
             }
             return returnString;
         }
-        //Enables Esc key to close program
-        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)//Enables Esc key to close program
         {
             if (keyData == Keys.Escape)
             {
@@ -2708,7 +2703,15 @@ namespace NBAdbToolbox
 
             return base.ProcessCmdKey(ref msg, keyData);
         }
-        private void ListSeasons_SelectAll(object sender, KeyEventArgs e)
+        public void ClearImage(PictureBox pic)
+        {
+            if (pic.Image != null)
+            {
+                pic.Image.Dispose();
+                pic.Image = null;
+            }
+        }
+        private void ListSeasons_SelectAll(object sender, KeyEventArgs e)//Allows us to select all seasons to populate
         {
             // Check if Ctrl+A was pressed
             if (e.Control && e.KeyCode == Keys.A)
@@ -2725,13 +2728,6 @@ namespace NBAdbToolbox
         }
 
         public HashSet<(int GameID, string builder, double mb, long len)> gameBytes = new HashSet<(int, string builder, double, long)>();
-        public void CheckStringBuildSize(int GameID, string builder, StringBuilder str)
-        {
-            long len = str.Length;
-            double mb = len / (1024.0 * 1024.0);
-            gameBytes.Add((GameID, builder, mb, len));
-
-        }
         private void FormResize(object sender, EventArgs e)
         {
             //Maintain aspect ratio when user finishes resizing
@@ -2949,11 +2945,16 @@ namespace NBAdbToolbox
         }
         #endregion
 
+
+
         public bool dbOverviewOpened = false;
         private Dictionary<int, Label> yearLabels = new Dictionary<int, Label>();
         private List<Label> tableHeaders = new List<Label>();
         private Label lblUnpopulated;
         private List<Panel> gridLines = new List<Panel>();
+        public int popCount = 0;
+        public int lineHeight = 0;
+        public int lineWidth = 0;
 
         public void DbOverviewClick(Control control, Label growShrink, Control parent)
         {
@@ -3025,8 +3026,6 @@ namespace NBAdbToolbox
 
             BuildOverview();
         }
-
-        public int popCount = 0;
         private void BuildOverview()
         {
             popCount = 0;
@@ -3156,8 +3155,6 @@ namespace NBAdbToolbox
             CreateGridLines(columnPositions, rowPositions, topTable);
         }
 
-        public int lineHeight = 0;
-        public int lineWidth = 0;
         private Label GetOrCreateYearLabel(int year, float fontSize)
         {
             if (!yearLabels.ContainsKey(year))
@@ -3255,6 +3252,8 @@ namespace NBAdbToolbox
 
             ClearGridLines();
         }
+
+
         public void SettingsClick(Control control, PictureBox picture, float fontSize)
         {
             control.Click += (s, e) =>
@@ -3288,24 +3287,6 @@ namespace NBAdbToolbox
         public void SettingsVisibility(bool vis)
         {
             pnlSettings.Visible = vis;
-            //btnBrowseConfig.Visible = vis;
-            //lblChangeConfig.Visible = vis;
-            //boxChangeConfig.Visible = vis;
-            //lblConfigFiles.Visible = vis;
-            //boxConfigFiles.Visible = vis;
-            //lblBackground.Visible = vis;
-            //boxBackground.Visible = vis;
-            //lblSound.Visible = vis;
-            //boxSoundOptions.Visible = vis;
-        }
-        public void ClearImage(PictureBox pic)
-        {
-            // Release previous image
-            if (pic.Image != null)
-            {
-                pic.Image.Dispose();
-                pic.Image = null;
-            }
         }
 
 
@@ -4363,10 +4344,7 @@ namespace NBAdbToolbox
 
         #endregion
 
-
-
-
-
+        //Current Data
         #region Current Data StringBuilder Update 5.17
         //Declarations
         #region Declarations
@@ -5230,12 +5208,6 @@ namespace NBAdbToolbox
         #endregion
 
         #endregion
-
-
-
-
-
-
 
         //If Current Data is Missing, use Historic Data
         #region Missing Data Inserts
