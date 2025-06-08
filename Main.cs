@@ -353,6 +353,8 @@ namespace NBAdbToolbox
 
         #endregion
 
+        public float screenFontSize = 0;
+
         public string settingsJSON = "";
         public bool defaultConfig = false;
         public bool isBuildEnabled = true;
@@ -378,6 +380,26 @@ namespace NBAdbToolbox
             this.MaximizeBox = true;
             this.MinimizeBox = true;
             this.ResizeEnd += FormResize;
+            if(screenWidth >= 2240)
+            {
+                screenFontSize = 1;
+            }
+            else if(screenWidth >= 1920 && screenWidth < 2240)
+            {
+                screenFontSize = 1.1f;
+            }
+            else if(screenFontSize >= 1536 && screenWidth < 1920)
+            {
+                screenFontSize = 1.3f;
+            }
+            else if (screenFontSize >= 1366 && screenWidth < 1536)
+            {
+                screenFontSize = 1.5f;
+            }
+            else if (screenFontSize >= 1280 && screenWidth < 1366)
+            {
+                screenFontSize = 2;
+            }
             #endregion
             lblDbUtil.ForeColor = ThemeColor;
 
@@ -397,7 +419,7 @@ namespace NBAdbToolbox
 
 
 
-            float fontSize = ((float)(pnlWelcome.Height * .08) / (96 / 12)) * (72 / 12);
+            float fontSize = ((float)(screenFontSize * pnlWelcome.Height * .08) / (96 / 12)) * (72 / 12);
 
             #region dbUtilProperties
             //DbUtil
@@ -1685,7 +1707,7 @@ namespace NBAdbToolbox
         private bool isRefreshing = false;
         public void UIController(string sender)//If an event occurs that will change the state of the UI, it must run through here
         {
-            float fontSize = ((float)(pnlWelcome.Height * .08) / (96 / 12)) * (72 / 12);
+            float fontSize = ((float)(screenFontSize * pnlWelcome.Height * .08) / (96 / 12)) * (72 / 12);
             if (sender == "NoConnection")
             {
                 btnBuild.Enabled = false;
@@ -2446,7 +2468,7 @@ namespace NBAdbToolbox
             pnlDbUtil.Width = pnlWelcome.Left;
             #endregion
 
-            float fontSize = ((float)(pnlWelcome.Height * .08) / (96 / 12)) * (72 / 12);
+            float fontSize = ((float)(screenFontSize * pnlWelcome.Height * .08) / (96 / 12)) * (72 / 12);
             pnlDbUtil.BorderStyle = BorderStyle.None;
             pnlDbUtil.Paint += (s, e) =>
             {
