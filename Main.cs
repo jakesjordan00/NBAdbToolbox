@@ -849,7 +849,7 @@ namespace NBAdbToolbox
             //To set font, i'll need the name, ideal size or pt, and its Style.
             //In addition, i also need the parent element and the child or the element we're working with
             lblStatus.Height = (int)(pnlWelcome.Height * .1);
-            lblStatus.Font = SetFontSize("Segoe UI", ((float)(screenFontSize * lblStatus.Height) / (96 / 12)) * (72 / 12), FontStyle.Bold, pnlWelcome, lblStatus);
+            lblStatus.Font = SetFontSize("Segoe UI", ((float)(lblStatus.Height) / (96 / 12)) * (72 / 12), FontStyle.Bold, pnlWelcome, lblStatus);
             //Auto-size and center
             CenterElement(pnlWelcome, lblStatus);
 
@@ -916,11 +916,11 @@ namespace NBAdbToolbox
             fontSize = ((float)(screenFontSize * lblServer.Height) / (96 / 12)) * (72 / 12) / 2;
             if (!isConnected)
             {
-                lblCStatus.Font = SetFontSize("Segoe UI", ((float)(screenFontSize * lblServer.Height * .9) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, pnlWelcome, lblCStatus);
+                lblCStatus.Font = SetFontSize("Segoe UI", ((float)(lblServer.Height * .9) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, pnlWelcome, lblCStatus);
             }
             else //If we're connected, use normal sized font
             {
-                lblCStatus.Font = SetFontSize("Segoe UI", ((float)(screenFontSize * lblServer.Height) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, pnlWelcome, lblCStatus);
+                lblCStatus.Font = SetFontSize("Segoe UI", ((float)(lblServer.Height) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, pnlWelcome, lblCStatus);
             }
             //lblCStatus.Height = lblServer.Height / 2;
             picStatus.SizeMode = PictureBoxSizeMode.Zoom;
@@ -1044,6 +1044,19 @@ namespace NBAdbToolbox
                 ((int)(lblDbUtil.Height * .8)).ToString()
             });
             lblDbOvName.Left = lblDbOverview.Right;
+            ChangeLabel(ThemeColor, lblDbOvExpand, pnlDbUtil, new List<string> {
+                "+",
+                "Bold",
+                (((float)(screenFontSize * pnlWelcome.Height * .05) / (96 / 12)) * (72 / 12)).ToString(),
+                ".",
+                "true",
+                ".",
+                lblDbOverview.Top.ToString(),
+                ThemeColor.ToString(),
+                "true",
+                ((int)(lblDbUtil.Height * .8)).ToString()
+            });
+            lblDbOvExpand.Left = (pnlDbUtil.Left + pnlDbUtil.Width - (lblDbOvExpand.Width + SystemInformation.VerticalScrollBarWidth));
 
 
 
