@@ -96,53 +96,57 @@ namespace NBAdbToolbox
 
         public Label lblSettings = new Label();
         public PictureBox picSettings = new PictureBox();//Db Status icon
+        public Panel pnlSettings = new Panel
+        {
+            Visible = false
+        };
         public Label lblBrowseConfig = new Label
         {
             Text = "Change Config Folder:",
-            Visible = false
+            Visible = true
         };
         public Label lblChangeConfig = new Label
         {
             Text = "Change Connection/Db:",
-            Visible = false
+            Visible = true
         };
         public Label lblConfigFiles= new Label
         {
             Text = "Default Connection:",
-            Visible = false
+            Visible = true
         };
         public Label lblBackground = new Label
         {
             Text = "Background:",
-            Visible = false
+            Visible = true
         };
         public Label lblSound = new Label
         {
             Text = "Sound Options:",
-            Visible = false
+            Visible = true
         };
         public FolderBrowserDialog dlgDefaultPath = new FolderBrowserDialog();
         public Button btnBrowseConfig = new Button
         {
             Text = "Browse...",
-            Visible = false
+            Visible = true
         };
         public ComboBox boxChangeConfig = new ComboBox
         {
-            Visible = false
+            Visible = true
         };
         public ComboBox boxConfigFiles = new ComboBox
         {
-            Visible = false
+            Visible = true
         };
         public ComboBox boxBackground = new ComboBox
         {
-            Visible = false,
+            Visible = true,
             Items = { "Court Default", "Court Dark" }
         };
         public ComboBox boxSoundOptions = new ComboBox
         {
-            Visible = false,
+            Visible = true,
             Items = { "Default", "Muted"}
         };
 
@@ -167,36 +171,6 @@ namespace NBAdbToolbox
         public Label lblTbUtil = new Label { Text = "TeamBox", Visible = false, Tag = "Table" };
         public Label lblPbUtil = new Label { Text = "PlayerBox", Visible = false, Tag = "Table" };
         public Label lblPbpUtil = new Label { Text = "PlayByPlay", Visible = false, Tag = "Table" };
-        public Label lbl25 = new Label{Text = "2025", Visible = false, Tag = "Year"};
-        public Label lbl24 = new Label{Text = "2024", Visible = false, Tag = "Year"};
-        public Label lbl23 = new Label{Text = "2023", Visible = false, Tag = "Year"};
-        public Label lbl22 = new Label{Text = "2022", Visible = false, Tag = "Year"};
-        public Label lbl21 = new Label{Text = "2021", Visible = false, Tag = "Year"};
-        public Label lbl20 = new Label{Text = "2020", Visible = false, Tag = "Year"};
-        public Label lbl19 = new Label{Text = "2019", Visible = false, Tag = "Year"};
-        public Label lbl18 = new Label{Text = "2018", Visible = false, Tag = "Year"};
-        public Label lbl17 = new Label{Text = "2017", Visible = false, Tag = "Year"};
-        public Label lbl16 = new Label{Text = "2016", Visible = false, Tag = "Year"};
-        public Label lbl15 = new Label{Text = "2015", Visible = false, Tag = "Year"};
-        public Label lbl14 = new Label{Text = "2014", Visible = false, Tag = "Year"};
-        public Label lbl13 = new Label{Text = "2013", Visible = false, Tag = "Year"};
-        public Label lbl12 = new Label{Text = "2012", Visible = false, Tag = "Year"};
-        public Label lbl11 = new Label{Text = "2011", Visible = false, Tag = "Year"};
-        public Label lbl10 = new Label{Text = "2010", Visible = false, Tag = "Year"};
-        public Label lbl09 = new Label{Text = "2009", Visible = false, Tag = "Year"};
-        public Label lbl08 = new Label{Text = "2008", Visible = false, Tag = "Year"};
-        public Label lbl07 = new Label{Text = "2007", Visible = false, Tag = "Year"};
-        public Label lbl06 = new Label{Text = "2006", Visible = false, Tag = "Year"};
-        public Label lbl05 = new Label{Text = "2005", Visible = false, Tag = "Year"};
-        public Label lbl04 = new Label{Text = "2004", Visible = false, Tag = "Year"};
-        public Label lbl03 = new Label{Text = "2003", Visible = false, Tag = "Year"};
-        public Label lbl02 = new Label{Text = "2002", Visible = false, Tag = "Year"};
-        public Label lbl01 = new Label{Text = "2001", Visible = false, Tag = "Year"};
-        public Label lbl00 = new Label{Text = "2000", Visible = false, Tag = "Year"};
-        public Label lbl99 = new Label{Text = "1999", Visible = false, Tag = "Year"};
-        public Label lbl98 = new Label{Text = "1998", Visible = false, Tag = "Year"};
-        public Label lbl97 = new Label{Text = "1997", Visible = false, Tag = "Year"};
-        public Label lbl96 = new Label{Text = "1996", Visible = false, Tag = "Year"};
 
         public Label lblEmpty = new Label { Text = "Unpopulated", Visible = false, Tag = "Year", Name = "Unpopulated"};
 
@@ -836,6 +810,7 @@ namespace NBAdbToolbox
 
             //Welcome
             pnlWelcome.Parent = bgCourt; //Set Panel parent as the image
+            int spacer = (int)(pnlWelcome.Height * .01);
 
 
             //Scoreboard
@@ -862,7 +837,7 @@ namespace NBAdbToolbox
 
             //Server label properties
             lblServer.Left = 5;
-            lblServer.Top = lblStatus.Bottom + 10;
+            lblServer.Top = lblStatus.Bottom;
             lblServer.Height = (int)(pnlWelcome.Height * .067);
             fontSize = ((float)((pnlWelcome.Height * .05)) / (96 / 12)) * (72 / 12);
             lblServer.AutoSize = true;
@@ -871,7 +846,7 @@ namespace NBAdbToolbox
             lblServer.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
             lblServerName.Left = lblServer.Right - 10;
             lblServerName.Height = (int)(pnlWelcome.Height * .067);
-            lblServerName.Top = lblStatus.Bottom + 10;
+            lblServerName.Top = lblServer.Top;
             lblServerName.Height = lblServer.Height;
             lblServerName.AutoSize = true;
             lblServerName.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
@@ -903,19 +878,12 @@ namespace NBAdbToolbox
 
 
 
-            //Edit Button properties
-            //btnEdit.Width = lblStatus.Width / 2;
-            //if (File.Exists(configPath)) //If our file exists, set width proper
-            //{
-            //    btnEdit.Width = (int)(lblStatus.Width / 1.5);
-            //}
             fontSize = ((float)(lblDB.Height) / (96 / 12)) * (72 / 12);
             btnEdit.Font = SetFontSize("Segoe UI", (float)(fontSize * .67), FontStyle.Bold, pnlWelcome, btnEdit); //12F
             CenterElement(pnlWelcome, btnEdit);
-            btnEdit.Top = lblDbStat.Bottom + 10; //subject to change
+            btnEdit.Top = lblDbStat.Bottom + spacer; //subject to change
             btnEdit.TextAlign = ContentAlignment.BottomCenter;
             btnEdit.AutoSize = true;
-            //btnEdit.Height = 30;
 
 
 
@@ -932,7 +900,7 @@ namespace NBAdbToolbox
             {
                 lblCStatus.Font = SetFontSize("Segoe UI", ((float)(lblServer.Height) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, pnlWelcome, lblCStatus);
             }
-            lblCStatus.Height = lblServer.Height / 2;
+            //lblCStatus.Height = lblServer.Height / 2;
             picStatus.SizeMode = PictureBoxSizeMode.Zoom;
             int topY = lblDB.Bottom + 20; //Vertical position            
             //picStatus.Top = lblStatus.Top+ (int)(lblCStatus.Height / 10);
@@ -1072,12 +1040,22 @@ namespace NBAdbToolbox
             picSettings.Left = lblSettings.Right;
             picSettings.Top = lblSettings.Top + lblSettings.Height/6;
             picSettings.BackColor = Color.FromArgb(0, 0, 0, 0);
+
+            pnlSettings.Top = lblSettings.Bottom + spacer;
+            pnlSettings.Width = pnlWelcome.Width;
+
+            pnlSettings.AutoScroll = true;
+
+
+
+
+
             lblBrowseConfig.Font = SetFontSize("Segoe UI", (float)(fontSize * .9), FontStyle.Bold, pnlWelcome, lblBrowseConfig);
-            lblBrowseConfig.Top = lblSettings.Bottom + 10;
+            lblBrowseConfig.Top = 0;
             lblBrowseConfig.Left = 0;
             btnBrowseConfig.Font = SetFontSize("Segoe UI", (float)(fontSize * .8), FontStyle.Bold, pnlWelcome, btnBrowseConfig);
             btnBrowseConfig.Width = btnEdit.Width/2;
-            btnBrowseConfig.Top = lblSettings.Bottom + 10;
+            btnBrowseConfig.Top = 0;
             lblBrowseConfig.Top = btnBrowseConfig.Top + (btnBrowseConfig.Height / 5);
             lblBrowseConfig.AutoSize = true;
             btnBrowseConfig.AutoSize = true;
@@ -2564,36 +2542,6 @@ namespace NBAdbToolbox
             AddPanelElement(pnlDbOverview, lblTbUtil);
             AddPanelElement(pnlDbOverview, lblPbUtil);
             AddPanelElement(pnlDbOverview, lblPbpUtil);
-            AddPanelElement(pnlDbOverview, lbl25);
-            AddPanelElement(pnlDbOverview, lbl24);
-            AddPanelElement(pnlDbOverview, lbl23);
-            AddPanelElement(pnlDbOverview, lbl22);
-            AddPanelElement(pnlDbOverview, lbl21);
-            AddPanelElement(pnlDbOverview, lbl20);
-            AddPanelElement(pnlDbOverview, lbl19);
-            AddPanelElement(pnlDbOverview, lbl18);
-            AddPanelElement(pnlDbOverview, lbl17);
-            AddPanelElement(pnlDbOverview, lbl16);
-            AddPanelElement(pnlDbOverview, lbl15);
-            AddPanelElement(pnlDbOverview, lbl14);
-            AddPanelElement(pnlDbOverview, lbl13);
-            AddPanelElement(pnlDbOverview, lbl12);
-            AddPanelElement(pnlDbOverview, lbl11);
-            AddPanelElement(pnlDbOverview, lbl10);
-            AddPanelElement(pnlDbOverview, lbl09);
-            AddPanelElement(pnlDbOverview, lbl08);
-            AddPanelElement(pnlDbOverview, lbl07);
-            AddPanelElement(pnlDbOverview, lbl06);
-            AddPanelElement(pnlDbOverview, lbl05);
-            AddPanelElement(pnlDbOverview, lbl04);
-            AddPanelElement(pnlDbOverview, lbl03);
-            AddPanelElement(pnlDbOverview, lbl02);
-            AddPanelElement(pnlDbOverview, lbl01);
-            AddPanelElement(pnlDbOverview, lbl00);
-            AddPanelElement(pnlDbOverview, lbl99);
-            AddPanelElement(pnlDbOverview, lbl98);
-            AddPanelElement(pnlDbOverview, lbl97);
-            AddPanelElement(pnlDbOverview, lbl96);
             AddPanelElement(pnlDbOverview, lblEmpty);
             AddPanelElement(pnlLoad, gpmValue);
             AddPanelElement(pnlLoad, gpm);
@@ -2612,16 +2560,17 @@ namespace NBAdbToolbox
             AddPanelElement(pnlDbUtil, lblDbOverview);
             AddPanelElement(pnlDbUtil, pnlDbOverview);
             AddPanelElement(pnlDbUtil, lblDbUtil);
-            AddPanelElement(pnlWelcome, boxSoundOptions);
-            AddPanelElement(pnlWelcome, lblSound);
-            AddPanelElement(pnlWelcome, boxBackground);
-            AddPanelElement(pnlWelcome, lblBackground);
-            AddPanelElement(pnlWelcome, boxConfigFiles);
-            AddPanelElement(pnlWelcome, lblConfigFiles);
-            AddPanelElement(pnlWelcome, boxChangeConfig);
-            AddPanelElement(pnlWelcome, lblChangeConfig);
-            AddPanelElement(pnlWelcome, btnBrowseConfig);
-            AddPanelElement(pnlWelcome, lblBrowseConfig);
+            AddPanelElement(pnlSettings, boxSoundOptions);
+            AddPanelElement(pnlSettings, lblSound);
+            AddPanelElement(pnlSettings, boxBackground);
+            AddPanelElement(pnlSettings, lblBackground);
+            AddPanelElement(pnlSettings, boxConfigFiles);
+            AddPanelElement(pnlSettings, lblConfigFiles);
+            AddPanelElement(pnlSettings, boxChangeConfig);
+            AddPanelElement(pnlSettings, lblChangeConfig);
+            AddPanelElement(pnlSettings, btnBrowseConfig);
+            AddPanelElement(pnlSettings, lblBrowseConfig);
+            AddPanelElement(pnlWelcome, pnlSettings);
             AddPanelElement(pnlWelcome, picSettings);
             AddPanelElement(pnlWelcome, lblSettings);
             AddPanelElement(pnlWelcome, lblDbStat);
@@ -3338,16 +3287,16 @@ namespace NBAdbToolbox
         }
         public void SettingsVisibility(bool vis)
         {
-            lblBrowseConfig.Visible = vis;
-            btnBrowseConfig.Visible = vis;
-            lblChangeConfig.Visible = vis;
-            boxChangeConfig.Visible = vis;
-            lblConfigFiles.Visible = vis;
-            boxConfigFiles.Visible = vis;
-            lblBackground.Visible = vis;
-            boxBackground.Visible = vis;
-            lblSound.Visible = vis;
-            boxSoundOptions.Visible = vis;
+            pnlSettings.Visible = vis;
+            //btnBrowseConfig.Visible = vis;
+            //lblChangeConfig.Visible = vis;
+            //boxChangeConfig.Visible = vis;
+            //lblConfigFiles.Visible = vis;
+            //boxConfigFiles.Visible = vis;
+            //lblBackground.Visible = vis;
+            //boxBackground.Visible = vis;
+            //lblSound.Visible = vis;
+            //boxSoundOptions.Visible = vis;
         }
         public void ClearImage(PictureBox pic)
         {
