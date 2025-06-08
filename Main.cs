@@ -3064,6 +3064,8 @@ namespace NBAdbToolbox
         private void BuildOverview()
         {
             popCount = 0;
+            float weights = (float)((screenFontSize * .2) + ((lblDbOverview.Height * .6) * .8));
+            float noWeights = (float)(screenFontSize * lblDbOverview.Height * .6);
             float fontSize = ((float)(screenFontSize * lblDbOverview.Height * .6) / (96 / 12)) * (72 / 12);
             int leftTable = pnlDbUtil.Width / 7;
             int topTable = lblDbOverview.Height;
