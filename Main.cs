@@ -1058,7 +1058,7 @@ namespace NBAdbToolbox
             });
             lblDbOvExpand.Left = (pnlDbUtil.Left + pnlDbUtil.Width - (lblDbOvExpand.Width + SystemInformation.VerticalScrollBarWidth));
 
-
+            ArrangeOverviewControls();
 
 
 
@@ -2534,7 +2534,7 @@ namespace NBAdbToolbox
                 ".",
                 "true",
                 ".",
-                (lblDbOverview.Bottom + lblDbUtil.Height).ToString(),
+                (lblDbUtil.Height * 3).ToString(),
                 ThemeColor.ToString(),
                 "true",
                 ((int)(lblDbUtil.Height * .9)).ToString()
@@ -2555,7 +2555,6 @@ namespace NBAdbToolbox
                 "."
             });
             lblDbSelectSeason.Left = 0;
-            listSeasons.Top = lblDbSelectSeason.Bottom - (int)(lblDbSelectSeason.Height / 3);
 
             listSeasons.SelectionMode = SelectionMode.MultiExtended;
             listSeasons.Left = pnlDbUtil.Left;
@@ -2564,9 +2563,14 @@ namespace NBAdbToolbox
             btnPopulate.Text = "Populate Db";
             btnPopulate.Font = SetFontSize("Segoe UI", (float)(fontSize / 3.3), FontStyle.Bold, pnlWelcome, btnPopulate); //6.5
             btnPopulate.Width = (int)(listSeasons.Width * .8);
+        }
+
+        public void ArrangeOverviewControls()
+        {
+            lblDbOptions.Top = pnlDbOverview.Bottom;
+            lblDbSelectSeason.Top = lblDbOptions.Bottom;
+            listSeasons.Top = lblDbSelectSeason.Bottom;
             btnPopulate.Top = listSeasons.Bottom; //subject to change
-
-
         }
         public void InitializeElements()
         {
@@ -3017,6 +3021,7 @@ namespace NBAdbToolbox
 
         public void DbOverviewVisibility(bool vis, string sender)
         {
+            pnlDbOverview.MaximumSize = new Size(pnlWelcome.Left, (int)(pnlDbUtil.Height / 2));
             ClearOverview();
             pnlDbOverview.Refresh();
             if (!vis)
@@ -3060,6 +3065,7 @@ namespace NBAdbToolbox
             }
 
             BuildOverview();
+            int test = lblEmpty.Bottom;
         }
         private void BuildOverview()
         {
@@ -3178,11 +3184,30 @@ namespace NBAdbToolbox
                     lblUnpopulated.AutoSize = true;
                     pnlDbOverview.Controls.Add(lblUnpopulated);
                 }
-
                 lblUnpopulated.Text = unpopText;
                 lblUnpopulated.Top = topYear;
                 lblUnpopulated.Visible = true;
                 lineHeight = lblUnpopulated.Top - singleLineHeight;
+            }
+            else
+            {
+                lblUnpopulated = null;
+                lblUnpopulated = new Label
+                {
+                    Tag = "Year",
+                    Name = "Unpopulated",
+                    ForeColor = ThemeColor,
+                    BackColor = SubThemeColor,
+                    Left = 0
+                };
+                lblUnpopulated.Font = SetFontSize("Segoe UI", fontSize * 1.2f, FontStyle.Bold, pnlDbUtil, lblUnpopulated);
+                lblUnpopulated.AutoSize = true;
+                pnlDbOverview.Controls.Add(lblUnpopulated);
+                lblUnpopulated.Text = "All seasons populated!";
+                lblUnpopulated.Top = topYear;
+                lblUnpopulated.Visible = true;
+                lineHeight = lblUnpopulated.Top - singleLineHeight;
+
             }
 
             //add final row position
