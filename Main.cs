@@ -780,9 +780,9 @@ namespace NBAdbToolbox
 
 
 
-            //lblSeasonStatusLoadInfo
+            //lblSeasonStatusLoadInfo  
             lblSeasonStatusLoad.Left = 0;
-            fontSize = ((float)(pnlLoad.Height * .08) / (96 / 12)) * (72 / 12);
+            fontSize = ((float)(screenFontSize * pnlLoad.Height * .08) / (96 / 12)) * (72 / 12);
             lblSeasonStatusLoad.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Regular, pnlLoad, lblSeasonStatusLoad);
             lblSeasonStatusLoad.AutoSize = true;
             lblSeasonStatusLoadInfo.Left = lblSeasonStatusLoad.Right - (int)(pnlLoad.Width * .01);
@@ -792,7 +792,7 @@ namespace NBAdbToolbox
 
 
             lblCurrentGame.Left = 4;
-            fontSize = ((float)(pnlLoad.Height * .05) / (96 / 12)) * (72 / 12);
+            fontSize = ((float)(screenFontSize * pnlLoad.Height * .05) / (96 / 12)) * (72 / 12);
             lblCurrentGame.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Regular, pnlLoad, lblCurrentGame);
             lblCurrentGame.AutoSize = true;
             lblCurrentGameCount.Left = lblCurrentGame.Right - (int)(pnlLoad.Width * .02);
@@ -801,12 +801,12 @@ namespace NBAdbToolbox
             lblCurrentGame.Top = lblSeasonStatusLoad.Bottom;
             lblCurrentGameCount.Top = lblSeasonStatusLoad.Bottom;
 
-            fontSize = ((float)(pnlLoad.Height * .045) / (96 / 12)) * (72 / 12);
+            fontSize = ((float)(screenFontSize * pnlLoad.Height * .045) / (96 / 12)) * (72 / 12);
             gpm.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Regular, pnlLoad, gpm);
             gpm.AutoSize = true;
             gpm.Top = lblCurrentGame.Bottom;
             gpm.Left = 4;
-            fontSize = ((float)(pnlLoad.Height * .05) / (96 / 12)) * (72 / 12);
+            fontSize = ((float)(screenFontSize * pnlLoad.Height * .05) / (96 / 12)) * (72 / 12);
             gpmValue.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, pnlLoad, gpmValue);
             gpmValue.AutoSize = true;
             gpmValue.Top = gpm.Bottom;
@@ -861,7 +861,7 @@ namespace NBAdbToolbox
             lblServer.Left = 5;
             lblServer.Top = lblStatus.Bottom;
             lblServer.Height = (int)(pnlWelcome.Height * .067);
-            fontSize = ((float)((pnlWelcome.Height * .05)) / (96 / 12)) * (72 / 12);
+            fontSize = ((float)((screenFontSize * pnlWelcome.Height * .05)) / (96 / 12)) * (72 / 12);
             lblServer.AutoSize = true;
             //lblServer.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, pnlWelcome, lblServer);
 
@@ -878,7 +878,7 @@ namespace NBAdbToolbox
             lblDB.Top = lblServer.Bottom;
             lblDB.Height = (int)(pnlWelcome.Height * .06);
             lblDB.AutoSize = true;
-            fontSize = ((float)((pnlWelcome.Height * .04)) / (96 / 12)) * (72 / 12);
+            fontSize = ((float)((screenFontSize * pnlWelcome.Height * .04)) / (96 / 12)) * (72 / 12);
             lblDB.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
             lblDbName.Left = lblDB.Right - 10;
             lblDbName.Top = lblServer.Bottom;
@@ -900,7 +900,7 @@ namespace NBAdbToolbox
 
 
 
-            fontSize = ((float)(lblDB.Height) / (96 / 12)) * (72 / 12);
+            fontSize = ((float)(screenFontSize * lblDB.Height) / (96 / 12)) * (72 / 12);
             btnEdit.Font = SetFontSize("Segoe UI", (float)(fontSize * .67), FontStyle.Bold, pnlWelcome, btnEdit); //12F
             CenterElement(pnlWelcome, btnEdit);
             btnEdit.Top = lblDbStat.Bottom + spacer; //subject to change
@@ -913,7 +913,7 @@ namespace NBAdbToolbox
 
 
 
-            fontSize = ((float)(lblServer.Height) / (96 / 12)) * (72 / 12) / 2;
+            fontSize = ((float)(screenFontSize * lblServer.Height) / (96 / 12)) * (72 / 12) / 2;
             if (!isConnected)
             {
                 lblCStatus.Font = SetFontSize("Segoe UI", ((float)(lblServer.Height * .9) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, pnlWelcome, lblCStatus);
@@ -3051,7 +3051,7 @@ namespace NBAdbToolbox
         private void BuildOverview()
         {
             popCount = 0;
-            float fontSize = ((float)(lblDbOverview.Height * .6) / (96 / 12)) * (72 / 12);
+            float fontSize = ((float)(screenFontSize * lblDbOverview.Height * .6) / (96 / 12)) * (72 / 12);
             int leftTable = pnlDbUtil.Width / 7;
             int topTable = lblDbOverview.Height;
             List<int> columnPositions = new List<int>();
