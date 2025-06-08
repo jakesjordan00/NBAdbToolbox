@@ -483,7 +483,7 @@ namespace NBAdbToolbox
                     ChangeLabel(ThemeColor, lblCurrentGame, pnlLoad, new List<string> {
                         "Current game: ", //Text
                         "Regular", //FontStyle
-                        ((float)(pnlLoad.Height * .05) / (96 / 12) * (72 / 12)).ToString(), //FontSize
+                        ((float)(screenFontSize * pnlLoad.Height * .05) / (96 / 12) * (72 / 12)).ToString(), //FontSize
                         ".", //Width
                         "true", //AutoSize
                         "4", //Left
@@ -497,7 +497,7 @@ namespace NBAdbToolbox
                     ChangeLabel(ThemeColor, lblSeasonStatusLoad, pnlLoad, new List<string> {
                         "Checking util.BuildLog", //Text
                         "Bold", //FontStyle
-                        ((float)(pnlLoad.Height * .08) / (96 / 12) * (72 / 12)).ToString(), //FontSize
+                        ((float)(screenFontSize * pnlLoad.Height * .08) / (96 / 12) * (72 / 12)).ToString(), //FontSize
                         ".", //Width
                         "true", //AutoSize
                         "0", //Left
@@ -509,7 +509,7 @@ namespace NBAdbToolbox
                     ChangeLabel(ThemeColor, lblWorkingOn, pnlLoad, new List<string> {
                         "", //Text
                         "Regular", //FontStyle
-                        ((float)(pnlLoad.Height * .03) / (96 / 12) * (72 / 12)).ToString(), //FontSize
+                        ((float)(screenFontSize * pnlLoad.Height * .03) / (96 / 12) * (72 / 12)).ToString(), //FontSize
                         ".", //Width
                         "true", //AutoSize
                         (pnlLoad.Width - lblWorkingOn.Width).ToString(), //Left
@@ -849,7 +849,7 @@ namespace NBAdbToolbox
             //To set font, i'll need the name, ideal size or pt, and its Style.
             //In addition, i also need the parent element and the child or the element we're working with
             lblStatus.Height = (int)(pnlWelcome.Height * .1);
-            lblStatus.Font = SetFontSize("Segoe UI", ((float)(lblStatus.Height) / (96 / 12)) * (72 / 12), FontStyle.Bold, pnlWelcome, lblStatus);
+            lblStatus.Font = SetFontSize("Segoe UI", ((float)(screenFontSize * lblStatus.Height) / (96 / 12)) * (72 / 12), FontStyle.Bold, pnlWelcome, lblStatus);
             //Auto-size and center
             CenterElement(pnlWelcome, lblStatus);
 
@@ -916,11 +916,11 @@ namespace NBAdbToolbox
             fontSize = ((float)(screenFontSize * lblServer.Height) / (96 / 12)) * (72 / 12) / 2;
             if (!isConnected)
             {
-                lblCStatus.Font = SetFontSize("Segoe UI", ((float)(lblServer.Height * .9) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, pnlWelcome, lblCStatus);
+                lblCStatus.Font = SetFontSize("Segoe UI", ((float)(screenFontSize * lblServer.Height * .9) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, pnlWelcome, lblCStatus);
             }
             else //If we're connected, use normal sized font
             {
-                lblCStatus.Font = SetFontSize("Segoe UI", ((float)(lblServer.Height) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, pnlWelcome, lblCStatus);
+                lblCStatus.Font = SetFontSize("Segoe UI", ((float)(screenFontSize * lblServer.Height) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, pnlWelcome, lblCStatus);
             }
             //lblCStatus.Height = lblServer.Height / 2;
             picStatus.SizeMode = PictureBoxSizeMode.Zoom;
@@ -1034,7 +1034,7 @@ namespace NBAdbToolbox
             ChangeLabel(ThemeColor, lblDbOvName, pnlDbUtil, new List<string> {
                 database,
                 "Bold",
-                (((float)(pnlWelcome.Height * .05) / (96 / 12)) * (72 / 12)).ToString(),
+                (((float)(screenFontSize * pnlWelcome.Height * .05) / (96 / 12)) * (72 / 12)).ToString(),
                 ".",
                 "true",
                 lblDbOverview.Left.ToString(),
@@ -1121,14 +1121,14 @@ namespace NBAdbToolbox
             };
 
             boxChangeConfig.DropDownStyle = ComboBoxStyle.DropDownList; //Makes it non-editable
-            boxChangeConfig.Font = SetFontSize("Segoe UI", (int)(fontSize * .7), FontStyle.Regular, pnlWelcome, boxChangeConfig);
+            boxChangeConfig.Font = SetFontSize("Segoe UI", (float)(fontSize * .7), FontStyle.Regular, pnlWelcome, boxChangeConfig);
             boxChangeConfig.Top = btnBrowseConfig.Bottom + spacer;
             boxChangeConfig.Width = (int)(btnEdit.Width * .7);
 
             lblChangeConfig.Left = 0;
             lblChangeConfig.Top = boxChangeConfig.Top;
             lblChangeConfig.AutoSize = true;
-            lblChangeConfig.Font = SetFontSize("Segoe UI", (int)(fontSize * .9), FontStyle.Bold, pnlWelcome, lblChangeConfig);
+            lblChangeConfig.Font = SetFontSize("Segoe UI", (float)(fontSize * .9), FontStyle.Bold, pnlWelcome, lblChangeConfig);
             lblChangeConfig.ForeColor = ThemeColor;
             boxChangeConfig.Left = lblChangeConfig.Right;
 
@@ -1162,14 +1162,14 @@ namespace NBAdbToolbox
             };
 
             boxConfigFiles.DropDownStyle = ComboBoxStyle.DropDownList; //Makes it non-editable
-            boxConfigFiles.Font = SetFontSize("Segoe UI", (int)(fontSize * .7), FontStyle.Regular, pnlWelcome, boxConfigFiles);
+            boxConfigFiles.Font = SetFontSize("Segoe UI", (float)(fontSize * .7), FontStyle.Regular, pnlWelcome, boxConfigFiles);
             boxConfigFiles.Top = boxChangeConfig.Bottom + spacer;
             boxConfigFiles.Width = (int)(btnEdit.Width * .7);
 
             lblConfigFiles.Left = 0;
             lblConfigFiles.Top = boxConfigFiles.Top ;
             lblConfigFiles.AutoSize = true;
-            lblConfigFiles.Font = SetFontSize("Segoe UI", (int)(fontSize * .9), FontStyle.Bold, pnlWelcome, lblConfigFiles);
+            lblConfigFiles.Font = SetFontSize("Segoe UI", (float)(fontSize * .9), FontStyle.Bold, pnlWelcome, lblConfigFiles);
             lblConfigFiles.ForeColor = ThemeColor;
             boxConfigFiles.Left = lblConfigFiles.Right;
 
@@ -1201,14 +1201,14 @@ namespace NBAdbToolbox
                 lblSettings.Focus();
             };
             boxBackground.DropDownStyle = ComboBoxStyle.DropDownList; //Makes it non-editable
-            boxBackground.Font = SetFontSize("Segoe UI", (int)(fontSize * .7), FontStyle.Regular, pnlWelcome, boxBackground);
+            boxBackground.Font = SetFontSize("Segoe UI", (float)(fontSize * .7), FontStyle.Regular, pnlWelcome, boxBackground);
             boxBackground.Top = boxConfigFiles.Bottom + spacer;
             boxBackground.Width = (int)(btnEdit.Width * .4);
 
             lblBackground.Left = 0;
             lblBackground.Top = boxConfigFiles.Bottom + spacer;
             lblBackground.AutoSize = true;
-            lblBackground.Font = SetFontSize("Segoe UI", (int)(fontSize * .9), FontStyle.Bold, pnlWelcome, lblBackground);
+            lblBackground.Font = SetFontSize("Segoe UI", (float)(fontSize * .9), FontStyle.Bold, pnlWelcome, lblBackground);
             lblBackground.ForeColor = ThemeColor;
             boxBackground.Left = lblBackground.Right;
             boxBackground.SelectedItem = settings.BackgroundImage;
@@ -1216,14 +1216,14 @@ namespace NBAdbToolbox
 
 
             boxSoundOptions.DropDownStyle = ComboBoxStyle.DropDownList; //Makes it non-editable
-            boxSoundOptions.Font = SetFontSize("Segoe UI", (int)(fontSize * .7), FontStyle.Regular, pnlWelcome, boxSoundOptions);
+            boxSoundOptions.Font = SetFontSize("Segoe UI", (float)(fontSize * .7), FontStyle.Regular, pnlWelcome, boxSoundOptions);
             boxSoundOptions.Top = boxBackground.Bottom + spacer;
             boxSoundOptions.Width = (int)(btnEdit.Width * .4);
 
             lblSound.Left = 0;
             lblSound.Top = boxBackground.Bottom + spacer;
             lblSound.AutoSize = true;
-            lblSound.Font = SetFontSize("Segoe UI", (int)(fontSize * .9), FontStyle.Bold, pnlWelcome, lblSound);
+            lblSound.Font = SetFontSize("Segoe UI", (float)(fontSize * .9), FontStyle.Bold, pnlWelcome, lblSound);
             lblSound.ForeColor = ThemeColor;
             boxSoundOptions.Left = lblSound.Right;
             boxSoundOptions.SelectedItem = settings.Sound;
@@ -1791,12 +1791,12 @@ namespace NBAdbToolbox
             if (!isConnected)
             {
                 lblStatus.Height = (int)(pnlWelcome.Height * .1);
-                lblCStatus.Font = SetFontSize("Segoe UI", ((float)(lblServer.Height * .9) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, pnlWelcome, lblCStatus);
+                lblCStatus.Font = SetFontSize("Segoe UI", ((float)(screenFontSize * lblServer.Height * .9) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, pnlWelcome, lblCStatus);
             }
             else //If we're connected, use normal sized font
             {
                 lblStatus.Height = (int)(pnlWelcome.Height * .1);
-                lblCStatus.Font = SetFontSize("Segoe UI", ((float)(lblServer.Height) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, pnlWelcome, lblCStatus);
+                lblCStatus.Font = SetFontSize("Segoe UI", ((float)(screenFontSize * lblServer.Height) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, pnlWelcome, lblCStatus);
             }
             lblDbName.AutoSize = true;
             lblDbName.AutoSize = true;
@@ -2020,7 +2020,7 @@ namespace NBAdbToolbox
             ChangeLabel(ThemeColor, lblSeasonStatusLoad, pnlLoad, new List<string> {
             "Deleting any " + SeasonID + " data, one sec...", //Text
             "Bold", //FontStyle
-            ((float)(pnlLoad.Height * .075) / (96 / 12) * (72 / 12)).ToString(), //FontSize
+            ((float)(screenFontSize * pnlLoad.Height * .075) / (96 / 12) * (72 / 12)).ToString(), //FontSize
             ".", //Width
             "true", //AutoSize
             "0", //Left
@@ -2101,7 +2101,7 @@ namespace NBAdbToolbox
             ChangeLabel(ThemeColor, lblSeasonStatusLoad, pnlLoad, new List<string> {
                             "Deleting any " + SeasonID + " data, one sec...", //Text
                             "Bold", //FontStyle
-                            ((float)(pnlLoad.Height * .075) / (96 / 12) * (72 / 12)).ToString(), //FontSize
+                            ((float)(screenFontSize * pnlLoad.Height * .075) / (96 / 12) * (72 / 12)).ToString(), //FontSize
                             ".", //Width
                             "true", //AutoSize
                             "0", //Left
@@ -2156,7 +2156,7 @@ namespace NBAdbToolbox
             ChangeLabel(ThemeColor, lblSeasonStatusLoad, pnlLoad, new List<string> {
                             "Deleting any " + SeasonID + " data, one sec...", //Text
                             "Bold", //FontStyle
-                            ((float)(pnlLoad.Height * .075) / (96 / 12) * (72 / 12)).ToString(), //FontSize
+                            ((float)(screenFontSize * pnlLoad.Height * .075) / (96 / 12) * (72 / 12)).ToString(), //FontSize
                             ".", //Width
                             "true", //AutoSize
                             "0", //Left
@@ -2174,7 +2174,7 @@ namespace NBAdbToolbox
             ChangeLabel(ThemeColor, lblSeasonStatusLoad, pnlLoad, new List<string> {
             "Hitting endpoints and inserting " + SeasonID + " data", //Text
             "Bold", //FontStyle
-            ((float)(pnlLoad.Height * .075) / (96 / 12) * (72 / 12)).ToString(), //FontSize
+            ((float)(screenFontSize * pnlLoad.Height * .075) / (96 / 12) * (72 / 12)).ToString(), //FontSize
             ".", //Width
             "true", //AutoSize
             "0", //Left
@@ -2282,7 +2282,7 @@ namespace NBAdbToolbox
                         {
              /*Text*/       completionMessage,
              /*FontStyle*/  "Regular",
-             /*FontSize*/   ((float)(pnlLoad.Height * .03) / (96 / 12) * (72 / 12)).ToString(),
+             /*FontSize*/   ((float)(screenFontSize * pnlLoad.Height * .03) / (96 / 12) * (72 / 12)).ToString(),
              /*Width*/      ".",
              /*Autosize*/   "true",
              /*Left*/       (pnlLoad.Width - lblWorkingOn.Width).ToString(),
@@ -2350,7 +2350,7 @@ namespace NBAdbToolbox
             ChangeLabel(SuccessColor, lblCurrentGame, pnlLoad, new List<string> {
                         "Full Load: " + elapsedStringFull,
                         "Bold",
-                        ((float)(pnlLoad.Height * .06) / (96 / 12) * (72 / 12)).ToString(),
+                        ((float)(screenFontSize * pnlLoad.Height * .06) / (96 / 12) * (72 / 12)).ToString(),
                         ".",
                         "true",
                         ".",
@@ -2364,7 +2364,7 @@ namespace NBAdbToolbox
             ChangeLabel(SuccessColor, lblSeasonStatusLoad, pnlLoad, new List<string> {
                         "Done! Check your SQL db",
                         "Regular",
-                        ((float)(pnlLoad.Height * .08) / (96 / 12) * (72 / 12)).ToString(),
+                        ((float)(screenFontSize * pnlLoad.Height * .08) / (96 / 12) * (72 / 12)).ToString(),
                         ".",
                         "true",
                         ".",
@@ -2374,7 +2374,7 @@ namespace NBAdbToolbox
                         "." }
             );//Done! Check your SQL db
 
-            float workingOnTop = ((float)(pnlLoad.Height * .033) / (96 / 12) * (72 / 12));
+            float workingOnTop = ((float)(screenFontSize * pnlLoad.Height * .033) / (96 / 12) * (72 / 12));
             ChangeLabel(ThemeColor, lblWorkingOn, pnlLoad, new List<string> {
                         ".", //Text
                         "Bold", //FontStyle
@@ -2391,7 +2391,7 @@ namespace NBAdbToolbox
             //working on top = 8.3655 with 2001 as last season = .033
             if (pnlLoad.Height - lblWorkingOn.Height <= 0)
             {
-                workingOnTop = ((float)(pnlLoad.Height * .03) / (96 / 12) * (72 / 12));
+                workingOnTop = ((float)(screenFontSize * pnlLoad.Height * .03) / (96 / 12) * (72 / 12));
             }
             //working on top = 8.11199951 = .032
             ChangeLabel(ThemeColor, lblWorkingOn, pnlLoad, new List<string> {
@@ -2489,7 +2489,7 @@ namespace NBAdbToolbox
             ChangeLabel(ThemeColor, lblDbOverview, pnlDbUtil, new List<string> {
                 "Database Overview",
                 "Bold",
-                (((float)(pnlWelcome.Height * .05) / (96 / 12)) * (72 / 12)).ToString(),
+                (((float)(screenFontSize * pnlWelcome.Height * .05) / (96 / 12)) * (72 / 12)).ToString(),
                 ".",
                 "true",
                 pnlDbUtil.Left.ToString(),
@@ -2501,7 +2501,7 @@ namespace NBAdbToolbox
             ChangeLabel(ThemeColor, lblDbOvExpand, pnlDbUtil, new List<string> {
                 "+",
                 "Bold",
-                (((float)(pnlWelcome.Height * .05) / (96 / 12)) * (72 / 12)).ToString(),
+                (((float)(screenFontSize * pnlWelcome.Height * .05) / (96 / 12)) * (72 / 12)).ToString(),
                 ".",
                 "true",
                 ".",
