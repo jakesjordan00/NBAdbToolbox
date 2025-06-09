@@ -1109,8 +1109,10 @@ namespace NBAdbToolbox
                 }
                 lblSettings.Focus();
             };
-
-            RefreshDefaultConfigPath("Main");
+            if (Directory.Exists(settings.ConfigPath))
+            {
+                RefreshDefaultConfigPath("Main");
+            }
             boxChangeConfig.SelectedIndexChanged += (s, e) =>
             {
                 if (boxChangeConfig.SelectedItem != null)
