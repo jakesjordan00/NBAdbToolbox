@@ -1774,7 +1774,6 @@ namespace NBAdbToolbox
                 lblDbStat.ForeColor = Color.FromArgb(255, 204, 0);
                 lblDbStat.BackColor = Color.FromArgb(100, 0, 0, 0);
                 lblDbStat.AutoSize = true;
-                picDbStatus.BackColor = Color.FromArgb(100, 0, 0, 0);
                 picDbStatus.Left = lblDbName.Right;
             }
             else if (sender == "BadConnection")
@@ -1793,7 +1792,6 @@ namespace NBAdbToolbox
                 lblDbStat.ForeColor = Color.Red;
                 lblDbStat.BackColor = Color.Transparent;
                 lblDbName.AutoSize = true;
-                picDbStatus.BackColor = Color.Red;
                 picDbStatus.Left = lblDbName.Right;
             }
 
