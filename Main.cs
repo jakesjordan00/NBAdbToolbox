@@ -386,15 +386,15 @@ namespace NBAdbToolbox
             }
             else if(screenWidth >= 1920 && screenWidth < 2240)
             {
-                screenFontSize = 1.1f;
+                screenFontSize = 1.05f;
             }
             else if(screenWidth >= 1536 && screenWidth < 1920)
             {
-                screenFontSize = 1.3f;
+                screenFontSize = 1.1f;
             }
             else if (screenWidth >= 1366 && screenWidth < 1536)
             {
-                screenFontSize = 1.5f;
+                screenFontSize = 1.3f;
             }
             else if (screenWidth >= 1280 && screenWidth < 1366)
             {
