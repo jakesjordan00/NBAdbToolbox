@@ -29,6 +29,7 @@ using System.Runtime;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
 using System.Xml.Linq;
 using System.Runtime.InteropServices.ComTypes;
+using System.Threading;
 
 namespace NBAdbToolbox
 {
@@ -1625,13 +1626,16 @@ namespace NBAdbToolbox
         {
             try
             {
-                using (SqlConnection conn = new SqlConnection(connectionString))
+                SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder(connectionString);
+                builder.ConnectTimeout = 3; //set 3 second timeout
+
+                using (SqlConnection conn = new SqlConnection(builder.ToString()))
                 {
                     conn.Open();
                     btnBuild.Enabled = true;
                     lblServerName.ForeColor = SuccessColor;
                     btnEdit.Text = "Edit Server/Db connection";
-                    return true; // Connected successfully
+                    return true; //connected successfully
                 }
             }
             catch (Exception ex)
@@ -2561,7 +2565,7 @@ namespace NBAdbToolbox
             listSeasons.KeyDown += ListSeasons_SelectAll;
 
             btnPopulate.Text = "Populate Db";
-            btnPopulate.Font = SetFontSize("Segoe UI", (float)(fontSize / 3.3), FontStyle.Bold, pnlWelcome, btnPopulate); //6.5
+            btnPopulate.Font = SetFontSize("Segoe UI", (float)(fontSize / 2.3), FontStyle.Bold, pnlWelcome, btnPopulate); //6.5
             btnPopulate.Width = (int)(listSeasons.Width * .8);
         }
 
