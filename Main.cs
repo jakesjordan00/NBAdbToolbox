@@ -1044,7 +1044,8 @@ namespace NBAdbToolbox
                 "true",
                 ((int)(lblDbUtil.Height * .8)).ToString()
             });
-            lblDbOvName.Font = SetFontSize("Segoe UI", (((float)(screenFontSize * pnlWelcome.Height * .05) / (96 / 12)) * (72 / 12)), FontStyle.Bold, lblDbOvExpand.Right - lblDbOverview.Right, lblDbOvName);
+            lblDbOvName.Font = SetFontSize("Segoe UI", (((float)(screenFontSize * pnlWelcome.Height * .05) / (96 / 12)) * (72 / 12)), FontStyle.Bold, 
+                (int)(screenFontSize * (lblDbOvExpand.Right - lblDbOverview.Right)), lblDbOvName);
             lblDbOvName.Left = lblDbOverview.Right;
             if (!dbConnection)
             {
