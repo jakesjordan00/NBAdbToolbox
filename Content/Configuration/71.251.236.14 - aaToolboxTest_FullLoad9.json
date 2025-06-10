@@ -1,0 +1,10 @@
+{
+  "Server": "71.251.236.14",
+  "Alias": null,
+  "Create": true,
+  "Default": null,
+  "UseWindowsAuth": null,
+  "Database": "aaToolboxTest_FullLoad9",
+  "Username": "test",
+  "Password": "test123"
+}
