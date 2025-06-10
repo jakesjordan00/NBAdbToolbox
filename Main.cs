@@ -82,17 +82,17 @@ namespace NBAdbToolbox
         private string imagePath = "";              //Icon file path
         private string imagePathDb = "";            //Db icon file path
         #region Labels and Controls
-            public Label lblStatus = new Label();      //Header label
-            public Label lblServer = new Label();      //Server
-            public Label lblServerName = new Label();  //Server name
-            public Label lblCStatus = new Label();     //Connection string status
-            public Label lblDB = new Label();          //Database
-            public Label lblDbName = new Label();      //Database name
-            public Label lblDbStat = new Label();      //Need to create database/Database created label
-            public Button btnEdit = new Button();      //Edit config file
-            public Button btnBuild = new Button();     //Build Database
-            public PictureBox picStatus = new PictureBox();//Connection string icon
-            public PictureBox picDbStatus = new PictureBox();//Db Status icon
+        public Label lblStatus = new Label();      //Header label
+        public Label lblServer = new Label();      //Server
+        public Label lblServerName = new Label();  //Server name
+        public Label lblCStatus = new Label();     //Connection string status
+        public Label lblDB = new Label();          //Database
+        public Label lblDbName = new Label();      //Database name
+        public Label lblDbStat = new Label();      //Need to create database/Database created label
+        public Button btnEdit = new Button();      //Edit config file
+        public Button btnBuild = new Button();     //Build Database
+        public PictureBox picStatus = new PictureBox();//Connection string icon
+        public PictureBox picDbStatus = new PictureBox();//Db Status icon
 
 
         public Label lblSettings = new Label();
@@ -111,7 +111,7 @@ namespace NBAdbToolbox
             Text = "Change Connection/Db:",
             Visible = true
         };
-        public Label lblConfigFiles= new Label
+        public Label lblConfigFiles = new Label
         {
             Text = "Default Connection:",
             Visible = true
@@ -148,7 +148,7 @@ namespace NBAdbToolbox
         public ComboBox boxSoundOptions = new ComboBox
         {
             Visible = true,
-            Items = { "Default", "Muted"}
+            Items = { "Default", "Muted" }
         };
 
 
@@ -164,7 +164,7 @@ namespace NBAdbToolbox
 
         #region pnlDbUtil - Database Utilities
         public Panel pnlDbUtil = new Panel();
-        public Label lblGameUtil = new Label { Text = "Game", Visible = false, Tag = "Table"};
+        public Label lblGameUtil = new Label { Text = "Game", Visible = false, Tag = "Table" };
         public Label lblTeamUtil = new Label { Text = "Team", Visible = false, Tag = "Table" };
         public Label lblArenaUtil = new Label { Text = "Arena", Visible = false, Tag = "Table" };
         public Label lblPlayerUtil = new Label { Text = "Player", Visible = false, Tag = "Table" };
@@ -173,20 +173,20 @@ namespace NBAdbToolbox
         public Label lblPbUtil = new Label { Text = "PlayerBox", Visible = false, Tag = "Table" };
         public Label lblPbpUtil = new Label { Text = "PlayByPlay", Visible = false, Tag = "Table" };
 
-        public Label lblEmpty = new Label { Text = "Unpopulated", Visible = false, Tag = "Year", Name = "Unpopulated"};
+        public Label lblEmpty = new Label { Text = "Unpopulated", Visible = false, Tag = "Year", Name = "Unpopulated" };
 
 
 
         public Panel pnlDbOverview = new Panel();
-            #region Labels and Controls
-            public Label lblDbUtil = new Label {Text = "Database Utilities"};
-            public Label lblDbOverview = new Label();
-            public Label lblDbOvName = new Label();
-            public Label lblDbOvExpand = new Label();
-            public Label lblDbOptions = new Label();
-            public Label lblDbSelectSeason = new Label();
-            public ListBox listSeasons = new ListBox();
-            public Button btnPopulate = new Button();
+        #region Labels and Controls
+        public Label lblDbUtil = new Label { Text = "Database Utilities" };
+        public Label lblDbOverview = new Label();
+        public Label lblDbOvName = new Label();
+        public Label lblDbOvExpand = new Label();
+        public Label lblDbOptions = new Label();
+        public Label lblDbSelectSeason = new Label();
+        public ListBox listSeasons = new ListBox();
+        public Button btnPopulate = new Button();
         //pnlDbUtil sub panel Positions and sizes
         public int leftPanelPos = 0;
         public int midPanelPos = 0;
@@ -197,63 +197,63 @@ namespace NBAdbToolbox
         public int dimH2 = 0;
         #endregion
         #region Variables
-        public HashSet<int> Missing2019Games = new HashSet<int> {  21900194, 21900200, 21900203, 21900204, 21900208, 21900244, 21900306, 21900307, 21900308, 21900309, 21900310, 21900311, 21900312, 21900313, 21900314, 21900315, 21900316, 21900317, 21900318, 21900319, 21900320, 21900321, 21900322, 21900323, 21900324, 21900325, 21900326, 21900327, 21900328, 21900329, 21900619, 21900668, 21900669, 21900670, 21900671, 21900672, 21900673, 21900674, 21900675, 21900676, 21900677, 21900678, 21900679, 21900680, 21900681, 21900682, 21900683, 21900684, 21900685, 21900686, 21900687, 21900688, 21900689, 21900690, 21900691, 21900692, 21900693, 21900694, 21900695, 21900696, 21900697, 21900698, 21900699, 21900700, 21900701, 21900702, 21900703, 21900704, 21900705, 21900706, 21900708, 21900709, 21900710, 21900711, 21900712, 21900713, 21900714, 21900715, 21900716, 21900717, 21900718, 21900719, 21900721, 21900722, 21900723, 21900724, 21900725, 21900726, 21900727, 21900728, 21900729, 21900730, 21900731, 21900732, 21900733, 21900734, 21900735, 21900736, 21900737, 21900738, 21900739, 21900740, 21900741, 21900742, 21900743, 21900744, 21900745, 21900746, 21900747, 21900748, 21900749, 21900750, 21900751, 21900752, 21900753, 21900754, 21900755, 21900756, 21900757, 21900758, 21900759, 21900760, 21900761, 21900762, 21900763, 21900764, 21900765, 21900766, 21900767, 21900768, 21900769, 21900770, 21900771, 21900772, 21900773, 21900774, 21900775, 21900776, 21900778, 21900779, 21900780, 21900781, 21900782, 21900783, 21900784, 21900785, 21900786, 21900787, 21900788, 21900789, 21900790, 21900791, 21900792, 21900793, 21900794, 21900795, 21900796, 21900797, 21900798, 21900799, 21900800, 21900801, 21900802, 21900803, 21900804, 21900805, 21900806, 21900807, 21900808, 21900809, 21900810, 21900811, 21900812, 21900813, 21900814, 21900815, 21900816, 21900817, 21900818, 21900819, 21900822, 21900823, 21900824, 21900825, 21900826, 21900827, 21900828, 21900829, 21900830, 21900831, 21900832, 21900833, 21900834, 21900835, 21900836, 21900837, 21900838, 21900845, 21900847, 21900853, 21900854, 21900855, 21900856, 21900857, 21900858, 21900859, 21900860, 21900861, 21900862, 21900863, 21900865, 21900867, 21900873, 21900874, 21900875, 21900876, 21900884, 21900885, 21900886, 21900887, 21900895, 21900905, 21900907, 21900909, 21900910, 21900911, 21900912, 21900913, 21900914, 21900915, 21900916, 21900927, 21900928, 21900929, 21900930, 21900931, 21900932, 21900933, 21900934, 21900935, 21900936, 21900937, 21900938, 21900939, 21900940, 21900941, 21900942, 21900943, 21900944, 21900945, 21900947, 21900955, 21900965, 21900967, 21901308, 21901309, 21901310, 21901311, 21901312, 21901313, 21901314, 21901315, 21901316, 21901317, 21901318, 41900101, 41900131, 41900141, 41900166, 41900171, 
+        public HashSet<int> Missing2019Games = new HashSet<int> {  21900194, 21900200, 21900203, 21900204, 21900208, 21900244, 21900306, 21900307, 21900308, 21900309, 21900310, 21900311, 21900312, 21900313, 21900314, 21900315, 21900316, 21900317, 21900318, 21900319, 21900320, 21900321, 21900322, 21900323, 21900324, 21900325, 21900326, 21900327, 21900328, 21900329, 21900619, 21900668, 21900669, 21900670, 21900671, 21900672, 21900673, 21900674, 21900675, 21900676, 21900677, 21900678, 21900679, 21900680, 21900681, 21900682, 21900683, 21900684, 21900685, 21900686, 21900687, 21900688, 21900689, 21900690, 21900691, 21900692, 21900693, 21900694, 21900695, 21900696, 21900697, 21900698, 21900699, 21900700, 21900701, 21900702, 21900703, 21900704, 21900705, 21900706, 21900708, 21900709, 21900710, 21900711, 21900712, 21900713, 21900714, 21900715, 21900716, 21900717, 21900718, 21900719, 21900721, 21900722, 21900723, 21900724, 21900725, 21900726, 21900727, 21900728, 21900729, 21900730, 21900731, 21900732, 21900733, 21900734, 21900735, 21900736, 21900737, 21900738, 21900739, 21900740, 21900741, 21900742, 21900743, 21900744, 21900745, 21900746, 21900747, 21900748, 21900749, 21900750, 21900751, 21900752, 21900753, 21900754, 21900755, 21900756, 21900757, 21900758, 21900759, 21900760, 21900761, 21900762, 21900763, 21900764, 21900765, 21900766, 21900767, 21900768, 21900769, 21900770, 21900771, 21900772, 21900773, 21900774, 21900775, 21900776, 21900778, 21900779, 21900780, 21900781, 21900782, 21900783, 21900784, 21900785, 21900786, 21900787, 21900788, 21900789, 21900790, 21900791, 21900792, 21900793, 21900794, 21900795, 21900796, 21900797, 21900798, 21900799, 21900800, 21900801, 21900802, 21900803, 21900804, 21900805, 21900806, 21900807, 21900808, 21900809, 21900810, 21900811, 21900812, 21900813, 21900814, 21900815, 21900816, 21900817, 21900818, 21900819, 21900822, 21900823, 21900824, 21900825, 21900826, 21900827, 21900828, 21900829, 21900830, 21900831, 21900832, 21900833, 21900834, 21900835, 21900836, 21900837, 21900838, 21900845, 21900847, 21900853, 21900854, 21900855, 21900856, 21900857, 21900858, 21900859, 21900860, 21900861, 21900862, 21900863, 21900865, 21900867, 21900873, 21900874, 21900875, 21900876, 21900884, 21900885, 21900886, 21900887, 21900895, 21900905, 21900907, 21900909, 21900910, 21900911, 21900912, 21900913, 21900914, 21900915, 21900916, 21900927, 21900928, 21900929, 21900930, 21900931, 21900932, 21900933, 21900934, 21900935, 21900936, 21900937, 21900938, 21900939, 21900940, 21900941, 21900942, 21900943, 21900944, 21900945, 21900947, 21900955, 21900965, 21900967, 21901308, 21901309, 21901310, 21901311, 21901312, 21901313, 21901314, 21901315, 21901316, 21901317, 21901318, 41900101, 41900131, 41900141, 41900166, 41900171,
                 41900211 };
-            #endregion
+        #endregion
         //pnlDbUtil Options section
         public int overviewHeight = 0;
         #endregion
 
         #region PnlLoad
         public Panel pnlLoad = new Panel();
-            #region Labels and Controls
-            public Label lblSeasonStatusLoad = new Label
-            {
-                Text = "Currently loading: ",
-                Visible = false
-            };
-            public Label lblSeasonStatusLoadInfo = new Label
-            {
-                Text = "",
-                Visible = false
-            };
-            public Label lblCurrentGame = new Label
-            {
-                Text = "Current game: ",
-                Visible = false
-            };
-            public Label lblCurrentGameCount = new Label
-            {
-                Text = "0",
-                Visible = false
-            };
-            public Label lblWorkingOn = new Label
-            {
-                Text = "",
-                Visible = false
-            };
-            public Label lblWorkingOnInfo = new Label
-            {
-                Text = "",
-                Visible = false
-            };
-            public Label gpm = new Label
-            {
-                Text = "Games per minute/Est.Time remaining:",
-                Visible = false
-            };
-            public Label gpmValue = new Label
-            {
-                Text = "",
-                Visible = false
-            };
-            PictureBox picLoad = new PictureBox
-            {
-                Image = Image.FromFile(Path.Combine(projectRoot, @"Content\Images\Loading", "kawhi1.png")),
-                Visible = false,
-                SizeMode = PictureBoxSizeMode.Zoom,
-                BackColor = Color.Transparent
-            };
+        #region Labels and Controls
+        public Label lblSeasonStatusLoad = new Label
+        {
+            Text = "Currently loading: ",
+            Visible = false
+        };
+        public Label lblSeasonStatusLoadInfo = new Label
+        {
+            Text = "",
+            Visible = false
+        };
+        public Label lblCurrentGame = new Label
+        {
+            Text = "Current game: ",
+            Visible = false
+        };
+        public Label lblCurrentGameCount = new Label
+        {
+            Text = "0",
+            Visible = false
+        };
+        public Label lblWorkingOn = new Label
+        {
+            Text = "",
+            Visible = false
+        };
+        public Label lblWorkingOnInfo = new Label
+        {
+            Text = "",
+            Visible = false
+        };
+        public Label gpm = new Label
+        {
+            Text = "Games per minute/Est.Time remaining:",
+            Visible = false
+        };
+        public Label gpmValue = new Label
+        {
+            Text = "",
+            Visible = false
+        };
+        PictureBox picLoad = new PictureBox
+        {
+            Image = Image.FromFile(Path.Combine(projectRoot, @"Content\Images\Loading", "kawhi1.png")),
+            Visible = false,
+            SizeMode = PictureBoxSizeMode.Zoom,
+            BackColor = Color.Transparent
+        };
         #endregion
 
         #endregion
@@ -381,15 +381,15 @@ namespace NBAdbToolbox
             this.MaximizeBox = true;
             this.MinimizeBox = true;
             this.ResizeEnd += FormResize;
-            if(screenWidth >= 2240)
+            if (screenWidth >= 2240)
             {
                 screenFontSize = 1;
             }
-            else if(screenWidth >= 1920 && screenWidth < 2240)
+            else if (screenWidth >= 1920 && screenWidth < 2240)
             {
                 screenFontSize = 1.05f;
             }
-            else if(screenWidth >= 1536 && screenWidth < 1920)
+            else if (screenWidth >= 1536 && screenWidth < 1920)
             {
                 screenFontSize = 1.1f;
             }
@@ -696,7 +696,7 @@ namespace NBAdbToolbox
 
                                 #endregion
                                 PopulateDb_4_AfterHistoricGame();
-                                if(iterator == TotalGames)
+                                if (iterator == TotalGames)
                                 {
                                     await SecondInsert;
                                 }
@@ -735,7 +735,7 @@ namespace NBAdbToolbox
                                 root.season.games.playoffs[i].playByPlay = null;
                                 PopulateDb_8_AfterCurrentGame(gamesPS[i].ToString());
                             }
-                            
+
                             await DeleteSeasonData;
                             PopulateDb_7_AfterCurrentDelete();
 
@@ -937,7 +937,7 @@ namespace NBAdbToolbox
             pnlWelcome.Controls.SetChildIndex(picStatus, 1);
 
             //Build Database Button
-            btnBuild.Text = "Build Database"; 
+            btnBuild.Text = "Build Database";
             btnBuild.Font = SetFontSize("Segoe UI", (float)(fontSize * 1.3), FontStyle.Bold, (int)(pnlWelcome.Width * .7), btnBuild);
             btnBuild.AutoSize = true;
             CenterElement(pnlWelcome, btnBuild);
@@ -1008,7 +1008,7 @@ namespace NBAdbToolbox
             };
             #endregion
 
-            
+
             #region Database Overview
             pnlDbOverview.Parent = pnlDbUtil;
             pnlDbOverview.Width = pnlDbUtil.Width;
@@ -1082,7 +1082,7 @@ namespace NBAdbToolbox
             picSettings.SizeMode = PictureBoxSizeMode.Zoom;
             picSettings.Image = Image.FromFile(Path.Combine(projectRoot, @"Content\Images", "Settings.png"));
             picSettings.Left = lblSettings.Right;
-            picSettings.Top = lblSettings.Top + lblSettings.Height/6;
+            picSettings.Top = lblSettings.Top + lblSettings.Height / 6;
             picSettings.BackColor = Color.FromArgb(0, 0, 0, 0);
 
             pnlSettings.Top = lblSettings.Bottom + spacer;
@@ -1098,7 +1098,7 @@ namespace NBAdbToolbox
             lblBrowseConfig.Top = 0;
             lblBrowseConfig.Left = 0;
             btnBrowseConfig.Font = SetFontSize("Segoe UI", (float)(fontSize * .8), FontStyle.Bold, (int)(pnlWelcome.Width * .7), btnBrowseConfig);
-            btnBrowseConfig.Width = btnEdit.Width/2;
+            btnBrowseConfig.Width = btnEdit.Width / 2;
             btnBrowseConfig.Top = 0;
             lblBrowseConfig.Top = btnBrowseConfig.Top + (btnBrowseConfig.Height / 5);
             lblBrowseConfig.AutoSize = true;
@@ -1181,7 +1181,7 @@ namespace NBAdbToolbox
                 lblSettings.Focus();
             };
             boxConfigFiles.DropDownClosed += (s, e) =>
-            {                
+            {
                 lblSettings.Focus();
             };
 
@@ -1191,7 +1191,7 @@ namespace NBAdbToolbox
             boxConfigFiles.Width = (int)(btnEdit.Width * .7);
 
             lblConfigFiles.Left = 0;
-            lblConfigFiles.Top = boxConfigFiles.Top ;
+            lblConfigFiles.Top = boxConfigFiles.Top;
             lblConfigFiles.AutoSize = true;
             lblConfigFiles.Font = SetFontSize("Segoe UI", (float)(fontSize * .9), FontStyle.Bold, (int)(pnlWelcome.Width * .7), lblConfigFiles);
             lblConfigFiles.ForeColor = ThemeColor;
@@ -1216,7 +1216,7 @@ namespace NBAdbToolbox
                     GetThemeColors();
                     SetTheme("Change");
                     DbOverviewVisibility(dbOverviewOpened, "Background");
-                    
+
                 }
                 lblSettings.Focus();
             };
@@ -1285,6 +1285,8 @@ namespace NBAdbToolbox
                 SubThemeColor = Color.Black;
                 SuccessColor = Color.FromArgb(255, 100, 220, 100);
                 LastSuccessColor = Color.FromArgb(255, 20, 100, 20);
+                ErrorColor = Color.FromArgb(255, 200, 50, 50);
+                LastErrorColor = Color.FromArgb(255, 120, 30, 30);
             }
             else if (settings.BackgroundImage == "Court Default")
             {
@@ -1293,6 +1295,8 @@ namespace NBAdbToolbox
                 SubThemeColor = Color.Ivory;
                 SuccessColor = Color.FromArgb(255, 20, 100, 20);
                 LastSuccessColor = Color.FromArgb(255, 100, 220, 100);
+                ErrorColor = Color.FromArgb(255, 120, 30, 30);
+                LastErrorColor = Color.FromArgb(255, 200, 50, 50);
             }
             else
             {
@@ -1321,6 +1325,14 @@ namespace NBAdbToolbox
                 {
                     lbl.ForeColor = SuccessColor;
                 }
+                else if (lbl.ForeColor == WarningColor || lbl.ForeColor == LastWarningColor)
+                {
+                    lbl.ForeColor = WarningColor;
+                }
+                else if (lbl.ForeColor == ErrorColor || lbl.ForeColor == LastErrorColor)
+                {
+                    lbl.ForeColor = ErrorColor;
+                }
                 if (lbl.Tag != null)
                 {
                     lbl.BackColor = SubThemeColor;
@@ -1337,7 +1349,7 @@ namespace NBAdbToolbox
             //update buttons
             foreach (Button btn in buttons)
             {
-                if(!btn.Enabled)
+                if (!btn.Enabled)
                 {
 
                 }
@@ -1434,7 +1446,7 @@ namespace NBAdbToolbox
                         configPath = Path.Combine(backupDir, settings.DefaultConfig);
                         settings.ConfigPath = Path.Combine(projectRoot, @"Content\Configuration");
                     }
-                    else if(backupDirFiles.Count() > 0)
+                    else if (backupDirFiles.Count() > 0)
                     {
                         configPath = backupDirFiles[0];
                         settings.ConfigPath = backupDir;
@@ -1687,7 +1699,6 @@ namespace NBAdbToolbox
             listSeasons.Items.Clear();
             seasonInfo.Clear();
             lblStatus.Text = "Invalid Connection!";
-            lblStatus.ForeColor = ErrorColor;
             UIController("BadConnection");
         }
         public void WriteConfig(string sender) //Writes Config File and Settings file
@@ -1746,7 +1757,6 @@ namespace NBAdbToolbox
                 btnPopulate.Enabled = false;
                 listSeasons.Items.Clear();
 
-                lblStatus.ForeColor = ThemeColor;
                 lblServerName.ForeColor = ErrorColor;
                 lblCStatus.ForeColor = ErrorColor;
                 lblDbName.ForeColor = ErrorColor;
@@ -1803,7 +1813,6 @@ namespace NBAdbToolbox
                 lblDbOvName.Visible = false;
                 listSeasons.Items.Clear();
 
-                lblStatus.ForeColor = ErrorColor;
                 CenterElement(pnlWelcome, lblStatus);
                 lblDbName.ForeColor = ErrorColor;
                 lblDbName.BackColor = Color.Transparent;
@@ -2156,13 +2165,13 @@ namespace NBAdbToolbox
             elapsedStringRead = CheckTime(timeUnitsRead);
             foreach (NBAdbToolboxSchedule.Game game in scheduleGames)
             {
-                if(game.GameId.Substring(2, 1) == "2")
+                if (game.GameId.Substring(2, 1) == "2")
                 {
                     RegularSeasonGames++;
                     GameID = Int32.Parse(game.GameId);
                     gamesRS.Add(GameID);
                 }
-                else if(game.GameId.Substring(2, 1) != "1" && game.GameId.Substring(2, 1) != "3" && game.GameId.Substring(2, 1) != "6")
+                else if (game.GameId.Substring(2, 1) != "1" && game.GameId.Substring(2, 1) != "3" && game.GameId.Substring(2, 1) != "6")
                 {
                     PostseasonGames++;
                     GameID = Int32.Parse(game.GameId);
@@ -2299,7 +2308,7 @@ namespace NBAdbToolbox
                     BuildLogInsert.ExecuteNonQuery();
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
 
             }
@@ -2751,7 +2760,7 @@ namespace NBAdbToolbox
             }
             return returnString;
         }
-        
+
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)//Enables Esc key to close program
         {
             if (keyData == Keys.Escape)
@@ -2850,7 +2859,7 @@ namespace NBAdbToolbox
             if (structions[2] != ".")
             {
                 fontSize = float.Parse(structions[2]);
-                if(label.Text == "Season Select")
+                if (label.Text == "Season Select")
                 {
                     label.Font = SetFontSize("Segoe UI", fontSize, style, (int)(parent.Width * 1.1), label);
                 }
@@ -2895,7 +2904,7 @@ namespace NBAdbToolbox
             if (structions[7] != ".")
             {
                 label.ForeColor = color;
-                
+
             }
             /*Visiblity*/
             if (structions[8] == "true")
@@ -2911,7 +2920,7 @@ namespace NBAdbToolbox
             {
                 label.Height = Int32.Parse(structions[9]);
             }
-        }   
+        }
         public void ImageDriver()
         {
             if (reverse)
@@ -2956,7 +2965,7 @@ namespace NBAdbToolbox
         }
 
         private void UpdateLoadingImage(int imageNumber)
-        { 
+        {
             //Release previous image
             if (picLoad.Image != null)
             {
@@ -3104,7 +3113,7 @@ namespace NBAdbToolbox
             }
             else
             {
-                lblDbOvName.ForeColor = WarningColor;             
+                lblDbOvName.ForeColor = WarningColor;
             }
             lblDbOverview.ForeColor = ThemeColor;
             lblDbOvExpand.ForeColor = ThemeColor;
@@ -3330,7 +3339,7 @@ namespace NBAdbToolbox
                 pnlDbOverview.Controls.Add(line);
                 gridLines.Add(line);
             }
-            lineHeight = 0; 
+            lineHeight = 0;
             lineWidth = 0;
         }
 
@@ -3450,7 +3459,7 @@ namespace NBAdbToolbox
                                 rows = Convert.ToInt32(reader[1]);
                             }
                         }
-                    }                    
+                    }
                     if (rows != 0)
                     {
                         using (SqlCommand alterDeletePbp = new SqlCommand("AlterTablesDeletePBP", connection))
@@ -3473,7 +3482,7 @@ namespace NBAdbToolbox
             catch (Exception e)
             {
                 Console.WriteLine($"Error in deletion process: {e.Message}");
-            }            
+            }
         }
 
 
@@ -3520,12 +3529,12 @@ namespace NBAdbToolbox
             root = await historic.ReadFile(SeasonID, iter, filePath);
         }
         public async Task InsertGameWithLoading(NBAdbToolboxHistoric.Game game, int season, int imageIteration, string sender)
-        {          
+        {
             await Task.Run(() =>
             {
                 GetGameDetails(game, sender);
             });
-            
+
         }
 
         //For each game, this method checks each of our tables and determines what to do, Insert, update, or nothing.
@@ -3817,7 +3826,7 @@ namespace NBAdbToolbox
             {
                 sqlBuilder.Append("'RS', null)\n");
             }
-            else if(sender == "Postseason")
+            else if (sender == "Postseason")
             {
                 sqlBuilder.Append("'PS', '" + GameID.ToString().Remove(7) + "')\n");
             }
@@ -3826,8 +3835,8 @@ namespace NBAdbToolbox
                 sqlBuilder.Append("null, null)\n");
             }
 
-                //GameExt
-                sqlBuilder.Append("Insert into GameExt(SeasonID, GameID, Status, Attendance, Sellout");
+            //GameExt
+            sqlBuilder.Append("Insert into GameExt(SeasonID, GameID, Status, Attendance, Sellout");
 
             //Officials
             for (int o = 0; o < officials.Count && o < 4; o++)
@@ -3840,7 +3849,7 @@ namespace NBAdbToolbox
                 {
                     sqlBuilder.Append(", Official").Append(o + 1).Append("ID");
                 }
-                else if(o == 3)
+                else if (o == 3)
                 {
                     sqlBuilder.Append(", OfficialAlternateID");
                 }
@@ -3949,7 +3958,7 @@ namespace NBAdbToolbox
                 {
                     HistoricInactiveInsert(inactive, "Historic");
                 }
-                HistoricInactiveBoxInsert(game.box.awayTeamId, game.box.homeTeamId,inactive.personId);
+                HistoricInactiveBoxInsert(game.box.awayTeamId, game.box.homeTeamId, inactive.personId);
             }
         }
         public void HistoricPlayerInsert(NBAdbToolboxHistoric.Player player, string number, string sender)
@@ -4254,7 +4263,7 @@ namespace NBAdbToolbox
                             minutes += Int32.Parse(team.players[i].statistics.minutes.Remove(team.players[i].statistics.minutes.IndexOf(":")));
                             seconds += Int32.Parse(team.players[i].statistics.minutes.Substring(team.players[i].statistics.minutes.IndexOf(":") + 1));
                         }
-                        catch(ArgumentOutOfRangeException e)
+                        catch (ArgumentOutOfRangeException e)
                         {
                             minutes += Int32.Parse(team.players[i].statistics.minutes);
                             seconds += 0;
@@ -4558,7 +4567,8 @@ namespace NBAdbToolbox
             {
                 InitiateCurrentTeam(game);
             }
-            if (!arenaList.Contains((SeasonID, game.arena.arenaId))){
+            if (!arenaList.Contains((SeasonID, game.arena.arenaId)))
+            {
                 arenaList.Add((SeasonID, game.arena.arenaId));
                 CurrentArena(game.arena, game.homeTeam.teamId);
             }
@@ -4582,7 +4592,7 @@ namespace NBAdbToolbox
             sqlBuilder.Append("\n").Append(sqlBuilderParallel.ToString());
             sqlBuilderParallel.Clear();
             CurrentDataInsert(sqlBuilder);
-            
+
             sqlBuilder.Clear();
         }
         public void CurrentDataInsert(StringBuilder sqlStringBuilder)
@@ -4600,7 +4610,7 @@ namespace NBAdbToolbox
                     insert.ExecuteNonQuery();
                 }
             }
-            catch(Exception e) 
+            catch (Exception e)
             {
                 ErrorOutput(e);
             }
@@ -5378,7 +5388,7 @@ namespace NBAdbToolbox
                 }
                 //Games
                 string gameType = "";
-                if(GameID.ToString().Substring(0) == "2" || GameID.ToString().Substring(0) == "6")
+                if (GameID.ToString().Substring(0) == "2" || GameID.ToString().Substring(0) == "6")
                 {
                     gameType = "Regular Season";
                 }
