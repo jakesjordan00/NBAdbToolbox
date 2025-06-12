@@ -1,35 +1,36 @@
-﻿using System;
+﻿using NBAdbToolboxCurrent;
+using NBAdbToolboxCurrentPBP;
+using NBAdbToolboxHistoric;
+using NBAdbToolboxSchedule;
+using Newtonsoft.Json;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Data.SqlClient;
-using System.Drawing;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using Newtonsoft.Json;
-using System.Diagnostics;
-using static NBAdbToolbox.Main;
 using System.Data.SqlTypes;
+using System.Diagnostics;
+using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Globalization;
-using System.Runtime.ConstrainedExecution;
-using NBAdbToolboxHistoric;
-using NBAdbToolboxCurrent;
-using NBAdbToolboxCurrentPBP;
-using NBAdbToolboxSchedule;
+using System.IO;
+using System.Linq;
 using System.Media;
-using System.Runtime.InteropServices;
-using System.Collections;
+using System.Net;
 using System.Runtime;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
-using System.Xml.Linq;
+using System.Runtime.ConstrainedExecution;
+using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Xml.Linq;
+using static NBAdbToolbox.Main;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TaskbarClock;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
 
 namespace NBAdbToolbox
 {
@@ -85,7 +86,7 @@ namespace NBAdbToolbox
         public Label lblStatus = new Label();      //Header label
         public Label lblServer = new Label();      //Server
         public Label lblServerName = new Label();  //Server name
-        public Label lblCStatus = new Label();     //Connection string status
+        public Label lblCStatus = new Label { Tag = "Server Connection" };     //Connection string status
         public Label lblDB = new Label();          //Database
         public Label lblDbName = new Label();      //Database name
         public Label lblDbStat = new Label();      //Need to create database/Database created label
@@ -359,6 +360,8 @@ namespace NBAdbToolbox
         public string settingsJSON = "";
         public bool defaultConfig = false;
         public bool isBuildEnabled = true;
+
+        public bool dbOverviewFirstOpen = true;
         //Settings
 
 
@@ -368,64 +371,26 @@ namespace NBAdbToolbox
             GetSettings("Main");
             //Set screen size
             #region Set screen size
-            screenWidth = Screen.PrimaryScreen.WorkingArea.Width;
-            screenHeight = Screen.PrimaryScreen.WorkingArea.Height;
-            this.Width = (int)(screenWidth / 1.5);
-            this.Height = (int)(screenHeight / 1.2);
-            aspectRatio = (float)((screenWidth / 1.5) / (screenHeight / 1.2));
-            this.MaximumSize = new Size((int)(screenWidth * 1.1), (int)(screenHeight * 1.1));
-            this.StartPosition = FormStartPosition.Manual;
-            this.Left = (screenWidth - this.Width) / 2;
-            this.Top = (screenHeight - this.Height) / 2;
-            this.FormBorderStyle = FormBorderStyle.FixedDialog;
-            this.MaximizeBox = true;
-            this.MinimizeBox = true;
-            this.ResizeEnd += FormResize;
-            if (screenWidth >= 2240)
-            {
-                screenFontSize = 1;
-            }
-            else if (screenWidth >= 1920 && screenWidth < 2240)
-            {
-                screenFontSize = 1.05f;
-            }
-            else if (screenWidth >= 1536 && screenWidth < 1920)
-            {
-                screenFontSize = 1.1f;
-            }
-            else if (screenWidth >= 1366 && screenWidth < 1536)
-            {
-                screenFontSize = 1.3f;
-            }
-            else if (screenWidth >= 1280 && screenWidth < 1366)
-            {
-                screenFontSize = 2;
-            }
             #endregion
             lblDbUtil.ForeColor = ThemeColor;
 
-
+            //Add initial controls before we  attempts connection
             AddControls();
 
             //Check for dbconfig - Verify Server/Database Connectivity
-            #region Verify Server/Database Connectivity
             InitializeDbConfig("Main");
-            #endregion
 
-            #region Add Elements - Adding Labels/Panels etc to Window
-            //This should be second to last i believe.
+            //Add controls to panel
             InitializeElements();
+            //Set Colors
             SetTheme("Main");
-            #endregion
 
 
 
             float fontSize = ((float)(screenFontSize * pnlWelcome.Height * .08) / (96 / 12)) * (72 / 12);
 
-            #region dbUtilProperties
             //DbUtil
             pnlDbUtil.Parent = bgCourt;
-            #endregion
 
 
 
@@ -751,10 +716,21 @@ namespace NBAdbToolbox
                     }
                     stopwatchFull.Stop();
                     PopulateDb_10_Completion();
-                    GetSeasons(cString);
+                    GetSeasons();
                     if (dbOverviewOpened)
                     {
+                        lblDbOptions.Invoke((MethodInvoker)(() =>
+                        {
+                            lblDbOptions.Text = "Loading Season info";
+                            CenterElement(pnlDbUtil, lblDbOptions);
+                        }));
+                        await Task.Run(() => GetSeasonInfo());
+                        dbOverviewFirstOpen = false;
                         DbOverviewVisibility(dbOverviewOpened, "Populate");
+                    }
+                    else
+                    {
+                        dbOverviewFirstOpen = true;
                     }
                 }
             };
@@ -955,7 +931,7 @@ namespace NBAdbToolbox
             #region Edit Connection & Build DB
             if (dbConnection)
             {
-                GetSeasons(bob.ToString());
+                GetSeasons();
             }
 
             //Edit Button Actions
@@ -1124,7 +1100,7 @@ namespace NBAdbToolbox
             {
                 RefreshDefaultConfigPath("Main");
             }
-            boxChangeConfig.SelectedIndexChanged += (s, e) =>
+            boxChangeConfig.SelectedIndexChanged += async (s, e) =>
             {
                 if (boxChangeConfig.SelectedItem != null)
                 {
@@ -1136,7 +1112,18 @@ namespace NBAdbToolbox
                     InitializeDbConfig("boxChangeConfig");
                     if (dbOverviewOpened)
                     {
+                        lblDbOptions.Invoke((MethodInvoker)(() =>
+                        {
+                            lblDbOptions.Text = "Loading Season info";
+                            CenterElement(pnlDbUtil, lblDbOptions);
+                        }));
+                        await Task.Run(() => GetSeasonInfo());
+                        dbOverviewFirstOpen = false;
                         DbOverviewVisibility(dbOverviewOpened, "Change");
+                    }
+                    else
+                    {
+                        dbOverviewFirstOpen = true;
                     }
                 }
                 lblSettings.Focus();
@@ -1167,7 +1154,7 @@ namespace NBAdbToolbox
 
 
 
-            boxConfigFiles.SelectedIndexChanged += (s, e) =>
+            boxConfigFiles.SelectedIndexChanged += async (s, e) =>
             {
                 if (isRefreshing) return;
                 if (boxConfigFiles.SelectedItem != null)
@@ -1178,6 +1165,21 @@ namespace NBAdbToolbox
                     config = JsonConvert.DeserializeObject<DbConfig>(File.ReadAllText(configPath));
                     defaultConfig = false;
                     InitializeDbConfig("boxDefaultConfig");
+                    if (dbOverviewOpened)
+                    {
+                        lblDbOptions.Invoke((MethodInvoker)(() =>
+                        {
+                            lblDbOptions.Text = "Loading Season info";
+                            CenterElement(pnlDbUtil, lblDbOptions);
+                        }));
+                        await Task.Run(() => GetSeasonInfo());
+                        dbOverviewFirstOpen = false;
+                        DbOverviewVisibility(dbOverviewOpened, "Change");
+                    }
+                    else
+                    {
+                        dbOverviewFirstOpen = true;
+                    }
                 }
                 RefreshDefaultConfigPath("Change");
                 lblSettings.Focus();
@@ -1335,7 +1337,7 @@ namespace NBAdbToolbox
                 {
                     lbl.ForeColor = ErrorColor;
                 }
-                if (lbl.Tag != null)
+                if (lbl.Tag != null && lbl.Tag.ToString() != "Server Connection")
                 {
                     lbl.BackColor = SubThemeColor;
                 }
@@ -1452,7 +1454,7 @@ namespace NBAdbToolbox
                     {
                         configPath = backupDirFiles[0];
                         settings.ConfigPath = backupDir;
-                        settings.DefaultConfig = backupDirFileNames[0] + ".json";
+                        settings.DefaultConfig = backupDirFileNames[0];
                     }
                 }
                 else
@@ -1616,16 +1618,16 @@ namespace NBAdbToolbox
                 if (config.Create == false) //and if the config file says we dont need to create database, 
                 {
                     bob.InitialCatalog = config.Database; //have the connection string use the database
+                    dbConnection = TestConnectionString(bob.ToString());
                 }
-                dbConnection = TestConnectionString(bob.ToString());
             }
             else //If the connection string doesnt work on master for whatever reason and our config file says we have a db, double check the db only connection string to make sure.
             {
                 if (config.Create == false) //same as above
                 {
                     bob.InitialCatalog = config.Database; //same as above
+                    dbConnection = TestConnectionString(bob.ToString());
                 }
-                dbConnection = TestConnectionString(bob.ToString());
             }
             if (config.Create == true)
             {
@@ -1661,6 +1663,7 @@ namespace NBAdbToolbox
                     btnBuild.Enabled = true;
                     lblServerName.ForeColor = SuccessColor;
                     btnEdit.Text = "Edit Server/Db connection";
+                    conn.Dispose();
                     return true; //connected successfully
                 }
             }
@@ -1680,7 +1683,7 @@ namespace NBAdbToolbox
             ClearImage(picDbStatus);
             picDbStatus.Image = Image.FromFile(imagePathDb);
             cString = bob.ToString();
-            GetSeasons(cString);
+            GetSeasons();
             UIController("DbExists");
         }
         public void DbMissing()
@@ -1839,20 +1842,21 @@ namespace NBAdbToolbox
                 lblStatus.Height = (int)(pnlWelcome.Height * .1);
                 lblCStatus.Font = SetFontSize("Segoe UI", ((float)(screenFontSize * lblServer.Height) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, (int)(pnlWelcome.Width * .7), lblCStatus);
             }
-            lblDbName.AutoSize = true;
-            lblDbName.AutoSize = true;
-            picDbStatus.Left = lblDbName.Right;
-            lblCStatus.AutoSize = true;
-            lblStatus.Left = (pnlWelcome.ClientSize.Width - lblStatus.Width) / 2;
-            lblCStatus.Left = pnlWelcome.Width - (lblCStatus.Width + picStatus.Width);
-            picStatus.Left = lblCStatus.Right;
-            lblDbName.AutoSize = true;
-            lblDbStat.AutoSize = true;
-            picDbStatus.Left = lblDbName.Right;
-            lblDbUtil.Text = "Database Utilities";
-            lblDbUtil.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, (int)(pnlDbUtil.Width * .7), lblDbUtil);
-            lblDbUtil.AutoSize = true;
-            lblDbUtil.Left = (pnlDbUtil.Width - lblDbUtil.Width) / 2;
+
+            if (sender == "GetConfig")
+            {
+                lblCStatus.AutoSize = true;
+                lblStatus.Left = (pnlWelcome.ClientSize.Width - lblStatus.Width) / 2;
+                lblCStatus.Left = pnlWelcome.Width - (lblCStatus.Width + picStatus.Width);
+                picStatus.Left = lblCStatus.Right;
+                lblDbName.AutoSize = true;
+                lblDbStat.AutoSize = true;
+                picDbStatus.Left = lblDbName.Right;
+                lblDbUtil.Text = "Database Utilities";
+                lblDbUtil.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, (int)(pnlDbUtil.Width * .7), lblDbUtil);
+                lblDbUtil.AutoSize = true;
+                lblDbUtil.Left = (pnlDbUtil.Width - lblDbUtil.Width) / 2;
+            }
 
 
         }
@@ -2336,7 +2340,7 @@ namespace NBAdbToolbox
             lblWorkingOn.Left = pnlLoad.Width - lblWorkingOn.Width;
             #endregion
 
-            if (seasonIterator != selectedSeasons)
+            if (seasonIterator != selectedSeasons && settings.Sound != "Muted")
             {
                 PlayCompletionSound("Season");
             }
@@ -2374,7 +2378,10 @@ namespace NBAdbToolbox
                         { "ms", (timeElapsedFull.Milliseconds, "") }
                         };
             string elapsedStringFull = CheckTime(timeUnitsFull);
-            PlayCompletionSound("Run");
+            if (settings.Sound != "Muted")
+            {
+                PlayCompletionSound("Run");
+            }
             #region Enable buttons and clear label text
             btnPopulate.Enabled = true;
             btnEdit.Enabled = true;
@@ -2488,6 +2495,39 @@ namespace NBAdbToolbox
         #region Initializations
         public void AddControls()
         {
+            screenWidth = Screen.PrimaryScreen.WorkingArea.Width;
+            screenHeight = Screen.PrimaryScreen.WorkingArea.Height;
+            this.Width = (int)(screenWidth / 1.5);
+            this.Height = (int)(screenHeight / 1.2);
+            aspectRatio = (float)((screenWidth / 1.5) / (screenHeight / 1.2));
+            this.MaximumSize = new Size((int)(screenWidth * 1.1), (int)(screenHeight * 1.1));
+            this.StartPosition = FormStartPosition.Manual;
+            this.Left = (screenWidth - this.Width) / 2;
+            this.Top = (screenHeight - this.Height) / 2;
+            this.FormBorderStyle = FormBorderStyle.FixedDialog;
+            this.MaximizeBox = true;
+            this.MinimizeBox = true;
+            this.ResizeEnd += FormResize;
+            if (screenWidth >= 2240)
+            {
+                screenFontSize = 1;
+            }
+            else if (screenWidth >= 1920 && screenWidth < 2240)
+            {
+                screenFontSize = 1.05f;
+            }
+            else if (screenWidth >= 1536 && screenWidth < 1920)
+            {
+                screenFontSize = 1.1f;
+            }
+            else if (screenWidth >= 1366 && screenWidth < 1536)
+            {
+                screenFontSize = 1.3f;
+            }
+            else if (screenWidth >= 1280 && screenWidth < 1366)
+            {
+                screenFontSize = 2;
+            }
             #region Set and declare variables
             lblServer.Text = "Server: ";
             lblDB.Text = "Database: ";
@@ -2594,6 +2634,11 @@ namespace NBAdbToolbox
             btnPopulate.AutoSize = true;
             btnPopulate.Width = (int)(listSeasons.Width * .9);
             btnPopulate.Left = (int)(listSeasons.Width * .05);
+        }
+
+        public void AddControlsAfterConnection()
+        {
+
         }
 
         public void ArrangeOverviewControls()
@@ -3035,7 +3080,7 @@ namespace NBAdbToolbox
 
         public void DbOverviewClick(Control control, Label growShrink, Control parent)
         {
-            control.Click += (s, e) =>
+            control.Click += async (s, e) =>
             {
                 if (control.Focused || parent.Focused || dbOverviewOpened)
                 {
@@ -3047,6 +3092,16 @@ namespace NBAdbToolbox
                 }
                 else
                 {
+                    if (dbOverviewFirstOpen)
+                    {
+                        lblDbOptions.Invoke((MethodInvoker)(() =>
+                        {
+                            lblDbOptions.Text = "Loading Season info";
+                            CenterElement(pnlDbUtil, lblDbOptions);
+                        }));
+                        await Task.Run(() => GetSeasonInfo());
+                        dbOverviewFirstOpen = false;
+                    }
                     parent.Focus();
                     growShrink.Text = "-";
                     dbOverviewOpened = true;
@@ -3419,27 +3474,47 @@ namespace NBAdbToolbox
 
 
         #region Need to organize/move or delete
-        public void GetSeasons(string connection)
+        public void GetSeasons()
         {
             listSeasons.Items.Clear();
-            seasonInfo.Clear();
-
             using (SqlConnection conn = new SqlConnection(bob.ToString()))
-            using (SqlCommand SQLSeasons = new SqlCommand("Seasons", conn))
+            using (SqlCommand SQLSeasons = new SqlCommand("select cast(SeasonID as varchar(4)) from Season order by SeasonID desc", conn))
             {
-                SQLSeasons.CommandType = CommandType.StoredProcedure;
+                SQLSeasons.CommandType = CommandType.Text;
                 conn.Open();
-
                 using (SqlDataReader sdr = SQLSeasons.ExecuteReader())
                 {
                     while (sdr.Read())
                     {
-                        listSeasons.Items.Add(sdr["SeasonID"].ToString());
-                        seasonInfo.Add((sdr.GetInt32(0), (sdr.GetInt32(1), sdr.GetInt32(2), sdr.GetInt32(3), sdr.GetInt32(4), sdr.GetInt32(5), sdr.GetInt32(6), sdr.GetInt32(7)
-                            , sdr.GetInt32(8), sdr.GetInt32(9), sdr.GetInt32(10))));
+                        listSeasons.Items.Add(sdr.GetString(0));
                     }
                 }
             }
+        }
+        public void GetSeasonInfo()
+        {
+            seasonInfo.Clear();
+            if (dbConnection)
+            {
+                using (SqlConnection conn = new SqlConnection(bob.ToString()))
+                using (SqlCommand SQLSeasons = new SqlCommand("Seasons", conn))
+                {
+                    SQLSeasons.CommandType = CommandType.StoredProcedure;
+                    conn.Open();
+
+                    using (SqlDataReader sdr = SQLSeasons.ExecuteReader())
+                    {
+                        while (sdr.Read())
+                        {
+                            listSeasons.Items.Add(sdr["SeasonID"].ToString());
+                            seasonInfo.Add((sdr.GetInt32(0), (sdr.GetInt32(1), sdr.GetInt32(2), sdr.GetInt32(3), sdr.GetInt32(4), sdr.GetInt32(5), sdr.GetInt32(6), sdr.GetInt32(7)
+                                , sdr.GetInt32(8), sdr.GetInt32(9), sdr.GetInt32(10))));
+                        }
+                    }
+                }
+            }
+            lblDbOptions.Text = "Options";
+            CenterElement(pnlDbUtil, lblDbOptions);
         }
         public Stopwatch stopwatchDelete = new Stopwatch();
         public void AlterDeleteExisting()
