@@ -1456,9 +1456,14 @@ namespace NBAdbToolbox
                         settings.ConfigPath = backupDir;
                         settings.DefaultConfig = backupDirFileNames[0];
                     }
+                    else if (!File.Exists(Path.Combine(backupDir, settings.DefaultConfig)))
+                    {
+
+                    }
                 }
                 else
                 {
+                    Directory.CreateDirectory(Path.Combine(projectRoot, @"Content\Configuration"));
                     defaultConfig = true;
                 }
             }
@@ -1569,6 +1574,10 @@ namespace NBAdbToolbox
             lblDbStat.Text = "Could not connect using master or Db.";
             imagePath = Path.Combine(projectRoot, @"Content\Images", "Error.png");
             picStatus.Image = Image.FromFile(imagePath);
+            if (!Directory.Exists(settings.ConfigPath))
+            {
+                settings.ConfigPath = Path.Combine(projectRoot, @"Content\Configuration", "settings.json");
+            }
             UIController("NoConnection");
 
         }
