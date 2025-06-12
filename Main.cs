@@ -375,7 +375,7 @@ namespace NBAdbToolbox
             lblDbUtil.ForeColor = ThemeColor;
 
             //Add initial controls before we  attempts connection
-            AddControls();
+            AddControls("Init");
 
             //Check for dbconfig - Verify Server/Database Connectivity
             InitializeDbConfig("Main");
@@ -389,8 +389,6 @@ namespace NBAdbToolbox
 
             float fontSize = ((float)(screenFontSize * pnlWelcome.Height * .08) / (96 / 12)) * (72 / 12);
 
-            //DbUtil
-            pnlDbUtil.Parent = bgCourt;
 
 
 
@@ -742,79 +740,9 @@ namespace NBAdbToolbox
             #endregion
             //Panel Formatting
             #region Panel Formatting
-            pnlLoad.Top = pnlWelcome.Bottom;
-            pnlLoad.Left = pnlWelcome.Left;
-            pnlLoad.Width = pnlWelcome.Width;
-            pnlLoad.Height = pnlWelcome.Top;
-            pnlLoad.BackColor = Color.Transparent;
-            picLoad.Parent = pnlLoad;
-            pnlLoad.Parent = bgCourt;
-            picLoad.SizeMode = PictureBoxSizeMode.Zoom;
-            picLoad.Width = pnlLoad.Height;
-            picLoad.Height = pnlLoad.Height;
-            picLoad.Left = (pnlLoad.ClientSize.Width - picLoad.Width) / 2;
-            picLoad.BackColor = Color.Transparent;
 
 
-            lblDbUtil.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, (int)(pnlDbUtil.Width * .7), lblDbUtil);
-            lblDbUtil.AutoSize = true;
-            lblDbUtil.Left = (pnlDbUtil.Width - lblDbUtil.Width) / 2;
-
-
-
-            //lblSeasonStatusLoadInfo  
-            lblSeasonStatusLoad.Left = 0;
-            fontSize = ((float)(screenFontSize * pnlLoad.Height * .08) / (96 / 12)) * (72 / 12);
-            lblSeasonStatusLoad.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Regular, (int)(pnlLoad.Width * .7), lblSeasonStatusLoad);
-            lblSeasonStatusLoad.AutoSize = true;
-            lblSeasonStatusLoadInfo.Left = lblSeasonStatusLoad.Right - (int)(pnlLoad.Width * .01);
-            lblSeasonStatusLoadInfo.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, (int)(pnlLoad.Width * .7), lblSeasonStatusLoadInfo);
-            lblSeasonStatusLoadInfo.AutoSize = true;
-
-
-
-            lblCurrentGame.Left = 4;
-            fontSize = ((float)(screenFontSize * pnlLoad.Height * .05) / (96 / 12)) * (72 / 12);
-            lblCurrentGame.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Regular, (int)(pnlLoad.Width * .7), lblCurrentGame);
-            lblCurrentGame.AutoSize = true;
-            lblCurrentGameCount.Left = lblCurrentGame.Right - (int)(pnlLoad.Width * .02);
-            lblCurrentGameCount.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, (int)(pnlLoad.Width * .7), lblCurrentGameCount);
-            lblCurrentGameCount.AutoSize = true;
-            lblCurrentGame.Top = lblSeasonStatusLoad.Bottom;
-            lblCurrentGameCount.Top = lblSeasonStatusLoad.Bottom;
-
-            fontSize = ((float)(screenFontSize * pnlLoad.Height * .045) / (96 / 12)) * (72 / 12);
-            gpm.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Regular, (int)(pnlLoad.Width * .7), gpm);
-            gpm.AutoSize = true;
-            gpm.Top = lblCurrentGame.Bottom;
-            gpm.Left = 4;
-            fontSize = ((float)(screenFontSize * pnlLoad.Height * .05) / (96 / 12)) * (72 / 12);
-            gpmValue.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, (int)(pnlLoad.Width * .7), gpmValue);
-            gpmValue.AutoSize = true;
-            gpmValue.Top = gpm.Bottom;
-            gpmValue.Left = 4;
-            gpmValue.ForeColor = ThemeColor;
-
-
-
-            //Navbar
-            pnlNav.Height = this.Height / 20;
-            pnlNav.Dock = DockStyle.Top;
-            pnlNav.Parent = bgCourt;
-            pnlNav.Width = this.Width;
-            pnlNav.BorderStyle = BorderStyle.None;
-            pnlNav.Paint += (s, e) =>
-            {
-                Control p = (Control)s;
-                using (Pen pen = new Pen(Color.Black, 3))
-                {
-                    e.Graphics.DrawLine(pen, 0, p.Height - 1, p.Width, p.Height - 1);
-                }
-            };
-
-            //Welcome
-            pnlWelcome.Parent = bgCourt; //Set Panel parent as the image
-            int spacer = (int)(pnlWelcome.Height * .01);
+            AddControlsAfterConnection();
 
 
             //Scoreboard
@@ -824,113 +752,6 @@ namespace NBAdbToolbox
             pnlScoreboard.Top = pnlNav.Bottom;
             pnlScoreboard.Left = pnlDbUtil.Right;
 
-
-
-            //Set Label Properties ***************************************************************************
-
-            //To set font, i'll need the name, ideal size or pt, and its Style.
-            //In addition, i also need the parent element and the child or the element we're working with
-            lblStatus.Height = (int)(pnlWelcome.Height * .1);
-            lblStatus.Font = SetFontSize("Segoe UI", ((float)(lblStatus.Height) / (96 / 12)) * (72 / 12), FontStyle.Bold, (int)(pnlWelcome.Width * .7), lblStatus);
-            //Auto-size and center
-            CenterElement(pnlWelcome, lblStatus);
-
-
-
-
-
-            //Server label properties
-            lblServer.Left = 5;
-            lblServer.Top = lblStatus.Bottom;
-            lblServer.Height = (int)(pnlWelcome.Height * .067);
-            fontSize = ((float)((screenFontSize * pnlWelcome.Height * .05)) / (96 / 12)) * (72 / 12);
-            lblServer.AutoSize = true;
-            //lblServer.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, pnlWelcome, lblServer);
-
-            lblServer.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
-            lblServerName.Left = lblServer.Right - 10;
-            lblServerName.Height = (int)(pnlWelcome.Height * .067);
-            lblServerName.Top = lblServer.Top;
-            lblServerName.Height = lblServer.Height;
-            lblServerName.AutoSize = true;
-            lblServerName.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
-
-            //Database label Properties
-            lblDB.Left = 5;
-            lblDB.Top = lblServer.Bottom;
-            lblDB.Height = (int)(pnlWelcome.Height * .06);
-            lblDB.AutoSize = true;
-            fontSize = ((float)((screenFontSize * pnlWelcome.Height * .04)) / (96 / 12)) * (72 / 12);
-            lblDB.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
-            lblDbName.Left = lblDB.Right - 10;
-            lblDbName.Top = lblServer.Bottom;
-            lblDbName.AutoSize = true;
-            lblDbName.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
-            picDbStatus.Width = lblDB.Height;
-            picDbStatus.Height = lblDB.Height;
-            picDbStatus.SizeMode = PictureBoxSizeMode.Zoom;
-            picDbStatus.Top = lblDB.Top;
-            picDbStatus.Left = lblDbName.Right;
-
-            lblDbStat.Left = 5;
-            lblDbStat.Top = lblDB.Bottom;
-            lblDbStat.Height = (int)(pnlWelcome.Height * .067);
-            lblDbStat.AutoSize = true;
-            lblDbStat.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, (int)(pnlWelcome.Width * .7), lblDbStat);
-
-
-
-
-
-            fontSize = ((float)(screenFontSize * lblDB.Height) / (96 / 12)) * (72 / 12);
-            btnEdit.Font = SetFontSize("Segoe UI", (float)(fontSize * .67), FontStyle.Bold, (int)(pnlWelcome.Width * .7), btnEdit); //12F
-            CenterElement(pnlWelcome, btnEdit);
-            btnEdit.Top = lblDbStat.Bottom + spacer; //subject to change
-            btnEdit.TextAlign = ContentAlignment.BottomCenter;
-            btnEdit.AutoSize = true;
-
-
-
-
-
-
-
-            fontSize = ((float)(screenFontSize * lblServer.Height) / (96 / 12)) * (72 / 12) / 2;
-            if (!isConnected)
-            {
-                lblCStatus.Font = SetFontSize("Segoe UI", ((float)(lblServer.Height * .9) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, (int)(pnlWelcome.Width * .7), lblCStatus);
-            }
-            else //If we're connected, use normal sized font
-            {
-                lblCStatus.Font = SetFontSize("Segoe UI", ((float)(lblServer.Height) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, (int)(pnlWelcome.Width * .7), lblCStatus);
-            }
-            //lblCStatus.Height = lblServer.Height / 2;
-            picStatus.SizeMode = PictureBoxSizeMode.Zoom;
-            int topY = lblDB.Bottom + 20; //Vertical position            
-            //picStatus.Top = lblStatus.Top+ (int)(lblCStatus.Height / 10);
-            lblCStatus.AutoSize = true;
-            lblCStatus.Height = lblServer.Height / 2;
-            picStatus.Width = lblCStatus.Height;
-            picStatus.Height = lblCStatus.Height;
-            int totalWidth = picStatus.Width + lblCStatus.Width; //Measure combined width  
-            picStatus.Left = pnlWelcome.Width - totalWidth; //Position image on the left      
-            lblCStatus.Left = picStatus.Right - 2; //Position label on the right
-            pnlWelcome.Controls.SetChildIndex(picStatus, 1);
-
-            //Build Database Button
-            btnBuild.Text = "Build Database";
-            btnBuild.Font = SetFontSize("Segoe UI", (float)(fontSize * 1.3), FontStyle.Bold, (int)(pnlWelcome.Width * .7), btnBuild);
-            btnBuild.AutoSize = true;
-            CenterElement(pnlWelcome, btnBuild);
-            btnBuild.Top = btnEdit.Bottom + spacer; //subject to change
-            if (!isBuildEnabled)
-            {
-                btnBuild.Enabled = false;
-            }
-            else
-            {
-                btnBuild.Enabled = true;
-            }
 
             #endregion
             #region Edit Connection & Build DB
@@ -995,20 +816,6 @@ namespace NBAdbToolbox
 
 
             #region Database Overview
-            pnlDbOverview.Parent = pnlDbUtil;
-            pnlDbOverview.Width = pnlDbUtil.Width;
-            pnlDbOverview.Top = lblDbOverview.Top;
-            pnlDbOverview.Height = (int)(lblDbOverview.Height * 1.3);
-            pnlDbOverview.BorderStyle = BorderStyle.None;
-            pnlDbOverview.Paint += (s, e) =>
-            {
-                Control p = (Control)s;
-                using (Pen pen = new Pen(Color.White, 2))
-                {
-                    e.Graphics.DrawLine(pen, 0, p.Height - 1, p.Width, p.Height - 1);
-                }
-            };
-            pnlDbOverview.AutoScroll = true;
 
             DbOverviewClick(pnlDbOverview, lblDbOvExpand, pnlDbOverview);
             DbOverviewClick(lblDbOverview, lblDbOvExpand, pnlDbOverview);
@@ -1016,82 +823,7 @@ namespace NBAdbToolbox
             DbOverviewClick(lblDbOvName, lblDbOvExpand, pnlDbOverview);
             #endregion
 
-            string database = config?.Database ?? "";
-            ChangeLabel(ThemeColor, lblDbOvName, pnlDbUtil, new List<string> {
-                database,
-                "Bold",
-                (((float)(screenFontSize * pnlWelcome.Height * .05) / (96 / 12)) * (72 / 12)).ToString(),
-                ".",
-                "true",
-                lblDbOverview.Left.ToString(),
-                lblDbOverview.Top.ToString(),
-                ".",
-                "true",
-                ((int)(lblDbUtil.Height * .8)).ToString()
-            });
-            lblDbOvName.Font = SetFontSize("Segoe UI", (((float)(screenFontSize * pnlWelcome.Height * .05) / (96 / 12)) * (72 / 12)), FontStyle.Bold, 
-                (int)(screenFontSize * (lblDbOvExpand.Right - lblDbOverview.Right)), lblDbOvName);
-            lblDbOvName.Left = lblDbOverview.Right;
-            if (!dbConnection)
-            {
-                lblDbOvName.BackColor = Color.FromArgb(100, 0, 0, 0);
-            }
-            else
-            {
-                lblDbOvName.BackColor = Color.Transparent;
-            }
-            ChangeLabel(ThemeColor, lblDbOvExpand, pnlDbUtil, new List<string> {
-            "+",
-            "Bold",
-            (((float)(screenFontSize * pnlWelcome.Height * .05) / (96 / 12)) * (72 / 12)).ToString(),
-            ".",
-            "true",
-            ".",
-            lblDbOverview.Top.ToString(),
-            ThemeColor.ToString(),
-            "true",
-            ((int)(lblDbUtil.Height * .8)).ToString()
-            });
-            lblDbOvExpand.Left = (pnlDbUtil.Left + pnlDbUtil.Width - (lblDbOvExpand.Width + SystemInformation.VerticalScrollBarWidth));
-
-            ArrangeOverviewControls();
-
-
-
-            #region Settings area
-            lblSettings.Text = "Settings";
-            lblSettings.Top = btnBuild.Bottom + spacer; //subject to change
-            lblSettings.Font = SetFontSize("Segoe UI", (float)(fontSize), FontStyle.Bold, (int)(pnlWelcome.Width * .7), btnBuild);
-            lblSettings.AutoSize = true;
-            lblSettings.Left = (pnlWelcome.ClientSize.Width - lblSettings.Width) / 2;
-            picSettings.Width = lblSettings.Height;
-            picSettings.Height = lblSettings.Height;
-            picSettings.SizeMode = PictureBoxSizeMode.Zoom;
-            picSettings.Image = Image.FromFile(Path.Combine(projectRoot, @"Content\Images", "Settings.png"));
-            picSettings.Left = lblSettings.Right;
-            picSettings.Top = lblSettings.Top + lblSettings.Height / 6;
-            picSettings.BackColor = Color.FromArgb(0, 0, 0, 0);
-
-            pnlSettings.Top = lblSettings.Bottom + spacer;
-            pnlSettings.Width = pnlWelcome.Width;
-            pnlSettings.Height = pnlWelcome.Height - pnlSettings.Top;
-            pnlSettings.AutoScroll = true;
-
-
-
-
-
-            lblBrowseConfig.Font = SetFontSize("Segoe UI", (float)(fontSize * .9), FontStyle.Bold, (int)(pnlWelcome.Width * .7), lblBrowseConfig);
-            lblBrowseConfig.Top = 0;
-            lblBrowseConfig.Left = 0;
-            btnBrowseConfig.Font = SetFontSize("Segoe UI", (float)(fontSize * .8), FontStyle.Bold, (int)(pnlWelcome.Width * .7), btnBrowseConfig);
-            btnBrowseConfig.Width = btnEdit.Width / 2;
-            btnBrowseConfig.Top = 0;
-            lblBrowseConfig.Top = btnBrowseConfig.Top + (btnBrowseConfig.Height / 5);
-            lblBrowseConfig.AutoSize = true;
-            btnBrowseConfig.AutoSize = true;
-            btnBrowseConfig.Left = lblBrowseConfig.Right;
-            lblBrowseConfig.ForeColor = ThemeColor;
+            
 
             btnBrowseConfig.Click += (s, e) =>
             {
@@ -1147,18 +879,7 @@ namespace NBAdbToolbox
                 lblSettings.Focus();
             };
 
-            boxChangeConfig.DropDownStyle = ComboBoxStyle.DropDownList; //Makes it non-editable
-            boxChangeConfig.Font = SetFontSize("Segoe UI", (float)(fontSize * .7), FontStyle.Regular, (int)(pnlWelcome.Width * .7), boxChangeConfig);
-            boxChangeConfig.Top = btnBrowseConfig.Bottom + spacer;
-            boxChangeConfig.Width = (int)(btnEdit.Width * .7);
-
-            lblChangeConfig.Left = 0;
-            lblChangeConfig.Top = boxChangeConfig.Top;
-            lblChangeConfig.AutoSize = true;
-            lblChangeConfig.Font = SetFontSize("Segoe UI", (float)(fontSize * .9), FontStyle.Bold, (int)(pnlWelcome.Width * .7), lblChangeConfig);
-            lblChangeConfig.ForeColor = ThemeColor;
-            boxChangeConfig.Left = lblChangeConfig.Right;
-
+            
 
 
 
@@ -1208,19 +929,7 @@ namespace NBAdbToolbox
                 lblSettings.Focus();
             };
 
-            boxConfigFiles.DropDownStyle = ComboBoxStyle.DropDownList; //Makes it non-editable
-            boxConfigFiles.Font = SetFontSize("Segoe UI", (float)(fontSize * .7), FontStyle.Regular, (int)(pnlWelcome.Width * .7), boxConfigFiles);
-            boxConfigFiles.Top = boxChangeConfig.Bottom + spacer;
-            boxConfigFiles.Width = (int)(btnEdit.Width * .7);
-
-            lblConfigFiles.Left = 0;
-            lblConfigFiles.Top = boxConfigFiles.Top;
-            lblConfigFiles.AutoSize = true;
-            lblConfigFiles.Font = SetFontSize("Segoe UI", (float)(fontSize * .9), FontStyle.Bold, (int)(pnlWelcome.Width * .7), lblConfigFiles);
-            lblConfigFiles.ForeColor = ThemeColor;
-            boxConfigFiles.Left = lblConfigFiles.Right;
-
-
+            
 
 
 
@@ -1247,34 +956,7 @@ namespace NBAdbToolbox
             {
                 lblSettings.Focus();
             };
-            boxBackground.DropDownStyle = ComboBoxStyle.DropDownList; //Makes it non-editable
-            boxBackground.Font = SetFontSize("Segoe UI", (float)(fontSize * .7), FontStyle.Regular, (int)(pnlWelcome.Width * .7), boxBackground);
-            boxBackground.Top = boxConfigFiles.Bottom + spacer;
-            boxBackground.Width = (int)(btnEdit.Width * .4);
-
-            lblBackground.Left = 0;
-            lblBackground.Top = boxConfigFiles.Bottom + spacer;
-            lblBackground.AutoSize = true;
-            lblBackground.Font = SetFontSize("Segoe UI", (float)(fontSize * .9), FontStyle.Bold, (int)(pnlWelcome.Width * .7), lblBackground);
-            lblBackground.ForeColor = ThemeColor;
-            boxBackground.Left = lblBackground.Right;
-            boxBackground.SelectedItem = settings.BackgroundImage;
-
-
-
-            boxSoundOptions.DropDownStyle = ComboBoxStyle.DropDownList; //Makes it non-editable
-            boxSoundOptions.Font = SetFontSize("Segoe UI", (float)(fontSize * .7), FontStyle.Regular, (int)(pnlWelcome.Width * .7), boxSoundOptions);
-            boxSoundOptions.Top = boxBackground.Bottom + spacer;
-            boxSoundOptions.Width = (int)(btnEdit.Width * .4);
-
-            lblSound.Left = 0;
-            lblSound.Top = boxBackground.Bottom + spacer;
-            lblSound.AutoSize = true;
-            lblSound.Font = SetFontSize("Segoe UI", (float)(fontSize * .9), FontStyle.Bold, (int)(pnlWelcome.Width * .7), lblSound);
-            lblSound.ForeColor = ThemeColor;
-            boxSoundOptions.Left = lblSound.Right;
-            boxSoundOptions.SelectedItem = settings.Sound;
-
+            
 
 
 
@@ -1283,12 +965,10 @@ namespace NBAdbToolbox
 
             SettingsClick(lblSettings, picSettings, fontSize);
             SettingsClick(picSettings, picSettings, fontSize);
-            #endregion
 
 
 
 
-            lblDbOvName.FlatStyle = FlatStyle.Flat;
         }
 
         public Color ThemeColor = new Color();
@@ -1581,6 +1261,11 @@ namespace NBAdbToolbox
                 if (config.Alias != null)
                 {
                     lblServerName.Text = config.Alias;
+                    ToolTip tip = new ToolTip();
+                    tip.BackColor = SubThemeColor;
+                    tip.ForeColor = ThemeColor;
+                    tip.SetToolTip(lblServerName, config.Server);
+                    tip.IsBalloon = true;
                 }
                 else
                 {
@@ -2546,21 +2231,24 @@ namespace NBAdbToolbox
         #endregion
 
         #region Initializations
-        public void AddControls()
+        public void AddControls(string sender)
         {
-            screenWidth = Screen.PrimaryScreen.WorkingArea.Width;
-            screenHeight = Screen.PrimaryScreen.WorkingArea.Height;
-            this.Width = (int)(screenWidth / 1.5);
-            this.Height = (int)(screenHeight / 1.2);
-            aspectRatio = (float)((screenWidth / 1.5) / (screenHeight / 1.2));
-            this.MaximumSize = new Size((int)(screenWidth * 1.1), (int)(screenHeight * 1.1));
-            this.StartPosition = FormStartPosition.Manual;
-            this.Left = (screenWidth - this.Width) / 2;
-            this.Top = (screenHeight - this.Height) / 2;
-            this.FormBorderStyle = FormBorderStyle.FixedDialog;
-            this.MaximizeBox = true;
-            this.MinimizeBox = true;
-            this.ResizeEnd += FormResize;
+            if(sender == "Init")
+            {
+                screenWidth = Screen.PrimaryScreen.WorkingArea.Width;
+                screenHeight = Screen.PrimaryScreen.WorkingArea.Height;
+                this.Width = (int)(screenWidth / 1.5);
+                this.Height = (int)(screenHeight / 1.2);
+                aspectRatio = (float)((screenWidth / 1.5) / (screenHeight / 1.2));
+                this.MaximumSize = new Size((int)(screenWidth * 1.1), (int)(screenHeight * 1.1));
+                this.StartPosition = FormStartPosition.Manual;
+                this.Left = (screenWidth - this.Width) / 2;
+                this.Top = (screenHeight - this.Height) / 2;
+                this.FormBorderStyle = FormBorderStyle.FixedDialog;
+                this.MaximizeBox = true;
+                this.MinimizeBox = true;
+                this.ResizeEnd += FormResize;
+            }
             if (screenWidth >= 2240)
             {
                 screenFontSize = 1;
@@ -2692,6 +2380,345 @@ namespace NBAdbToolbox
         public void AddControlsAfterConnection()
         {
 
+
+
+            float fontSize = ((float)(screenFontSize * pnlWelcome.Height * .08) / (96 / 12)) * (72 / 12);
+
+            pnlDbUtil.Parent = bgCourt;
+
+
+            //Panel Formatting
+            pnlLoad.Top = pnlWelcome.Bottom;
+            pnlLoad.Left = pnlWelcome.Left;
+            pnlLoad.Width = pnlWelcome.Width;
+            pnlLoad.Height = pnlWelcome.Top;
+            pnlLoad.BackColor = Color.Transparent;
+            picLoad.Parent = pnlLoad;
+            pnlLoad.Parent = bgCourt;
+            picLoad.SizeMode = PictureBoxSizeMode.Zoom;
+            picLoad.Width = pnlLoad.Height;
+            picLoad.Height = pnlLoad.Height;
+            picLoad.Left = (pnlLoad.ClientSize.Width - picLoad.Width) / 2;
+            picLoad.BackColor = Color.Transparent;
+
+
+
+            lblDbUtil.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, (int)(pnlDbUtil.Width * .7), lblDbUtil);
+            lblDbUtil.AutoSize = true;
+            lblDbUtil.Left = (pnlDbUtil.Width - lblDbUtil.Width) / 2;
+
+
+
+            //lblSeasonStatusLoadInfo  
+            lblSeasonStatusLoad.Left = 0;
+            fontSize = ((float)(screenFontSize * pnlLoad.Height * .08) / (96 / 12)) * (72 / 12);
+            lblSeasonStatusLoad.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Regular, (int)(pnlLoad.Width * .7), lblSeasonStatusLoad);
+            lblSeasonStatusLoad.AutoSize = true;
+            lblSeasonStatusLoadInfo.Left = lblSeasonStatusLoad.Right - (int)(pnlLoad.Width * .01);
+            lblSeasonStatusLoadInfo.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, (int)(pnlLoad.Width * .7), lblSeasonStatusLoadInfo);
+            lblSeasonStatusLoadInfo.AutoSize = true;
+
+
+
+            lblCurrentGame.Left = 4;
+            fontSize = ((float)(screenFontSize * pnlLoad.Height * .05) / (96 / 12)) * (72 / 12);
+            lblCurrentGame.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Regular, (int)(pnlLoad.Width * .7), lblCurrentGame);
+            lblCurrentGame.AutoSize = true;
+            lblCurrentGameCount.Left = lblCurrentGame.Right - (int)(pnlLoad.Width * .02);
+            lblCurrentGameCount.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, (int)(pnlLoad.Width * .7), lblCurrentGameCount);
+            lblCurrentGameCount.AutoSize = true;
+            lblCurrentGame.Top = lblSeasonStatusLoad.Bottom;
+            lblCurrentGameCount.Top = lblSeasonStatusLoad.Bottom;
+
+            fontSize = ((float)(screenFontSize * pnlLoad.Height * .045) / (96 / 12)) * (72 / 12);
+            gpm.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Regular, (int)(pnlLoad.Width * .7), gpm);
+            gpm.AutoSize = true;
+            gpm.Top = lblCurrentGame.Bottom;
+            gpm.Left = 4;
+            fontSize = ((float)(screenFontSize * pnlLoad.Height * .05) / (96 / 12)) * (72 / 12);
+            gpmValue.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, (int)(pnlLoad.Width * .7), gpmValue);
+            gpmValue.AutoSize = true;
+            gpmValue.Top = gpm.Bottom;
+            gpmValue.Left = 4;
+            gpmValue.ForeColor = ThemeColor;
+
+
+            //Navbar
+            pnlNav.Height = this.Height / 20;
+            pnlNav.Dock = DockStyle.Top;
+            pnlNav.Parent = bgCourt;
+            pnlNav.Width = this.Width;
+            pnlNav.BorderStyle = BorderStyle.None;
+            pnlNav.Paint += (s, e) =>
+            {
+                Control p = (Control)s;
+                using (Pen pen = new Pen(Color.Black, 3))
+                {
+                    e.Graphics.DrawLine(pen, 0, p.Height - 1, p.Width, p.Height - 1);
+                }
+            };
+
+            //Welcome
+            pnlWelcome.Parent = bgCourt; //Set Panel parent as the image
+            int spacer = (int)(pnlWelcome.Height * .01);
+
+
+
+
+            //Set Label Properties ***************************************************************************
+
+            //To set font, i'll need the name, ideal size or pt, and its Style.
+            //In addition, i also need the parent element and the child or the element we're working with
+            lblStatus.Height = (int)(pnlWelcome.Height * .1);
+            lblStatus.Font = SetFontSize("Segoe UI", ((float)(lblStatus.Height) / (96 / 12)) * (72 / 12), FontStyle.Bold, (int)(pnlWelcome.Width * .7), lblStatus);
+            //Auto-size and center
+            CenterElement(pnlWelcome, lblStatus);
+
+
+
+
+
+            //Server label properties
+            lblServer.Left = 5;
+            lblServer.Top = lblStatus.Bottom;
+            lblServer.Height = (int)(pnlWelcome.Height * .067);
+            fontSize = ((float)((screenFontSize * pnlWelcome.Height * .05)) / (96 / 12)) * (72 / 12);
+            lblServer.AutoSize = true;
+            //lblServer.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, pnlWelcome, lblServer);
+
+            lblServer.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
+            lblServerName.Left = lblServer.Right - 10;
+            lblServerName.Height = (int)(pnlWelcome.Height * .067);
+            lblServerName.Top = lblServer.Top;
+            lblServerName.Height = lblServer.Height;
+            lblServerName.AutoSize = true;
+            lblServerName.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
+
+            //Database label Properties
+            lblDB.Left = 5;
+            lblDB.Top = lblServer.Bottom;
+            lblDB.Height = (int)(pnlWelcome.Height * .06);
+            lblDB.AutoSize = true;
+            fontSize = ((float)((screenFontSize * pnlWelcome.Height * .04)) / (96 / 12)) * (72 / 12);
+            lblDB.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
+            lblDbName.Left = lblDB.Right - 10;
+            lblDbName.Top = lblServer.Bottom;
+            lblDbName.AutoSize = true;
+            lblDbName.Font = new Font("Segoe UI", fontSize, FontStyle.Bold);
+            picDbStatus.Width = lblDB.Height;
+            picDbStatus.Height = lblDB.Height;
+            picDbStatus.SizeMode = PictureBoxSizeMode.Zoom;
+            picDbStatus.Top = lblDB.Top;
+            picDbStatus.Left = lblDbName.Right;
+
+            lblDbStat.Left = 5;
+            lblDbStat.Top = lblDB.Bottom;
+            lblDbStat.Height = (int)(pnlWelcome.Height * .067);
+            lblDbStat.AutoSize = true;
+            lblDbStat.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, (int)(pnlWelcome.Width * .7), lblDbStat);
+
+
+
+
+
+            fontSize = ((float)(screenFontSize * lblDB.Height) / (96 / 12)) * (72 / 12);
+            btnEdit.Font = SetFontSize("Segoe UI", (float)(fontSize * .67), FontStyle.Bold, (int)(pnlWelcome.Width * .7), btnEdit); //12F
+            CenterElement(pnlWelcome, btnEdit);
+            btnEdit.Top = lblDbStat.Bottom + spacer; //subject to change
+            btnEdit.TextAlign = ContentAlignment.BottomCenter;
+            btnEdit.AutoSize = true;
+
+
+
+
+
+
+
+            fontSize = ((float)(screenFontSize * lblServer.Height) / (96 / 12)) * (72 / 12) / 2;
+            if (!isConnected)
+            {
+                lblCStatus.Font = SetFontSize("Segoe UI", ((float)(lblServer.Height * .9) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, (int)(pnlWelcome.Width * .7), lblCStatus);
+            }
+            else //If we're connected, use normal sized font
+            {
+                lblCStatus.Font = SetFontSize("Segoe UI", ((float)(lblServer.Height) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, (int)(pnlWelcome.Width * .7), lblCStatus);
+            }
+            //lblCStatus.Height = lblServer.Height / 2;
+            picStatus.SizeMode = PictureBoxSizeMode.Zoom;
+            int topY = lblDB.Bottom + 20; //Vertical position            
+            //picStatus.Top = lblStatus.Top+ (int)(lblCStatus.Height / 10);
+            lblCStatus.AutoSize = true;
+            lblCStatus.Height = lblServer.Height / 2;
+            picStatus.Width = lblCStatus.Height;
+            picStatus.Height = lblCStatus.Height;
+            int totalWidth = picStatus.Width + lblCStatus.Width; //Measure combined width  
+            picStatus.Left = pnlWelcome.Width - totalWidth; //Position image on the left      
+            lblCStatus.Left = picStatus.Right - 2; //Position label on the right
+            pnlWelcome.Controls.SetChildIndex(picStatus, 1);
+
+            //Build Database Button
+            btnBuild.Text = "Build Database";
+            btnBuild.Font = SetFontSize("Segoe UI", (float)(fontSize * 1.3), FontStyle.Bold, (int)(pnlWelcome.Width * .7), btnBuild);
+            btnBuild.AutoSize = true;
+            CenterElement(pnlWelcome, btnBuild);
+            btnBuild.Top = btnEdit.Bottom + spacer; //subject to change
+            if (!isBuildEnabled)
+            {
+                btnBuild.Enabled = false;
+            }
+            else
+            {
+                btnBuild.Enabled = true;
+            }
+
+
+
+
+            pnlDbOverview.Parent = pnlDbUtil;
+            pnlDbOverview.Width = pnlDbUtil.Width;
+            pnlDbOverview.Top = lblDbOverview.Top;
+            pnlDbOverview.Height = (int)(lblDbOverview.Height * 1.3);
+            pnlDbOverview.BorderStyle = BorderStyle.None;
+            pnlDbOverview.Paint += (s, e) =>
+            {
+                Control p = (Control)s;
+                using (Pen pen = new Pen(Color.White, 2))
+                {
+                    e.Graphics.DrawLine(pen, 0, p.Height - 1, p.Width, p.Height - 1);
+                }
+            };
+            pnlDbOverview.AutoScroll = true;
+
+            string database = config?.Database ?? "";
+            ChangeLabel(ThemeColor, lblDbOvName, pnlDbUtil, new List<string> {
+                database,
+                "Bold",
+                (((float)(screenFontSize * pnlWelcome.Height * .05) / (96 / 12)) * (72 / 12)).ToString(),
+                ".",
+                "true",
+                lblDbOverview.Left.ToString(),
+                lblDbOverview.Top.ToString(),
+                ".",
+                "true",
+                ((int)(lblDbUtil.Height * .8)).ToString()
+            });
+            lblDbOvName.Font = SetFontSize("Segoe UI", (((float)(screenFontSize * pnlWelcome.Height * .05) / (96 / 12)) * (72 / 12)), FontStyle.Bold,
+                (int)(screenFontSize * (lblDbOvExpand.Right - lblDbOverview.Right)), lblDbOvName);
+            lblDbOvName.Left = lblDbOverview.Right;
+            if (!dbConnection)
+            {
+                lblDbOvName.BackColor = Color.FromArgb(100, 0, 0, 0);
+            }
+            else
+            {
+                lblDbOvName.BackColor = Color.Transparent;
+            }
+            ChangeLabel(ThemeColor, lblDbOvExpand, pnlDbUtil, new List<string> {
+            "+",
+            "Bold",
+            (((float)(screenFontSize * pnlWelcome.Height * .05) / (96 / 12)) * (72 / 12)).ToString(),
+            ".",
+            "true",
+            ".",
+            lblDbOverview.Top.ToString(),
+            ThemeColor.ToString(),
+            "true",
+            ((int)(lblDbUtil.Height * .8)).ToString()
+            });
+            lblDbOvExpand.Left = (pnlDbUtil.Left + pnlDbUtil.Width - (lblDbOvExpand.Width + SystemInformation.VerticalScrollBarWidth));
+
+            ArrangeOverviewControls();
+
+
+
+            lblSettings.Text = "Settings";
+            lblSettings.Top = btnBuild.Bottom + spacer; //subject to change
+            lblSettings.Font = SetFontSize("Segoe UI", (float)(fontSize), FontStyle.Bold, (int)(pnlWelcome.Width * .7), btnBuild);
+            lblSettings.AutoSize = true;
+            lblSettings.Left = (pnlWelcome.ClientSize.Width - lblSettings.Width) / 2;
+            picSettings.Width = lblSettings.Height;
+            picSettings.Height = lblSettings.Height;
+            picSettings.SizeMode = PictureBoxSizeMode.Zoom;
+            picSettings.Image = Image.FromFile(Path.Combine(projectRoot, @"Content\Images", "Settings.png"));
+            picSettings.Left = lblSettings.Right;
+            picSettings.Top = lblSettings.Top + lblSettings.Height / 6;
+            picSettings.BackColor = Color.FromArgb(0, 0, 0, 0);
+
+            pnlSettings.Top = lblSettings.Bottom + spacer;
+            pnlSettings.Width = pnlWelcome.Width;
+            pnlSettings.Height = pnlWelcome.Height - pnlSettings.Top;
+            pnlSettings.AutoScroll = true;
+
+
+
+
+
+            lblBrowseConfig.Font = SetFontSize("Segoe UI", (float)(fontSize * .9), FontStyle.Bold, (int)(pnlWelcome.Width * .7), lblBrowseConfig);
+            lblBrowseConfig.Top = 0;
+            lblBrowseConfig.Left = 0;
+            btnBrowseConfig.Font = SetFontSize("Segoe UI", (float)(fontSize * .8), FontStyle.Bold, (int)(pnlWelcome.Width * .7), btnBrowseConfig);
+            btnBrowseConfig.Width = btnEdit.Width / 2;
+            btnBrowseConfig.Top = 0;
+            lblBrowseConfig.Top = btnBrowseConfig.Top + (btnBrowseConfig.Height / 5);
+            lblBrowseConfig.AutoSize = true;
+            btnBrowseConfig.AutoSize = true;
+            btnBrowseConfig.Left = lblBrowseConfig.Right;
+            lblBrowseConfig.ForeColor = ThemeColor;
+
+
+            boxChangeConfig.DropDownStyle = ComboBoxStyle.DropDownList; //Makes it non-editable
+            boxChangeConfig.Font = SetFontSize("Segoe UI", (float)(fontSize * .7), FontStyle.Regular, (int)(pnlWelcome.Width * .7), boxChangeConfig);
+            boxChangeConfig.Top = btnBrowseConfig.Bottom + spacer;
+            boxChangeConfig.Width = (int)(btnEdit.Width * .7);
+
+            lblChangeConfig.Left = 0;
+            lblChangeConfig.Top = boxChangeConfig.Top;
+            lblChangeConfig.AutoSize = true;
+            lblChangeConfig.Font = SetFontSize("Segoe UI", (float)(fontSize * .9), FontStyle.Bold, (int)(pnlWelcome.Width * .7), lblChangeConfig);
+            lblChangeConfig.ForeColor = ThemeColor;
+            boxChangeConfig.Left = lblChangeConfig.Right;
+
+            boxConfigFiles.DropDownStyle = ComboBoxStyle.DropDownList; //Makes it non-editable
+            boxConfigFiles.Font = SetFontSize("Segoe UI", (float)(fontSize * .7), FontStyle.Regular, (int)(pnlWelcome.Width * .7), boxConfigFiles);
+            boxConfigFiles.Top = boxChangeConfig.Bottom + spacer;
+            boxConfigFiles.Width = (int)(btnEdit.Width * .7);
+
+            lblConfigFiles.Left = 0;
+            lblConfigFiles.Top = boxConfigFiles.Top;
+            lblConfigFiles.AutoSize = true;
+            lblConfigFiles.Font = SetFontSize("Segoe UI", (float)(fontSize * .9), FontStyle.Bold, (int)(pnlWelcome.Width * .7), lblConfigFiles);
+            lblConfigFiles.ForeColor = ThemeColor;
+            boxConfigFiles.Left = lblConfigFiles.Right;
+
+            boxBackground.DropDownStyle = ComboBoxStyle.DropDownList; //Makes it non-editable
+            boxBackground.Font = SetFontSize("Segoe UI", (float)(fontSize * .7), FontStyle.Regular, (int)(pnlWelcome.Width * .7), boxBackground);
+            boxBackground.Top = boxConfigFiles.Bottom + spacer;
+            boxBackground.Width = (int)(btnEdit.Width * .4);
+
+            lblBackground.Left = 0;
+            lblBackground.Top = boxConfigFiles.Bottom + spacer;
+            lblBackground.AutoSize = true;
+            lblBackground.Font = SetFontSize("Segoe UI", (float)(fontSize * .9), FontStyle.Bold, (int)(pnlWelcome.Width * .7), lblBackground);
+            lblBackground.ForeColor = ThemeColor;
+            boxBackground.Left = lblBackground.Right;
+            boxBackground.SelectedItem = settings.BackgroundImage;
+
+
+
+            boxSoundOptions.DropDownStyle = ComboBoxStyle.DropDownList; //Makes it non-editable
+            boxSoundOptions.Font = SetFontSize("Segoe UI", (float)(fontSize * .7), FontStyle.Regular, (int)(pnlWelcome.Width * .7), boxSoundOptions);
+            boxSoundOptions.Top = boxBackground.Bottom + spacer;
+            boxSoundOptions.Width = (int)(btnEdit.Width * .4);
+
+            lblSound.Left = 0;
+            lblSound.Top = boxBackground.Bottom + spacer;
+            lblSound.AutoSize = true;
+            lblSound.Font = SetFontSize("Segoe UI", (float)(fontSize * .9), FontStyle.Bold, (int)(pnlWelcome.Width * .7), lblSound);
+            lblSound.ForeColor = ThemeColor;
+            boxSoundOptions.Left = lblSound.Right;
+            boxSoundOptions.SelectedItem = settings.Sound;
+
+            lblDbOvName.FlatStyle = FlatStyle.Flat;
         }
 
         public void ArrangeOverviewControls()
@@ -2922,6 +2949,8 @@ namespace NBAdbToolbox
                 // Height is too large for the ratio, adjust it
                 this.Height = (int)(this.Width / aspectRatio);
             }
+            AddControls("Resize");
+            AddControlsAfterConnection();
 
             isResizing = false;
         }
@@ -3141,7 +3170,6 @@ namespace NBAdbToolbox
                     growShrink.Text = "+";
                     dbOverviewOpened = false;
                     DbOverviewVisibility(false, "Click Close");
-                    parent.Height = (int)(lblDbOverview.Height * 1.3);
                 }
                 else
                 {
@@ -3164,7 +3192,6 @@ namespace NBAdbToolbox
                     growShrink.Text = "-";
                     dbOverviewOpened = true;
                     DbOverviewVisibility(true, "Click Open");
-                    parent.Height = (int)(pnlDbUtil.Height / 2);
                 }
 
             };
@@ -3210,7 +3237,7 @@ namespace NBAdbToolbox
             else
             {
                 dbOverviewOpened = true;
-                pnlDbOverview.Height = (int)(pnlDbUtil.Height / 2);
+                //pnlDbOverview.Height = (int)(pnlDbUtil.Height / 2);
                 lblDbOptions.Top = pnlDbOverview.Bottom;
                 lblDbSelectSeason.Top = lblDbOptions.Bottom;
                 listSeasons.Top = lblDbSelectSeason.Bottom;
@@ -3240,6 +3267,22 @@ namespace NBAdbToolbox
 
             BuildOverview();
             int test = lblEmpty.Bottom;
+            if (vis && lblUnpopulated.Bottom + pnlDbOverview.Top <= pnlDbUtil.Height / 2)
+            {
+                pnlDbOverview.Height = lblUnpopulated.Bottom + pnlDbOverview.Top;
+                lblDbOptions.Top = pnlDbOverview.Bottom;
+                lblDbSelectSeason.Top = lblDbOptions.Bottom;
+                listSeasons.Top = lblDbSelectSeason.Bottom;
+                btnPopulate.Top = listSeasons.Bottom;
+            }
+            else if (vis)
+            {
+                pnlDbOverview.Height = (int)(pnlDbUtil.Height / 2);
+                lblDbOptions.Top = pnlDbOverview.Bottom;
+                lblDbSelectSeason.Top = lblDbOptions.Bottom;
+                listSeasons.Top = lblDbSelectSeason.Bottom;
+                btnPopulate.Top = listSeasons.Bottom;
+            }
         }
         private void BuildOverview()
         {
@@ -3434,13 +3477,17 @@ namespace NBAdbToolbox
                 seasonData.Item2.PlayByPlay,
                 seasonData.Item2.Games
             };
+            string[] textValues =
+            {
+                "Games", "Teams", "Arenas", "Players", "Officials", "Games", "Games", "Games"
+            };
 
             //create labels for each data point
             for (int i = 0; i < Math.Min(dataValues.Length, columnPositions.Count - 1); i++)
             {
                 string labelKey = $"data_{year}_{i}";
                 Label dataLabel = GetOrCreateDataLabel(labelKey, fontSize * 0.6f);
-                dataLabel.Text = dataValues[i].ToString();
+                dataLabel.Text = dataValues[i].ToString() + " " + textValues[i];
                 dataLabel.AutoSize = true;
                 dataLabel.Left = columnPositions[i]; //center under column
                 dataLabel.Top = rowPosition + (int)(dataLabel.Height * .4);
@@ -3562,6 +3609,7 @@ namespace NBAdbToolbox
 
         public void SettingsClick(Control control, PictureBox picture, float fontSize)
         {
+            fontSize = ((float)(screenFontSize * lblServer.Height) / (96 / 12)) * (72 / 12) / 2;
             control.Click += (s, e) =>
             {
                 if (lblSettings.Focused)
@@ -3584,7 +3632,7 @@ namespace NBAdbToolbox
                         picture.Image.RotateFlip(RotateFlipType.RotateNoneFlipY);
                         picture.Refresh();
                     }
-                    lblSettings.Font = SetFontSize("Segoe UI", (float)(fontSize * 1.05), FontStyle.Bold | FontStyle.Underline, (int)(pnlWelcome.Width * .7), lblSettings);
+                    lblSettings.Font = SetFontSize("Segoe UI", (float)(fontSize * 1.1), FontStyle.Bold | FontStyle.Underline, (int)(pnlWelcome.Width * .73), lblSettings);
                     lblSettings.Left = (pnlWelcome.ClientSize.Width - lblSettings.Width) / 2;
                     SettingsVisibility(true);
                 }
