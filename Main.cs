@@ -3688,7 +3688,6 @@ namespace NBAdbToolbox
                     }
                 }
             }
-            CenterElement(pnlDbUtil, lblDbOptions);
         }
         public Stopwatch stopwatchDelete = new Stopwatch();
         public void AlterDeleteExisting()
