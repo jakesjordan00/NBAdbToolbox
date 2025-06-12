@@ -410,10 +410,10 @@ where type_desc = 'USER_TABLE'
 create procedure Seasons
 as
 select s.SeasonID, s.Games + s.PlayoffGames Games, case when s.HistoricLoaded = 1 or s.CurrentLoaded = 1 then 1 else 0 end Loaded
-	 , (select COUNT(distinct TeamID) from Team t where s.SeasonID = t.SeasonID) Teams
-	 , (select COUNT(distinct ArenaID) from Arena a where s.SeasonID = a.SeasonID) Arenas
-	 , (select COUNT(distinct PlayerID) from Player p where s.SeasonID = p.SeasonID) Players
-	 , (select COUNT(distinct OfficialID) from Official o where s.SeasonID = o.SeasonID) Officials
+	 , (select COUNT(distinct TeamID) from Team t where s.SeasonID = t.SeasonID) Team
+	 , (select COUNT(distinct ArenaID) from Arena a where s.SeasonID = a.SeasonID) Arena
+	 , (select COUNT(distinct PlayerID) from Player p where s.SeasonID = p.SeasonID) Player
+	 , (select COUNT(distinct OfficialID) from Official o where s.SeasonID = o.SeasonID) Official
      , COUNT(distinct g.GameID) Game
 	 , (select COUNT(distinct pb.GameID) from PlayerBox pb where s.SeasonID = pb.SeasonID) PlayerBox
 	 , (select COUNT(distinct Tb.GameID) from TeamBox Tb where s.SeasonID = Tb.SeasonID) TeamBox
