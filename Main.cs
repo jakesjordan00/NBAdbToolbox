@@ -1601,7 +1601,7 @@ namespace NBAdbToolbox
             picStatus.Image = Image.FromFile(imagePath);
             if (!Directory.Exists(settings.ConfigPath))
             {
-                settings.ConfigPath = Path.Combine(projectRoot, @"Content\Configuration", "settings.json");
+                settings.ConfigPath = Path.Combine(projectRoot, @"Content\Configuration");
             }
             UIController("NoConnection");
 
