@@ -966,6 +966,10 @@ namespace NBAdbToolbox
                         Password = popup.Password
                     };
                     defaultConfig = false;
+                    if (configPath == "" || popup.DefaultDb == true)
+                    {
+
+                    }
                     //configPath = Path.Combine(settings.ConfigPath, 
                     InitializeDbConfig("btnEdit");
                     RefreshDefaultConfigPath("Edit");
@@ -1523,7 +1527,28 @@ namespace NBAdbToolbox
         {
             if (!File.Exists(configPath) || defaultConfig) //If our file doesnt exist
             {
-                NoConnection();
+                if(sender == "btnEdit")
+                {
+                    configName = "";
+                    string db = "";
+                    if (config.Database != null)
+                    {
+                        db = " - " + config.Database;
+                    }
+                    if (config.Alias != null)
+                    {
+                        configName = config.Alias + db;
+                    }
+                    else
+                    {
+                        configName = config.Server + db;
+                    }
+                    WriteConfig("btnEdit");
+                }
+                else
+                {
+                    NoConnection();
+                }
             }
             else if (File.Exists(configPath)) //If our file does exist
             {
