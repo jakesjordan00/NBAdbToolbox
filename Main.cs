@@ -310,7 +310,7 @@ namespace NBAdbToolbox
             (2023, 1318),
             (2024, 1230)
         };
-        public HashSet<(int SeasonID, (int Games, int Loaded, int Teams, int Arenas, int Players, int Officials, int Game, int PlayerBox, int TeamBox, int PlayByPlay))> seasonInfo
+        public HashSet<(int SeasonID, (int Games, int Loaded, int Team, int Arena, int Player, int Official, int Game, int PlayerBox, int TeamBox, int PlayByPlay))> seasonInfo
             = new HashSet<(int, (int, int, int, int, int, int, int, int, int, int))>();
 
 
@@ -725,6 +725,11 @@ namespace NBAdbToolbox
                             CenterElement(pnlDbUtil, lblDbOptions);
                         }));
                         await Task.Run(() => GetSeasonInfo());
+                        lblDbOptions.Invoke((MethodInvoker)(() =>
+                        {
+                            lblDbOptions.Text = "Options";
+                            CenterElement(pnlDbUtil, lblDbOptions);
+                        }));
                         dbOverviewFirstOpen = false;
                         DbOverviewVisibility(dbOverviewOpened, "Populate");
                     }
@@ -1122,6 +1127,11 @@ namespace NBAdbToolbox
                             CenterElement(pnlDbUtil, lblDbOptions);
                         }));
                         await Task.Run(() => GetSeasonInfo());
+                        lblDbOptions.Invoke((MethodInvoker)(() =>
+                        {
+                            lblDbOptions.Text = "Options";
+                            CenterElement(pnlDbUtil, lblDbOptions);
+                        }));
                         dbOverviewFirstOpen = false;
                         DbOverviewVisibility(dbOverviewOpened, "Change");
                     }
@@ -1177,6 +1187,11 @@ namespace NBAdbToolbox
                             CenterElement(pnlDbUtil, lblDbOptions);
                         }));
                         await Task.Run(() => GetSeasonInfo());
+                        lblDbOptions.Invoke((MethodInvoker)(() =>
+                        {
+                            lblDbOptions.Text = "Options";
+                            CenterElement(pnlDbUtil, lblDbOptions);
+                        }));
                         dbOverviewFirstOpen = false;
                         DbOverviewVisibility(dbOverviewOpened, "Change");
                     }
@@ -3138,6 +3153,11 @@ namespace NBAdbToolbox
                             CenterElement(pnlDbUtil, lblDbOptions);
                         }));
                         await Task.Run(() => GetSeasonInfo());
+                        lblDbOptions.Invoke((MethodInvoker)(() =>
+                        {
+                            lblDbOptions.Text = "Options";
+                            CenterElement(pnlDbUtil, lblDbOptions);
+                        }));
                         dbOverviewFirstOpen = false;
                     }
                     parent.Focus();
@@ -3305,6 +3325,14 @@ namespace NBAdbToolbox
                 Label yearLabel = GetOrCreateYearLabel(year, fontSize);
                 yearLabel.Top = topYear;
                 yearLabel.Visible = true;
+                if(rowPositions.Count == 0)
+                {
+                    AddDataLabelsForYear(year, topYear, columnPositions, tableHeaders[0].Bottom, fontSize);
+                }
+                else
+                {
+                    AddDataLabelsForYear(year, topYear, columnPositions, rowPositions[rowPositions.Count - 1], fontSize);
+                }
                 rowPositions.Add(topYear + yearLabel.Height);
                 topYear += yearLabel.Height + (int)(yearLabel.Height * .25);
                 singleLineHeight = yearLabel.Height + (int)(yearLabel.Height * .25);
@@ -3388,6 +3416,64 @@ namespace NBAdbToolbox
             }
             return yearLabels[year];
         }
+        private void AddDataLabelsForYear(int year, int topYear, List<int> columnPositions, int rowPosition, float fontSize)
+        {
+            //find the season data for this year
+            var seasonData = seasonInfo.FirstOrDefault(s => s.SeasonID == year);
+            if (seasonData.Item2.Loaded == 0) return; //no data found
+
+            //data values in order: Game, Team, Arena, Player, Official, TeamBox, PlayerBox, PlayByPlay
+            int[] dataValues = {
+                seasonData.Item2.Game,
+                seasonData.Item2.Team,
+                seasonData.Item2.Arena,
+                seasonData.Item2.Player,
+                seasonData.Item2.Official,
+                seasonData.Item2.PlayerBox,
+                seasonData.Item2.TeamBox,
+                seasonData.Item2.PlayByPlay,
+                seasonData.Item2.Games
+            };
+
+            //create labels for each data point
+            for (int i = 0; i < Math.Min(dataValues.Length, columnPositions.Count - 1); i++)
+            {
+                string labelKey = $"data_{year}_{i}";
+                Label dataLabel = GetOrCreateDataLabel(labelKey, fontSize * 0.6f);
+                dataLabel.Text = dataValues[i].ToString();
+                dataLabel.AutoSize = true;
+                dataLabel.Left = columnPositions[i]; //center under column
+                dataLabel.Top = rowPosition + (int)(dataLabel.Height * .4);
+                dataLabel.Visible = true;
+                if(i == 0 || i > 4)
+                {
+                    if (dataValues[i] != dataValues[8])
+                    {
+                        dataLabel.ForeColor = WarningColor;
+                    }
+                }
+            }
+        }
+
+        private Dictionary<string, Label> dataLabels = new Dictionary<string, Label>();
+
+        private Label GetOrCreateDataLabel(string key, float fontSize)
+        {
+            if (!dataLabels.ContainsKey(key))
+            {
+                Label dataLabel = new Label
+                {
+                    Tag = "Data",
+                    ForeColor = ThemeColor,
+                    BackColor = Color.Transparent
+                };
+                dataLabel.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Regular, (int)(pnlDbUtil.Width * .7), dataLabel);
+                dataLabels[key] = dataLabel;
+                pnlDbOverview.Controls.Add(dataLabel);
+            }
+            return dataLabels[key];
+        }
+
         private void CreateGridLines(List<int> columnPositions, List<int> rowPositions, int topTable)
         {
             ClearGridLines();
@@ -3457,6 +3543,12 @@ namespace NBAdbToolbox
             foreach (Label yearLabel in yearLabels.Values)
             {
                 yearLabel.Visible = false;
+            }
+
+            //hide data labels
+            foreach (Label dataLabel in dataLabels.Values)
+            {
+                dataLabel.Visible = false;
             }
 
             if (lblUnpopulated != null)
@@ -3542,14 +3634,12 @@ namespace NBAdbToolbox
                     {
                         while (sdr.Read())
                         {
-                            listSeasons.Items.Add(sdr["SeasonID"].ToString());
                             seasonInfo.Add((sdr.GetInt32(0), (sdr.GetInt32(1), sdr.GetInt32(2), sdr.GetInt32(3), sdr.GetInt32(4), sdr.GetInt32(5), sdr.GetInt32(6), sdr.GetInt32(7)
                                 , sdr.GetInt32(8), sdr.GetInt32(9), sdr.GetInt32(10))));
                         }
                     }
                 }
             }
-            lblDbOptions.Text = "Options";
             CenterElement(pnlDbUtil, lblDbOptions);
         }
         public Stopwatch stopwatchDelete = new Stopwatch();
