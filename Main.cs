@@ -2247,7 +2247,6 @@ namespace NBAdbToolbox
                 this.FormBorderStyle = FormBorderStyle.FixedDialog;
                 this.MaximizeBox = true;
                 this.MinimizeBox = true;
-                this.ResizeEnd += FormResize;
             }
             if (screenWidth >= 2240)
             {
@@ -2923,37 +2922,7 @@ namespace NBAdbToolbox
         }
 
         public HashSet<(int GameID, string builder, double mb, long len)> gameBytes = new HashSet<(int, string builder, double, long)>();
-        private void FormResize(object sender, EventArgs e)
-        {
-            //Maintain aspect ratio when user finishes resizing
-            MaintainAspectRatio();
-        }
-        private void MaintainAspectRatio()
-        {
-            // Prevent recursive calls
-            if (isResizing)
-                return;
-
-            isResizing = true;
-
-            // Determine which dimension changed last and adjust the other
-            float currentRatio = (float)this.Width / this.Height;
-
-            if (currentRatio > aspectRatio)
-            {
-                // Width is too large for the ratio, adjust it
-                this.Width = (int)(this.Height * aspectRatio);
-            }
-            else if (currentRatio < aspectRatio)
-            {
-                // Height is too large for the ratio, adjust it
-                this.Height = (int)(this.Width / aspectRatio);
-            }
-            AddControls("Resize");
-            AddControlsAfterConnection();
-
-            isResizing = false;
-        }
+        
         public void ChangeLabel(Color color, Label label, Control parent, List<string> structions)
         {
             float fontSize = 0;
