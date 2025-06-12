@@ -1404,13 +1404,17 @@ namespace NBAdbToolbox
 
 
         #region Settings
-        private bool ConfigChanged()
+        private bool ConfigChanged(string sender)
         {
-            if (configControl == null)
+            if (sender == "btnEdit")
+            {
+                return true;
+            }
+            else if (configControl == null)
             {
                 return false;
             }
-            else
+            else 
             {
                 return config.Server != configControl.Server ||
                        config.Alias != configControl.Alias ||
@@ -1543,7 +1547,7 @@ namespace NBAdbToolbox
                     {
                         configName = config.Server + db;
                     }
-                    WriteConfig("btnEdit");
+                    WriteConfig(sender);
                 }
                 else
                 {
@@ -1750,7 +1754,7 @@ namespace NBAdbToolbox
             {
                 WriteSettings();
             }
-            if (ConfigChanged() || settings.ConfigPath != settingsControl.ConfigPath) //If the config file has changed, write update to file
+            if (ConfigChanged(sender) || settings.ConfigPath != settingsControl.ConfigPath) //If the config file has changed, write update to file
             {
                 configPath = Path.Combine(settings.ConfigPath, configName + ".json");
                 File.WriteAllText(Path.Combine(settings.ConfigPath, configName + ".json"), JsonConvert.SerializeObject(config, Formatting.Indented));
@@ -1970,7 +1974,7 @@ namespace NBAdbToolbox
             dbConnection = TestConnectionString(connectionString);
             if (dbConnection)
             {
-                if (ConfigChanged()) //If the config file has changed, write update to file
+                if (ConfigChanged("dbConnection")) //If the config file has changed, write update to file
                 {
                     WriteConfig("FirstDbConTest");
                 }
@@ -2029,7 +2033,7 @@ namespace NBAdbToolbox
                     }
                     conn.Close();
                 }
-                if (ConfigChanged()) //If the config file has changed, write update to file
+                if (ConfigChanged("SeasonInsert")) //If the config file has changed, write update to file
                 {
                     WriteConfig("After SeasonInsert");
                 }
