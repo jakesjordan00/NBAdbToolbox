@@ -313,6 +313,39 @@ namespace NBAdbToolbox
         public HashSet<(int SeasonID, (int Games, int Loaded, int Team, int Arena, int Player, int Official, int Game, int PlayerBox, int TeamBox, int PlayByPlay))> seasonInfo
             = new HashSet<(int, (int, int, int, int, int, int, int, int, int, int))>();
 
+        public HashSet<(int SeasonID, (int Games, int Loaded, int Team, int Arena, int Player, int Official, int Game, int PlayerBox, int TeamBox, int PlayByPlay))> seasonControl
+            = new HashSet<(int, (int, int, int, int, int, int, int, int, int, int))>()
+            {
+                (2024, (1313, 1, 30, 36, 587, 80, 1313, 1313, 1313, 1313)),
+                (2023, (1319, 1, 30, 34, 595, 80, 1319, 1319, 1319, 1319)),
+                (2022, (1320, 1, 30, 35, 554, 82, 1320, 1320, 1320, 1320)),
+                (2021, (1323, 1, 30, 30, 633, 84, 1323, 1323, 1323, 1323)),
+                (2020, (1171, 1, 30, 30, 550, 79, 1171, 1171, 1171, 1171)),
+                (2019, (1142, 1, 30, 34, 549, 74, 1142, 1142, 1142, 1142)),
+                (2018, (1312, 1, 30, 32, 557, 68, 1312, 1312, 1312, 1312)),
+                (2017, (1311, 1, 30, 32, 559, 71, 1311, 1311, 1311, 1311)),
+                (2016, (1309, 1, 30, 31, 493, 67, 1309, 1309, 1309, 1309)),
+                (2015, (1316, 1, 30, 31, 484, 66, 1316, 1316, 1316, 1316)),
+                (2014, (1311, 1, 30, 31, 503, 67, 1311, 1311, 1311, 1311)),
+                (2013, (1319, 1, 30, 30, 495, 66, 1319, 1319, 1319, 1319)),
+                (2012, (1314, 1, 30, 30, 485, 68, 1314, 1314, 1314, 1314)),
+                (2011, (1074, 1, 30, 29, 483, 66, 1074, 1074, 1074, 1074)),
+                (2010, (1311, 1, 30, 30, 469, 64, 1311, 1311, 1311, 1311)),
+                (2009, (1312, 1, 30, 30, 469, 66, 1312, 1312, 1312, 1312)),
+                (2008, (1315, 1, 30, 30, 461, 61, 1315, 1315, 1315, 1315)),
+                (2007, (1316, 1, 30, 30, 469, 58, 1316, 1316, 1316, 1315)),
+                (2006, (1309, 1, 30, 31, 471, 60, 1309, 1309, 1309, 1308)),
+                (2005, (1319, 1, 30, 32, 470, 63, 1319, 1319, 1319, 1319)),
+                (2004, (1314, 1, 30, 29, 469, 62, 1314, 1314, 1314, 1314)),
+                (2003, (1271, 1, 29, 29, 548, 60, 1271, 1271, 1271, 1270)),
+                (2002, (1277, 1, 29, 29, 620, 39, 1277, 1277, 1277, 1277)),
+                (2001, (1260, 1, 29, 28, 650, 56, 1260, 1260, 1260, 1260)),
+                (2000, (1260, 1, 29, 29, 652, 51, 1260, 1260, 1260, 1260)),
+                (1999, (1264, 1, 29, 32, 646, 37, 1264, 1264, 1264, 1264)),
+                (1998, (791, 1, 29, 33, 633, 37, 791, 791, 791, 790)),
+                (1997, (1260, 1, 29, 34, 608, 40, 1260, 1260, 1260, 1260)),
+                (1996, (1261, 1, 29, 33, 715, 40, 1261, 1261, 1261, 1259))
+            };
 
 
 
@@ -3345,6 +3378,18 @@ namespace NBAdbToolbox
                 {
                     AddDataLabelsForYear(year, topYear, columnPositions, rowPositions[rowPositions.Count - 1], fontSize);
                 }
+                if (seasonDataWarning)
+                {
+                    yearLabel.ForeColor = WarningColor;
+                }
+                if (seasonDataError)
+                {
+                    yearLabel.ForeColor = ErrorColor;
+                }
+                else if (seasonDataSuccess)
+                {
+                    yearLabel.ForeColor = SuccessColor;
+                }
                 rowPositions.Add(topYear + yearLabel.Height);
                 topYear += yearLabel.Height + (int)(yearLabel.Height * .25);
                 singleLineHeight = yearLabel.Height + (int)(yearLabel.Height * .25);
@@ -3428,10 +3473,17 @@ namespace NBAdbToolbox
             }
             return yearLabels[year];
         }
+        public bool seasonDataWarning = false;
+        public bool seasonDataError = false;
+        public bool seasonDataSuccess = false;
         private void AddDataLabelsForYear(int year, int topYear, List<int> columnPositions, int rowPosition, float fontSize)
         {
+            seasonDataWarning = false;
+            seasonDataError = false;
+            seasonDataSuccess = false;
             //find the season data for this year
             var seasonData = seasonInfo.FirstOrDefault(s => s.SeasonID == year);
+            var seasonDataControl = seasonControl.FirstOrDefault(s => s.SeasonID == year);
             if (seasonData.Item2.Loaded == 0) return; //no data found
 
             //data values in order: Game, Team, Arena, Player, Official, TeamBox, PlayerBox, PlayByPlay
@@ -3445,6 +3497,17 @@ namespace NBAdbToolbox
                 seasonData.Item2.TeamBox,
                 seasonData.Item2.PlayByPlay,
                 seasonData.Item2.Games
+            };
+            int[] controlValues = {
+                seasonDataControl.Item2.Game,
+                seasonDataControl.Item2.Team,
+                seasonDataControl.Item2.Arena,
+                seasonDataControl.Item2.Player,
+                seasonDataControl.Item2.Official,
+                seasonDataControl.Item2.PlayerBox,
+                seasonDataControl.Item2.TeamBox,
+                seasonDataControl.Item2.PlayByPlay,
+                seasonDataControl.Item2.Games
             };
             string[] textValues =
             {
@@ -3461,13 +3524,15 @@ namespace NBAdbToolbox
                 dataLabel.Left = columnPositions[i]; //center under column
                 dataLabel.Top = rowPosition + (int)(dataLabel.Height * .4);
                 dataLabel.Visible = true;
-                if(i == 0 || i > 4)
+                if (dataValues[i] != controlValues[i])
                 {
-                    if (dataValues[i] != dataValues[8])
-                    {
-                        dataLabel.ForeColor = WarningColor;
-                    }
+                    dataLabel.ForeColor = ErrorColor; 
+                    seasonDataWarning = true;
                 }
+            }
+            if(!seasonDataWarning && !seasonDataError)
+            {
+                seasonDataSuccess = true;
             }
         }
 
@@ -3769,6 +3834,7 @@ namespace NBAdbToolbox
             //Arenas
             if (!arenaList.Contains((SeasonID, game.box.arena.arenaId)))
             {
+                arenaList.Add((SeasonID, game.box.arena.arenaId));
                 HistoricArenaInsert(game.box.arena, game.box.homeTeamId, "Historic"); //5.7 Populate DB Update
             }
 
@@ -3882,14 +3948,6 @@ namespace NBAdbToolbox
         #region Arena Methods
         public void HistoricArenaInsert(NBAdbToolboxHistoric.Arena arena, int teamID, string sender)
         {
-            if (sender == "Historic")
-            {
-                arenaList.Add((SeasonID, arena.arenaId));
-            }
-            else if (sender == "Missing")
-            {
-                arenaList.Add((SeasonID, arena.arenaId));
-            }
 
             sqlBuilder.Append("insert into Arena values(")
                       .Append(SeasonID).Append(", ")
@@ -4011,7 +4069,7 @@ namespace NBAdbToolbox
             SqlDateTime gameDate = SqlDateTime.Parse(game.box.gameEt.Remove(game.box.gameEt.IndexOf('T')));
 
             //Build the Game table insert
-            sqlBuilder.Append("Insert into Game(SeasonID, GameID, Date, HomeID, HScore, AwayID, AScore, Label, LabelDetail, Datetime, ")
+            sqlBuilder.Append("Insert into Game(SeasonID, GameID, Date, HomeID, HScore, AwayID, AScore, Datetime, ")
                       .Append("WinnerID, WScore, LoserID, Lscore, GameType, SeriesID) values(")
                       .Append(SeasonID).Append(", ")
                       .Append(GameID).Append(", '")
@@ -4020,8 +4078,6 @@ namespace NBAdbToolbox
                       .Append(game.box.homeTeam.score).Append(", ")
                       .Append(game.box.awayTeamId).Append(", ")
                       .Append(game.box.awayTeam.score).Append(", '")
-                      .Append(game.box.gameLabel).Append("', '")
-                      .Append(game.box.gameSubLabel).Append("', '")
                       .Append(datetime).Append("', ");
 
             //Winner/loser logic
@@ -4055,7 +4111,7 @@ namespace NBAdbToolbox
             }
 
             //GameExt
-            sqlBuilder.Append("Insert into GameExt(SeasonID, GameID, Status, Attendance, Sellout");
+            sqlBuilder.Append("Insert into GameExt(SeasonID, GameID, ArenaID, Status, Attendance, Sellout, Label, LabelDetail");
 
             //Officials
             for (int o = 0; o < officials.Count && o < 4; o++)
@@ -4077,10 +4133,13 @@ namespace NBAdbToolbox
             //Start the values part
             sqlBuilder.Append(") values(")
                       .Append(SeasonID).Append(", ")
-                      .Append(GameID).Append(", '")
+                      .Append(GameID).Append(", ")
+                      .Append(game.box.arena.arenaId).Append(", '")
                       .Append(game.box.gameStatusText).Append("', ")
                       .Append(game.box.attendance).Append(", ")
-                      .Append(game.box.sellout);
+                      .Append(game.box.sellout).Append(", '")
+                      .Append(game.box.gameLabel).Append("', '")
+                      .Append(game.box.gameSubLabel).Append("'");
             //Add official values
             for (int o = 0; o < officials.Count && o < 4; o++)
             {
@@ -5182,13 +5241,14 @@ namespace NBAdbToolbox
             gameInsertSB.Append("\n");
 
             // Build the GameExt insert
-            gameExtSB.Append("Insert into GameExt(SeasonID, GameID, Status, Attendance");
+            gameExtSB.Append("Insert into GameExt(SeasonID, GameID, ArenaID, Status, Attendance");
 
             // Start the values part for GameExt
             StringBuilder gameExtValuesSB = new StringBuilder();
             gameExtValuesSB.Append(") values(")
                            .Append(SeasonID).Append(", ")
-                           .Append(game.gameId).Append(", '")
+                           .Append(game.gameId).Append(", ")
+                           .Append(game.arena.arenaId).Append(", '")
                            .Append(game.gameStatusText).Append("', ")
                            .Append(game.attendance);
 
