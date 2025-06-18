@@ -1,4 +1,4 @@
---use nba2002
+use LastNBAHistoric0613
 
 
 select t.SeasonID, concat('Game - ', (s.Games + s.PlayoffGames) - count(t.GameID)) [Table - Game Discrepancy], (s.Games + s.PlayoffGames) - count(t.GameID) [Game Discrepancy],
@@ -59,9 +59,197 @@ having (s.Games + s.PlayoffGames) - count(distinct t.GameID) > 0
 order by SeasonID desc, [Game Discrepancy] desc
 
 
+use nba96H_0605
 
---select distinct g.SeasonID, right(g.GameID, 4) Game
---from PlayByPlay g 
---where g.SeasonID = 1998
---order by Game
---2006, 2003, 1998, 1996
+select t.SeasonID, concat('Game - ', (s.Games + s.PlayoffGames) - count(t.GameID)) [Table - Game Discrepancy], (s.Games + s.PlayoffGames) - count(t.GameID) [Game Discrepancy],
+count(t.GameID) Games
+from Game t inner join
+		Season s on t.SeasonID = s.SeasonID
+group by t.SeasonID, s.Games, s.PlayoffGames
+having (s.Games + s.PlayoffGames) - count(distinct t.GameID) > 0
+union
+
+select t.SeasonID, concat('GameExt - ', (s.Games + s.PlayoffGames) - count(t.GameID)) [Table - Game Discrepancy], (s.Games + s.PlayoffGames) - count(t.GameID) [Game Discrepancy],
+count(t.GameID) Games
+from GameExt t inner join
+		Season s on t.SeasonID = s.SeasonID
+group by t.SeasonID, s.Games, s.PlayoffGames
+having (s.Games + s.PlayoffGames) - count(distinct t.GameID) > 0
+union
+
+select t.SeasonID, concat('Tbox - ', (s.Games + s.PlayoffGames) - count(distinct t.GameID)) [Table - Game Discrepancy], (s.Games + s.PlayoffGames) - count(distinct t.GameID) [Game Discrepancy],
+count(distinct t.GameID)
+from TeamBox t inner join
+		Season s on t.SeasonID = s.SeasonID
+group by t.SeasonID, s.Games, s.PlayoffGames
+having (s.Games + s.PlayoffGames) - count(distinct t.GameID) > 0
+union
+
+select t.SeasonID, concat('PBox - ', (s.Games + s.PlayoffGames) - count(distinct t.GameID)) [Table - Game Discrepancy], (s.Games + s.PlayoffGames) - count(distinct t.GameID) [Game Discrepancy],
+count(distinct t.GameID)
+from PlayerBox t inner join
+		Season s on t.SeasonID = s.SeasonID
+group by t.SeasonID, s.Games, s.PlayoffGames
+having (s.Games + s.PlayoffGames) - count(distinct t.GameID) > 0
+union
+
+select t.SeasonID, concat('PBP - ', (s.Games + s.PlayoffGames) - count(distinct t.GameID)) [Table - Game Discrepancy], (s.Games + s.PlayoffGames) - count(distinct t.GameID) [Game Discrepancy],
+count(distinct t.GameID)
+from PlayByPlay t inner join
+		Season s on t.SeasonID = s.SeasonID
+group by t.SeasonID, s.Games, s.PlayoffGames
+having (s.Games + s.PlayoffGames) - count(distinct t.GameID) > 0
+union
+
+select t.SeasonID, concat('SLineups - ', (s.Games + s.PlayoffGames) - count(distinct t.GameID)) [Table - Game Discrepancy], (s.Games + s.PlayoffGames) - count(distinct t.GameID) [Game Discrepancy],
+count(distinct t.GameID)
+from StartingLineups t inner join
+		Season s on t.SeasonID = s.SeasonID
+group by t.SeasonID, s.Games, s.PlayoffGames
+having (s.Games + s.PlayoffGames) - count(distinct t.GameID) > 0
+union
+
+select t.SeasonID, concat('TboxLineups - ', (s.Games + s.PlayoffGames) - count(distinct t.GameID)) [Table - Game Discrepancy], (s.Games + s.PlayoffGames) - count(distinct t.GameID) [Game Discrepancy],
+count(distinct t.GameID)
+from TeamBoxLineups t inner join
+		Season s on t.SeasonID = s.SeasonID
+group by t.SeasonID, s.Games, s.PlayoffGames
+having (s.Games + s.PlayoffGames) - count(distinct t.GameID) > 0
+
+order by SeasonID desc, [Game Discrepancy] desc
+
+
+
+
+
+
+
+
+
+
+
+
+
+use LastNBACurrent0613
+execute Seasons
+
+
+select t.SeasonID, concat('Game - ', (s.Games + s.PlayoffGames) - count(t.GameID)) [Table - Game Discrepancy], (s.Games + s.PlayoffGames) - count(t.GameID) [Game Discrepancy],
+count(t.GameID) Games
+from Game t inner join
+		Season s on t.SeasonID = s.SeasonID
+group by t.SeasonID, s.Games, s.PlayoffGames
+having (s.Games + s.PlayoffGames) - count(distinct t.GameID) > 0
+union
+
+select t.SeasonID, concat('GameExt - ', (s.Games + s.PlayoffGames) - count(t.GameID)) [Table - Game Discrepancy], (s.Games + s.PlayoffGames) - count(t.GameID) [Game Discrepancy],
+count(t.GameID) Games
+from GameExt t inner join
+		Season s on t.SeasonID = s.SeasonID
+group by t.SeasonID, s.Games, s.PlayoffGames
+having (s.Games + s.PlayoffGames) - count(distinct t.GameID) > 0
+union
+
+select t.SeasonID, concat('Tbox - ', (s.Games + s.PlayoffGames) - count(distinct t.GameID)) [Table - Game Discrepancy], (s.Games + s.PlayoffGames) - count(distinct t.GameID) [Game Discrepancy],
+count(distinct t.GameID)
+from TeamBox t inner join
+		Season s on t.SeasonID = s.SeasonID
+group by t.SeasonID, s.Games, s.PlayoffGames
+having (s.Games + s.PlayoffGames) - count(distinct t.GameID) > 0
+union
+
+select t.SeasonID, concat('PBox - ', (s.Games + s.PlayoffGames) - count(distinct t.GameID)) [Table - Game Discrepancy], (s.Games + s.PlayoffGames) - count(distinct t.GameID) [Game Discrepancy],
+count(distinct t.GameID)
+from PlayerBox t inner join
+		Season s on t.SeasonID = s.SeasonID
+group by t.SeasonID, s.Games, s.PlayoffGames
+having (s.Games + s.PlayoffGames) - count(distinct t.GameID) > 0
+union
+
+select t.SeasonID, concat('PBP - ', (s.Games + s.PlayoffGames) - count(distinct t.GameID)) [Table - Game Discrepancy], (s.Games + s.PlayoffGames) - count(distinct t.GameID) [Game Discrepancy],
+count(distinct t.GameID)
+from PlayByPlay t inner join
+		Season s on t.SeasonID = s.SeasonID
+group by t.SeasonID, s.Games, s.PlayoffGames
+having (s.Games + s.PlayoffGames) - count(distinct t.GameID) > 0
+union
+
+select t.SeasonID, concat('SLineups - ', (s.Games + s.PlayoffGames) - count(distinct t.GameID)) [Table - Game Discrepancy], (s.Games + s.PlayoffGames) - count(distinct t.GameID) [Game Discrepancy],
+count(distinct t.GameID)
+from StartingLineups t inner join
+		Season s on t.SeasonID = s.SeasonID
+group by t.SeasonID, s.Games, s.PlayoffGames
+having (s.Games + s.PlayoffGames) - count(distinct t.GameID) > 0
+union
+
+select t.SeasonID, concat('TboxLineups - ', (s.Games + s.PlayoffGames) - count(distinct t.GameID)) [Table - Game Discrepancy], (s.Games + s.PlayoffGames) - count(distinct t.GameID) [Game Discrepancy],
+count(distinct t.GameID)
+from TeamBoxLineups t inner join
+		Season s on t.SeasonID = s.SeasonID
+group by t.SeasonID, s.Games, s.PlayoffGames
+having (s.Games + s.PlayoffGames) - count(distinct t.GameID) > 0
+
+order by SeasonID desc, [Game Discrepancy] desc
+
+
+use nba96H_0605
+
+select t.SeasonID, concat('Game - ', (s.Games + s.PlayoffGames) - count(t.GameID)) [Table - Game Discrepancy], (s.Games + s.PlayoffGames) - count(t.GameID) [Game Discrepancy],
+count(t.GameID) Games
+from Game t inner join
+		Season s on t.SeasonID = s.SeasonID
+group by t.SeasonID, s.Games, s.PlayoffGames
+having (s.Games + s.PlayoffGames) - count(distinct t.GameID) > 0
+union
+
+select t.SeasonID, concat('GameExt - ', (s.Games + s.PlayoffGames) - count(t.GameID)) [Table - Game Discrepancy], (s.Games + s.PlayoffGames) - count(t.GameID) [Game Discrepancy],
+count(t.GameID) Games
+from GameExt t inner join
+		Season s on t.SeasonID = s.SeasonID
+group by t.SeasonID, s.Games, s.PlayoffGames
+having (s.Games + s.PlayoffGames) - count(distinct t.GameID) > 0
+union
+
+select t.SeasonID, concat('Tbox - ', (s.Games + s.PlayoffGames) - count(distinct t.GameID)) [Table - Game Discrepancy], (s.Games + s.PlayoffGames) - count(distinct t.GameID) [Game Discrepancy],
+count(distinct t.GameID)
+from TeamBox t inner join
+		Season s on t.SeasonID = s.SeasonID
+group by t.SeasonID, s.Games, s.PlayoffGames
+having (s.Games + s.PlayoffGames) - count(distinct t.GameID) > 0
+union
+
+select t.SeasonID, concat('PBox - ', (s.Games + s.PlayoffGames) - count(distinct t.GameID)) [Table - Game Discrepancy], (s.Games + s.PlayoffGames) - count(distinct t.GameID) [Game Discrepancy],
+count(distinct t.GameID)
+from PlayerBox t inner join
+		Season s on t.SeasonID = s.SeasonID
+group by t.SeasonID, s.Games, s.PlayoffGames
+having (s.Games + s.PlayoffGames) - count(distinct t.GameID) > 0
+union
+
+select t.SeasonID, concat('PBP - ', (s.Games + s.PlayoffGames) - count(distinct t.GameID)) [Table - Game Discrepancy], (s.Games + s.PlayoffGames) - count(distinct t.GameID) [Game Discrepancy],
+count(distinct t.GameID)
+from PlayByPlay t inner join
+		Season s on t.SeasonID = s.SeasonID
+group by t.SeasonID, s.Games, s.PlayoffGames
+having (s.Games + s.PlayoffGames) - count(distinct t.GameID) > 0
+union
+
+select t.SeasonID, concat('SLineups - ', (s.Games + s.PlayoffGames) - count(distinct t.GameID)) [Table - Game Discrepancy], (s.Games + s.PlayoffGames) - count(distinct t.GameID) [Game Discrepancy],
+count(distinct t.GameID)
+from StartingLineups t inner join
+		Season s on t.SeasonID = s.SeasonID
+group by t.SeasonID, s.Games, s.PlayoffGames
+having (s.Games + s.PlayoffGames) - count(distinct t.GameID) > 0
+union
+
+select t.SeasonID, concat('TboxLineups - ', (s.Games + s.PlayoffGames) - count(distinct t.GameID)) [Table - Game Discrepancy], (s.Games + s.PlayoffGames) - count(distinct t.GameID) [Game Discrepancy],
+count(distinct t.GameID)
+from TeamBoxLineups t inner join
+		Season s on t.SeasonID = s.SeasonID
+group by t.SeasonID, s.Games, s.PlayoffGames
+having (s.Games + s.PlayoffGames) - count(distinct t.GameID) > 0
+
+order by SeasonID desc, [Game Discrepancy] desc
+
+
+

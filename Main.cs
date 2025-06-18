@@ -186,8 +186,18 @@ namespace NBAdbToolbox
         public Label lblDbOvExpand = new Label();
         public Label lblDbOptions = new Label();
         public Label lblDbSelectSeason = new Label();
+        public Label lblPopulate = new Label
+        {
+            Text = "Populate Season Data"
+        };
         public ListBox listSeasons = new ListBox();
         public Button btnPopulate = new Button();
+        public Label lblRefresh = new Label
+        {
+            Text = "Refresh Current Season"
+        };
+        public Button btnRefresh = new Button();
+
         //pnlDbUtil sub panel Positions and sizes
         public int leftPanelPos = 0;
         public int midPanelPos = 0;
@@ -310,13 +320,14 @@ namespace NBAdbToolbox
             (2023, 1318),
             (2024, 1230)
         };
-        public HashSet<(int SeasonID, (int Games, int Loaded, int Team, int Arena, int Player, int Official, int Game, int PlayerBox, int TeamBox, int PlayByPlay))> seasonInfo
-            = new HashSet<(int, (int, int, int, int, int, int, int, int, int, int))>();
+        public HashSet<(int SeasonID, (int Games, int Loaded, int Team, int Arena, int Player, int Official, int Game, int PlayerBox, int TeamBox, int PlayByPlay, 
+            int HistoricLoaded, int CurrentLoaded))> seasonInfo
+            = new HashSet<(int, (int, int, int, int, int, int, int, int, int, int, int, int))>();
 
         public HashSet<(int SeasonID, (int Games, int Loaded, int Team, int Arena, int Player, int Official, int Game, int PlayerBox, int TeamBox, int PlayByPlay))> seasonControl
             = new HashSet<(int, (int, int, int, int, int, int, int, int, int, int))>()
             {
-                (2024, (1313, 1, 30, 36, 587, 80, 1313, 1313, 1313, 1313)),
+                (2024, (1319, 1, 30, 36, 587, 80, 1319, 1319, 1319, 1319)),
                 (2023, (1319, 1, 30, 34, 595, 80, 1319, 1319, 1319, 1319)),
                 (2022, (1320, 1, 30, 35, 554, 82, 1320, 1320, 1320, 1320)),
                 (2021, (1323, 1, 30, 30, 633, 84, 1323, 1323, 1323, 1323)),
@@ -346,7 +357,16 @@ namespace NBAdbToolbox
                 (1997, (1260, 1, 29, 34, 608, 40, 1260, 1260, 1260, 1260)),
                 (1996, (1261, 1, 29, 33, 715, 40, 1261, 1261, 1261, 1259))
             };
-
+        public HashSet<(int SeasonID, (int Games, int Loaded, int Team, int Arena, int Player, int Official, int Game, int PlayerBox, int TeamBox, int PlayByPlay))> seasonCurrentControl
+            = new HashSet<(int, (int, int, int, int, int, int, int, int, int, int))>()
+            {
+                (2024, (1319, 1, 30, 36, 587, 80, 1319, 1319, 1319, 1319)),
+                (2023, (1319, 1, 30, 34, 595, 81, 1319, 1319, 1319, 1319)),
+                (2022, (1320, 1, 30, 35, 554, 83, 1320, 1320, 1320, 1320)),
+                (2021, (1323, 1, 30, 30, 633, 84, 1323, 1323, 1323, 1323)),
+                (2020, (1171, 1, 30, 31, 550, 79, 1171, 1171, 1171, 1171)),
+                (2019, (1142, 1, 30, 37, 549, 74, 1142, 1142, 1142, 1142)),
+            };
 
 
         public int currentImageIterator = 0;
@@ -445,79 +465,10 @@ namespace NBAdbToolbox
                 var popup = new PopulatePopup(dialog, seasons);
                 if (popup.ShowDialog() == DialogResult.OK)
                 {
-                    //Task.Run(() => LoadImages());
-
-                    #region Set UI status lables and images
-                    imagePath = Path.Combine(projectRoot, @"Content\Images\Loading", "kawhi1.png");
-                    using (var img = Image.FromFile(imagePath))
-                    {
-                        // Create and assign the Bitmap
-                        var bitmap = new Bitmap(img);
-
-                        // Dispose of previous image to prevent memory leaks
-                        if (picLoad.Image != null)
-                        {
-                            var oldImage = picLoad.Image;
-                            picLoad.Image = null;
-                            oldImage.Dispose();
-                        }
-                        picLoad.Image = bitmap;
-                        picLoad.Width = pnlLoad.Height;
-                        picLoad.Height = pnlLoad.Height;
-                        picLoad.Left = (pnlLoad.ClientSize.Width - picLoad.Width) / 2;
-                        picLoad.Top = 0;
-                    }
                     int historic = 0;
                     int current = 0;
                     string source = "";
-                    gpm.Visible = true;
-                    gpmValue.Visible = true;
-                    lblCurrentGameCount.Visible = true;
-                    lblSeasonStatusLoadInfo.Visible = true;
-                    picLoad.Visible = true;
-                    #region ChangeLabel
-
-                    ChangeLabel(ThemeColor, lblCurrentGame, pnlLoad, new List<string> {
-                        "Current game: ", //Text
-                        "Regular", //FontStyle
-                        ((float)(screenFontSize * pnlLoad.Height * .05) / (96 / 12) * (72 / 12)).ToString(), //FontSize
-                        ".", //Width
-                        "true", //AutoSize
-                        "4", //Left
-                        ".", //Top
-                        ThemeColor.ToString(), //Color
-                        "true", //Visible
-                        "." //Height
-                    }); //Current game: 
-                    gpm.Top = lblCurrentGame.Bottom;
-                    gpmValue.Top = gpm.Bottom;
-                    ChangeLabel(ThemeColor, lblSeasonStatusLoad, pnlLoad, new List<string> {
-                        "Checking util.BuildLog", //Text
-                        "Bold", //FontStyle
-                        ((float)(screenFontSize * pnlLoad.Height * .08) / (96 / 12) * (72 / 12)).ToString(), //FontSize
-                        ".", //Width
-                        "true", //AutoSize
-                        "0", //Left
-                        ".", //Top
-                        ThemeColor.ToString(), //Color
-                        "true", //Visible
-                        "." //Height
-                    }); //Currently Loading: 
-                    ChangeLabel(ThemeColor, lblWorkingOn, pnlLoad, new List<string> {
-                        "", //Text
-                        "Regular", //FontStyle
-                        ((float)(screenFontSize * pnlLoad.Height * .03) / (96 / 12) * (72 / 12)).ToString(), //FontSize
-                        ".", //Width
-                        "true", //AutoSize
-                        (pnlLoad.Width - lblWorkingOn.Width).ToString(), //Left
-                        lblSeasonStatusLoadInfo.Top.ToString(), //Top
-                        ThemeColor.ToString(), //Color
-                        "true", //Visible
-                        "." //Height
-                    }); //No text yet
-                    #endregion
-
-                    #endregion
+                    InitializeDbLoad();
                     int buildID = 0;
                     using (SqlCommand BuildLogCheck = new SqlCommand("BuildLogCheck", MainConnection))
                     {
@@ -777,14 +728,12 @@ namespace NBAdbToolbox
 
             AddControlsAfterConnection();
 
-
             //Scoreboard
             pnlScoreboard.Height = this.Height / 18;
             pnlScoreboard.Width = this.Width - pnlDbUtil.Width;
             pnlScoreboard.Parent = bgCourt;
             pnlScoreboard.Top = pnlNav.Bottom;
             pnlScoreboard.Left = pnlDbUtil.Right;
-
 
             #endregion
             #region Edit Connection & Build DB
@@ -843,10 +792,10 @@ namespace NBAdbToolbox
                     bob.InitialCatalog = config.Database;
                     cString = bob.ToString();
                     btnPopulate.Enabled = true;
+                    ButtonChangeState(btnPopulate, true);
                 }
             };
             #endregion
-
 
             #region Database Overview
 
@@ -855,8 +804,6 @@ namespace NBAdbToolbox
             DbOverviewClick(lblDbOvExpand, lblDbOvExpand, pnlDbOverview);
             DbOverviewClick(lblDbOvName, lblDbOvExpand, pnlDbOverview);
             #endregion
-
-            
 
             btnBrowseConfig.Click += (s, e) =>
             {
@@ -911,17 +858,6 @@ namespace NBAdbToolbox
             {
                 lblSettings.Focus();
             };
-
-            
-
-
-
-
-
-
-
-
-
             boxConfigFiles.SelectedIndexChanged += async (s, e) =>
             {
                 if (isRefreshing) return;
@@ -961,15 +897,6 @@ namespace NBAdbToolbox
             {
                 lblSettings.Focus();
             };
-
-            
-
-
-
-
-
-
-
             boxBackground.SelectedIndexChanged += (s, e) =>
             {
                 if (boxBackground.SelectedItem.ToString() != settings.BackgroundImage)
@@ -989,21 +916,216 @@ namespace NBAdbToolbox
             {
                 lblSettings.Focus();
             };
-            
-
-
-
-
-
-
             SettingsClick(lblSettings, picSettings, fontSize);
             SettingsClick(picSettings, picSettings, fontSize);
 
 
 
+            btnRefresh.Click += async (s, e) =>
+            {
+                await RefreshClick();
+                if (dbOverviewOpened)
+                {
+                    lblDbOptions.Invoke((MethodInvoker)(() =>
+                    {
+                        lblDbOptions.Text = "Loading Season info";
+                        CenterElement(pnlDbUtil, lblDbOptions);
+                    }));
+                    await Task.Run(() => GetSeasonInfo());
+                    lblDbOptions.Invoke((MethodInvoker)(() =>
+                    {
+                        lblDbOptions.Text = "Options";
+                        CenterElement(pnlDbUtil, lblDbOptions);
+                    }));
+                    dbOverviewFirstOpen = false;
+                    DbOverviewVisibility(dbOverviewOpened, "Refresh");
+                }
+                else
+                {
+                    dbOverviewFirstOpen = true;
+                }
+                RefreshCompletion();
+            };
 
         }
 
+        public void RefreshCompletion()
+        {
+            ButtonChangeState(btnRefresh, true);
+            ButtonChangeState(btnPopulate, true);
+            ButtonChangeState(btnEdit, true);
+
+        }
+        public void InitializeDbLoad()
+        {
+            #region Set UI status lables and images
+            imagePath = Path.Combine(projectRoot, @"Content\Images\Loading", "kawhi1.png");
+            using (var img = Image.FromFile(imagePath))
+            {
+                // Create and assign the Bitmap
+                var bitmap = new Bitmap(img);
+
+                // Dispose of previous image to prevent memory leaks
+                if (picLoad.Image != null)
+                {
+                    var oldImage = picLoad.Image;
+                    picLoad.Image = null;
+                    oldImage.Dispose();
+                }
+                picLoad.Image = bitmap;
+                picLoad.Width = pnlLoad.Height;
+                picLoad.Height = pnlLoad.Height;
+                picLoad.Left = (pnlLoad.ClientSize.Width - picLoad.Width) / 2;
+                picLoad.Top = 0;
+            }
+            gpm.Visible = true;
+            gpmValue.Visible = true;
+            lblCurrentGameCount.Visible = true;
+            lblSeasonStatusLoadInfo.Visible = true;
+            picLoad.Visible = true;
+            #region ChangeLabel
+
+            ChangeLabel(ThemeColor, lblCurrentGame, pnlLoad, new List<string> {
+                        "Current game: ", //Text
+                        "Regular", //FontStyle
+                        ((float)(screenFontSize * pnlLoad.Height * .05) / (96 / 12) * (72 / 12)).ToString(), //FontSize
+                        ".", //Width
+                        "true", //AutoSize
+                        "4", //Left
+                        ".", //Top
+                        ThemeColor.ToString(), //Color
+                        "true", //Visible
+                        "." //Height
+                    }); //Current game: 
+            gpm.Top = lblCurrentGame.Bottom;
+            gpmValue.Top = gpm.Bottom;
+            ChangeLabel(ThemeColor, lblSeasonStatusLoad, pnlLoad, new List<string> {
+                        "Checking util.BuildLog", //Text
+                        "Bold", //FontStyle
+                        ((float)(screenFontSize * pnlLoad.Height * .08) / (96 / 12) * (72 / 12)).ToString(), //FontSize
+                        ".", //Width
+                        "true", //AutoSize
+                        "0", //Left
+                        ".", //Top
+                        ThemeColor.ToString(), //Color
+                        "true", //Visible
+                        "." //Height
+                    }); //Currently Loading: 
+            ChangeLabel(ThemeColor, lblWorkingOn, pnlLoad, new List<string> {
+                        "", //Text
+                        "Regular", //FontStyle
+                        ((float)(screenFontSize * pnlLoad.Height * .03) / (96 / 12) * (72 / 12)).ToString(), //FontSize
+                        ".", //Width
+                        "true", //AutoSize
+                        (pnlLoad.Width - lblWorkingOn.Width).ToString(), //Left
+                        lblSeasonStatusLoadInfo.Top.ToString(), //Top
+                        ThemeColor.ToString(), //Color
+                        "true", //Visible
+                        "." //Height
+                    }); //No text yet
+            #endregion
+
+            #endregion
+        }
+        public string GetLowestTable(int seasonID)
+        {
+            var season = seasonInfo.FirstOrDefault(s => s.SeasonID == seasonID);
+            if (season.Equals(default))
+            {
+                return "Game";
+            }
+
+            var data = season.Item2;
+            int games = data.Games;
+
+            //check if all values equal Games
+            if (data.Game == games && data.PlayerBox == games && data.TeamBox == games && data.PlayByPlay == games)
+            {
+                return "Game";
+            }
+
+            //find the lowest value among the four tables
+            var tableValues = new Dictionary<string, int>
+            {
+                {"Game", data.Game},
+                {"PlayerBox", data.PlayerBox},
+                {"TeamBox", data.TeamBox},
+                {"PlayByPlay", data.PlayByPlay}
+            };
+
+            int minValue = tableValues.Values.Min();
+            return tableValues.FirstOrDefault(kvp => kvp.Value == minValue).Key;
+        }
+        public async Task RefreshClick()
+        {
+            RefreshDb_PreSelection();
+            SqlConnection connection = new SqlConnection(bob.ToString());
+            int buildID = 0;
+            using (SqlCommand BuildLogCheck = new SqlCommand("BuildLogCheck", connection))
+            {
+                BuildLogCheck.CommandType = CommandType.StoredProcedure;
+                connection.Open();
+                using (SqlDataReader reader = BuildLogCheck.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        buildID = reader.GetInt32(0);
+                    }
+                }
+                connection.Close();
+            }
+            stopwatchFull.Restart();
+            stopwatchRead.Restart();
+            DateTime lastDate = DateTime.MinValue;
+            string query = "";
+            List<int> gameList = new List<int>();
+            //query = "select Max(g.Date) Date from Game g where g.SeasonID = 2024";
+            query = "select distinct GameID from " + GetLowestTable(2024) + " where SeasonID = 2024 order by GameID";
+            using (SqlCommand lastDateQuery = new SqlCommand(query))
+            {
+                lastDateQuery.Connection = connection;
+                lastDateQuery.CommandType = CommandType.Text;
+                connection.Open();
+                using (SqlDataReader sdr = lastDateQuery.ExecuteReader())
+                {
+                    while (sdr.Read())
+                    {
+                        //lastDate = sdr.GetDateTime(0);
+                        gameList.Add(sdr.GetInt32(0));
+                    }
+                    gameList.RemoveAt(gameList.Count - 1);
+                }
+                connection.Close();
+            }
+            //scheduleGames = await leagueSchedule.GetJSON(lastDate);
+            scheduleGames = await leagueSchedule.GetJSON(gameList);
+
+            string values = " where GameID in(";
+            List<int> games = new List<int>();
+            foreach (NBAdbToolboxSchedule.Game game in scheduleGames)
+            {
+                values += Int32.Parse(game.GameId) + ", ";
+                games.Add(Int32.Parse(game.GameId));
+                TotalGames++;
+            }
+            stopwatchRead.Stop();
+            TotalGamesCD = TotalGames - 1;
+
+            RefreshDb_DeleteMissing(values, connection);
+            InitializeDbLoad();
+            PopulateDb_7_AfterCurrentDelete();
+            stopwatchInsert.Restart();
+            for (int i = 0; i < games.Count; i++)
+            {
+                GameID = games[i];
+                await CurrentGameGPS(games[i], "Refresh");
+                PopulateDb_8_AfterCurrentGame(games[i].ToString());
+            }
+            PopulateDb_9_AfterSeasonInserts(buildID, 1, 0, "Current Refresh", 1, 1);
+            stopwatchFull.Stop();
+            PopulateDb_10_Completion();
+            scheduleGames.Clear();
+        }
         public Color ThemeColor = new Color();
         public Color SubThemeColor = new Color();
         public Color SuccessColor = new Color();
@@ -1085,18 +1207,17 @@ namespace NBAdbToolbox
             //update buttons
             foreach (Button btn in buttons)
             {
+                    btn.ForeColor = SubThemeColor;
+                    btn.BackColor = ThemeColor;
+                
                 if (!btn.Enabled)
                 {
+                    btnBuild.BackColor = Color.Gainsboro;
+                    // Use FlatStyle to have more control
+                    btn.FlatStyle = FlatStyle.Flat;
+                    btn.FlatAppearance.BorderSize = 1;
+                    btn.FlatAppearance.BorderColor = ThemeColor;
 
-                }
-                else if (btn.Text == "Populate Db" || btn.Text == "Build Database" || btn.Text == "Edit Server/Db connection")
-                {
-
-                }
-                else
-                {
-                    btn.ForeColor = ThemeColor;
-                    btn.BackColor = SubThemeColor;
                 }
             }
             //update buttons
@@ -1432,6 +1553,7 @@ namespace NBAdbToolbox
                 {
                     conn.Open();
                     btnBuild.Enabled = true;
+                    ButtonChangeState(btnBuild, true);
                     lblServerName.ForeColor = SuccessColor;
                     btnEdit.Text = "Edit Server/Db connection";
                     conn.Dispose();
@@ -1522,15 +1644,25 @@ namespace NBAdbToolbox
             AddPanelElement(pnlLoad, picLoad);
         }
 
+        public void ButtonChangeState(Button btn, bool enabled)
+        {
+            btn.Enabled = enabled;
+            btn.ForeColor = ThemeColor;
+            btn.BackColor = SubThemeColor;
+            if (!enabled)
+            {
+                btn.BackColor = Color.Gainsboro;
+            }
+        }
         private bool isRefreshing = false;
         public void UIController(string sender)//If an event occurs that will change the state of the UI, it must run through here
         {
             float fontSize = ((float)(screenFontSize * pnlWelcome.Height * .08) / (96 / 12)) * (72 / 12);
             if (sender == "NoConnection")
             {
-                btnBuild.Enabled = false;
+                ButtonChangeState(btnBuild, false);
                 isBuildEnabled = false;
-                btnPopulate.Enabled = false;
+                ButtonChangeState(btnPopulate, false);
                 listSeasons.Items.Clear();
 
                 lblServerName.ForeColor = ErrorColor;
@@ -1552,9 +1684,10 @@ namespace NBAdbToolbox
 
             else if (sender == "DbExists")
             {
-                btnBuild.Enabled = false;
+                ButtonChangeState(btnBuild, false);
                 isBuildEnabled = false;
-                btnPopulate.Enabled = true;
+                ButtonChangeState(btnPopulate, true);
+                ButtonChangeState(btnRefresh, true);
                 lblDbOvName.Visible = true;
 
                 lblDbOvName.ForeColor = SuccessColor;
@@ -1566,9 +1699,9 @@ namespace NBAdbToolbox
             }
             else if (sender == "DbMissing")
             {
-                btnBuild.Enabled = true;
+                ButtonChangeState(btnBuild, true);
                 isBuildEnabled = true;
-                btnPopulate.Enabled = false;
+                ButtonChangeState(btnPopulate, false);
                 lblDbOvName.Visible = false;
                 listSeasons.Items.Clear();
                 lblDbOvName.ForeColor = WarningColor;
@@ -1583,9 +1716,9 @@ namespace NBAdbToolbox
             }
             else if (sender == "BadConnection")
             {
-                btnBuild.Enabled = true;
+                ButtonChangeState(btnBuild, true);
                 isBuildEnabled = true;
-                btnPopulate.Enabled = false;
+                ButtonChangeState(btnPopulate, false);
                 lblDbOvName.Visible = false;
                 listSeasons.Items.Clear();
 
@@ -1724,7 +1857,7 @@ namespace NBAdbToolbox
                     {
                         CreateTables.ExecuteScalar();
                         config.Create = false;
-                        btnBuild.Enabled = false;
+                        ButtonChangeState(btnBuild, false);
                         FormatProcedures();
                     }
                     catch (SqlException ex)
@@ -1793,6 +1926,83 @@ namespace NBAdbToolbox
 
 
 
+        public void RefreshDb_PreSelection()
+        {
+            TotalGames = 0;
+            TotalGamesCD = 0;
+            iterator = 0;
+            imageIteration = 1;
+            reverse = false;
+            scheduleGames.Clear();
+            SeasonID = 2024;
+            completionMessage += SeasonID + ": ";
+            ButtonChangeState(btnPopulate, true);
+            ButtonChangeState(btnEdit, false);
+            listSeasons.Enabled = false;
+            ButtonChangeState(btnRefresh, false);
+            stopwatch = Stopwatch.StartNew();
+            start = DateTime.Now;
+            timeElapsedRead = TimeSpan.Zero;
+            elapsedStringRead = "";
+            ChangeLabel(ThemeColor, lblSeasonStatusLoad, pnlLoad, new List<string> {
+            "Finding missing games...", //Text
+            "Bold", //FontStyle
+            ((float)(screenFontSize * pnlLoad.Height * .075) / (96 / 12) * (72 / 12)).ToString(), //FontSize
+            ".", //Width
+            "true", //AutoSize
+            "0", //Left
+            ".", //Top
+            ThemeColor.ToString(), //Color
+            "true", //Visible
+            "." //Height
+            }); //Hitting endpoints and inserting
+
+        }
+        public void RefreshDb_DeleteMissing(string values, SqlConnection connection)
+        {
+            ChangeLabel(ThemeColor, lblSeasonStatusLoad, pnlLoad, new List<string> {
+            "Deleting any incomplete games...", //Text
+            "Bold", //FontStyle
+            ((float)(screenFontSize * pnlLoad.Height * .075) / (96 / 12) * (72 / 12)).ToString(), //FontSize
+            ".", //Width
+            "true", //AutoSize
+            "0", //Left
+            ".", //Top
+            ThemeColor.ToString(), //Color
+            "true", //Visible
+            "." //Height
+            }); //Hitting endpoints and inserting
+            stopwatchDelete.Restart();
+            string delete = "delete from ";
+            string cmd = "";
+            if (scheduleGames.Count > 0)
+            {
+                values = values.Remove(values.Length - 3) + ")";
+                cmd = delete + "StartingLineups" + values + "\n"
+                    + delete + "TeamBoxLineups" + values + "\n"
+                    + delete + "PlayByPlay" + values + "\n"
+                    + delete + "PlayerBox" + values + "\n"
+                    + delete + "TeamBox" + values + "\n"
+                    + delete + "GameExt" + values + "\n"
+                    + delete + "Game" + values;
+                try
+                {
+                    using (SqlCommand deleteExisting = new SqlCommand(cmd))
+                    {
+                        deleteExisting.Connection = connection;
+                        deleteExisting.CommandType = CommandType.Text;
+                        connection.Open();
+                        deleteExisting.ExecuteNonQuery();
+                        connection.Close();
+                    }
+                }
+                catch
+                {
+
+                }
+            }
+            stopwatchDelete.Stop();
+        }
 
         #region Populate Database
         public void PopulateDb_1_PreSelection()
@@ -1804,8 +2014,9 @@ namespace NBAdbToolbox
             sqlBuilder.Capacity = 4 * 1024;
             playByPlayBuilder.Capacity = 245 * 1024;
             sqlBuilderParallel.Capacity = 40 * 1024;
-            btnPopulate.Enabled = false;
-            btnEdit.Enabled = false;
+            ButtonChangeState(btnPopulate, false);
+            ButtonChangeState(btnEdit, false);
+            ButtonChangeState(btnRefresh, false);
             listSeasons.Enabled = false;
             iterator = 0;
             imageIteration = 1;
@@ -2055,7 +2266,7 @@ namespace NBAdbToolbox
             #region Build Log Insert
             try
             {
-                using (SqlConnection Main = new SqlConnection(cString))
+                using (SqlConnection Main = new SqlConnection(bob.ToString()))
                 using (SqlCommand BuildLogInsert = new SqlCommand("BuildLogInsert", Main))
                 {
                     BuildLogInsert.CommandType = CommandType.StoredProcedure;
@@ -2093,7 +2304,14 @@ namespace NBAdbToolbox
             #endregion
             #region Completion Message
             completionMessage += elapsedStringSeason + ". ";
-            completionMessage += iterator + " games, " + RegularSeasonGames + "/" + PostseasonGames + "\n";
+            if(source == "Current Refresh")
+            {
+                completionMessage += iterator + " games.";
+            }
+            else
+            {
+                completionMessage += iterator + " games, " + RegularSeasonGames + "/" + PostseasonGames + "\n";
+            }
             int lblLeft = lblWorkingOn.Width;
             ChangeLabel(ThemeColor, lblWorkingOn, pnlLoad, new List<string>
                         {
@@ -2109,6 +2327,14 @@ namespace NBAdbToolbox
              /*Height*/     "."
                         });
             lblWorkingOn.Left = pnlLoad.Width - lblWorkingOn.Width;
+            if(source == "Current")
+            {
+                lblWorkingOn.Top = lblSeasonStatusLoad.Bottom;
+            }
+            else 
+            {
+                lblWorkingOn.Top = 0;
+            }
             #endregion
 
             if (seasonIterator != selectedSeasons && settings.Sound != "Muted")
@@ -2128,6 +2354,7 @@ namespace NBAdbToolbox
             root = null;
             rootC = null;
             rootCPBP = null;
+            schedule = null;
             SeasonID = 0;
             GameID = 0;
             RegularSeasonGames = 0;
@@ -2154,8 +2381,9 @@ namespace NBAdbToolbox
                 PlayCompletionSound("Run");
             }
             #region Enable buttons and clear label text
-            btnPopulate.Enabled = true;
-            btnEdit.Enabled = true;
+            ButtonChangeState(btnPopulate, true);
+            ButtonChangeState(btnEdit, true);
+            ButtonChangeState(btnRefresh, true);
             listSeasons.Enabled = true;
 
             lblStatus.Text = "Welcome Back!";
@@ -2381,11 +2609,9 @@ namespace NBAdbToolbox
                 "true",
                 ((int)(lblDbUtil.Height * .9)).ToString()
             });
-            lblDbOptions.Left = (pnlDbUtil.ClientSize.Width - lblDbOptions.Width) / 2;
 
-
-            ChangeLabel(ThemeColor, lblDbSelectSeason, lblDbOptions, new List<string> {
-                "Season Select",
+            ChangeLabel(ThemeColor, lblPopulate, lblDbOptions, new List<string> {
+                ".",
                 "Bold",
                 fontSize.ToString(),
                 ".",
@@ -2396,24 +2622,35 @@ namespace NBAdbToolbox
                 "true",
                 "."
             });
+
+            ChangeLabel(ThemeColor, lblDbSelectSeason, lblDbOptions, new List<string> {
+                "Season Select",
+                "Bold",
+                fontSize.ToString(),
+                ".",
+                "true",
+                pnlDbUtil.Left.ToString(),
+                lblPopulate.Bottom.ToString(),
+                ThemeColor.ToString(),
+                "true",
+                "."
+            });
             lblDbSelectSeason.Left = (int)(listSeasons.Width * .03);
+            
 
             listSeasons.SelectionMode = SelectionMode.MultiExtended;
-            listSeasons.Left = pnlDbUtil.Left;
             listSeasons.KeyDown += ListSeasons_SelectAll;
 
             btnPopulate.Text = "Populate Db";
             btnPopulate.Font = SetFontSize("Segoe UI", (float)(fontSize / 2.7), FontStyle.Bold, (int)(listSeasons.Width * .8), btnPopulate); //6.5
             btnPopulate.AutoSize = true;
             btnPopulate.Width = (int)(listSeasons.Width * .9);
-            btnPopulate.Left = (int)(listSeasons.Width * .05);
+
+
         }
 
         public void AddControlsAfterConnection()
         {
-
-
-
             float fontSize = ((float)(screenFontSize * pnlWelcome.Height * .08) / (96 / 12)) * (72 / 12);
 
             pnlDbUtil.Parent = bgCourt;
@@ -2597,10 +2834,12 @@ namespace NBAdbToolbox
             if (!isBuildEnabled)
             {
                 btnBuild.Enabled = false;
+                ButtonChangeState(btnBuild, false);
             }
             else
             {
                 btnBuild.Enabled = true;
+                ButtonChangeState(btnBuild, true);
             }
 
 
@@ -2659,7 +2898,6 @@ namespace NBAdbToolbox
             });
             lblDbOvExpand.Left = (pnlDbUtil.Left + pnlDbUtil.Width - (lblDbOvExpand.Width + SystemInformation.VerticalScrollBarWidth));
 
-            ArrangeOverviewControls();
 
 
 
@@ -2751,14 +2989,46 @@ namespace NBAdbToolbox
             boxSoundOptions.SelectedItem = settings.Sound;
 
             lblDbOvName.FlatStyle = FlatStyle.Flat;
+
+
+            lblDbOptions.AutoSize = true;
+            lblDbOptions.Left = (pnlDbUtil.ClientSize.Width - lblDbOptions.Width) / 2;
+
+
+
+            lblPopulate.Font = SetFontSize("Segoe UI", (float)(fontSize), FontStyle.Bold, (int)(lblDbUtil.Width / 1.5), lblRefresh);
+            lblPopulate.AutoSize = true;
+            lblRefresh.Font = SetFontSize("Segoe UI", (float)(fontSize), FontStyle.Bold, (int)(lblDbUtil.Width / 1.5), lblRefresh);
+            lblRefresh.AutoSize = true;
+            if (listSeasons.Items.Count > 0)
+            {
+                btnRefresh.Text = "Refresh " + listSeasons.Items[0].ToString() + " data";
+            }
+            else
+            {
+                btnRefresh.Enabled = false;
+                ButtonChangeState(btnRefresh, false);
+            }
+            btnRefresh.Font = SetFontSize("Segoe UI", (float)(fontSize), FontStyle.Bold, (int)(lblRefresh.Width * .8), btnRefresh);
+            btnRefresh.AutoSize = true;
+            ArrangeOverviewControls();
         }
 
         public void ArrangeOverviewControls()
         {
+            int spacer = (int)(pnlDbUtil.Height * .01);
             lblDbOptions.Top = pnlDbOverview.Bottom;
-            lblDbSelectSeason.Top = lblDbOptions.Bottom;
+            lblPopulate.Top = lblDbOptions.Bottom;
+            lblDbSelectSeason.Top = lblPopulate.Bottom;
             listSeasons.Top = lblDbSelectSeason.Bottom;
             btnPopulate.Top = listSeasons.Bottom; //subject to change
+            lblRefresh.Top = btnPopulate.Bottom + (int)(btnPopulate.Height / 2);
+            btnRefresh.Top = lblRefresh.Bottom;
+            btnPopulate.Left = (int)(listSeasons.Width * .05);
+            btnRefresh.Left = (int)((lblRefresh.Width - btnRefresh.Width) * .5);
+            listSeasons.Left = btnRefresh.Left;
+            lblDbSelectSeason.Left = (int)((listSeasons.Width - listSeasons.Width) * .5) + listSeasons.Left;
+            btnPopulate.Left = btnRefresh.Left;
         }
         public void InitializeElements()
         {
@@ -2779,9 +3049,12 @@ namespace NBAdbToolbox
             AddPanelElement(pnlLoad, lblSeasonStatusLoadInfo);
             AddPanelElement(pnlLoad, lblSeasonStatusLoad);
             AddPanelElement(pnlLoad, picLoad);
+            AddPanelElement(pnlDbUtil, btnRefresh);
+            AddPanelElement(pnlDbUtil, lblRefresh);
             AddPanelElement(pnlDbUtil, btnPopulate);
             AddPanelElement(pnlDbUtil, listSeasons);
             AddPanelElement(pnlDbUtil, lblDbSelectSeason);
+            AddPanelElement(pnlDbUtil, lblPopulate);
             AddPanelElement(pnlDbUtil, lblDbOptions);
             AddPanelElement(pnlDbUtil, lblDbOvExpand);
             AddPanelElement(pnlDbUtil, lblDbOvName);
@@ -3214,9 +3487,13 @@ namespace NBAdbToolbox
                 this.ActiveControl = null;
                 pnlDbOverview.Height = (int)(lblDbOverview.Height * 1.3);
                 lblDbOptions.Top = pnlDbOverview.Bottom;
-                lblDbSelectSeason.Top = lblDbOptions.Bottom;
+                lblPopulate.Top = lblDbOptions.Bottom;
+                lblDbSelectSeason.Top = lblPopulate.Bottom;
                 listSeasons.Top = lblDbSelectSeason.Bottom;
                 btnPopulate.Top = listSeasons.Bottom;
+                lblRefresh.Top = btnPopulate.Bottom + (int)(btnPopulate.Height / 2);
+                btnRefresh.Top = lblRefresh.Bottom;
+
                 if (dbConnection)
                 {
                     lblDbOvName.ForeColor = SuccessColor;
@@ -3241,9 +3518,12 @@ namespace NBAdbToolbox
                 dbOverviewOpened = true;
                 //pnlDbOverview.Height = (int)(pnlDbUtil.Height / 2);
                 lblDbOptions.Top = pnlDbOverview.Bottom;
-                lblDbSelectSeason.Top = lblDbOptions.Bottom;
+                lblPopulate.Top = lblDbOptions.Bottom;
+                lblDbSelectSeason.Top = lblPopulate.Bottom;
                 listSeasons.Top = lblDbSelectSeason.Bottom;
                 btnPopulate.Top = listSeasons.Bottom;
+                lblRefresh.Top = btnPopulate.Bottom + (int)(btnPopulate.Height / 2);
+                btnRefresh.Top = lblRefresh.Bottom;
             }
 
             //show and build overview
@@ -3273,17 +3553,23 @@ namespace NBAdbToolbox
             {
                 pnlDbOverview.Height = lblUnpopulated.Bottom + pnlDbOverview.Top;
                 lblDbOptions.Top = pnlDbOverview.Bottom;
-                lblDbSelectSeason.Top = lblDbOptions.Bottom;
+                lblPopulate.Top = lblDbOptions.Bottom;
+                lblDbSelectSeason.Top = lblPopulate.Bottom;
                 listSeasons.Top = lblDbSelectSeason.Bottom;
                 btnPopulate.Top = listSeasons.Bottom;
+                lblRefresh.Top = btnPopulate.Bottom + (int)(btnPopulate.Height / 2);
+                btnRefresh.Top = lblRefresh.Bottom;
             }
             else if (vis)
             {
                 pnlDbOverview.Height = (int)(pnlDbUtil.Height / 2);
                 lblDbOptions.Top = pnlDbOverview.Bottom;
-                lblDbSelectSeason.Top = lblDbOptions.Bottom;
+                lblPopulate.Top = lblDbOptions.Bottom;
+                lblDbSelectSeason.Top = lblPopulate.Bottom;
                 listSeasons.Top = lblDbSelectSeason.Bottom;
                 btnPopulate.Top = listSeasons.Bottom;
+                lblRefresh.Top = btnPopulate.Bottom + (int)(btnPopulate.Height / 2);
+                btnRefresh.Top = lblRefresh.Bottom;
             }
         }
         private void BuildOverview()
@@ -3344,7 +3630,7 @@ namespace NBAdbToolbox
             //check which years have data
             for (int year = 2024; year >= 1996; year--)
             {
-                if (seasonInfo.Any(s => s.SeasonID == year && s.Item2.Loaded == 1))
+                if (seasonInfo.Any(s => s.SeasonID == year && (s.Item2.TeamBox > 0 || s.Item2.PlayByPlay > 0 || s.Item2.PlayerBox > 0)))
                 {
                     populatedYears.Add(year);
                     popCount++;
@@ -3484,7 +3770,8 @@ namespace NBAdbToolbox
             //find the season data for this year
             var seasonData = seasonInfo.FirstOrDefault(s => s.SeasonID == year);
             var seasonDataControl = seasonControl.FirstOrDefault(s => s.SeasonID == year);
-            if (seasonData.Item2.Loaded == 0) return; //no data found
+            var seasonCurrentDataControl = seasonCurrentControl.FirstOrDefault(s => s.SeasonID == year);
+
 
             //data values in order: Game, Team, Arena, Player, Official, TeamBox, PlayerBox, PlayByPlay
             int[] dataValues = {
@@ -3496,7 +3783,9 @@ namespace NBAdbToolbox
                 seasonData.Item2.PlayerBox,
                 seasonData.Item2.TeamBox,
                 seasonData.Item2.PlayByPlay,
-                seasonData.Item2.Games
+                seasonData.Item2.Games,
+                seasonData.Item2.HistoricLoaded,
+                seasonData.Item2.CurrentLoaded
             };
             int[] controlValues = {
                 seasonDataControl.Item2.Game,
@@ -3508,6 +3797,17 @@ namespace NBAdbToolbox
                 seasonDataControl.Item2.TeamBox,
                 seasonDataControl.Item2.PlayByPlay,
                 seasonDataControl.Item2.Games
+            };
+            int[] controlCurrentValues = {
+                seasonCurrentDataControl.Item2.Game,
+                seasonCurrentDataControl.Item2.Team,
+                seasonCurrentDataControl.Item2.Arena,
+                seasonCurrentDataControl.Item2.Player,
+                seasonCurrentDataControl.Item2.Official,
+                seasonCurrentDataControl.Item2.PlayerBox,
+                seasonCurrentDataControl.Item2.TeamBox,
+                seasonCurrentDataControl.Item2.PlayByPlay,
+                seasonCurrentDataControl.Item2.Games
             };
             string[] textValues =
             {
@@ -3524,10 +3824,41 @@ namespace NBAdbToolbox
                 dataLabel.Left = columnPositions[i]; //center under column
                 dataLabel.Top = rowPosition + (int)(dataLabel.Height * .4);
                 dataLabel.Visible = true;
-                if (dataValues[i] != controlValues[i])
+                if (dataValues[9] == 1 && dataValues[10] == 0)
                 {
-                    dataLabel.ForeColor = ErrorColor; 
-                    seasonDataWarning = true;
+                    if (dataValues[i] != controlValues[i])
+                    {
+                        dataLabel.ForeColor = ErrorColor;
+                        seasonDataWarning = true;
+                    }
+                    else
+                    {
+                        dataLabel.ForeColor = ThemeColor;
+                    }
+                }
+                else if(dataValues[10] == 1 && dataValues[9] == 0)
+                {
+                    if (dataValues[i] != controlCurrentValues[i])
+                    {
+                        dataLabel.ForeColor = ErrorColor;
+                        seasonDataWarning = true;
+                    }
+                    else
+                    {
+                        dataLabel.ForeColor = ThemeColor;
+                    }
+                }
+                else
+                {
+                    if (dataValues[i] != controlValues[i] || dataValues[i] != controlCurrentValues[i])
+                    {
+                        dataLabel.ForeColor = ErrorColor;
+                        seasonDataError = true;
+                    }
+                    else
+                    {
+                        dataLabel.ForeColor = ThemeColor;
+                    }
                 }
             }
             if(!seasonDataWarning && !seasonDataError)
@@ -3717,7 +4048,7 @@ namespace NBAdbToolbox
                         while (sdr.Read())
                         {
                             seasonInfo.Add((sdr.GetInt32(0), (sdr.GetInt32(1), sdr.GetInt32(2), sdr.GetInt32(3), sdr.GetInt32(4), sdr.GetInt32(5), sdr.GetInt32(6), sdr.GetInt32(7)
-                                , sdr.GetInt32(8), sdr.GetInt32(9), sdr.GetInt32(10))));
+                                , sdr.GetInt32(8), sdr.GetInt32(9), sdr.GetInt32(10), sdr.GetInt32(11), sdr.GetInt32(12))));
                         }
                     }
                 }
@@ -5725,12 +6056,5 @@ namespace NBAdbToolbox
 
 
 
-
-        public async Task GetSchedule()
-        {
-            schedule = null;
-            List<Games> games = new List<Games>();
-            scheduleGames = await leagueSchedule.GetJSON();
-        }
     }
 }

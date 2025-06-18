@@ -11,7 +11,8 @@ namespace NBAdbToolboxSchedule
 {
     public class Schedule
     {
-        public async Task<List<Game>> GetJSON()
+        //public async Task<List<Game>> GetJSON(DateTime lastDate)
+        public async Task<List<Game>> GetJSON(List<int> gameList)
         {
             string pbpLink = "https://cdn.nba.com/static/json/staticData/scheduleLeagueV2_1.json";
             string json = "";
@@ -44,11 +45,16 @@ namespace NBAdbToolboxSchedule
             {
                 foreach(Game game in date.Games)
                 {
-                    if(game.GameDateTimeEst <= System.DateTime.Now)
+                    //if(game.GameDateTimeEst.Date >= lastDate.Date && game.GameDateTimeEst <= DateTime.Now)
+                    //{
+                    //    GameList.Add(game);
+                    //}
+                    int gameId = int.Parse(game.GameId);
+                    if (!gameList.Contains(Int32.Parse(game.GameId)) && game.GameId.Substring(2, 1) != "1" && game.GameId.Substring(2, 1) != "3" && game.GameDateTimeEst <= DateTime.Now)
                     {
                         GameList.Add(game);
                     }
-                    GameList = GameList.OrderBy(g => int.Parse(g.GameId)).ToList();
+                    GameList = GameList.OrderBy(g => Int32.Parse(g.GameId)).ToList();
                 }
             }
             return GameList;

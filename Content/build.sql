@@ -359,7 +359,7 @@ insert into Season values(2020, 1610612749, 1080, 91, 0, 0)
 insert into Season values(2021, 1610612744, 1230, 93, 0, 0)
 insert into Season values(2022, 1610612743, 1230, 90, 0, 0)
 insert into Season values(2023, 1610612738, 1230, 89, 0, 0)
-insert into Season values(2024, null, 1230, 83, 0, 0)
+insert into Season values(2024, null, 1230, 87, 0, 0)
 ~~~
 
 create schema util
@@ -420,10 +420,11 @@ select s.SeasonID, s.Games + s.PlayoffGames Games, case when s.HistoricLoaded = 
 	 , (select COUNT(distinct pb.GameID) from PlayerBox pb where s.SeasonID = pb.SeasonID) PlayerBox
 	 , (select COUNT(distinct Tb.GameID) from TeamBox Tb where s.SeasonID = Tb.SeasonID) TeamBox
 	 , (select COUNT(distinct pbp.GameID) from PlayByPlay pbp where s.SeasonID = pbp.SeasonID) PlayByPlay
+	 , HistoricLoaded, CurrentLoaded
 
 from Season s left join
 		Game g on s.SeasonID = g.SeasonID 
-group by s.SeasonID, s.Games, s.PlayoffGames,  case when s.HistoricLoaded = 1 or s.CurrentLoaded = 1 then 1 else 0 end
+group by s.SeasonID, s.Games, s.PlayoffGames, HistoricLoaded, CurrentLoaded
 Order by SeasonID desc
 ~~~
 
@@ -531,6 +532,7 @@ BEGIN
     delete from Arena with (tablock) where SeasonID = @season;
     delete from Team with (tablock) where SeasonID = @season;
     delete from util.MissingData with (tablock) where SeasonID = @season;
+    update Season set CurrentLoaded = 0, HistoricLoaded = 0 where SeasonID = @season
 END
 ~~~
 
