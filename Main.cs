@@ -1227,7 +1227,6 @@ namespace NBAdbToolbox
                     // Use FlatStyle to have more control
                     btn.FlatStyle = FlatStyle.Flat;
                     btn.FlatAppearance.BorderSize = 1;
-                    btn.FlatAppearance.BorderColor = ThemeColor;
                 }
                 else
                 {
@@ -1663,8 +1662,12 @@ namespace NBAdbToolbox
             btn.Enabled = enabled;
             btn.ForeColor = SubThemeColor;
             btn.BackColor = ThemeColor;
+            btn.FlatStyle = FlatStyle.Flat;
+            btn.FlatAppearance.BorderSize = 2;
+            btn.FlatAppearance.BorderColor = Color.DodgerBlue;
             if (!enabled)
             {
+                btn.FlatAppearance.BorderColor = Color.Black;
                 btn.BackColor = Color.Gainsboro;
             }
         }
@@ -1672,7 +1675,6 @@ namespace NBAdbToolbox
         public void UIController(string sender)//If an event occurs that will change the state of the UI, it must run through here
         {
             float fontSize = ((float)(screenFontSize * pnlWelcome.Height * .08) / (96 / 12)) * (72 / 12);
-            CheckDataFiles(); //GetSeasons();
             if (sender == "NoConnection")
             {
                 ButtonChangeState(btnBuild, false);
@@ -1775,6 +1777,11 @@ namespace NBAdbToolbox
                 lblDbUtil.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, (int)(pnlDbUtil.Width * .7), lblDbUtil);
                 lblDbUtil.AutoSize = true;
                 lblDbUtil.Left = (pnlDbUtil.Width - lblDbUtil.Width) / 2;
+                CheckDataFiles(); //GetSeasons();
+            }
+            if (allFilesDownloaded)
+            {
+                ButtonChangeState(btnDownloadSeasonData, false);
             }
 
 
@@ -4258,6 +4265,7 @@ namespace NBAdbToolbox
                     {
                         k = 0;
                     }
+                    allFilesDownloaded = true;
                 }
                 else
                 {
