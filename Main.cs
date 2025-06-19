@@ -190,8 +190,16 @@ namespace NBAdbToolbox
         {
             Text = "Populate Season Data"
         };
+        public Label lblDownloadSeasonData = new Label
+        {
+            Text = "Download Data Files"
+        };
+        public Label lblDlSelectSeason = new Label();
+
         public ListBox listSeasons = new ListBox();
+        public ListBox listDownloadSeasonData = new ListBox();
         public Button btnPopulate = new Button();
+        public Button btnDownloadSeasonData = new Button();
         public Label lblRefresh = new Label
         {
             Text = "Refresh Current Season"
@@ -698,7 +706,7 @@ namespace NBAdbToolbox
                     }
                     stopwatchFull.Stop();
                     PopulateDb_10_Completion();
-                    GetSeasons();
+                    CheckDataFiles(); //GetSeasons();
                     if (dbOverviewOpened)
                     {
                         lblDbOptions.Invoke((MethodInvoker)(() =>
@@ -737,10 +745,11 @@ namespace NBAdbToolbox
 
             #endregion
             #region Edit Connection & Build DB
-            if (dbConnection)
-            {
-                GetSeasons();
-            }
+            //if (dbConnection)
+            //{
+            //    CheckDataFiles(); //GetSeasons();
+            //}
+            CheckDataFiles(); //GetSeasons();
 
             //Edit Button Actions
             btnEdit.Click += (s, e) =>
@@ -932,6 +941,7 @@ namespace NBAdbToolbox
                         CenterElement(pnlDbUtil, lblDbOptions);
                     }));
                     await Task.Run(() => GetSeasonInfo());
+                    CheckDataFiles(); //GetSeasons();
                     lblDbOptions.Invoke((MethodInvoker)(() =>
                     {
                         lblDbOptions.Text = "Options";
@@ -954,6 +964,7 @@ namespace NBAdbToolbox
             ButtonChangeState(btnRefresh, true);
             ButtonChangeState(btnPopulate, true);
             ButtonChangeState(btnEdit, true);
+            ButtonChangeState(btnDownloadSeasonData, true);
 
         }
         public void InitializeDbLoad()
@@ -1207,17 +1218,21 @@ namespace NBAdbToolbox
             //update buttons
             foreach (Button btn in buttons)
             {
-                    btn.ForeColor = SubThemeColor;
-                    btn.BackColor = ThemeColor;
+                btn.ForeColor = SubThemeColor;
+                btn.BackColor = ThemeColor;
                 
                 if (!btn.Enabled)
                 {
-                    btnBuild.BackColor = Color.Gainsboro;
+                    btn.BackColor = Color.Gainsboro;
                     // Use FlatStyle to have more control
                     btn.FlatStyle = FlatStyle.Flat;
                     btn.FlatAppearance.BorderSize = 1;
                     btn.FlatAppearance.BorderColor = ThemeColor;
-
+                }
+                else
+                {
+                    btn.ForeColor = SubThemeColor;
+                    btn.BackColor = ThemeColor;
                 }
             }
             //update buttons
@@ -1576,7 +1591,6 @@ namespace NBAdbToolbox
             ClearImage(picDbStatus);
             picDbStatus.Image = Image.FromFile(imagePathDb);
             cString = bob.ToString();
-            GetSeasons();
             UIController("DbExists");
         }
         public void DbMissing()
@@ -1647,8 +1661,8 @@ namespace NBAdbToolbox
         public void ButtonChangeState(Button btn, bool enabled)
         {
             btn.Enabled = enabled;
-            btn.ForeColor = ThemeColor;
-            btn.BackColor = SubThemeColor;
+            btn.ForeColor = SubThemeColor;
+            btn.BackColor = ThemeColor;
             if (!enabled)
             {
                 btn.BackColor = Color.Gainsboro;
@@ -1658,6 +1672,7 @@ namespace NBAdbToolbox
         public void UIController(string sender)//If an event occurs that will change the state of the UI, it must run through here
         {
             float fontSize = ((float)(screenFontSize * pnlWelcome.Height * .08) / (96 / 12)) * (72 / 12);
+            CheckDataFiles(); //GetSeasons();
             if (sender == "NoConnection")
             {
                 ButtonChangeState(btnBuild, false);
@@ -2622,6 +2637,18 @@ namespace NBAdbToolbox
                 "true",
                 "."
             });
+            ChangeLabel(ThemeColor, lblDownloadSeasonData, lblDbOptions, new List<string> {
+                ".",
+                "Bold",
+                fontSize.ToString(),
+                ".",
+                "true",
+                ".",
+                lblDbOptions.Bottom.ToString(),
+                ThemeColor.ToString(),
+                "true",
+                "."
+            });
 
             ChangeLabel(ThemeColor, lblDbSelectSeason, lblDbOptions, new List<string> {
                 "Season Select",
@@ -2636,15 +2663,80 @@ namespace NBAdbToolbox
                 "."
             });
             lblDbSelectSeason.Left = (int)(listSeasons.Width * .03);
-            
+            ChangeLabel(ThemeColor, lblDlSelectSeason, lblDbOptions, new List<string> {
+                "Season Select",
+                "Bold",
+                fontSize.ToString(),
+                ".",
+                "true",
+                ".",
+                lblDownloadSeasonData.Bottom.ToString(),
+                ThemeColor.ToString(),
+                "true",
+                "."
+            });
+
 
             listSeasons.SelectionMode = SelectionMode.MultiExtended;
-            listSeasons.KeyDown += ListSeasons_SelectAll;
+            listSeasons.KeyDown += ListSeasons_SelectAll; listSeasons.DrawMode = DrawMode.OwnerDrawFixed;
+
+            listSeasons.DrawItem += (sender, e) =>
+            {
+                if (e.Index < 0) return;
+
+                string season = listSeasons.Items[e.Index].ToString();
+                bool isDownloaded = downloadedSeasons.Contains(season);
+
+                //Draw background - gray out if files don't exist
+                if (!isDownloaded)
+                {
+                    e.Graphics.FillRectangle(new SolidBrush(Color.Black), e.Bounds);
+                }
+                else if ((e.State & DrawItemState.Selected) == DrawItemState.Selected)
+                {
+                    e.Graphics.FillRectangle(new SolidBrush(SystemColors.Highlight), e.Bounds);
+                }
+                else
+                {
+                    e.Graphics.FillRectangle(new SolidBrush(Color.Black), e.Bounds);
+                }
+
+                //Draw text
+                Color textThemeColor = SubThemeColor;
+                if (settings.BackgroundImage == "Court Dark")
+                {
+                    textThemeColor = ThemeColor;
+                }
+                Color textColor = !isDownloaded ? ErrorColor :
+                ((e.State & DrawItemState.Selected) == DrawItemState.Selected ? SystemColors.HighlightText : textThemeColor);
+
+                e.Graphics.DrawString(season, listSeasons.Font, new SolidBrush(textColor), e.Bounds);
+                e.DrawFocusRectangle();
+            };
+
+            //Prevent selection of seasons without files
+            listSeasons.SelectedIndexChanged += (s, e) =>
+            {
+                for (int i = listSeasons.SelectedIndices.Count - 1; i >= 0; i--)
+                {
+                    string season = listSeasons.Items[listSeasons.SelectedIndices[i]].ToString();
+                    if (!downloadedSeasons.Contains(season))
+                    {
+                        listSeasons.SetSelected(listSeasons.SelectedIndices[i], false);
+                    }
+                }
+            };
 
             btnPopulate.Text = "Populate Db";
             btnPopulate.Font = SetFontSize("Segoe UI", (float)(fontSize / 2.7), FontStyle.Bold, (int)(listSeasons.Width * .8), btnPopulate); //6.5
             btnPopulate.AutoSize = true;
             btnPopulate.Width = (int)(listSeasons.Width * .9);
+
+            btnDownloadSeasonData.Text = "Download";
+            btnDownloadSeasonData.Font = SetFontSize("Segoe UI", (float)(fontSize / 2.7), FontStyle.Bold, (int)(listSeasons.Width * .8), btnPopulate); //6.5
+            btnDownloadSeasonData.Height = btnPopulate.Height;
+            btnDownloadSeasonData.Width = (int)(listSeasons.Width * .9);
+
 
 
         }
@@ -2996,8 +3088,10 @@ namespace NBAdbToolbox
 
 
 
-            lblPopulate.Font = SetFontSize("Segoe UI", (float)(fontSize), FontStyle.Bold, (int)(lblDbUtil.Width / 1.5), lblRefresh);
+            lblPopulate.Font = SetFontSize("Segoe UI", (float)(fontSize), FontStyle.Bold, (int)(lblDbUtil.Width / 1.5), lblPopulate);
             lblPopulate.AutoSize = true;
+            lblDownloadSeasonData.Font = SetFontSize("Segoe UI", (float)(fontSize), FontStyle.Bold, (int)(lblDbUtil.Width / 1.5), lblDownloadSeasonData);
+            lblDownloadSeasonData.AutoSize = true;
             lblRefresh.Font = SetFontSize("Segoe UI", (float)(fontSize), FontStyle.Bold, (int)(lblDbUtil.Width / 1.5), lblRefresh);
             lblRefresh.AutoSize = true;
             if (listSeasons.Items.Count > 0)
@@ -3011,6 +3105,9 @@ namespace NBAdbToolbox
             }
             btnRefresh.Font = SetFontSize("Segoe UI", (float)(fontSize), FontStyle.Bold, (int)(lblRefresh.Width * .8), btnRefresh);
             btnRefresh.AutoSize = true;
+            btnDownloadSeasonData.Font = SetFontSize("Segoe UI", (float)(fontSize), FontStyle.Bold, (int)(listSeasons.Width * .8), btnDownloadSeasonData);
+            btnDownloadSeasonData.AutoSize = true;
+            btnDownloadSeasonData.Height = btnPopulate.Height;
             ArrangeOverviewControls();
         }
 
@@ -3019,16 +3116,27 @@ namespace NBAdbToolbox
             int spacer = (int)(pnlDbUtil.Height * .01);
             lblDbOptions.Top = pnlDbOverview.Bottom;
             lblPopulate.Top = lblDbOptions.Bottom;
+            lblDownloadSeasonData.Top = lblDbOptions.Bottom;
             lblDbSelectSeason.Top = lblPopulate.Bottom;
+            lblDlSelectSeason.Top = lblPopulate.Bottom;
             listSeasons.Top = lblDbSelectSeason.Bottom;
-            btnPopulate.Top = listSeasons.Bottom; //subject to change
+            listDownloadSeasonData.Top = lblDbSelectSeason.Bottom;
+
+            btnPopulate.Top = listSeasons.Bottom;
+            btnDownloadSeasonData.Top = listDownloadSeasonData.Bottom;
             lblRefresh.Top = btnPopulate.Bottom + (int)(btnPopulate.Height / 2);
             btnRefresh.Top = lblRefresh.Bottom;
             btnPopulate.Left = (int)(listSeasons.Width * .05);
+
             btnRefresh.Left = (int)((lblRefresh.Width - btnRefresh.Width) * .5);
             listSeasons.Left = btnRefresh.Left;
             lblDbSelectSeason.Left = (int)((listSeasons.Width - listSeasons.Width) * .5) + listSeasons.Left;
             btnPopulate.Left = btnRefresh.Left;
+
+            lblDownloadSeasonData.Left = lblDbOptions.Left + (int)(lblDbOptions.Width / 2);
+            listDownloadSeasonData.Left = lblDownloadSeasonData.Left + listSeasons.Left;
+            lblDlSelectSeason.Left = lblDownloadSeasonData.Left + lblDbSelectSeason.Left;
+            btnDownloadSeasonData.Left = listDownloadSeasonData.Left;
         }
         public void InitializeElements()
         {
@@ -3049,6 +3157,10 @@ namespace NBAdbToolbox
             AddPanelElement(pnlLoad, lblSeasonStatusLoadInfo);
             AddPanelElement(pnlLoad, lblSeasonStatusLoad);
             AddPanelElement(pnlLoad, picLoad);
+            AddPanelElement(pnlDbUtil, btnDownloadSeasonData);
+            AddPanelElement(pnlDbUtil, lblDownloadSeasonData);
+            AddPanelElement(pnlDbUtil, lblDlSelectSeason);
+            AddPanelElement(pnlDbUtil, listDownloadSeasonData);
             AddPanelElement(pnlDbUtil, btnRefresh);
             AddPanelElement(pnlDbUtil, lblRefresh);
             AddPanelElement(pnlDbUtil, btnPopulate);
@@ -3494,6 +3606,14 @@ namespace NBAdbToolbox
                 lblRefresh.Top = btnPopulate.Bottom + (int)(btnPopulate.Height / 2);
                 btnRefresh.Top = lblRefresh.Bottom;
 
+                lblDownloadSeasonData.Top = lblDbOptions.Bottom;
+                lblDlSelectSeason.Top = lblPopulate.Bottom;
+                listDownloadSeasonData.Top = lblDbSelectSeason.Bottom;
+                btnDownloadSeasonData.Top = listDownloadSeasonData.Bottom;
+                lblDownloadSeasonData.Left = lblDbOptions.Left + (int)(lblDbOptions.Width / 2);
+                listDownloadSeasonData.Left = lblDownloadSeasonData.Left + listSeasons.Left;
+                lblDlSelectSeason.Left = lblDownloadSeasonData.Left + lblDbSelectSeason.Left;
+                btnDownloadSeasonData.Left = listDownloadSeasonData.Left;
                 if (dbConnection)
                 {
                     lblDbOvName.ForeColor = SuccessColor;
@@ -3524,6 +3644,15 @@ namespace NBAdbToolbox
                 btnPopulate.Top = listSeasons.Bottom;
                 lblRefresh.Top = btnPopulate.Bottom + (int)(btnPopulate.Height / 2);
                 btnRefresh.Top = lblRefresh.Bottom;
+
+                lblDownloadSeasonData.Top = lblDbOptions.Bottom;
+                lblDlSelectSeason.Top = lblPopulate.Bottom;
+                listDownloadSeasonData.Top = lblDbSelectSeason.Bottom;
+                btnDownloadSeasonData.Top = listDownloadSeasonData.Bottom;
+                lblDownloadSeasonData.Left = lblDbOptions.Left + (int)(lblDbOptions.Width / 2);
+                listDownloadSeasonData.Left = lblDownloadSeasonData.Left + listSeasons.Left;
+                lblDlSelectSeason.Left = lblDownloadSeasonData.Left + lblDbSelectSeason.Left;
+                btnDownloadSeasonData.Left = listDownloadSeasonData.Left;
             }
 
             //show and build overview
@@ -3559,6 +3688,15 @@ namespace NBAdbToolbox
                 btnPopulate.Top = listSeasons.Bottom;
                 lblRefresh.Top = btnPopulate.Bottom + (int)(btnPopulate.Height / 2);
                 btnRefresh.Top = lblRefresh.Bottom;
+
+                lblDownloadSeasonData.Top = lblDbOptions.Bottom;
+                lblDlSelectSeason.Top = lblPopulate.Bottom;
+                listDownloadSeasonData.Top = lblDbSelectSeason.Bottom;
+                btnDownloadSeasonData.Top = listDownloadSeasonData.Bottom;
+                lblDownloadSeasonData.Left = lblDbOptions.Left + (int)(lblDbOptions.Width / 2);
+                listDownloadSeasonData.Left = lblDownloadSeasonData.Left + listSeasons.Left;
+                lblDlSelectSeason.Left = lblDownloadSeasonData.Left + lblDbSelectSeason.Left;
+                btnDownloadSeasonData.Left = listDownloadSeasonData.Left;
             }
             else if (vis)
             {
@@ -3570,6 +3708,15 @@ namespace NBAdbToolbox
                 btnPopulate.Top = listSeasons.Bottom;
                 lblRefresh.Top = btnPopulate.Bottom + (int)(btnPopulate.Height / 2);
                 btnRefresh.Top = lblRefresh.Bottom;
+
+                lblDownloadSeasonData.Top = lblDbOptions.Bottom;
+                lblDlSelectSeason.Top = lblPopulate.Bottom;
+                listDownloadSeasonData.Top = lblDbSelectSeason.Bottom;
+                btnDownloadSeasonData.Top = listDownloadSeasonData.Bottom;
+                lblDownloadSeasonData.Left = lblDbOptions.Left + (int)(lblDbOptions.Width / 2);
+                listDownloadSeasonData.Left = lblDownloadSeasonData.Left + listSeasons.Left;
+                lblDlSelectSeason.Left = lblDownloadSeasonData.Left + lblDbSelectSeason.Left;
+                btnDownloadSeasonData.Left = listDownloadSeasonData.Left;
             }
         }
         private void BuildOverview()
@@ -4015,9 +4162,14 @@ namespace NBAdbToolbox
 
 
         #region Need to organize/move or delete
+
+        //Replace your existing GetSeasons method with this:
         public void GetSeasons()
         {
             listSeasons.Items.Clear();
+            string historicDataPath = Path.Combine(projectRoot, @"Content\Historic Data\");
+
+            int j = 0;
             using (SqlConnection conn = new SqlConnection(bob.ToString()))
             using (SqlCommand SQLSeasons = new SqlCommand("select cast(SeasonID as varchar(4)) from Season order by SeasonID desc", conn))
             {
@@ -4027,10 +4179,97 @@ namespace NBAdbToolbox
                 {
                     while (sdr.Read())
                     {
-                        listSeasons.Items.Add(sdr.GetString(0));
+                        string seasonID = sdr.GetString(0);
+                        listSeasons.Items.Add(seasonID);
+
+                        //Check if ALL files exist for this season
+                        int iter = (int.Parse(seasonID) <= 2012 || int.Parse(seasonID) == 2019 || int.Parse(seasonID) == 2020) ? 3 : 4;
+                        bool allFilesExist = true;
+
+                        for (int i = 0; i < iter; i++)
+                        {
+                            string fileName = $"{seasonID}p{i}.json";
+                            if (!File.Exists(Path.Combine(historicDataPath, fileName)))
+                            {
+                                allFilesExist = false;
+                                break;
+                            }
+                        }
+
+                        if (allFilesExist)
+                        {
+                            downloadedSeasons.Add(seasonID);
+                            if(j != -1)
+                            {
+                                j = 0;
+                            }
+                        }
+                        else
+                        {
+                            j = -1;
+                            missingSeasons.Add(seasonID);
+                            listDownloadSeasonData.Items.Add(seasonID);
+                            allFilesDownloaded = false;
+                            ButtonChangeState(btnDownloadSeasonData, true);
+                        }
                     }
                 }
             }
+            if(j != -1)
+            {
+                allFilesDownloaded = true;
+                ButtonChangeState(btnDownloadSeasonData, false);
+            }
+        }
+
+        public HashSet<string> downloadedSeasons = new HashSet<string>();
+        public HashSet<string> missingSeasons = new HashSet<string>();
+        public bool allFilesDownloaded = false;
+        public void CheckDataFiles()
+        {
+            listDownloadSeasonData.Items.Clear();
+            downloadedSeasons.Clear();
+            missingSeasons.Clear();
+            string historicDataPath = Path.Combine(projectRoot, @"Content\Historic Data\");
+            int k = 0;
+            for (int i = 2024; i >= 1996; i--)
+            {
+                string seasonID = i.ToString();
+                listSeasons.Items.Add(seasonID);
+
+                //Check if ALL files exist for this season
+                int iter = (int.Parse(seasonID) <= 2012 || int.Parse(seasonID) == 2019 || int.Parse(seasonID) == 2020) ? 3 : 4;
+                bool allFilesExist = true;
+
+                for (int j = 0; j < iter; j++)
+                {
+                    string fileName = $"{seasonID}p{j}.json";
+                    if (!File.Exists(Path.Combine(historicDataPath, fileName)))
+                    {
+                        allFilesExist = false;
+                        break;
+                    }
+                }
+
+                if (allFilesExist)
+                {
+                    downloadedSeasons.Add(seasonID);
+                    if (k != -1)
+                    {
+                        k = 0;
+                    }
+                }
+                else
+                {
+                    k = -1;
+                    missingSeasons.Add(seasonID);
+                    listDownloadSeasonData.Items.Add(seasonID);
+                    allFilesDownloaded = false;
+                    ButtonChangeState(btnDownloadSeasonData, true);
+                }
+
+            }
+
         }
         public void GetSeasonInfo()
         {
