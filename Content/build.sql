@@ -359,7 +359,7 @@ insert into Season values(2020, 1610612749, 1080, 91, 0, 0)
 insert into Season values(2021, 1610612744, 1230, 93, 0, 0)
 insert into Season values(2022, 1610612743, 1230, 90, 0, 0)
 insert into Season values(2023, 1610612738, 1230, 89, 0, 0)
-insert into Season values(2024, null, 1230, 87, 0, 0)
+insert into Season values(2024, null, 1230, 91, 0, 0)
 ~~~
 
 create schema util
@@ -420,6 +420,8 @@ select s.SeasonID, s.Games + s.PlayoffGames Games, case when s.HistoricLoaded = 
 	 , (select COUNT(distinct pb.GameID) from PlayerBox pb where s.SeasonID = pb.SeasonID) PlayerBox
 	 , (select COUNT(distinct Tb.GameID) from TeamBox Tb where s.SeasonID = Tb.SeasonID) TeamBox
 	 , (select COUNT(distinct pbp.GameID) from PlayByPlay pbp where s.SeasonID = pbp.SeasonID) PlayByPlay
+	 , (select COUNT(distinct sl.GameID) from StartingLineups sl where s.SeasonID = sl.SeasonID) StartingLineups
+	 , (select COUNT(distinct tbl.GameID) from TeamBoxLineups tbl where s.SeasonID = tbl.SeasonID) TeamBoxLineups
 	 , HistoricLoaded, CurrentLoaded
 
 from Season s left join
@@ -506,6 +508,58 @@ values(
 update Season set HistoricLoaded = 1 where SeasonID = @Season and @Historic = 1;
 update Season set CurrentLoaded  = 1 where SeasonID = @Season and @Current = 1;
 exec sp_msforeachtable 'alter table ? with check check constraint all';
+~~~
+
+create procedure TeamBoxLineupCalc @SeasonID int, @GameID int
+as
+select 
+concat('insert into TeamBoxLineups values(', p.SeasonID, ', ', p.GameID, ', ', p.TeamID, ', ', p.MatchupID, ', ''', 
+case when p.Starter = 1 then 'Starters' else 'Bench' end, ''', ''', 'minutesplaceholder'', '
+     , sum(p.Points), ', ', sum(p.FG2M), ', ', sum(p.FG2A)
+     , ', '
+     , cast(sum(p.[FG2%]) as decimal (18, 2))
+     , ', '
+     , sum(p.FG3M) 
+     , ', '
+     , sum(p.FG3A) 
+     , ', '
+     , cast(sum(p.[FG3%]) as decimal (18, 2))
+     , ', '
+     , sum(p.FGM) 
+     , ', '
+     , sum(p.FGA) 
+     , ', ' 
+     , cast(sum(p.[FG%]) as decimal (18, 2))
+     , ', '
+     , sum(p.FTM) 
+     , ', ' 
+     , sum(p.FTA) 
+     , ', ' 
+     , cast(sum(p.[FT%]) as decimal (18, 2))
+     , ', '
+     , sum(p.ReboundsDefensive)    
+     , ', '
+     , sum(p.ReboundsOffensive)    
+     , ', '
+     , sum(p.ReboundsTotal)
+     , ', '
+     , sum(p.Assists)      
+     , ', '
+     , cast(sum(p.AssistsTurnoverRatio) as decimal (18, 2)) 
+     , ', '
+     , sum(p.Steals)
+     , ', '
+     , sum(p.Turnovers)    
+     , ', '
+     , sum(p.Blocks)
+     , ', '
+     , sum(p.FoulsPersonal) 
+     , ')') InsertCmd     
+	 , cast(sum(p.MinutesCalculated) as decimal (18, 2)) MinutesCalculated   
+from PlayerBox p
+where Status != 'INACTIVE' and p.SeasonID = @SeasonID and GameID = @GameID
+group by  p.SeasonID, p.GameID, p.TeamID, p.MatchupID, p.Starter
+order by GameID, p.TeamID
 ~~~
 
 create procedure PlayByPlayCleanup

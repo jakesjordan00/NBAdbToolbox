@@ -18,6 +18,7 @@ using System.IO;
 using System.Linq;
 using System.Media;
 using System.Net;
+using System.Net.Http;
 using System.Runtime;
 using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
@@ -312,68 +313,54 @@ namespace NBAdbToolbox
         public Panel pnlNav = new Panel();
         public Panel pnlScoreboard = new Panel();
 
-        public HashSet<(int SeasonID, int Games)> seasonGames = new HashSet<(int, int)>
-        {
-            (2012, 1314),
-            (2013, 1319),
-            (2014, 1311),
-            (2015, 1316),
-            (2016, 1309),
-            (2017, 1311),
-            (2018, 1312),
-            (2019, 1142),
-            (2020, 1171),
-            (2021, 1323),
-            (2022, 1320),
-            (2023, 1318),
-            (2024, 1230)
-        };
-        public HashSet<(int SeasonID, (int Games, int Loaded, int Team, int Arena, int Player, int Official, int Game, int PlayerBox, int TeamBox, int PlayByPlay, 
+        public HashSet<(int SeasonID, (int Games, int Loaded, int Team, int Arena, int Player, int Official, int Game, int PlayerBox, int TeamBox, int PlayByPlay, int StartingLineups, int TeamBoxLineups,
             int HistoricLoaded, int CurrentLoaded))> seasonInfo
-            = new HashSet<(int, (int, int, int, int, int, int, int, int, int, int, int, int))>();
+            = new HashSet<(int, (int, int, int, int, int, int, int, int, int, int, int, int, int, int))>();
 
-        public HashSet<(int SeasonID, (int Games, int Loaded, int Team, int Arena, int Player, int Official, int Game, int PlayerBox, int TeamBox, int PlayByPlay))> seasonControl
-            = new HashSet<(int, (int, int, int, int, int, int, int, int, int, int))>()
+        public HashSet<(int SeasonID, (int Games, int Loaded, int Team, int Arena, int Player, int Official, int Game, int PlayerBox, int TeamBox, int PlayByPlay, int StartingLineups, int TeamBoxLineups))> seasonControl
+            = new HashSet<(int, (int, int, int, int, int, int, int, int, int, int, int, int))>()
             {
-                (2024, (1319, 1, 30, 36, 587, 80, 1319, 1319, 1319, 1319)),
-                (2023, (1319, 1, 30, 34, 595, 80, 1319, 1319, 1319, 1319)),
-                (2022, (1320, 1, 30, 35, 554, 82, 1320, 1320, 1320, 1320)),
-                (2021, (1323, 1, 30, 30, 633, 84, 1323, 1323, 1323, 1323)),
-                (2020, (1171, 1, 30, 30, 550, 79, 1171, 1171, 1171, 1171)),
-                (2019, (1142, 1, 30, 34, 549, 74, 1142, 1142, 1142, 1142)),
-                (2018, (1312, 1, 30, 32, 557, 68, 1312, 1312, 1312, 1312)),
-                (2017, (1311, 1, 30, 32, 559, 71, 1311, 1311, 1311, 1311)),
-                (2016, (1309, 1, 30, 31, 493, 67, 1309, 1309, 1309, 1309)),
-                (2015, (1316, 1, 30, 31, 484, 66, 1316, 1316, 1316, 1316)),
-                (2014, (1311, 1, 30, 31, 503, 67, 1311, 1311, 1311, 1311)),
-                (2013, (1319, 1, 30, 30, 495, 66, 1319, 1319, 1319, 1319)),
-                (2012, (1314, 1, 30, 30, 485, 68, 1314, 1314, 1314, 1314)),
-                (2011, (1074, 1, 30, 29, 483, 66, 1074, 1074, 1074, 1074)),
-                (2010, (1311, 1, 30, 30, 469, 64, 1311, 1311, 1311, 1311)),
-                (2009, (1312, 1, 30, 30, 469, 66, 1312, 1312, 1312, 1312)),
-                (2008, (1315, 1, 30, 30, 461, 61, 1315, 1315, 1315, 1315)),
-                (2007, (1316, 1, 30, 30, 469, 58, 1316, 1316, 1316, 1315)),
-                (2006, (1309, 1, 30, 31, 471, 60, 1309, 1309, 1309, 1308)),
-                (2005, (1319, 1, 30, 32, 470, 63, 1319, 1319, 1319, 1319)),
-                (2004, (1314, 1, 30, 29, 469, 62, 1314, 1314, 1314, 1314)),
-                (2003, (1271, 1, 29, 29, 548, 60, 1271, 1271, 1271, 1270)),
-                (2002, (1277, 1, 29, 29, 620, 39, 1277, 1277, 1277, 1277)),
-                (2001, (1260, 1, 29, 28, 650, 56, 1260, 1260, 1260, 1260)),
-                (2000, (1260, 1, 29, 29, 652, 51, 1260, 1260, 1260, 1260)),
-                (1999, (1264, 1, 29, 32, 646, 37, 1264, 1264, 1264, 1264)),
-                (1998, (791, 1, 29, 33, 633, 37, 791, 791, 791, 790)),
-                (1997, (1260, 1, 29, 34, 608, 40, 1260, 1260, 1260, 1260)),
-                (1996, (1261, 1, 29, 33, 715, 40, 1261, 1261, 1261, 1259))
+                (2024, (1320, 1, 30, 36, 587, 80, 1320, 1320, 1320, 1320, 1320, 1320)),
+                //(2024, (1321, 1, 30, 36, 587, 80, 1321, 1321, 1321, 1321)),
+                (2023, (1319, 1, 30, 34, 595, 80, 1319, 1319, 1319, 1319, 1319, 1319)),
+                (2022, (1320, 1, 30, 35, 554, 82, 1320, 1320, 1320, 1320, 1320, 1320)),
+                (2021, (1323, 1, 30, 30, 633, 84, 1323, 1323, 1323, 1323, 1323, 1323)),
+                (2020, (1171, 1, 30, 30, 550, 79, 1171, 1171, 1171, 1171, 1171, 1171)),
+                (2019, (1142, 1, 30, 34, 549, 74, 1142, 1142, 1142, 1142, 1142, 1142)),
+                (2018, (1312, 1, 30, 32, 557, 68, 1312, 1312, 1312, 1312, 1312, 1312)),
+                (2017, (1311, 1, 30, 32, 559, 71, 1311, 1311, 1311, 1311, 1311, 1311)),
+                (2016, (1309, 1, 30, 31, 493, 67, 1309, 1309, 1309, 1309, 1309, 1309)),
+                (2015, (1316, 1, 30, 31, 484, 66, 1316, 1316, 1316, 1316, 1316, 1316)),
+                (2014, (1311, 1, 30, 31, 503, 67, 1311, 1311, 1311, 1311, 1311, 1311)),
+                (2013, (1319, 1, 30, 30, 495, 66, 1319, 1319, 1319, 1319, 1319, 1319)),
+                (2012, (1314, 1, 30, 30, 485, 68, 1314, 1314, 1314, 1314, 1314, 1314)),
+                (2011, (1074, 1, 30, 29, 483, 66, 1074, 1074, 1074, 1074, 1074, 1074)),
+                (2010, (1311, 1, 30, 30, 469, 64, 1311, 1311, 1311, 1311, 1311, 1311)),
+                (2009, (1312, 1, 30, 30, 469, 66, 1312, 1312, 1312, 1312, 1312, 1312)),
+                (2008, (1315, 1, 30, 30, 461, 61, 1315, 1315, 1315, 1315, 1315, 1315)),
+                (2007, (1316, 1, 30, 30, 469, 58, 1316, 1316, 1316, 1315, 1316, 1315)),
+                (2006, (1309, 1, 30, 31, 471, 60, 1309, 1309, 1309, 1308, 1309, 1308)),
+                (2005, (1319, 1, 30, 32, 470, 63, 1319, 1319, 1319, 1319, 1319, 1319)),
+                (2004, (1314, 1, 30, 29, 469, 62, 1314, 1314, 1314, 1314, 1314, 1314)),
+                (2003, (1271, 1, 29, 29, 548, 60, 1271, 1271, 1271, 1270, 1271, 1270)),
+                (2002, (1277, 1, 29, 29, 620, 39, 1277, 1277, 1277, 1277, 1277, 1277)),
+                (2001, (1260, 1, 29, 28, 650, 56, 1260, 1260, 1260, 1260, 1260, 1260)),
+                (2000, (1260, 1, 29, 29, 652, 51, 1260, 1260, 1260, 1260, 1260, 1260)),
+                (1999, (1264, 1, 29, 32, 646, 37, 1264, 1264, 1264, 1264, 1264, 1264)),
+                (1998, (791, 1, 29, 33, 633, 37, 791, 791, 791, 790, 1320, 1320)),
+                (1997, (1260, 1, 29, 34, 608, 40, 1260, 1260, 1260, 1260, 1320, 1320)),
+                (1996, (1261, 1, 29, 33, 715, 40, 1261, 1261, 1261, 1259, 1320, 1320))
             };
-        public HashSet<(int SeasonID, (int Games, int Loaded, int Team, int Arena, int Player, int Official, int Game, int PlayerBox, int TeamBox, int PlayByPlay))> seasonCurrentControl
-            = new HashSet<(int, (int, int, int, int, int, int, int, int, int, int))>()
+        public HashSet<(int SeasonID, (int Games, int Loaded, int Team, int Arena, int Player, int Official, int Game, int PlayerBox, int TeamBox, int PlayByPlay, int StartingLineups, int TeamBoxLineups))> seasonCurrentControl
+            = new HashSet<(int, (int, int, int, int, int, int, int, int, int, int, int, int))>()
             {
-                (2024, (1319, 1, 30, 36, 587, 80, 1319, 1319, 1319, 1319)),
-                (2023, (1319, 1, 30, 34, 595, 81, 1319, 1319, 1319, 1319)),
-                (2022, (1320, 1, 30, 35, 554, 83, 1320, 1320, 1320, 1320)),
-                (2021, (1323, 1, 30, 30, 633, 84, 1323, 1323, 1323, 1323)),
-                (2020, (1171, 1, 30, 31, 550, 79, 1171, 1171, 1171, 1171)),
-                (2019, (1142, 1, 30, 37, 549, 74, 1142, 1142, 1142, 1142)),
+                (2024, (1320, 1, 30, 36, 587, 80, 1320, 1320, 1320, 1320, 1320, 1320)),
+                //(2024, (1321, 1, 30, 36, 587, 80, 1321, 1321, 1321, 1321, 1321, 1321)),
+                (2023, (1319, 1, 30, 34, 595, 81, 1319, 1319, 1319, 1319, 1319, 1319)),
+                (2022, (1320, 1, 30, 35, 554, 83, 1320, 1320, 1320, 1320, 1320, 1320)),
+                (2021, (1323, 1, 30, 30, 633, 84, 1323, 1323, 1323, 1323, 1323, 1323)),
+                (2020, (1171, 1, 30, 31, 550, 79, 1171, 1171, 1171, 1171, 1171, 1171)),
+                (2019, (1142, 1, 30, 37, 549, 74, 1142, 1142, 1142, 1142, 1142, 1142)),
             };
 
 
@@ -425,6 +412,9 @@ namespace NBAdbToolbox
         public bool dbOverviewFirstOpen = true;
         //Settings
 
+        public bool isPopulating = false;
+        public bool missingPbp = false;
+        public string pbpInsertFailSafe = "";
 
         public Main()
         {
@@ -473,6 +463,7 @@ namespace NBAdbToolbox
                 var popup = new PopulatePopup(dialog, seasons);
                 if (popup.ShowDialog() == DialogResult.OK)
                 {
+                    isPopulating = true;
                     int historic = 0;
                     int current = 0;
                     string source = "";
@@ -495,6 +486,7 @@ namespace NBAdbToolbox
                     int seasonIterator = 0;
                     foreach (int season in seasons)
                     {
+                        missingPbp = false;
                         SeasonID = season;
                         seasonIterator++;
                         Task DeleteSeasonData = Task.Run(() =>
@@ -523,7 +515,7 @@ namespace NBAdbToolbox
                             foreach (NBAdbToolboxHistoric.Game game in root.season.games.regularSeason)
                             {
                                 sqlBuilder.Clear();
-                                playByPlayBuilder.Clear();
+                                Task SecondInsert;
                                 GameID = Int32.Parse(game.game_id);
                                 lblCurrentGameCount.Text = game.game_id;
                                 await Task.Run(async () =>      //This inserts the games from season file into db
@@ -536,60 +528,43 @@ namespace NBAdbToolbox
                                 {
                                     game.box = null;
                                     game.playByPlay = null;
+                                    SecondInsert = Task.CompletedTask;
                                 }
                                 else
                                 {
-                                    Task SecondInsert = Task.Run(async () =>
+                                    SecondInsert = Task.Run(async () =>
                                     {
-                                        int retryAttempts = 3;
-                                        int currentAttempt = 0;
-                                        bool success = false;
-                                        string pbpInsert = "";
-                                        while (!success && currentAttempt < retryAttempts)
-                                        {
-                                            try
-                                            {
-                                                currentAttempt++;
-                                                pbpInsert = playByPlayBuilder.ToString();
-                                                playByPlayBuilder.Clear();
-                                                using SqlConnection bigInsertsPBP = new SqlConnection(cString);
-                                                using SqlCommand PBPInsert = new SqlCommand(pbpInsert, bigInsertsPBP);
-                                                PBPInsert.CommandType = CommandType.Text;
-                                                PBPInsert.CommandTimeout = 120;
-                                                await bigInsertsPBP.OpenAsync();
-                                                await PBPInsert.ExecuteNonQueryAsync();
-                                                success = true;
-                                            }
-                                            catch (SqlException ex) when (ex.Number == 1205)
-                                            {
-                                                Console.WriteLine($"Deadlock detected (attempt {currentAttempt}/{retryAttempts}): {ex.Message}");
-                                                await Task.Delay(500 * currentAttempt);
-                                            }
-                                            catch (Exception e)
-                                            {
-                                                Console.WriteLine($"Error in SecondInsert: {e.Message}");
-                                                pbpInsert += "";
-                                                await Task.Delay(500 * currentAttempt);
-                                            }
-                                        }
-                                        game.box = null;
-                                        game.playByPlay = null;
+                                        await InsertPlayByPlayWithRetry(game, "RS");
                                     });
                                 }
                                 lastSeason = season;
 
                                 UpdateLoadingImage(imageIteration);
                                 #endregion
-                                PopulateDb_4_AfterHistoricGame();
+                                PopulateDb_4_AfterHistoricGame("RS");
+                                if(iterator == RegularSeasonGames)
+                                {
+                                    await SecondInsert;
+                                }
                             }
-
+                            if (missingPbp)
+                            {
+                                lblSeasonStatusLoad.Text = "Catching any missing data";
+                                foreach (var game in root.season.games.regularSeason.Where(g => g.playByPlay != null))
+                                {
+                                    HistoricPlayByPlayStaging(game.playByPlay);
+                                    await InsertPlayByPlayWithRetry(game, "Retry");
+                                    UpdateLoadingImage(imageIteration);
+                                    PopulateDb_4_AfterHistoricGame("Retry");
+                                }
+                            }
                             root.season.games.regularSeason = null;
+                            missingPbp = false;
                             lblSeasonStatusLoad.Text = "Inserting " + SeasonID + " Postseason";
 
                             foreach (NBAdbToolboxHistoric.Game game in root.season.games.playoffs)
                             {
                                 sqlBuilder.Clear();
-                                playByPlayBuilder.Clear();
                                 GameID = Int32.Parse(game.game_id);
                                 lblCurrentGameCount.Text = game.game_id;
                                 await Task.Run(async () =>      //This inserts the games from season file into db
@@ -597,66 +572,34 @@ namespace NBAdbToolbox
                                     await InsertGameWithLoading(game, season, imageIteration, "Postseason");
                                 });
                                 #region Second Insert
-                                Task SecondInsert;
-                                if (GameID == 20600975 || GameID == 20700753) //No Pbp data
+                                Task SecondInsert = Task.Run(async () =>
                                 {
-                                    game.box = null;
-                                    game.playByPlay = null;
-                                    SecondInsert = Task.CompletedTask; // No-op task
-                                }
-                                else
-                                {
-                                    SecondInsert = Task.Run(async () =>
-                                    {
-                                        int retryAttempts = 3;
-                                        int currentAttempt = 0;
-                                        bool success = false;
-                                        string pbpInsert = "";
-
-                                        while (!success && currentAttempt < retryAttempts)
-                                        {
-                                            try
-                                            {
-                                                currentAttempt++;
-                                                pbpInsert = playByPlayBuilder.ToString();
-                                                playByPlayBuilder.Clear();
-
-                                                using SqlConnection bigInsertsPBP = new SqlConnection(cString);
-                                                using SqlCommand PBPInsert = new SqlCommand(pbpInsert, bigInsertsPBP);
-                                                PBPInsert.CommandType = CommandType.Text;
-                                                PBPInsert.CommandTimeout = 120;
-
-                                                await bigInsertsPBP.OpenAsync();
-                                                await PBPInsert.ExecuteNonQueryAsync();
-                                                success = true;
-                                            }
-                                            catch (SqlException ex) when (ex.Number == 1205)
-                                            {
-                                                Console.WriteLine($"Deadlock detected (attempt {currentAttempt}/{retryAttempts}): {ex.Message}");
-                                                await Task.Delay(500 * currentAttempt);
-                                            }
-                                            catch (Exception e)
-                                            {
-                                                Console.WriteLine($"Error in SecondInsert: {e.Message}");
-                                                pbpInsert += "";
-                                                await Task.Delay(500 * currentAttempt);
-                                            }
-                                        }
-                                        game.box = null;
-                                        game.playByPlay = null;
-                                    });
-                                }
+                                    await InsertPlayByPlayWithRetry(game, "PS");
+                                });
+                                
 
                                 UpdateLoadingImage(imageIteration);
 
                                 #endregion
-                                PopulateDb_4_AfterHistoricGame();
+                                PopulateDb_4_AfterHistoricGame("PS");
                                 if (iterator == TotalGames)
                                 {
                                     await SecondInsert;
                                 }
                             }
+                            if (missingPbp)
+                            {
+                                lblSeasonStatusLoad.Text = "Catching any missing data";
+                                foreach (var game in root.season.games.playoffs.Where(g => g.playByPlay != null))
+                                {
+                                    HistoricPlayByPlayStaging(game.playByPlay);
+                                    await InsertPlayByPlayWithRetry(game, "Retry");
+                                    UpdateLoadingImage(imageIteration);
+                                    PopulateDb_4_AfterHistoricGame("Retry");
+                                }
+                            }
                             root.season.games.playoffs = null;
+                            missingPbp = false;
                         }
                         #endregion
                         //Current Data
@@ -677,6 +620,18 @@ namespace NBAdbToolbox
                             {
                                 GameID = gamesRS[i];
                                 await CurrentGameGPS(gamesRS[i], "");
+                                Task CalculateTeamBoxLineup = TeamBoxLineupCalculation(GameID);
+                                if (i % 5 == 0 || i == RegularSeasonGames - 1)
+                                {
+                                    await CalculateTeamBoxLineup;
+                                    string execute = LineupCalc.ToString();
+                                    LineupCalc.Clear();
+                                    Task CalculateTeamBoxLineupsInsert = CalculatedTeamBoxLineupInsert(execute);
+                                    if (i == RegularSeasonGames - 1)
+                                    {
+                                        await CalculateTeamBoxLineupsInsert;
+                                    }
+                                }
                                 root.season.games.regularSeason[i].box = null;
                                 root.season.games.regularSeason[i].playByPlay = null;
                                 PopulateDb_8_AfterCurrentGame(gamesRS[i].ToString());
@@ -686,6 +641,19 @@ namespace NBAdbToolbox
                                 GameID = gamesPS[i];
                                 lblCurrentGameCount.Text = gamesPS[i].ToString();
                                 await CurrentGameGPS(gamesPS[i], "");
+                                Task CalculateTeamBoxLineup = TeamBoxLineupCalculation(GameID);
+                                if (i % 5 == 0 || i == PostseasonGames - 1)
+                                {
+                                    await CalculateTeamBoxLineup;
+                                    string execute = LineupCalc.ToString();
+                                    LineupCalc.Clear();
+                                    Task CalculateTeamBoxLineupsInsert = CalculatedTeamBoxLineupInsert(execute);
+                                    if(i == PostseasonGames - 1)
+                                    {
+                                        await CalculateTeamBoxLineupsInsert;
+                                    }
+                                }
+                                //Task TeamBoxLineupTask = TeamBoxLineupCalculation(GameID);
                                 root.season.games.playoffs[i].box = null;
                                 root.season.games.playoffs[i].playByPlay = null;
                                 PopulateDb_8_AfterCurrentGame(gamesPS[i].ToString());
@@ -706,6 +674,7 @@ namespace NBAdbToolbox
                     }
                     stopwatchFull.Stop();
                     PopulateDb_10_Completion();
+                    isPopulating = false;
                     CheckDataFiles(); //GetSeasons();
                     if (dbOverviewOpened)
                     {
@@ -929,6 +898,16 @@ namespace NBAdbToolbox
             SettingsClick(picSettings, picSettings, fontSize);
 
 
+            btnDownloadSeasonData.Click += async (s, e) =>
+            {
+                if (listDownloadSeasonData.SelectedItems.Count == 0)
+                {
+                    MessageBox.Show("Please select seasons to download", "No Selection", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                await DownloadSeasonFiles();
+            };
 
             btnRefresh.Click += async (s, e) =>
             {
@@ -957,6 +936,108 @@ namespace NBAdbToolbox
                 RefreshCompletion();
             };
 
+        }
+        private async Task InsertPlayByPlayWithRetry(NBAdbToolboxHistoric.Game game, string sender)
+        {
+            int retryAttempts = 3;
+            int currentAttempt = 0;
+            bool success = false;
+            string pbpInsert = "";
+            bool primaryKeyError = false;
+
+            while (!success && currentAttempt < retryAttempts)
+            {
+                try
+                {
+                    currentAttempt++;
+                    if (currentAttempt == 1)
+                    {
+                        pbpInsert = playByPlayBuilder.ToString();
+                        pbpInsertFailSafe = playByPlayBuilder.ToString();
+                    }
+                    else if (pbpInsert != pbpInsertFailSafe && !primaryKeyError && pbpInsertFailSafe != "")
+                    {
+                        pbpInsert = pbpInsertFailSafe;
+                    }
+
+                    using SqlConnection bigInsertsPBP = new SqlConnection(cString);
+                    using SqlCommand PBPInsert = new SqlCommand(pbpInsert, bigInsertsPBP);
+                    PBPInsert.CommandType = CommandType.Text;
+                    PBPInsert.CommandTimeout = 120;
+                    playByPlayBuilder.Clear();
+
+                    await bigInsertsPBP.OpenAsync();
+                    await PBPInsert.ExecuteNonQueryAsync();
+                    success = true;
+                }
+                catch (SqlException ex) when (ex.Number == 1205)
+                {
+                    Console.WriteLine($"Deadlock detected (attempt {currentAttempt}/{retryAttempts}): {ex.Message}");
+                    await Task.Delay(500 * currentAttempt);
+                }
+                catch (SqlException ex) when (ex.Number == 2627)
+                {
+                    primaryKeyError = true;
+                    Console.WriteLine($"Duplicate Primary Key: {ex.Message}");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error in SecondInsert: {e.Message}");
+                    pbpInsert = pbpInsertFailSafe;
+                    await Task.Delay(500 * currentAttempt);
+                }
+            }
+
+            if (success)
+            {
+                game.box = null;
+                game.playByPlay = null;
+            }
+            else if(sender != "Retry")
+            {
+                missingPbp = true;
+            }
+        }
+        public StringBuilder LineupCalc = new StringBuilder();
+        private async Task TeamBoxLineupCalculation(int game)
+        {
+            using (SqlConnection conn = new SqlConnection(bob.ToString()))
+            using (SqlCommand SQLSeasons = new SqlCommand("TeamBoxLineupCalc", conn))
+            {
+                SQLSeasons.CommandType = CommandType.StoredProcedure;
+                SQLSeasons.Parameters.AddWithValue("@SeasonID", SeasonID);
+                SQLSeasons.Parameters.AddWithValue("@GameID", game);
+                conn.Open();
+                using (SqlDataReader sdr = SQLSeasons.ExecuteReader())
+                {
+                    while (sdr.Read())
+                    {
+                        string insert = sdr.GetString(0);
+                        string min = sdr.GetString(1);
+                        double sec = double.Parse(min.Substring(min.IndexOf("."))) * 60;
+                        min = min.Substring(0, min.IndexOf("."));
+                        insert = insert.Replace("minutesplaceholder", min + ":" + sec) + "\n";
+                        LineupCalc.Append(insert);
+                    }
+                }
+            }
+        }
+        private async Task CalculatedTeamBoxLineupInsert(string execute)
+        {
+            try
+            {
+                using (SqlConnection tbl = new SqlConnection(bob.ToString()))
+                using (SqlCommand tblInsert = new SqlCommand(execute, tbl))
+                {
+                    tblInsert.CommandType = CommandType.Text;
+                    tbl.Open();
+                    tblInsert.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+
+            }
         }
 
         public void RefreshCompletion()
@@ -1130,6 +1211,18 @@ namespace NBAdbToolbox
             {
                 GameID = games[i];
                 await CurrentGameGPS(games[i], "Refresh");
+                Task CalculateTeamBoxLineup = TeamBoxLineupCalculation(GameID);
+                if (i % 5 == 0 || i == games.Count - 1)
+                {
+                    await CalculateTeamBoxLineup;
+                    string execute = LineupCalc.ToString();
+                    LineupCalc.Clear();
+                    Task CalculateTeamBoxLineupsInsert = CalculatedTeamBoxLineupInsert(execute);
+                    if (i == games.Count - 1)
+                    {
+                        await CalculateTeamBoxLineupsInsert;
+                    }
+                }
                 PopulateDb_8_AfterCurrentGame(games[i].ToString());
             }
             PopulateDb_9_AfterSeasonInserts(buildID, 1, 0, "Current Refresh", 1, 1);
@@ -1137,6 +1230,133 @@ namespace NBAdbToolbox
             PopulateDb_10_Completion();
             scheduleGames.Clear();
         }
+
+
+        public async Task DownloadSeasonFiles()
+        {
+            string gitToken = "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";
+            //Disable controls during download
+            btnDownloadSeasonData.Enabled = false;
+            ButtonChangeState(btnDownloadSeasonData, false);
+            listDownloadSeasonData.Enabled = false;
+
+            //Create progress bar
+            ProgressBar progressBar = new ProgressBar
+            {
+                Width = listDownloadSeasonData.Width,
+                Height = 20,
+                Left = listDownloadSeasonData.Left,
+                Top = btnDownloadSeasonData.Bottom + 10,
+                Visible = true
+            };
+            pnlDbUtil.Controls.Add(progressBar);
+
+            //Create status label
+            Label lblDownloadStatus = new Label
+            {
+                Text = "Preparing download...",
+                AutoSize = true,
+                Left = progressBar.Left,
+                Top = progressBar.Bottom + 5,
+                ForeColor = ThemeColor,
+                Visible = true
+            };
+            pnlDbUtil.Controls.Add(lblDownloadStatus);
+
+            //Calculate total files to download
+            int totalFiles = 0;
+            foreach (string season in listDownloadSeasonData.SelectedItems)
+            {
+                int seasonID = int.Parse(season);
+                int iter = (seasonID <= 2012 || seasonID == 2019 || seasonID == 2020) ? 3 : 4;
+                totalFiles += iter;
+            }
+
+            progressBar.Maximum = totalFiles;
+            progressBar.Value = 0;
+
+            string historicDataPath = Path.Combine(projectRoot, @"Content\Historic Data\");
+            int filesDownloaded = 0;
+
+            using (HttpClient client = new HttpClient())
+            {
+                client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0");
+                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", gitToken);
+                foreach (string season in listDownloadSeasonData.SelectedItems)
+                {
+                    int seasonID = int.Parse(season);
+                    int iter = (seasonID <= 2012 || seasonID == 2019 || seasonID == 2020) ? 3 : 4;
+
+                    for (int i = 0; i < iter; i++)
+                    {
+                        string fileName = $"{seasonID}p{i}.json";
+                        string localPath = Path.Combine(historicDataPath, fileName);
+                        string url = $"https://raw.githubusercontent.com/jakesjordan00/NBAdbToolbox/master/Content/Historic%20Data/{fileName}";
+
+                        lblDownloadStatus.Text = $"Downloading {fileName}...";
+                        lblDownloadStatus.Refresh();
+
+                        try
+                        {
+                            //Download file
+                            byte[] fileData = await client.GetByteArrayAsync(url);
+
+                            //Save to disk
+                            File.WriteAllBytes(localPath, fileData);
+
+                            filesDownloaded++;
+                            progressBar.Value = filesDownloaded;
+
+                        }
+                        catch (HttpRequestException ex)
+                        {
+                            MessageBox.Show($"Failed to download {fileName}: {ex.Message}", "Download Error",
+                                          MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show($"Error saving {fileName}: {ex.Message}", "Save Error",
+                                          MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                    }
+                }
+            }
+
+            //Cleanup
+            pnlDbUtil.Controls.Remove(progressBar);
+            pnlDbUtil.Controls.Remove(lblDownloadStatus);
+            progressBar.Dispose();
+            lblDownloadStatus.Dispose();
+
+            //Re-enable controls
+            btnDownloadSeasonData.Enabled = true;
+            listDownloadSeasonData.Enabled = true;
+            CheckDataFiles();
+            
+
+            //Check if all files downloaded
+            if (listDownloadSeasonData.Items.Count == 0)
+            {
+                allFilesDownloaded = true;
+                ButtonChangeState(btnDownloadSeasonData, false);
+                MessageBox.Show("All seasons downloaded successfully!", "Download Complete",
+                              MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            else
+            {
+                ButtonChangeState(btnDownloadSeasonData, true);
+                MessageBox.Show($"Downloaded {filesDownloaded} files successfully", "Download Complete",
+                              MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+
+            //Play completion sound
+            if (settings.Sound != "Muted")
+            {
+                PlayCompletionSound("Season");
+            }
+        }
+
+        #region Theme
         public Color ThemeColor = new Color();
         public Color SubThemeColor = new Color();
         public Color SuccessColor = new Color();
@@ -1226,12 +1446,16 @@ namespace NBAdbToolbox
                     btn.BackColor = Color.Gainsboro;
                     // Use FlatStyle to have more control
                     btn.FlatStyle = FlatStyle.Flat;
-                    btn.FlatAppearance.BorderSize = 1;
+                    btn.FlatAppearance.BorderSize = 2;
+                    btn.FlatAppearance.BorderColor = Color.Black;
                 }
                 else
                 {
                     btn.ForeColor = SubThemeColor;
                     btn.BackColor = ThemeColor;
+                    btn.FlatStyle = FlatStyle.Flat;
+                    btn.FlatAppearance.BorderSize = 2;
+                    btn.FlatAppearance.BorderColor = Color.DodgerBlue;
                 }
             }
             //update buttons
@@ -1241,6 +1465,7 @@ namespace NBAdbToolbox
                 lb.BackColor = SubThemeColor;
             }
         }
+        #endregion
 
         //generic recursive method to get all controls of a specific type
         public List<T> GetAllControlsOfType<T>(Control parent) where T : Control
@@ -1665,11 +1890,16 @@ namespace NBAdbToolbox
             btn.FlatStyle = FlatStyle.Flat;
             btn.FlatAppearance.BorderSize = 2;
             btn.FlatAppearance.BorderColor = Color.DodgerBlue;
+            if(btn.Text == "Populate Db")
+            {
+
+            }
             if (!enabled)
             {
                 btn.FlatAppearance.BorderColor = Color.Black;
                 btn.BackColor = Color.Gainsboro;
             }
+            btn.AutoSize = true;
         }
         private bool isRefreshing = false;
         public void UIController(string sender)//If an event occurs that will change the state of the UI, it must run through here
@@ -2094,9 +2324,13 @@ namespace NBAdbToolbox
             playByPlayBuilder.Clear();
 
         }
-        public void PopulateDb_4_AfterHistoricGame()
+        public void PopulateDb_4_AfterHistoricGame(string sender)
         {
             ImageDriver();
+            if(sender == "Retry")
+            {
+                iterator--;
+            }
             int gamesLeft = TotalGames - iterator;
             double gamesPerSec = iterator / stopwatchInsert.Elapsed.TotalSeconds;
             double gamesPerMin = Math.Round(gamesPerSec * 60, 2);
@@ -2386,7 +2620,6 @@ namespace NBAdbToolbox
         }
 
         #endregion
-
         public void PopulateDb_10_Completion()
         {
             TimeSpan timeElapsedFull = stopwatchFull.Elapsed;
@@ -2508,9 +2741,6 @@ namespace NBAdbToolbox
             #endregion
 
         }
-
-
-
         #endregion
 
         #region Initializations
@@ -2684,8 +2914,9 @@ namespace NBAdbToolbox
             });
 
 
-            listSeasons.SelectionMode = SelectionMode.MultiExtended;
-            listSeasons.KeyDown += ListSeasons_SelectAll; listSeasons.DrawMode = DrawMode.OwnerDrawFixed;
+            listSeasons.SelectionMode = SelectionMode.MultiExtended; 
+            listSeasons.KeyDown += (sender, e) => SelectAllListItems(sender, e, listSeasons);
+            listSeasons.DrawMode = DrawMode.OwnerDrawFixed;
 
             listSeasons.DrawItem += (sender, e) =>
             {
@@ -2734,14 +2965,44 @@ namespace NBAdbToolbox
                 }
             };
 
+            listDownloadSeasonData.SelectionMode = SelectionMode.MultiExtended;
+            listDownloadSeasonData.KeyDown += (sender, e) => SelectAllListItems(sender, e, listDownloadSeasonData);
+            listDownloadSeasonData.DrawMode = DrawMode.OwnerDrawFixed;
+            listDownloadSeasonData.DrawItem += (sender, e) =>
+            {
+                if (e.Index < 0) return;
+                string season = listDownloadSeasonData.Items[e.Index].ToString();
+
+                //Draw background
+                if ((e.State & DrawItemState.Selected) == DrawItemState.Selected)
+                {
+                    e.Graphics.FillRectangle(new SolidBrush(SystemColors.Highlight), e.Bounds);
+                }
+                else
+                {
+                    e.Graphics.FillRectangle(new SolidBrush(Color.Black), e.Bounds);
+                }
+
+                //Draw text
+                Color textThemeColor = SubThemeColor;
+                if (settings.BackgroundImage == "Court Dark")
+                {
+                    textThemeColor = ThemeColor;
+                }
+                Color textColor = (e.State & DrawItemState.Selected) == DrawItemState.Selected ? SystemColors.HighlightText : textThemeColor;
+
+                e.Graphics.DrawString(season, listDownloadSeasonData.Font, new SolidBrush(textColor), e.Bounds);
+                e.DrawFocusRectangle();
+            };
+
+
             btnPopulate.Text = "Populate Db";
             btnPopulate.Font = SetFontSize("Segoe UI", (float)(fontSize / 2.7), FontStyle.Bold, (int)(listSeasons.Width * .8), btnPopulate); //6.5
-            btnPopulate.AutoSize = true;
+            btnDownloadSeasonData.Height = btnPopulate.Height;
             btnPopulate.Width = (int)(listSeasons.Width * .9);
-
+            btnPopulate.AutoSize = true;
             btnDownloadSeasonData.Text = "Download";
             btnDownloadSeasonData.Font = SetFontSize("Segoe UI", (float)(fontSize / 2.7), FontStyle.Bold, (int)(listSeasons.Width * .8), btnPopulate); //6.5
-            btnDownloadSeasonData.Height = btnPopulate.Height;
             btnDownloadSeasonData.Width = (int)(listSeasons.Width * .9);
 
 
@@ -3111,10 +3372,9 @@ namespace NBAdbToolbox
                 ButtonChangeState(btnRefresh, false);
             }
             btnRefresh.Font = SetFontSize("Segoe UI", (float)(fontSize), FontStyle.Bold, (int)(lblRefresh.Width * .8), btnRefresh);
-            btnRefresh.AutoSize = true;
+            btnDownloadSeasonData.Text = "Populate Db";
             btnDownloadSeasonData.Font = SetFontSize("Segoe UI", (float)(fontSize), FontStyle.Bold, (int)(listSeasons.Width * .8), btnDownloadSeasonData);
-            btnDownloadSeasonData.AutoSize = true;
-            btnDownloadSeasonData.Height = btnPopulate.Height;
+            btnDownloadSeasonData.Text = "Download";
             ArrangeOverviewControls();
         }
 
@@ -3276,7 +3536,6 @@ namespace NBAdbToolbox
 
 
         #region Utility Functions
-        #region Utility (just putting this region here to save space. delete the two lines but keep code
         //Formats Time elapsed string for season load
         public string CheckTime(Dictionary<string, (int, string)> timeUnits)
         {
@@ -3330,20 +3589,20 @@ namespace NBAdbToolbox
                 pic.Image = null;
             }
         }
-        private void ListSeasons_SelectAll(object sender, KeyEventArgs e)//Allows us to select all seasons to populate
+        private void SelectAllListItems(object sender, KeyEventArgs e, ListBox list)//Allows us to select all seasons to populate
         {
             // Check if Ctrl+A was pressed
             if (e.Control && e.KeyCode == Keys.A)
             {
                 // Select all items
-                for (int i = 0; i < listSeasons.Items.Count; i++)
+                for (int i = 0; i < list.Items.Count; i++)
                 {
-                    listSeasons.SetSelected(i, true);
+                    list.SetSelected(i, true);
                 }
-
+                
                 // Mark the event as handled to prevent further processing
                 e.Handled = true;
-            }
+            }            
         }
 
         public HashSet<(int GameID, string builder, double mb, long len)> gameBytes = new HashSet<(int, string builder, double, long)>();
@@ -3541,10 +3800,9 @@ namespace NBAdbToolbox
             }
 
         }
-        #endregion
 
 
-
+        #region Db Overview
         public bool dbOverviewOpened = false;
         private Dictionary<int, Label> yearLabels = new Dictionary<int, Label>();
         private List<Label> tableHeaders = new List<Label>();
@@ -3553,7 +3811,10 @@ namespace NBAdbToolbox
         public int popCount = 0;
         public int lineHeight = 0;
         public int lineWidth = 0;
-
+        public bool seasonDataWarning = false;
+        public bool seasonDataError = false;
+        public bool seasonDataSuccess = false;
+        private Dictionary<string, Label> dataLabels = new Dictionary<string, Label>();
         public void DbOverviewClick(Control control, Label growShrink, Control parent)
         {
             control.Click += async (s, e) =>
@@ -3590,7 +3851,6 @@ namespace NBAdbToolbox
 
             };
         }
-
         public void DbOverviewVisibility(bool vis, string sender)
         {
             pnlDbOverview.MaximumSize = new Size(pnlWelcome.Left, (int)(pnlDbUtil.Height / 2));
@@ -3738,7 +3998,7 @@ namespace NBAdbToolbox
             //create table headers if needed
             if (tableHeaders.Count == 0)
             {
-                string[] tables = { "Game", "Team", "Arena", "Player", "Official", "TeamBox", "PlayerBox", "PlayByPlay" };
+                string[] tables = { "Game", "Team", "Arena", "Player", "Official", "TeamBox", "PlayerBox", "PlayByPlay", "StartingLineups", "TeamBoxLineups" };
                 foreach (string table in tables)
                 {
                     Label header = new Label
@@ -3780,6 +4040,7 @@ namespace NBAdbToolbox
             int topYear = tableHeaders[0].Bottom + (int)(tableHeaders[0].Height * .3);
             List<int> populatedYears = new List<int>();
             List<int> unpopulatedYears = new List<int>();
+            int heightMod = 0;
 
             //check which years have data
             for (int year = 2024; year >= 1996; year--)
@@ -3808,9 +4069,10 @@ namespace NBAdbToolbox
             foreach (int year in populatedYears)
             {
                 Label yearLabel = GetOrCreateYearLabel(year, fontSize);
+                yearLabel.AutoSize = true;
                 yearLabel.Top = topYear;
                 yearLabel.Visible = true;
-                if(rowPositions.Count == 0)
+                if (rowPositions.Count == 0)
                 {
                     AddDataLabelsForYear(year, topYear, columnPositions, tableHeaders[0].Bottom, fontSize);
                 }
@@ -3830,9 +4092,16 @@ namespace NBAdbToolbox
                 {
                     yearLabel.ForeColor = SuccessColor;
                 }
-                rowPositions.Add(topYear + yearLabel.Height);
-                topYear += yearLabel.Height + (int)(yearLabel.Height * .25);
-                singleLineHeight = yearLabel.Height + (int)(yearLabel.Height * .25);
+                heightMod = (int)(yearLabel.Height * 2);
+                int originalHeight = yearLabel.Height;
+                int originalWidth = yearLabel.Width;
+                yearLabel.AutoSize = false;
+                yearLabel.Width = originalWidth;
+                yearLabel.Height = heightMod;
+                yearLabel.TextAlign = ContentAlignment.BottomCenter;
+                rowPositions.Add(topYear + heightMod);
+                topYear += heightMod + (int)(heightMod * .1);
+                singleLineHeight = heightMod + (int)(heightMod * .1);
             }
             lineHeight = topYear;
 
@@ -3891,9 +4160,8 @@ namespace NBAdbToolbox
             rowPositions.Add(tableHeaders[0].Bottom);
 
             //create grid lines
-            CreateGridLines(columnPositions, rowPositions, topTable);
+            CreateGridLines(columnPositions, rowPositions, topTable, heightMod);
         }
-
         private Label GetOrCreateYearLabel(int year, float fontSize)
         {
             if (!yearLabels.ContainsKey(year))
@@ -3913,9 +4181,6 @@ namespace NBAdbToolbox
             }
             return yearLabels[year];
         }
-        public bool seasonDataWarning = false;
-        public bool seasonDataError = false;
-        public bool seasonDataSuccess = false;
         private void AddDataLabelsForYear(int year, int topYear, List<int> columnPositions, int rowPosition, float fontSize)
         {
             seasonDataWarning = false;
@@ -3937,6 +4202,8 @@ namespace NBAdbToolbox
                 seasonData.Item2.PlayerBox,
                 seasonData.Item2.TeamBox,
                 seasonData.Item2.PlayByPlay,
+                seasonData.Item2.StartingLineups,
+                seasonData.Item2.TeamBoxLineups,
                 seasonData.Item2.Games,
                 seasonData.Item2.HistoricLoaded,
                 seasonData.Item2.CurrentLoaded
@@ -3950,6 +4217,8 @@ namespace NBAdbToolbox
                 seasonDataControl.Item2.PlayerBox,
                 seasonDataControl.Item2.TeamBox,
                 seasonDataControl.Item2.PlayByPlay,
+                seasonDataControl.Item2.StartingLineups,
+                seasonDataControl.Item2.TeamBoxLineups,
                 seasonDataControl.Item2.Games
             };
             int[] controlCurrentValues = {
@@ -3961,11 +4230,13 @@ namespace NBAdbToolbox
                 seasonCurrentDataControl.Item2.PlayerBox,
                 seasonCurrentDataControl.Item2.TeamBox,
                 seasonCurrentDataControl.Item2.PlayByPlay,
+                seasonCurrentDataControl.Item2.StartingLineups,
+                seasonCurrentDataControl.Item2.TeamBoxLineups,
                 seasonCurrentDataControl.Item2.Games
             };
             string[] textValues =
             {
-                "Games", "Teams", "Arenas", "Players", "Officials", "Games", "Games", "Games"
+                "Games", "Teams", "Arenas", "Players", "Officials", "Games", "Games", "Games", "Games", "Games"
             };
 
             //create labels for each data point
@@ -3978,7 +4249,7 @@ namespace NBAdbToolbox
                 dataLabel.Left = columnPositions[i]; //center under column
                 dataLabel.Top = rowPosition + (int)(dataLabel.Height * .4);
                 dataLabel.Visible = true;
-                if (dataValues[9] == 1 && dataValues[10] == 0)
+                if (dataValues[11] == 1 && dataValues[12] == 0)
                 {
                     if (dataValues[i] != controlValues[i])
                     {
@@ -3990,7 +4261,7 @@ namespace NBAdbToolbox
                         dataLabel.ForeColor = ThemeColor;
                     }
                 }
-                else if(dataValues[10] == 1 && dataValues[9] == 0)
+                else if(dataValues[12] == 1 && dataValues[11] == 0)
                 {
                     if (dataValues[i] != controlCurrentValues[i])
                     {
@@ -4020,9 +4291,6 @@ namespace NBAdbToolbox
                 seasonDataSuccess = true;
             }
         }
-
-        private Dictionary<string, Label> dataLabels = new Dictionary<string, Label>();
-
         private Label GetOrCreateDataLabel(string key, float fontSize)
         {
             if (!dataLabels.ContainsKey(key))
@@ -4039,17 +4307,13 @@ namespace NBAdbToolbox
             }
             return dataLabels[key];
         }
-
-        private void CreateGridLines(List<int> columnPositions, List<int> rowPositions, int topTable)
+        private void CreateGridLines(List<int> columnPositions, List<int> rowPositions, int topTable, int rowHeight)
         {
             ClearGridLines();
 
             //calculate height for vertical lines
-            int height = lblEmpty.Top - (int)(lblEmpty.Height * .4);
-            if (popCount == 0)
-            {
-                height = rowPositions[0] - (int)(lblEmpty.Height * .25);
-            }
+
+            int height = rowHeight * popCount + lblEmpty.Height + topTable;
 
             //create vertical lines
             foreach (int x in columnPositions)
@@ -4057,7 +4321,7 @@ namespace NBAdbToolbox
                 Panel line = new Panel
                 {
                     Width = 1,
-                    Height = lineHeight,
+                    Height = height,
                     Left = x,
                     Top = topTable,
                     BackColor = ThemeColor,
@@ -4087,7 +4351,6 @@ namespace NBAdbToolbox
             lineHeight = 0;
             lineWidth = 0;
         }
-
         private void ClearGridLines()
         {
             foreach (Panel line in gridLines)
@@ -4097,7 +4360,6 @@ namespace NBAdbToolbox
             }
             gridLines.Clear();
         }
-
         private void ClearOverview()
         {
             //hide all controls
@@ -4124,8 +4386,7 @@ namespace NBAdbToolbox
 
             ClearGridLines();
         }
-
-
+        #endregion
         public void SettingsClick(Control control, PictureBox picture, float fontSize)
         {
             fontSize = ((float)(screenFontSize * lblServer.Height) / (96 / 12)) * (72 / 12) / 2;
@@ -4170,112 +4431,96 @@ namespace NBAdbToolbox
 
         #region Need to organize/move or delete
 
-        //Replace your existing GetSeasons method with this:
-        public void GetSeasons()
-        {
-            listSeasons.Items.Clear();
-            string historicDataPath = Path.Combine(projectRoot, @"Content\Historic Data\");
-
-            int j = 0;
-            using (SqlConnection conn = new SqlConnection(bob.ToString()))
-            using (SqlCommand SQLSeasons = new SqlCommand("select cast(SeasonID as varchar(4)) from Season order by SeasonID desc", conn))
-            {
-                SQLSeasons.CommandType = CommandType.Text;
-                conn.Open();
-                using (SqlDataReader sdr = SQLSeasons.ExecuteReader())
-                {
-                    while (sdr.Read())
-                    {
-                        string seasonID = sdr.GetString(0);
-                        listSeasons.Items.Add(seasonID);
-
-                        //Check if ALL files exist for this season
-                        int iter = (int.Parse(seasonID) <= 2012 || int.Parse(seasonID) == 2019 || int.Parse(seasonID) == 2020) ? 3 : 4;
-                        bool allFilesExist = true;
-
-                        for (int i = 0; i < iter; i++)
-                        {
-                            string fileName = $"{seasonID}p{i}.json";
-                            if (!File.Exists(Path.Combine(historicDataPath, fileName)))
-                            {
-                                allFilesExist = false;
-                                break;
-                            }
-                        }
-
-                        if (allFilesExist)
-                        {
-                            downloadedSeasons.Add(seasonID);
-                            if(j != -1)
-                            {
-                                j = 0;
-                            }
-                        }
-                        else
-                        {
-                            j = -1;
-                            missingSeasons.Add(seasonID);
-                            listDownloadSeasonData.Items.Add(seasonID);
-                            allFilesDownloaded = false;
-                            ButtonChangeState(btnDownloadSeasonData, true);
-                        }
-                    }
-                }
-            }
-            if(j != -1)
-            {
-                allFilesDownloaded = true;
-                ButtonChangeState(btnDownloadSeasonData, false);
-            }
-        }
 
         public HashSet<string> downloadedSeasons = new HashSet<string>();
         public HashSet<string> missingSeasons = new HashSet<string>();
         public bool allFilesDownloaded = false;
         public void CheckDataFiles()
         {
-            listDownloadSeasonData.Items.Clear();
-            downloadedSeasons.Clear();
-            missingSeasons.Clear();
-            string historicDataPath = Path.Combine(projectRoot, @"Content\Historic Data\");
-            int k = 0;
-            for (int i = 2024; i >= 1996; i--)
+            if (!isPopulating)
             {
-                string seasonID = i.ToString();
-                listSeasons.Items.Add(seasonID);
-
-                //Check if ALL files exist for this season
-                int iter = (int.Parse(seasonID) <= 2012 || int.Parse(seasonID) == 2019 || int.Parse(seasonID) == 2020) ? 3 : 4;
-                bool allFilesExist = true;
-
-                for (int j = 0; j < iter; j++)
+                listSeasons.Items.Clear();
+                listDownloadSeasonData.Items.Clear();
+                downloadedSeasons.Clear();
+                missingSeasons.Clear();
+                string historicDataPath = Path.Combine(projectRoot, @"Content\Historic Data\");
+                int k = 0;
+                for (int i = 2024; i >= 1996; i--)
                 {
-                    string fileName = $"{seasonID}p{j}.json";
-                    if (!File.Exists(Path.Combine(historicDataPath, fileName)))
+                    string seasonID = i.ToString();
+                    listSeasons.Items.Add(seasonID);
+
+                    //Check if ALL files exist for this season
+                    int iter = (int.Parse(seasonID) <= 2012 || int.Parse(seasonID) == 2019 || int.Parse(seasonID) == 2020) ? 3 : 4;
+                    bool allFilesExist = true;
+
+                    for (int j = 0; j < iter; j++)
                     {
-                        allFilesExist = false;
-                        break;
+                        string fileName = $"{seasonID}p{j}.json";
+                        if (!File.Exists(Path.Combine(historicDataPath, fileName)))
+                        {
+                            allFilesExist = false;
+                            break;
+                        }
+                    }
+                    if (allFilesExist)
+                    {
+                        downloadedSeasons.Add(seasonID);
+                        if (k != -1)
+                        {
+                            k = 0;
+                        }
+                        allFilesDownloaded = true;
+                    }
+                    else
+                    {
+                        k = -1;
+                        missingSeasons.Add(seasonID);
+                        listDownloadSeasonData.Items.Add(seasonID);
+                        allFilesDownloaded = false;
+                        ButtonChangeState(btnDownloadSeasonData, true);
                     }
                 }
-
-                if (allFilesExist)
+            }
+            else
+            {
+                listDownloadSeasonData.Items.Clear();
+                missingSeasons.Clear();
+                string historicDataPath = Path.Combine(projectRoot, @"Content\Historic Data\");
+                int k = 0;
+                for (int i = 2024; i >= 1996; i--)
                 {
-                    downloadedSeasons.Add(seasonID);
-                    if (k != -1)
+                    string seasonID = i.ToString();
+
+                    //Check if ALL files exist for this season
+                    int iter = (int.Parse(seasonID) <= 2012 || int.Parse(seasonID) == 2019 || int.Parse(seasonID) == 2020) ? 3 : 4;
+                    bool allFilesExist = true;
+
+                    for (int j = 0; j < iter; j++)
                     {
-                        k = 0;
+                        string fileName = $"{seasonID}p{j}.json";
+                        if (!File.Exists(Path.Combine(historicDataPath, fileName)))
+                        {
+                            allFilesExist = false;
+                            break;
+                        }
                     }
-                    allFilesDownloaded = true;
+                    if (allFilesExist)
+                    {
+                        if (k != -1)
+                        {
+                            k = 0;
+                        }
+                        allFilesDownloaded = true;
+                    }
+                    else
+                    {
+                        k = -1;
+                        missingSeasons.Add(seasonID);
+                        listDownloadSeasonData.Items.Add(seasonID);
+                        allFilesDownloaded = false;
+                    }
                 }
-                else
-                {
-                    k = -1;
-                    missingSeasons.Add(seasonID);
-                    listDownloadSeasonData.Items.Add(seasonID);
-                    allFilesDownloaded = false;
-                    ButtonChangeState(btnDownloadSeasonData, true);
-                }
-
             }
 
         }
@@ -4295,7 +4540,7 @@ namespace NBAdbToolbox
                         while (sdr.Read())
                         {
                             seasonInfo.Add((sdr.GetInt32(0), (sdr.GetInt32(1), sdr.GetInt32(2), sdr.GetInt32(3), sdr.GetInt32(4), sdr.GetInt32(5), sdr.GetInt32(6), sdr.GetInt32(7)
-                                , sdr.GetInt32(8), sdr.GetInt32(9), sdr.GetInt32(10), sdr.GetInt32(11), sdr.GetInt32(12))));
+                                , sdr.GetInt32(8), sdr.GetInt32(9), sdr.GetInt32(10), sdr.GetInt32(11), sdr.GetInt32(12), sdr.GetInt32(13), sdr.GetInt32(14))));
                         }
                     }
                 }
@@ -4443,7 +4688,7 @@ namespace NBAdbToolbox
             //Insert data into Main tables and wait for execution
             #region Insert data into Main tables and wait for execution
             // Get the SQL string from the StringBuilder
-            string hitDb = sqlBuilder.ToString();
+            string hitDb = "set nocount on;\n" + sqlBuilder.ToString();
             sqlBuilder.Clear();
             try
             {
@@ -5447,19 +5692,20 @@ namespace NBAdbToolbox
 
             sqlBuilder.Append("\n").Append(sqlBuilderParallel.ToString());
             sqlBuilderParallel.Clear();
-            CurrentDataInsert(sqlBuilder);
-
+            string execute = sqlBuilder.ToString();
+            Task InsertCurrent = CurrentDataInsert(execute);
             sqlBuilder.Clear();
         }
-        public void CurrentDataInsert(StringBuilder sqlStringBuilder)
+        public async Task CurrentDataInsert(string execute)
         {
-            if (sqlStringBuilder.Length == 0)
+            if (execute == "")
+            {
                 return;
+            }
             try
             {
-                string inserts = sqlStringBuilder.ToString();
                 using (SqlConnection connection = new SqlConnection(cString))
-                using (SqlCommand insert = new SqlCommand("set nocount on;\n" + inserts, connection))
+                using (SqlCommand insert = new SqlCommand("set nocount on;\n" + execute, connection))
                 {
                     insert.CommandType = CommandType.Text;
                     connection.Open();
@@ -5683,6 +5929,8 @@ namespace NBAdbToolbox
             // Handle position (if exists)
             if (!string.IsNullOrEmpty(player.position))
             {
+                sqlBuilderParallel.Append(", Starter");
+                valuesSB.Append(", 1");
                 sqlBuilderParallel.Append(", Position");
                 valuesSB.Append(", '").Append(player.position).Append("'");
             }
