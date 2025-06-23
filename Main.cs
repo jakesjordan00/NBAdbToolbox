@@ -620,16 +620,19 @@ namespace NBAdbToolbox
                             {
                                 GameID = gamesRS[i];
                                 await CurrentGameGPS(gamesRS[i], "");
-                                Task CalculateTeamBoxLineup = TeamBoxLineupCalculation(GameID);
-                                if (i % 5 == 0 || i == RegularSeasonGames - 1)
+                                if (!boxMissing)
                                 {
-                                    await CalculateTeamBoxLineup;
-                                    string execute = LineupCalc.ToString();
-                                    LineupCalc.Clear();
-                                    Task CalculateTeamBoxLineupsInsert = CalculatedTeamBoxLineupInsert(execute);
-                                    if (i == RegularSeasonGames - 1)
+                                    Task CalculateTeamBoxLineup = TeamBoxLineupCalculation(GameID);
+                                    if (i % 5 == 0 || i == RegularSeasonGames - 1)
                                     {
-                                        await CalculateTeamBoxLineupsInsert;
+                                        await CalculateTeamBoxLineup;
+                                        string execute = LineupCalc.ToString();
+                                        LineupCalc.Clear();
+                                        Task CalculateTeamBoxLineupsInsert = CalculatedTeamBoxLineupInsert(execute);
+                                        if (i == RegularSeasonGames - 1)
+                                        {
+                                            await CalculateTeamBoxLineupsInsert;
+                                        }
                                     }
                                 }
                                 root.season.games.regularSeason[i].box = null;
@@ -641,16 +644,19 @@ namespace NBAdbToolbox
                                 GameID = gamesPS[i];
                                 lblCurrentGameCount.Text = gamesPS[i].ToString();
                                 await CurrentGameGPS(gamesPS[i], "");
-                                Task CalculateTeamBoxLineup = TeamBoxLineupCalculation(GameID);
-                                if (i % 5 == 0 || i == PostseasonGames - 1)
+                                if (!boxMissing)
                                 {
-                                    await CalculateTeamBoxLineup;
-                                    string execute = LineupCalc.ToString();
-                                    LineupCalc.Clear();
-                                    Task CalculateTeamBoxLineupsInsert = CalculatedTeamBoxLineupInsert(execute);
-                                    if(i == PostseasonGames - 1)
+                                    Task CalculateTeamBoxLineup = TeamBoxLineupCalculation(GameID);
+                                    if (i % 5 == 0 || i == PostseasonGames - 1)
                                     {
-                                        await CalculateTeamBoxLineupsInsert;
+                                        await CalculateTeamBoxLineup;
+                                        string execute = LineupCalc.ToString();
+                                        LineupCalc.Clear();
+                                        Task CalculateTeamBoxLineupsInsert = CalculatedTeamBoxLineupInsert(execute);
+                                        if (i == PostseasonGames - 1)
+                                        {
+                                            await CalculateTeamBoxLineupsInsert;
+                                        }
                                     }
                                 }
                                 //Task TeamBoxLineupTask = TeamBoxLineupCalculation(GameID);
@@ -1211,18 +1217,7 @@ namespace NBAdbToolbox
             {
                 GameID = games[i];
                 await CurrentGameGPS(games[i], "Refresh");
-                Task CalculateTeamBoxLineup = TeamBoxLineupCalculation(GameID);
-                if (i % 5 == 0 || i == games.Count - 1)
-                {
-                    await CalculateTeamBoxLineup;
-                    string execute = LineupCalc.ToString();
-                    LineupCalc.Clear();
-                    Task CalculateTeamBoxLineupsInsert = CalculatedTeamBoxLineupInsert(execute);
-                    if (i == games.Count - 1)
-                    {
-                        await CalculateTeamBoxLineupsInsert;
-                    }
-                }
+                await TeamBoxLineupCalculation(GameID);
                 PopulateDb_8_AfterCurrentGame(games[i].ToString());
             }
             PopulateDb_9_AfterSeasonInserts(buildID, 1, 0, "Current Refresh", 1, 1);
@@ -5578,11 +5573,12 @@ namespace NBAdbToolbox
         public string seriesIDfirst7 = "";
         public StringBuilder sqlBuilderParallel = new StringBuilder(220 * 1024); //Start with roughly .225 MB initial capacity
         #endregion
-
+        public bool boxMissing = false;
         public async Task CurrentGameGPS(int GameID, string sender)
         {
             bool doBox = true;
             bool doPBP = true;
+            boxMissing = false;
             bool useHistoricBox = false;
             bool useHistoricPBP = false;
             string missingNote = "";
@@ -5599,6 +5595,7 @@ namespace NBAdbToolbox
             rootC = await currentData.GetJSON(GameID, SeasonID);
             if (rootC.game == null)
             {
+                boxMissing = true;
                 doBox = false;
                 useHistoricBox = true;
                 missingNote = "'No file available from NBA')\n";

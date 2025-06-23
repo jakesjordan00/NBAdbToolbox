@@ -510,6 +510,7 @@ update Season set CurrentLoaded  = 1 where SeasonID = @Season and @Current = 1;
 exec sp_msforeachtable 'alter table ? with check check constraint all';
 ~~~
 
+
 create procedure TeamBoxLineupCalc @SeasonID int, @GameID int
 as
 select 
@@ -555,7 +556,7 @@ case when p.Starter = 1 then 'Starters' else 'Bench' end, ''', ''', 'minutesplac
      , ', '
      , sum(p.FoulsPersonal) 
      , ')') InsertCmd     
-	 , cast(sum(p.MinutesCalculated) as decimal (18, 2)) MinutesCalculated   
+	 , cast(cast(sum(p.MinutesCalculated) as decimal (18, 2))as varchar(10)) MinutesCalculated   
 from PlayerBox p
 where Status != 'INACTIVE' and p.SeasonID = @SeasonID and GameID = @GameID
 group by  p.SeasonID, p.GameID, p.TeamID, p.MatchupID, p.Starter
