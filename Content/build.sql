@@ -411,6 +411,7 @@ where type_desc = 'USER_TABLE'
 
 create procedure Seasons
 as
+with Seasons as(
 select s.SeasonID, s.Games + s.PlayoffGames Games, case when s.HistoricLoaded = 1 or s.CurrentLoaded = 1 then 1 else 0 end Loaded
 	 , (select COUNT(distinct TeamID) from Team t where s.SeasonID = t.SeasonID) Team
 	 , (select COUNT(distinct ArenaID) from Arena a where s.SeasonID = a.SeasonID) Arena
@@ -426,7 +427,14 @@ select s.SeasonID, s.Games + s.PlayoffGames Games, case when s.HistoricLoaded = 
 
 from Season s left join
 		Game g on s.SeasonID = g.SeasonID 
-group by s.SeasonID, s.Games, s.PlayoffGames, HistoricLoaded, CurrentLoaded
+group by s.SeasonID, s.Games, s.PlayoffGames, HistoricLoaded, CurrentLoaded)
+select *,
+case when Games != Game 
+		then 'Missing Game(s)'
+	 when Games = Game and (Games != PlayerBox or Games != TeamBox or Games != PlayByPlay or Games != StartingLineups or Games != TeamBoxLineups) 
+		then 'Missing Data'
+	 else 'Operational' end Status
+from Seasons s
 Order by SeasonID desc
 ~~~
 

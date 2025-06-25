@@ -207,6 +207,12 @@ namespace NBAdbToolbox
         };
         public Button btnRefresh = new Button();
 
+        public Label lblRepair = new Label
+        {
+            Text = "Repair Incomplete Seasons"
+        };
+        public Button btnRepair = new Button();
+
         //pnlDbUtil sub panel Positions and sizes
         public int leftPanelPos = 0;
         public int midPanelPos = 0;
@@ -314,14 +320,13 @@ namespace NBAdbToolbox
         public Panel pnlScoreboard = new Panel();
 
         public HashSet<(int SeasonID, (int Games, int Loaded, int Team, int Arena, int Player, int Official, int Game, int PlayerBox, int TeamBox, int PlayByPlay, int StartingLineups, int TeamBoxLineups,
-            int HistoricLoaded, int CurrentLoaded))> seasonInfo
-            = new HashSet<(int, (int, int, int, int, int, int, int, int, int, int, int, int, int, int))>();
+            int HistoricLoaded, int CurrentLoaded, string Status))> seasonInfo
+            = new HashSet<(int, (int, int, int, int, int, int, int, int, int, int, int, int, int, int, string))>();
 
         public HashSet<(int SeasonID, (int Games, int Loaded, int Team, int Arena, int Player, int Official, int Game, int PlayerBox, int TeamBox, int PlayByPlay, int StartingLineups, int TeamBoxLineups))> seasonControl
             = new HashSet<(int, (int, int, int, int, int, int, int, int, int, int, int, int))>()
             {
-                (2024, (1320, 1, 30, 36, 587, 80, 1320, 1320, 1320, 1320, 1320, 1320)),
-                //(2024, (1321, 1, 30, 36, 587, 80, 1321, 1321, 1321, 1321)),
+                (2024, (1321, 1, 30, 36, 587, 80, 1321, 1321, 1321, 1321, 1321, 1321)),
                 (2023, (1319, 1, 30, 34, 595, 80, 1319, 1319, 1319, 1319, 1319, 1319)),
                 (2022, (1320, 1, 30, 35, 554, 82, 1320, 1320, 1320, 1320, 1320, 1320)),
                 (2021, (1323, 1, 30, 30, 633, 84, 1323, 1323, 1323, 1323, 1323, 1323)),
@@ -338,8 +343,8 @@ namespace NBAdbToolbox
                 (2010, (1311, 1, 30, 30, 469, 64, 1311, 1311, 1311, 1311, 1311, 1311)),
                 (2009, (1312, 1, 30, 30, 469, 66, 1312, 1312, 1312, 1312, 1312, 1312)),
                 (2008, (1315, 1, 30, 30, 461, 61, 1315, 1315, 1315, 1315, 1315, 1315)),
-                (2007, (1316, 1, 30, 30, 469, 58, 1316, 1316, 1316, 1315, 1316, 1315)),
-                (2006, (1309, 1, 30, 31, 471, 60, 1309, 1309, 1309, 1308, 1309, 1308)),
+                (2007, (1316, 1, 30, 30, 469, 58, 1316, 1316, 1316, 1315, 1316, 1316)),
+                (2006, (1309, 1, 30, 31, 471, 60, 1309, 1309, 1309, 1308, 1309, 1309)),
                 (2005, (1319, 1, 30, 32, 470, 63, 1319, 1319, 1319, 1319, 1319, 1319)),
                 (2004, (1314, 1, 30, 29, 469, 62, 1314, 1314, 1314, 1314, 1314, 1314)),
                 (2003, (1271, 1, 29, 29, 548, 60, 1271, 1271, 1271, 1270, 1271, 1270)),
@@ -347,15 +352,14 @@ namespace NBAdbToolbox
                 (2001, (1260, 1, 29, 28, 650, 56, 1260, 1260, 1260, 1260, 1260, 1260)),
                 (2000, (1260, 1, 29, 29, 652, 51, 1260, 1260, 1260, 1260, 1260, 1260)),
                 (1999, (1264, 1, 29, 32, 646, 37, 1264, 1264, 1264, 1264, 1264, 1264)),
-                (1998, (791, 1, 29, 33, 633, 37, 791, 791, 791, 790, 1320, 1320)),
-                (1997, (1260, 1, 29, 34, 608, 40, 1260, 1260, 1260, 1260, 1320, 1320)),
-                (1996, (1261, 1, 29, 33, 715, 40, 1261, 1261, 1261, 1259, 1320, 1320))
+                (1998, (791, 1, 29, 33, 633, 37, 791, 791, 791, 790, 791, 790)),        //Need to fix tboxlineups
+                (1997, (1260, 1, 29, 34, 608, 40, 1260, 1260, 1260, 1260, 1260, 1260)),
+                (1996, (1261, 1, 29, 33, 715, 40, 1261, 1261, 1261, 1259, 1261, 1259)) //Need to fix tboxlineups
             };
         public HashSet<(int SeasonID, (int Games, int Loaded, int Team, int Arena, int Player, int Official, int Game, int PlayerBox, int TeamBox, int PlayByPlay, int StartingLineups, int TeamBoxLineups))> seasonCurrentControl
             = new HashSet<(int, (int, int, int, int, int, int, int, int, int, int, int, int))>()
             {
-                (2024, (1320, 1, 30, 36, 587, 80, 1320, 1320, 1320, 1320, 1320, 1320)),
-                //(2024, (1321, 1, 30, 36, 587, 80, 1321, 1321, 1321, 1321, 1321, 1321)),
+                (2024, (1321, 1, 30, 36, 587, 80, 1321, 1321, 1321, 1321, 1321, 1321)),
                 (2023, (1319, 1, 30, 34, 595, 81, 1319, 1319, 1319, 1319, 1319, 1319)),
                 (2022, (1320, 1, 30, 35, 554, 83, 1320, 1320, 1320, 1320, 1320, 1320)),
                 (2021, (1323, 1, 30, 30, 633, 84, 1323, 1323, 1323, 1323, 1323, 1323)),
@@ -689,7 +693,7 @@ namespace NBAdbToolbox
                             lblDbOptions.Text = "Loading Season info";
                             CenterElement(pnlDbUtil, lblDbOptions);
                         }));
-                        await Task.Run(() => GetSeasonInfo());
+                        await Task.Run(() => GetSeasonInfo(/*Main - After populateDb completion and if dbOverviewOpened*/));
                         lblDbOptions.Invoke((MethodInvoker)(() =>
                         {
                             lblDbOptions.Text = "Options";
@@ -822,7 +826,7 @@ namespace NBAdbToolbox
                             lblDbOptions.Text = "Loading Season info";
                             CenterElement(pnlDbUtil, lblDbOptions);
                         }));
-                        await Task.Run(() => GetSeasonInfo());
+                        await Task.Run(() => GetSeasonInfo(/*Changing Configuration*/));
                         lblDbOptions.Invoke((MethodInvoker)(() =>
                         {
                             lblDbOptions.Text = "Options";
@@ -918,6 +922,34 @@ namespace NBAdbToolbox
             btnRefresh.Click += async (s, e) =>
             {
                 await RefreshClick();
+                if (dbOverviewOpened)
+                {
+                    lblDbOptions.Invoke((MethodInvoker)(() =>
+                    {
+                        lblDbOptions.Text = "Loading Season info";
+                        CenterElement(pnlDbUtil, lblDbOptions);
+                    }));
+                    await Task.Run(() => GetSeasonInfo());
+                    CheckDataFiles(); //GetSeasons();
+                    lblDbOptions.Invoke((MethodInvoker)(() =>
+                    {
+                        lblDbOptions.Text = "Options";
+                        CenterElement(pnlDbUtil, lblDbOptions);
+                    }));
+                    dbOverviewFirstOpen = false;
+                    DbOverviewVisibility(dbOverviewOpened, "Refresh");
+                }
+                else
+                {
+                    dbOverviewFirstOpen = true;
+                }
+                RefreshCompletion();
+            };
+
+
+            btnRepair.Click += async (s, e) =>
+            {
+                await RepairClick();//blah
                 if (dbOverviewOpened)
                 {
                     lblDbOptions.Invoke((MethodInvoker)(() =>
@@ -1124,6 +1156,19 @@ namespace NBAdbToolbox
             #endregion
 
             #endregion
+        }
+        public async Task RepairClick()
+        {
+            GetSeasonInfo();
+            List<int> nonOperationalSeasons = new List<int>();
+
+            foreach (var season in seasonInfo)
+            {
+                if (season.Item2.Status != "Operational")
+                {
+                    nonOperationalSeasons.Add(season.SeasonID);
+                }
+            }
         }
         public string GetLowestTable(int seasonID)
         {
@@ -1905,6 +1950,8 @@ namespace NBAdbToolbox
                 ButtonChangeState(btnBuild, false);
                 isBuildEnabled = false;
                 ButtonChangeState(btnPopulate, false);
+                ButtonChangeState(btnRefresh, false);
+                ButtonChangeState(btnRepair, false);
                 listSeasons.Items.Clear();
 
                 lblServerName.ForeColor = ErrorColor;
@@ -1930,6 +1977,7 @@ namespace NBAdbToolbox
                 isBuildEnabled = false;
                 ButtonChangeState(btnPopulate, true);
                 ButtonChangeState(btnRefresh, true);
+                ButtonChangeState(btnRepair, true);
                 lblDbOvName.Visible = true;
 
                 lblDbOvName.ForeColor = SuccessColor;
@@ -1944,6 +1992,8 @@ namespace NBAdbToolbox
                 ButtonChangeState(btnBuild, true);
                 isBuildEnabled = true;
                 ButtonChangeState(btnPopulate, false);
+                ButtonChangeState(btnRefresh, false);
+                ButtonChangeState(btnRepair, false);
                 lblDbOvName.Visible = false;
                 listSeasons.Items.Clear();
                 lblDbOvName.ForeColor = WarningColor;
@@ -1961,6 +2011,8 @@ namespace NBAdbToolbox
                 ButtonChangeState(btnBuild, true);
                 isBuildEnabled = true;
                 ButtonChangeState(btnPopulate, false);
+                ButtonChangeState(btnRefresh, false);
+                ButtonChangeState(btnRepair, false);
                 lblDbOvName.Visible = false;
                 listSeasons.Items.Clear();
 
@@ -2007,6 +2059,10 @@ namespace NBAdbToolbox
             if (allFilesDownloaded)
             {
                 ButtonChangeState(btnDownloadSeasonData, false);
+            }
+            if (seasonInfo == null || seasonInfo.Count == 0)
+            {
+                ButtonChangeState(btnRepair, false);
             }
 
 
@@ -2612,6 +2668,9 @@ namespace NBAdbToolbox
             PostseasonGames = 0;
             TotalGames = 0;
             TotalGamesCD = 0;
+            root = null;
+            rootC = null;
+            rootCPBP = null;
         }
 
         #endregion
@@ -3000,6 +3059,9 @@ namespace NBAdbToolbox
             btnDownloadSeasonData.Font = SetFontSize("Segoe UI", (float)(fontSize / 2.7), FontStyle.Bold, (int)(listSeasons.Width * .8), btnPopulate); //6.5
             btnDownloadSeasonData.Width = (int)(listSeasons.Width * .9);
 
+            btnRepair.AutoSize = true;
+            btnRefresh.AutoSize = true;
+
 
 
         }
@@ -3370,6 +3432,24 @@ namespace NBAdbToolbox
             btnDownloadSeasonData.Text = "Populate Db";
             btnDownloadSeasonData.Font = SetFontSize("Segoe UI", (float)(fontSize), FontStyle.Bold, (int)(listSeasons.Width * .8), btnDownloadSeasonData);
             btnDownloadSeasonData.Text = "Download";
+
+            lblRepair.Font = SetFontSize("Segoe UI", (float)(fontSize), FontStyle.Bold, (int)(lblDbUtil.Width / 1.5), lblRepair);
+            lblRepair.AutoSize = true;
+            if (listSeasons.Items.Count > 0)
+            {
+                btnRepair.Text = "Repair Db";
+            }
+            else
+            {
+                btnRepair.Enabled = false;
+                ButtonChangeState(btnRepair, false);
+            }
+            btnRepair.Font = SetFontSize("Segoe UI", (float)(fontSize), FontStyle.Bold, (int)(lblRepair.Width * .8), btnRepair);
+            btnRepair.AutoSize = true;
+
+
+
+
             ArrangeOverviewControls();
         }
 
@@ -3399,6 +3479,11 @@ namespace NBAdbToolbox
             listDownloadSeasonData.Left = lblDownloadSeasonData.Left + listSeasons.Left;
             lblDlSelectSeason.Left = lblDownloadSeasonData.Left + lblDbSelectSeason.Left;
             btnDownloadSeasonData.Left = listDownloadSeasonData.Left;
+
+            lblRepair.Top = lblRefresh.Top;
+            lblRepair.Left = lblDownloadSeasonData.Left;
+            btnRepair.Top = lblRepair.Bottom;
+            btnRepair.Left = btnDownloadSeasonData.Left;
         }
         public void InitializeElements()
         {
@@ -3419,6 +3504,8 @@ namespace NBAdbToolbox
             AddPanelElement(pnlLoad, lblSeasonStatusLoadInfo);
             AddPanelElement(pnlLoad, lblSeasonStatusLoad);
             AddPanelElement(pnlLoad, picLoad);
+            AddPanelElement(pnlDbUtil, btnRepair);
+            AddPanelElement(pnlDbUtil, lblRepair);
             AddPanelElement(pnlDbUtil, btnDownloadSeasonData);
             AddPanelElement(pnlDbUtil, lblDownloadSeasonData);
             AddPanelElement(pnlDbUtil, lblDlSelectSeason);
@@ -3876,6 +3963,12 @@ namespace NBAdbToolbox
                 listDownloadSeasonData.Left = lblDownloadSeasonData.Left + listSeasons.Left;
                 lblDlSelectSeason.Left = lblDownloadSeasonData.Left + lblDbSelectSeason.Left;
                 btnDownloadSeasonData.Left = listDownloadSeasonData.Left;
+
+                lblRepair.Top = lblRefresh.Top;
+                lblRepair.Left = lblDownloadSeasonData.Left;
+                btnRepair.Top = lblRepair.Bottom;
+                btnRepair.Left = btnDownloadSeasonData.Left;
+
                 if (dbConnection)
                 {
                     lblDbOvName.ForeColor = SuccessColor;
@@ -3915,6 +4008,10 @@ namespace NBAdbToolbox
                 listDownloadSeasonData.Left = lblDownloadSeasonData.Left + listSeasons.Left;
                 lblDlSelectSeason.Left = lblDownloadSeasonData.Left + lblDbSelectSeason.Left;
                 btnDownloadSeasonData.Left = listDownloadSeasonData.Left;
+                lblRepair.Top = lblRefresh.Top;
+                lblRepair.Left = lblDownloadSeasonData.Left;
+                btnRepair.Top = lblRepair.Bottom;
+                btnRepair.Left = btnDownloadSeasonData.Left;
             }
 
             //show and build overview
@@ -3959,6 +4056,10 @@ namespace NBAdbToolbox
                 listDownloadSeasonData.Left = lblDownloadSeasonData.Left + listSeasons.Left;
                 lblDlSelectSeason.Left = lblDownloadSeasonData.Left + lblDbSelectSeason.Left;
                 btnDownloadSeasonData.Left = listDownloadSeasonData.Left;
+                lblRepair.Top = lblRefresh.Top;
+                lblRepair.Left = lblDownloadSeasonData.Left;
+                btnRepair.Top = lblRepair.Bottom;
+                btnRepair.Left = btnDownloadSeasonData.Left;
             }
             else if (vis)
             {
@@ -3979,6 +4080,10 @@ namespace NBAdbToolbox
                 listDownloadSeasonData.Left = lblDownloadSeasonData.Left + listSeasons.Left;
                 lblDlSelectSeason.Left = lblDownloadSeasonData.Left + lblDbSelectSeason.Left;
                 btnDownloadSeasonData.Left = listDownloadSeasonData.Left;
+                lblRepair.Top = lblRefresh.Top;
+                lblRepair.Left = lblDownloadSeasonData.Left;
+                btnRepair.Top = lblRepair.Bottom;
+                btnRepair.Left = btnDownloadSeasonData.Left;
             }
         }
         private void BuildOverview()
@@ -4145,9 +4250,10 @@ namespace NBAdbToolbox
                 lblUnpopulated.AutoSize = true;
                 pnlDbOverview.Controls.Add(lblUnpopulated);
                 lblUnpopulated.Text = "All seasons populated!";
+                lblUnpopulated.AutoSize = true;
                 lblUnpopulated.Top = topYear;
                 lblUnpopulated.Visible = true;
-                lineHeight = lblUnpopulated.Top - singleLineHeight;
+                lineHeight -= lblUnpopulated.Height;
 
             }
 
@@ -4308,7 +4414,7 @@ namespace NBAdbToolbox
 
             //calculate height for vertical lines
 
-            int height = rowHeight * popCount + lblEmpty.Height + topTable;
+
 
             //create vertical lines
             foreach (int x in columnPositions)
@@ -4316,7 +4422,7 @@ namespace NBAdbToolbox
                 Panel line = new Panel
                 {
                     Width = 1,
-                    Height = height,
+                    Height = rowPositions.Max() - lblEmpty.Height - (int)(lblEmpty.Height * .33),
                     Left = x,
                     Top = topTable,
                     BackColor = ThemeColor,
@@ -4535,7 +4641,7 @@ namespace NBAdbToolbox
                         while (sdr.Read())
                         {
                             seasonInfo.Add((sdr.GetInt32(0), (sdr.GetInt32(1), sdr.GetInt32(2), sdr.GetInt32(3), sdr.GetInt32(4), sdr.GetInt32(5), sdr.GetInt32(6), sdr.GetInt32(7)
-                                , sdr.GetInt32(8), sdr.GetInt32(9), sdr.GetInt32(10), sdr.GetInt32(11), sdr.GetInt32(12), sdr.GetInt32(13), sdr.GetInt32(14))));
+                                , sdr.GetInt32(8), sdr.GetInt32(9), sdr.GetInt32(10), sdr.GetInt32(11), sdr.GetInt32(12), sdr.GetInt32(13), sdr.GetInt32(14), sdr.GetString(15))));
                         }
                     }
                 }

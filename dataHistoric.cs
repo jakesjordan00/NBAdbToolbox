@@ -24,24 +24,39 @@ namespace NBAdbToolboxHistoric
         {
 
             Dictionary<int, int> seasonCapacities = new Dictionary<int, int>{
+                { 1996, 286 * 1024 * 1024 }, // ~286 MB in bytes
+                { 1997, 289 * 1024 * 1024 }, // ~289 MB in bytes
+                { 1998, 182 * 1024 * 1024 }, // ~182 MB in bytes
+                { 1999, 296 * 1024 * 1024 }, // ~296 MB in bytes
+                { 2000, 291 * 1024 * 1024 }, // ~291 MB in bytes
+                { 2001, 288 * 1024 * 1024 }, // ~288 MB in bytes
+                { 2002, 293 * 1024 * 1024 }, // ~293 MB in bytes
+                { 2003, 284 * 1024 * 1024 }, // ~284 MB in bytes
+                { 2004, 297 * 1024 * 1024 }, // ~297 MB in bytes
+                { 2005, 296 * 1024 * 1024 }, // ~296 MB in bytes
+                { 2006, 295 * 1024 * 1024 }, // ~295 MB in bytes
+                { 2007, 294 * 1024 * 1024 }, // ~294 MB in bytes
+                { 2008, 293 * 1024 * 1024 }, // ~293 MB in bytes
+                { 2009, 294 * 1024 * 1024 }, // ~294 MB in bytes
+                { 2010, 294 * 1024 * 1024 }, // ~294 MB in bytes
+                { 2011, 241 * 1024 * 1024 }, // ~241 MB in bytes
                 { 2012, 297 * 1024 * 1024 }, // ~297 MB in bytes
-                { 2013, 303 * 1024 * 1024 }, // ~303 MB in bytes
+                { 2013, 302 * 1024 * 1024 }, // ~302 MB in bytes
                 { 2014, 303 * 1024 * 1024 }, // ~303 MB in bytes
-                { 2015, 309 * 1024 * 1024 }, // ~309 MB in bytes
+                { 2015, 308 * 1024 * 1024 }, // ~308 MB in bytes
                 { 2016, 307 * 1024 * 1024 }, // ~307 MB in bytes
                 { 2017, 305 * 1024 * 1024 }, // ~305 MB in bytes
-                { 2018, 318 * 1024 * 1024 }, // ~315 MB in bytes
-                { 2019, 276 * 1024 * 1024 }, // ~276 MB in bytes
+                { 2018, 315 * 1024 * 1024 }, // ~315 MB in bytes
+                { 2019, 275 * 1024 * 1024 }, // ~275 MB in bytes
                 { 2020, 278 * 1024 * 1024 }, // ~278 MB in bytes
-                { 2021, 314 * 1024 * 1024 }, // ~314 MB in bytes
-                { 2022, 318 * 1024 * 1024 }, // ~315 MB in bytes
+                { 2021, 313 * 1024 * 1024 }, // ~313 MB in bytes
+                { 2022, 314 * 1024 * 1024 }, // ~314 MB in bytes
                 { 2023, 313 * 1024 * 1024 }, // ~313 MB in bytes
-                { 2024, 314 * 1024 * 1024 }  // ~314 MB in bytes
+                { 2024, 321 * 1024 * 1024 }  // ~321 MB in bytes
             };
 
-            // Get exact capacity for current season (rounded up to nearest MB)
-            int capacity = seasonCapacities.ContainsKey(season) ? seasonCapacities[season] : 318 * 1024 * 1024; // Default to largest if not found
-
+            //Get capacity for current season
+            int capacity = seasonCapacities.ContainsKey(season) ? seasonCapacities[season] : 318 * 1024 * 1024; //Defaults to largest if not found
             StringBuilder seasonFileBuilder = new StringBuilder(capacity);
             string fullJson = "";
             Root root = null;
@@ -59,8 +74,27 @@ namespace NBAdbToolboxHistoric
                 ErrorOutput(e);
                 Console.WriteLine($"Error reading season {season}: {e.Message}");
             }
-            fullJson = seasonFileBuilder.ToString();            seasonFileBuilder.Clear();
-            seasonFileBuilder.Capacity = 0;
+            try
+            {
+                LogMemory("Before converting to string");
+                fullJson = seasonFileBuilder.ToString();
+            }
+            catch (OutOfMemoryException MemOut)
+            {
+                ErrorOutput(MemOut);
+                LogMemory("After failing ToString");
+                seasonFileBuilder.Clear();
+                seasonFileBuilder = null;
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                GC.Collect();
+                return null; // Don't continue if we can't create the string
+            }
+            finally
+            {
+                seasonFileBuilder.Clear();
+                seasonFileBuilder.Capacity = 0;
+            }
             try
             {
                 LogMemory("Before converting to string");
