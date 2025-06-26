@@ -323,8 +323,8 @@ namespace NBAdbToolbox
         public Panel pnlScoreboard = new Panel();
 
         public HashSet<(int SeasonID, (int Games, int Loaded, int Team, int Arena, int Player, int Official, int Game, int PlayerBox, int TeamBox, int PlayByPlay, int StartingLineups, int TeamBoxLineups,
-            int HistoricLoaded, int CurrentLoaded, string Status))> seasonInfo
-            = new HashSet<(int, (int, int, int, int, int, int, int, int, int, int, int, int, int, int, string))>();
+            int HistoricLoaded, int CurrentLoaded, int PBoxRows, int TBoxRows, int PbpRows, int StartingLineupRows, int TBoxLineupRows, string Status))> seasonInfo
+            = new HashSet<(int, (int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, string))>();
 
         public HashSet<(int SeasonID, (int Games, int Loaded, int Team, int Arena, int Player, int Official, int Game, int PlayerBox, int TeamBox, int PlayByPlay, int StartingLineups, int TeamBoxLineups))> seasonControl
             = new HashSet<(int, (int, int, int, int, int, int, int, int, int, int, int, int))>()
@@ -2004,6 +2004,7 @@ namespace NBAdbToolbox
                 lblDbStat.ForeColor = SuccessColor;
                 lblDbStat.BackColor = Color.Transparent;
                 picDbStatus.BackColor = Color.Transparent;
+                lblDbOvName.BackColor = Color.Transparent;
             }
             else if (sender == "DbMissing")
             {
@@ -2128,6 +2129,7 @@ namespace NBAdbToolbox
         //Create Database using build.sql file
         public void CreateDB(string connectionString)
         {
+            int exception = 0;
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 string createAlter = "use master create database " + config.Database + "; " +
@@ -2137,26 +2139,27 @@ namespace NBAdbToolbox
                 "alter database " + config.Database + " set recovery simple; " +
                 "alter database " + config.Database + " modify file (name = " + config.Database + ", size = 1024mb, filegrowth = 256mb); " +
                 "alter database " + config.Database + " modify file (name = " + config.Database + "_log, size = 1024mb, filegrowth = 256mb);";
-
-
-                using (SqlCommand InsertData = new SqlCommand(createAlter))
+                try
                 {
-                    InsertData.Connection = conn;
-                    InsertData.CommandType = CommandType.Text;
-                    conn.Open();
-                    try
+                    using (SqlCommand InsertData = new SqlCommand(createAlter))
                     {
+                        InsertData.Connection = conn;
+                        InsertData.CommandType = CommandType.Text;
+                        conn.Open();
                         InsertData.ExecuteScalar();
+                        conn.Close();
                         config.Create = false;
                         bob.InitialCatalog = config.Database;
+                        connectionString = bob.ToString();
                     }
-                    catch (SqlException ex)
-                    {
-
-                    }
-                    conn.Close();
                 }
-                connectionString = bob.ToString();
+                catch(SqlException e)
+                {
+                    exception = e.Number;
+                    config.Create = false;
+                    bob.InitialCatalog = config.Database;
+                    connectionString = bob.ToString();
+                }
             }
             dbConnection = TestConnectionString(connectionString);
             if (dbConnection)
@@ -2165,66 +2168,77 @@ namespace NBAdbToolbox
                 {
                     WriteConfig("FirstDbConTest");
                 }
-            }
-            //CheckServer(connectionString, "create");
-            using (SqlConnection conn = new SqlConnection(connectionString))
-            {
-                using (SqlCommand CreateTables = new SqlCommand(buildFile))
+                //CheckServer(connectionString, "create");
+                if(exception != 1801)
                 {
-                    CreateTables.Connection = conn;
-                    CreateTables.CommandType = CommandType.Text;
-                    conn.Open();
                     try
                     {
-                        CreateTables.ExecuteScalar();
-                        config.Create = false;
-                        ButtonChangeState(btnBuild, false);
-                        FormatProcedures();
+                        using (SqlConnection conn = new SqlConnection(connectionString))
+                        {
+                            using (SqlCommand CreateTables = new SqlCommand(buildFile))
+                            {
+                                CreateTables.Connection = conn;
+                                CreateTables.CommandType = CommandType.Text;
+                                conn.Open();
+                                CreateTables.ExecuteScalar();
+                                conn.Close();
+                                config.Create = false;
+                                ButtonChangeState(btnBuild, false);
+                                FormatProcedures();
+                            }
+                            for (int i = 0; i < procs.Count; i++)
+                            {
+                                using (SqlCommand CreateProcedures = new SqlCommand(procs[i]))
+                                {
+                                    CreateProcedures.Connection = conn;
+                                    CreateProcedures.CommandType = CommandType.Text;
+                                    conn.Open();
+                                    CreateProcedures.ExecuteScalar();
+                                    conn.Close();
+                                }
+                            }
+                            using (SqlCommand InsertSeasons = new SqlCommand("SeasonInsert"))
+                            {
+                                InsertSeasons.Connection = conn;
+                                InsertSeasons.CommandType = CommandType.StoredProcedure;
+                                conn.Open();
+                                InsertSeasons.ExecuteScalar();
+                                conn.Close();
+                            }
+                        }
                     }
                     catch (SqlException ex)
                     {
-
-                    }
-                    conn.Close();
-                }
-                for (int i = 0; i < procs.Count; i++)
-                {
-                    using (SqlCommand CreateProcedures = new SqlCommand(procs[i]))
-                    {
-                        CreateProcedures.Connection = conn;
-                        CreateProcedures.CommandType = CommandType.Text;
-                        conn.Open();
-                        try
+                        DbExists();
+                        exception = ex.Number;
+                        if (ex.Number == 2714) // Object already exists error
                         {
-                            CreateProcedures.ExecuteScalar();
+                            MessageBox.Show("Database already existed, now connected.", "Database Status",
+                                           MessageBoxButtons.OK, MessageBoxIcon.Information);
                         }
-                        catch (SqlException ex)
-                        {
-
-                        }
-                        conn.Close();
                     }
                 }
-                using (SqlCommand InsertSeasons = new SqlCommand("SeasonInsert"))
+                else
                 {
-                    InsertSeasons.Connection = conn;
-                    InsertSeasons.CommandType = CommandType.StoredProcedure;
-                    conn.Open();
-                    try
-                    {
-                        InsertSeasons.ExecuteScalar();
-                    }
-                    catch (SqlException ex)
-                    {
-
-                    }
-                    conn.Close();
+                    DbExists();
+                    MessageBox.Show("Database already existed, now connected.", "Database Status",
+                                    MessageBoxButtons.OK, MessageBoxIcon.Information);                    
                 }
+
+
                 if (ConfigChanged("SeasonInsert")) //If the config file has changed, write update to file
                 {
                     WriteConfig("After SeasonInsert");
                 }
-                DbExists();
+                if(exception == 0)
+                {
+                    DbExists();
+                }
+            }
+            else
+            {
+                MessageBox.Show("Database could not be connected, do you have permissions on master?", "Database Status",
+                                MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
         //Formats procedures from build.sql file
@@ -4331,6 +4345,19 @@ namespace NBAdbToolbox
                 seasonData.Item2.HistoricLoaded,
                 seasonData.Item2.CurrentLoaded
             };
+            int[] dataValueRows =
+            {
+                0,
+                0,
+                0,
+                0,
+                0,
+                seasonData.Item2.PBoxRows,
+                seasonData.Item2.TBoxRows,
+                seasonData.Item2.PbpRows,
+                seasonData.Item2.StartingLineupRows,
+                seasonData.Item2.TBoxLineupRows
+            };
             int[] controlValues = {
                 seasonDataControl.Item2.Game,
                 seasonDataControl.Item2.Team,
@@ -4361,16 +4388,31 @@ namespace NBAdbToolbox
             {
                 "Games", "Teams", "Arenas", "Players", "Officials", "Games", "Games", "Games", "Games", "Games"
             };
+            int labelTop = 0;
 
             //create labels for each data point
             for (int i = 0; i < Math.Min(dataValues.Length, columnPositions.Count - 1); i++)
             {
                 string labelKey = $"data_{year}_{i}";
                 Label dataLabel = GetOrCreateDataLabel(labelKey, fontSize * 0.6f);
-                dataLabel.Text = dataValues[i].ToString() + " " + textValues[i];
+                if(i >= 5)
+                {
+                    dataLabel.Text = dataValues[i].ToString() + " " + textValues[i] + "\n"
+                        + dataValueRows[i].ToString() + " Rows";
+                }
+                else if(i == 0)
+                {
+                    dataLabel.Text = dataValues[i].ToString() + " " + textValues[i];
+                    dataLabel.AutoSize = true;
+                    labelTop = (int)(dataLabel.Height * .4);
+                }
+                else
+                {
+                    dataLabel.Text = dataValues[i].ToString() + " " + textValues[i];
+                }
                 dataLabel.AutoSize = true;
                 dataLabel.Left = columnPositions[i]; //center under column
-                dataLabel.Top = rowPosition + (int)(dataLabel.Height * .4);
+                dataLabel.Top = rowPosition + labelTop;
                 dataLabel.Visible = true;
                 if (dataValues[11] == 1 && dataValues[12] == 0)
                 {
@@ -4663,7 +4705,8 @@ namespace NBAdbToolbox
                         while (sdr.Read())
                         {
                             seasonInfo.Add((sdr.GetInt32(0), (sdr.GetInt32(1), sdr.GetInt32(2), sdr.GetInt32(3), sdr.GetInt32(4), sdr.GetInt32(5), sdr.GetInt32(6), sdr.GetInt32(7)
-                                , sdr.GetInt32(8), sdr.GetInt32(9), sdr.GetInt32(10), sdr.GetInt32(11), sdr.GetInt32(12), sdr.GetInt32(13), sdr.GetInt32(14), sdr.GetString(15))));
+                                , sdr.GetInt32(8), sdr.GetInt32(9), sdr.GetInt32(10), sdr.GetInt32(11), sdr.GetInt32(12), sdr.GetInt32(13), sdr.GetInt32(14)
+                                , sdr.GetInt32(15), sdr.GetInt32(16), sdr.GetInt32(17), sdr.GetInt32(18), sdr.GetInt32(19), sdr.GetString(20))));
                         }
                     }
                 }

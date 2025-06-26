@@ -359,7 +359,7 @@ insert into Season values(2020, 1610612749, 1080, 91, 0, 0)
 insert into Season values(2021, 1610612744, 1230, 93, 0, 0)
 insert into Season values(2022, 1610612743, 1230, 90, 0, 0)
 insert into Season values(2023, 1610612738, 1230, 89, 0, 0)
-insert into Season values(2024, null, 1230, 91, 0, 0)
+insert into Season values(2024, 1610612760, 1230, 91, 0, 0)
 ~~~
 
 create schema util
