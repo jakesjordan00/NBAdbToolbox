@@ -27,15 +27,7 @@ namespace NBAdbToolboxSchedule
                     json = await client.GetStringAsync(pbpLink);
                     Schedule = JsonConvert.DeserializeObject<ScheduleLeagueV2>(json);
                 }
-                catch (HttpRequestException ex)
-                {
-
-                }
-                catch (NullReferenceException nah)
-                {
-
-                }
-                catch (TaskCanceledException thread)
+                catch
                 {
 
                 }

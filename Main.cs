@@ -44,7 +44,10 @@ namespace NBAdbToolbox
         NBAdbToolboxSchedule.ScheduleLeagueV2 schedule = new NBAdbToolboxSchedule.ScheduleLeagueV2();
         public bool dbConnection = false; //Determine whether or not we have a connection to the Database in dbconfig file
         public bool isConnected = false; //Server Connection status variable
-        static string projectRoot = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..")); //File path for project
+        //static string projectRoot = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..")); //File path for project when DEBUGGING
+
+        static string projectRoot = AppDomain.CurrentDomain.BaseDirectory.Replace(@"\bin\Debug\", "").Replace(@"\bin\Release\", ""); //File path for project on FINAL RELEASE and DEBUG
+        //C:\Users\derfj\Desktop\NBAdbToolbox\bin\Debug\
 
         public string settingsPath = Path.Combine(projectRoot, @"Content", "settings.json");
         private Settings settings;
@@ -802,6 +805,10 @@ namespace NBAdbToolbox
                 {
                     settings.ConfigPath = dlgDefaultPath.SelectedPath;
                     File.WriteAllText(settingsPath, JsonConvert.SerializeObject(settings, Formatting.Indented));
+                    if (Directory.Exists(settings.ConfigPath))
+                    {
+                        RefreshDefaultConfigPath("Main");
+                    }
                 }
                 lblSettings.Focus();
             };
@@ -1303,6 +1310,9 @@ namespace NBAdbToolbox
             };
             pnlDbUtil.Controls.Add(lblDownloadStatus);
 
+            lblRepair.Top = progressBar.Bottom + 10;
+            btnRepair.Top = lblRepair.Bottom;
+
             //Calculate total files to download
             int totalFiles = 0;
             foreach (string season in listDownloadSeasonData.SelectedItems)
@@ -1367,6 +1377,8 @@ namespace NBAdbToolbox
             pnlDbUtil.Controls.Remove(lblDownloadStatus);
             progressBar.Dispose();
             lblDownloadStatus.Dispose();
+            lblRepair.Top = lblRefresh.Top;
+            btnRepair.Top = lblRepair.Bottom;
 
             //Re-enable controls
             btnDownloadSeasonData.Enabled = true;
@@ -1594,12 +1606,18 @@ namespace NBAdbToolbox
                     }
                     else if (!File.Exists(Path.Combine(backupDir, settings.DefaultConfig)))
                     {
-
+                        defaultConfig = true;
                     }
+                }
+                else if(!Directory.Exists(settings.ConfigPath))
+                {
+                    Directory.CreateDirectory(Path.Combine(projectRoot, @"Content\Configuration"));
+                    settings.ConfigPath = Path.Combine(projectRoot, @"Content\Configuration");
+                    defaultConfig = true;
                 }
                 else
                 {
-                    Directory.CreateDirectory(Path.Combine(projectRoot, @"Content\Configuration"));
+                    settings.ConfigPath = Path.Combine(projectRoot, @"Content\Configuration");
                     defaultConfig = true;
                 }
             }
@@ -1622,7 +1640,7 @@ namespace NBAdbToolbox
             }
             if (settings.DefaultConfig == null)
             {
-                settings.DefaultConfig = "dbconfig.json";
+                settings.DefaultConfig = "";
             }
             if (settings.BackgroundImage == null)
             {
@@ -1649,7 +1667,7 @@ namespace NBAdbToolbox
                    settings.DefaultConfig != settingsControl.DefaultConfig ||
                    settings.BackgroundImage != settingsControl.BackgroundImage ||
                    settings.WindowSize != settingsControl.WindowSize ||
-                   settings.Sound != settingsControl.Sound;
+                   settings.Sound != settingsControl.Sound || defaultConfig;
         }
         #endregion
 
@@ -3425,26 +3443,29 @@ namespace NBAdbToolbox
             }
             else
             {
+                btnRefresh.Text = "Refresh data";
                 btnRefresh.Enabled = false;
                 ButtonChangeState(btnRefresh, false);
+                ButtonChangeState(btnRepair, false);
             }
-            btnRefresh.Font = SetFontSize("Segoe UI", (float)(fontSize), FontStyle.Bold, (int)(lblRefresh.Width * .8), btnRefresh);
+            btnRefresh.Font = SetFontSize("Segoe UI", (float)(fontSize), FontStyle.Bold, (int)(lblRefresh.Width * .85), btnRefresh);
             btnDownloadSeasonData.Text = "Populate Db";
-            btnDownloadSeasonData.Font = SetFontSize("Segoe UI", (float)(fontSize), FontStyle.Bold, (int)(listSeasons.Width * .8), btnDownloadSeasonData);
+            btnDownloadSeasonData.Font = SetFontSize("Segoe UI", (float)(fontSize), FontStyle.Bold, (int)(listDownloadSeasonData.Width * .85), btnDownloadSeasonData);
             btnDownloadSeasonData.Text = "Download";
-
-            lblRepair.Font = SetFontSize("Segoe UI", (float)(fontSize), FontStyle.Bold, (int)(lblDbUtil.Width / 1.5), lblRepair);
-            lblRepair.AutoSize = true;
-            if (listSeasons.Items.Count > 0)
+            btnDownloadSeasonData.AutoSize = true;
+            if(listDownloadSeasonData.Items.Count > 0)
             {
-                btnRepair.Text = "Repair Db";
+                ButtonChangeState(btnDownloadSeasonData, true);
             }
             else
             {
-                btnRepair.Enabled = false;
-                ButtonChangeState(btnRepair, false);
+                ButtonChangeState(btnDownloadSeasonData, false);
             }
-            btnRepair.Font = SetFontSize("Segoe UI", (float)(fontSize), FontStyle.Bold, (int)(lblRepair.Width * .8), btnRepair);
+
+            lblRepair.Font = SetFontSize("Segoe UI", (float)(fontSize), FontStyle.Bold, (int)(lblDbUtil.Width / 1.5), lblRepair);
+            btnRepair.Text = "Repair Db";
+            lblRepair.AutoSize = true;
+            btnRepair.Font = SetFontSize("Segoe UI", (float)(fontSize), FontStyle.Bold, (int)(lblRepair.Width * .85), btnRepair);
             btnRepair.AutoSize = true;
 
 
@@ -3456,6 +3477,7 @@ namespace NBAdbToolbox
         public void ArrangeOverviewControls()
         {
             int spacer = (int)(pnlDbUtil.Height * .01);
+            int indent = (int)(pnlDbOverview.Width * .02);
             lblDbOptions.Top = pnlDbOverview.Bottom;
             lblPopulate.Top = lblDbOptions.Bottom;
             lblDownloadSeasonData.Top = lblDbOptions.Bottom;
@@ -3468,15 +3490,15 @@ namespace NBAdbToolbox
             btnDownloadSeasonData.Top = listDownloadSeasonData.Bottom;
             lblRefresh.Top = btnPopulate.Bottom + (int)(btnPopulate.Height / 2);
             btnRefresh.Top = lblRefresh.Bottom;
-            btnPopulate.Left = (int)(listSeasons.Width * .05);
-
-            btnRefresh.Left = (int)((lblRefresh.Width - btnRefresh.Width) * .5);
-            listSeasons.Left = btnRefresh.Left;
-            lblDbSelectSeason.Left = (int)((listSeasons.Width - listSeasons.Width) * .5) + listSeasons.Left;
-            btnPopulate.Left = btnRefresh.Left;
+            btnPopulate.Left = indent;
+            int hi = (int)(pnlDbOverview.Width * .02);
+            //120 when bad connection -> 6
+            btnRefresh.Left = indent;
+            listSeasons.Left = indent;
+            lblDbSelectSeason.Left = (int)((listSeasons.Width - listSeasons.Width) * .5) + indent;
 
             lblDownloadSeasonData.Left = lblDbOptions.Left + (int)(lblDbOptions.Width / 2);
-            listDownloadSeasonData.Left = lblDownloadSeasonData.Left + listSeasons.Left;
+            listDownloadSeasonData.Left = lblDownloadSeasonData.Left + indent;
             lblDlSelectSeason.Left = lblDownloadSeasonData.Left + lblDbSelectSeason.Left;
             btnDownloadSeasonData.Left = listDownloadSeasonData.Left;
 
@@ -5736,7 +5758,7 @@ namespace NBAdbToolbox
             {
                 try
                 {
-                    InitiateCurrentPlayByPlay(rootCPBP.game);
+                    await InitiateCurrentPlayByPlay(rootCPBP.game);
                 }
                 catch (Exception e)
                 {
@@ -5986,7 +6008,6 @@ namespace NBAdbToolbox
                 int mIndex = minutes.IndexOf("M");
                 if (mIndex > 0)
                 {
-                    int colonIndex;
                     string minString = minutes.Replace("PT", "").Replace("M", ":").Replace("S", "");
 
                     // Check if we can safely parse
