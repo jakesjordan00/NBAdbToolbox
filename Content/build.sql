@@ -424,12 +424,42 @@ select s.SeasonID, s.Games + s.PlayoffGames Games, case when s.HistoricLoaded = 
 	 , (select COUNT(distinct sl.GameID) from StartingLineups sl where s.SeasonID = sl.SeasonID) StartingLineups
 	 , (select COUNT(distinct tbl.GameID) from TeamBoxLineups tbl where s.SeasonID = tbl.SeasonID) TeamBoxLineups
 	 , HistoricLoaded, CurrentLoaded
+	 , PBoxRows
+	 , TboxRows
+	 , PbpRows
+	 , StartingLineupsRows
+	 , TboxLineupRows
 
 from Season s left join
-		Game g on s.SeasonID = g.SeasonID 
-group by s.SeasonID, s.Games, s.PlayoffGames, HistoricLoaded, CurrentLoaded)
-select *,
-case when Games != Game 
+		Game g on s.SeasonID = g.SeasonID left join(
+select SeasonID, COUNT(PlayerID) as PBoxRows  
+from PlayerBox group by SeasonID) 
+pb on s.SeasonID = pb.SeasonID left join(
+select SeasonID, COUNT(TeamID) as TboxRows  
+from TeamBox group by SeasonID) 
+tb on s.SeasonID = tb.SeasonID left join(
+select SeasonID, COUNT(ActionID) as PbpRows  
+from PlayByPlay group by SeasonID) 
+pbp on s.SeasonID = pbp.SeasonID left join(
+select SeasonID, COUNT(Unit) as StartingLineupsRows  
+from StartingLineups group by SeasonID) 
+sl on s.SeasonID = sl.SeasonID left join(
+select SeasonID, COUNT(Unit) as TboxLineupRows  
+from TeamBoxLineups group by SeasonID) 
+tbl on s.SeasonID = tbl.SeasonID
+group by s.SeasonID, s.Games, s.PlayoffGames, HistoricLoaded, CurrentLoaded
+	 , PBoxRows
+	 , TboxRows
+	 , PbpRows
+	 , StartingLineupsRows
+	 , TboxLineupRows)
+select SeasonID, Game, Loaded, Team, Arena, Player, Official, Game, PlayerBox, TeamBox, PlayByPlay, StartingLineups, TeamBoxLineups, HistoricLoaded, CurrentLoaded
+, case when PBoxRows is null then 0 else PBoxRows end PBoxRows
+, case when TboxRows is null then 0 else TboxRows end TboxRows
+, case when PbpRows is null then 0 else PbpRows end PbpRows
+, case when StartingLineupsRows is null then 0 else StartingLineupsRows end StartingLineupsRows
+, case when TboxLineupRows is null then 0 else TboxLineupRows end TboxLineupRows
+, case when Games != Game 
 		then 'Missing Game(s)'
 	 when Games = Game and (Games != PlayerBox or Games != TeamBox or Games != PlayByPlay or Games != StartingLineups or Games != TeamBoxLineups) 
 		then 'Missing Data'
