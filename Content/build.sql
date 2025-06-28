@@ -453,17 +453,32 @@ group by s.SeasonID, s.Games, s.PlayoffGames, HistoricLoaded, CurrentLoaded
 	 , PbpRows
 	 , StartingLineupsRows
 	 , TboxLineupRows)
-select SeasonID, Game, Loaded, Team, Arena, Player, Official, Game, PlayerBox, TeamBox, PlayByPlay, StartingLineups, TeamBoxLineups, HistoricLoaded, CurrentLoaded
-, case when PBoxRows is null then 0 else PBoxRows end PBoxRows
-, case when TboxRows is null then 0 else TboxRows end TboxRows
-, case when PbpRows is null then 0 else PbpRows end PbpRows
-, case when StartingLineupsRows is null then 0 else StartingLineupsRows end StartingLineupsRows
-, case when TboxLineupRows is null then 0 else TboxLineupRows end TboxLineupRows
-, case when Games != Game 
-		then 'Missing Game(s)'
-	 when Games = Game and (Games != PlayerBox or Games != TeamBox or Games != PlayByPlay or Games != StartingLineups or Games != TeamBoxLineups) 
-		then 'Missing Data'
-	 else 'Operational' end Status
+select SeasonID, Game, Loaded, 
+	   Team, Arena, Player, Official, Game, PlayerBox, TeamBox, PlayByPlay, StartingLineups, TeamBoxLineups, HistoricLoaded, CurrentLoaded
+	 , case when PBoxRows is null then 0 else PBoxRows end PBoxRows
+	 , case when TboxRows is null then 0 else TboxRows end TboxRows
+	 , case when PbpRows is null then 0 else PbpRows end PbpRows
+	 , case when StartingLineupsRows is null then 0 else StartingLineupsRows end StartingLineupsRows
+	 , case when TboxLineupRows is null then 0 else TboxLineupRows end TboxLineupRows
+	 , case when Games != Game then 'Missing Game(s)'
+       else 
+        case 
+            when Games = PlayerBox and Games = TeamBox and Games = PlayByPlay and Games = StartingLineups and Games = TeamBoxLineups
+                then 'Operational'
+			when (Games = PlayerBox and Games = TeamBox and Games = StartingLineups and (Games = TeamBoxLineups or Games = TeamBoxLineups + 1)
+			and Games = PlayByPlay + 1 and SeasonID in(2006, 2007, 2003, 1998)) or
+			(Games = PlayerBox and Games = TeamBox and Games = StartingLineups and Games = TeamBoxLineups + 2
+			and Games = PlayByPlay + 2 and SeasonID = 1996) 
+				then 'Operational*'
+            else 'Missing Data from:' + 
+              STUFF((case when Games != PlayerBox then ', PlayerBox' else '' end) +
+                    (case when Games != TeamBox then ', TeamBox' else '' end) +
+                    (case when Games != PlayByPlay then ', PlayByPlay' else '' end) +
+                    (case when Games != StartingLineups then ', StartingLineups' else '' end) +
+                    (case when Games != TeamBoxLineups then ', TeamBoxLineups' else '' end)
+                    , 1, 2, '')
+        end
+  end Status
 from Seasons s
 Order by SeasonID desc
 ~~~
@@ -556,25 +571,25 @@ concat('insert into TeamBoxLineups values(', p.SeasonID, ', ', p.GameID, ', ', p
 case when p.Starter = 1 then 'Starters' else 'Bench' end, ''', ''', 'minutesplaceholder'', '
      , sum(p.Points), ', ', sum(p.FG2M), ', ', sum(p.FG2A)
      , ', '
-     , cast(sum(p.[FG2%]) as decimal (18, 2))
+     , cast(avg(p.[FG2%]) as decimal (18, 2))
      , ', '
      , sum(p.FG3M) 
      , ', '
      , sum(p.FG3A) 
      , ', '
-     , cast(sum(p.[FG3%]) as decimal (18, 2))
+     , cast(avg(p.[FG3%]) as decimal (18, 2))
      , ', '
      , sum(p.FGM) 
      , ', '
      , sum(p.FGA) 
      , ', ' 
-     , cast(sum(p.[FG%]) as decimal (18, 2))
+     , cast(avg(p.[FG%]) as decimal (18, 2))
      , ', '
      , sum(p.FTM) 
      , ', ' 
      , sum(p.FTA) 
      , ', ' 
-     , cast(sum(p.[FT%]) as decimal (18, 2))
+     , cast(avg(p.[FT%]) as decimal (18, 2))
      , ', '
      , sum(p.ReboundsDefensive)    
      , ', '
