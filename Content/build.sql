@@ -569,28 +569,24 @@ as
 select 
 concat('insert into TeamBoxLineups values(', p.SeasonID, ', ', p.GameID, ', ', p.TeamID, ', ', p.MatchupID, ', ''', 
 case when p.Starter = 1 then 'Starters' else 'Bench' end, ''', ''', 'minutesplaceholder'', '
-     , sum(p.Points), ', ', sum(p.FG2M), ', ', sum(p.FG2A)
+     , sum(p.Points)
      , ', '
-     , cast(avg(p.[FG2%]) as decimal (18, 2))
+     , sum(p.FG2M)
      , ', '
+     , sum(p.FG2A)
+     , ', fg2%, ' 
      , sum(p.FG3M) 
      , ', '
      , sum(p.FG3A) 
-     , ', '
-     , cast(avg(p.[FG3%]) as decimal (18, 2))
-     , ', '
+     , ', fg3%, '
      , sum(p.FGM) 
      , ', '
      , sum(p.FGA) 
-     , ', ' 
-     , cast(avg(p.[FG%]) as decimal (18, 2))
-     , ', '
+     , ', fg%, ' 
      , sum(p.FTM) 
      , ', ' 
      , sum(p.FTA) 
-     , ', ' 
-     , cast(avg(p.[FT%]) as decimal (18, 2))
-     , ', '
+     , ', ft%, ' 
      , sum(p.ReboundsDefensive)    
      , ', '
      , sum(p.ReboundsOffensive)    
@@ -608,8 +604,16 @@ case when p.Starter = 1 then 'Starters' else 'Bench' end, ''', ''', 'minutesplac
      , sum(p.Blocks)
      , ', '
      , sum(p.FoulsPersonal) 
-     , ')') InsertCmd     
+     , ')') InsertCmd      
 	 , cast(cast(sum(p.MinutesCalculated) as decimal (18, 2))as varchar(10)) MinutesCalculated   
+     , sum(p.FG2M) FG2M
+     , sum(p.FG2A) FG2A
+     , sum(p.FG3M) FG3M
+     , sum(p.FG3A) FG3A
+     , sum(p.FGM) FGM
+     , sum(p.FGA) FGA
+     , sum(p.FTM) FTM
+     , sum(p.FTA) FTA
 from PlayerBox p
 where Status != 'INACTIVE' and p.SeasonID = @SeasonID and GameID = @GameID
 group by  p.SeasonID, p.GameID, p.TeamID, p.MatchupID, p.Starter
@@ -662,7 +666,6 @@ end
 create procedure TableKeysOff @SeasonID int
 as
 begin
-    set nocount on;
     exec sp_MSforeachtable 'alter table ? nocheck constraint all';
     select 
         s.SeasonID,
@@ -673,7 +676,6 @@ begin
     where s.SeasonID = @SeasonID;
 end
 ~~~
-
 create procedure TableKeysOn
 as
 begin
