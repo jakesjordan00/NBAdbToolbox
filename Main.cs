@@ -1747,7 +1747,7 @@ namespace NBAdbToolbox
                 GetConfig(sender);
                 lblStatus.Text = "Welcome Back!";
                 lblStatus.ForeColor = ThemeColor;
-                btnEdit.Text = "Edit Server/Db connection";
+                btnEdit.Text = "Edit Server/Db Connection";
                 btnEdit.Width = (int)(lblStatus.Width / 1.5);
 
                 //Set label text
@@ -1789,7 +1789,7 @@ namespace NBAdbToolbox
         public void NoConnection()
         {
             lblStatus.Text = "Set Connection Configuration";
-            btnEdit.Text = "Create Server/Db connection";
+            btnEdit.Text = "Create Server/Db Connection";
             lblServerName.Text = "Not Connected.";
             lblCStatus.Text = "Disconnected";
             lblDbName.Text = "";
@@ -1842,14 +1842,14 @@ namespace NBAdbToolbox
             cString = bob.ToString();
             if (config.Server != "" && ((config.Username != "" && config.Password != "") || config.UseWindowsAuth == true))
             {
-                isConnected = TestConnectionString(cString);
+                isConnected = TestConnectionString(cString, "isConnected");
             }
             if (isConnected) //If the connection string works for master
             {
                 if (config.Create == false) //and if the config file says we dont need to create database, 
                 {
                     bob.InitialCatalog = config.Database; //have the connection string use the database
-                    dbConnection = TestConnectionString(bob.ToString());
+                    dbConnection = TestConnectionString(bob.ToString(), "dbConnection");
                 }
             }
             else //If the connection string doesnt work on master for whatever reason and our config file says we have a db, double check the db only connection string to make sure.
@@ -1857,7 +1857,7 @@ namespace NBAdbToolbox
                 if (config.Create == false) //same as above
                 {
                     bob.InitialCatalog = config.Database; //same as above
-                    dbConnection = TestConnectionString(bob.ToString());
+                    dbConnection = TestConnectionString(bob.ToString(), "dbConnection");
                 }
             }
             if (config.Create == true)
@@ -1881,22 +1881,63 @@ namespace NBAdbToolbox
 
             UIController("GetConfig");
         }
-        public bool TestConnectionString(string connectionString) //Test Server connection
+        public bool TestConnectionString(string connectionString, string sender) //Test Server connection
         {
             try
             {
                 SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder(connectionString);
                 builder.ConnectTimeout = 3; //set 3 second timeout
-
-                using (SqlConnection conn = new SqlConnection(builder.ToString()))
+                if(sender == "isConnected")
                 {
-                    conn.Open();
-                    btnBuild.Enabled = true;
-                    ButtonChangeState(btnBuild, true);
-                    lblServerName.ForeColor = SuccessColor;
-                    btnEdit.Text = "Edit Server/Db connection";
-                    conn.Dispose();
-                    return true; //connected successfully
+                    using (SqlConnection conn = new SqlConnection(builder.ToString()))
+                    using (SqlCommand DataCheck = new SqlCommand("select Name from sys.Databases where Name = '" + config.Database + "'", conn))
+                    {
+                        conn.Open();
+                        btnBuild.Enabled = true;
+                        ButtonChangeState(btnBuild, true);
+                        lblServerName.ForeColor = SuccessColor;
+                        btnEdit.Text = "Edit Server/Db connection";
+                        using (SqlDataReader sdr = DataCheck.ExecuteReader())
+                        {
+                            if (sdr.HasRows)
+                            {
+                                config.Create = false;
+                                bob.InitialCatalog = config.Database;
+                            }
+                            else
+                            {
+                                config.Create = true;
+                            }
+                        }
+                        conn.Dispose();
+                        return true; //connected successfully
+                    }
+                }
+                else
+                {
+                    using (SqlConnection conn = new SqlConnection(builder.ToString()))
+                    using (SqlCommand DataCheck = new SqlCommand("select * from util.BuildLog where SeasonID = 2024", conn))
+                    {
+                        DataCheck.CommandType = CommandType.Text;
+                        conn.Open();
+                        using (SqlDataReader sdr = DataCheck.ExecuteReader())
+                        {
+                            if (sdr.HasRows)
+                            {
+                                ButtonChangeState(btnRefresh, true);
+                            }
+                            else
+                            {
+                                ButtonChangeState(btnRefresh, false);
+                            }
+                        }
+                        btnBuild.Enabled = true;
+                        ButtonChangeState(btnBuild, true);
+                        lblServerName.ForeColor = SuccessColor;
+                        btnEdit.Text = "Edit Server/Db connection";
+                        conn.Dispose();
+                        return true;
+                    }
                 }
             }
             catch (Exception ex)
@@ -2203,7 +2244,7 @@ namespace NBAdbToolbox
                     connectionString = bob.ToString();
                 }
             }
-            dbConnection = TestConnectionString(connectionString);
+            dbConnection = TestConnectionString(connectionString, "dbConnection");
             if (dbConnection)
             {
                 if (ConfigChanged("dbConnection")) //If the config file has changed, write update to file
