@@ -407,7 +407,7 @@ namespace NBAdbToolbox
                 (1996, (1261, 1, 29, 33, 715, 40, 1261, 1261, 1261, 1259, 1261, 1259, 43203, 2522, 595362, 43157, 5036)) //Need to fix tboxlineups
             };
 
-
+        //public HashSet<(int SeasonID)>
         public int currentImageIterator = 0;
         public bool currentReverse = false;
         public string currentBoxUpdate = "";
@@ -631,6 +631,13 @@ namespace NBAdbToolbox
                                 {
                                     await SecondInsert;
                                 }
+                            }
+                            if(SeasonID < 2001)
+                            {
+                                Task UpdateOldPlayoffSeries = Task.Run(async () =>
+                                {
+                                    await UpdateSeries(SeasonID);
+                                });
                             }
                             if (missingPbp)
                             {
@@ -2929,6 +2936,25 @@ namespace NBAdbToolbox
             #endregion
 
         }
+
+        public async Task UpdateSeries(int seasonID)
+        {
+            try
+            {
+                using (SqlConnection Main = new SqlConnection(bob.ToString()))
+                using (SqlCommand UpdateSeries = new SqlCommand("UpdateSeries" + seasonID, Main))
+                {
+                    UpdateSeries.CommandType = CommandType.StoredProcedure;
+                    Main.Open();
+                    UpdateSeries.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+
+            }
+
+        }
         #endregion
 
         #region Initializations
@@ -5164,7 +5190,7 @@ namespace NBAdbToolbox
                       .Append(team.teamLosses).Append(", '(")
                       .Append(team.teamTricode).Append(") ")
                       .Append(team.teamCity).Append(" ")
-                      .Append(team.teamName).Append("')\n");
+                      .Append(team.teamName).Append("', null, null)\n");
         }
         public void HistoricTeamUpdate(NBAdbToolboxHistoric.Team team, int teamID)
         {

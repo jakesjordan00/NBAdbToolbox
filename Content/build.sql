@@ -19,6 +19,8 @@ Tricode				varchar(255),
 Wins				int,
 Losses				int,
 FullName			varchar(255),
+Conference          varchar(255),
+Division            varchar(255),
 Primary Key(SeasonID, TeamID),
 Foreign Key (SeasonID) references Season(SeasonID))
 
@@ -683,6 +685,601 @@ begin
    execute sp_MSforeachtable 'alter table ? check constraint all';
 end
 ~~~
+
+create procedure UpdateSeries1996
+as
+update Game set SeriesID = 
+case 
+when GameID in(
+	49600006,
+	49600014,
+	49600023
+) then '4960010'
+when GameID in(
+	49600002,
+	49600012,
+	49600019,
+	49600026,
+	49600036
+) then '4960011'
+when GameID in(
+	49600001,
+	49600010,
+	49600017
+) then '4960012'
+when GameID in(
+	49600005,
+	49600015,
+	49600038,
+	49600020,
+	49600030
+) then '4960013'
+when GameID in(
+	49600004,
+	49600011,
+	49600018
+) then '4960014'
+when GameID in(
+	49600007,
+	49600016,
+	49600022,
+	49600029,
+	49600034
+) then '4960015'
+when GameID in(
+	49600003,
+	49600009,
+	49600021
+) then '4960016'
+when GameID in(
+	49600008,
+	49600013,
+	49600024,
+	49600032
+) then '4960017'
+--Semis
+when GameID in(
+	49600043,
+	49600047,
+	49600058,
+	49600051,
+	49600053
+) then '4960020'
+when GameID in(
+	49600045,
+	49600049,
+	49600054,
+	49600056,
+	49600060,
+	49600064,
+	49600068
+) then '4960021'
+when GameID in(
+	49600057,
+	49600041,
+	49600044,
+	49600048,
+	49600052
+) then '4960022'
+when GameID in(
+	49600042,
+	49600046,
+	49600050,
+	49600055,
+	49600059,
+	49600063,
+	49600066
+) then '4960023'
+--Conf Finals
+when GameID in(
+	49600070,
+	49600072,
+	49600074,
+	49600076,
+	49600078
+) then '4960030'
+when GameID in(
+	49600069,
+	49600071,
+	49600073,
+	49600075,
+	49600077,
+	49600079
+) then '4960031'
+--Finals
+when GameID in(
+	49600083,
+	49600084,
+	49600088,
+	49600085,
+	49600086,
+	49600087
+) then '4960040'
+else SeriesID end
+where GameType = 'PS' and SeasonID = 1996
+~~~
+
+create procedure UpdateSeries1997
+as
+update Game set SeriesID = 
+case 
+--East First
+when GameID in(
+	49700006,
+	49700015,
+	49700023
+) then '4970010'
+when GameID in(
+	49700005,
+	49700013,
+	49700036,
+	49700019,
+	49700026
+) then '4970011'
+when GameID in(
+	49700002,
+	49700009,
+	49700017,
+	49700027
+) then '4970012'
+when GameID in(
+	49700001,
+	49700011,
+	49700020,
+	49700031
+) then '4970013'
+--West First
+when GameID in(
+	49700003,
+	49700012,
+	49700039,
+	49700025,
+	49700032
+) then '4970014'
+when GameID in(
+	49700007,
+	49700016,
+	49700021,
+	49700028,
+	49700033
+) then '4970015'
+
+when GameID in(
+	49700008,
+	49700014,
+	49700022,
+	49700029	
+) then '4970016'
+when GameID in(
+	49700004,
+	49700010,
+	49700018,
+	49700024
+) then '4970017'
+
+--Semis
+
+when GameID in(
+	49700041,
+	49700045,
+	49700049,
+	49700055,
+	49700057
+) then '4970020'
+when GameID in(
+	49700043,
+	49700047,
+	49700051,
+	49700053,
+	49700060
+) then '4970021'
+when GameID in(
+	49700044,
+	49700048,
+	49700052,
+	49700056,
+	49700058	
+) then '4970022'
+when GameID in(
+	49700042,
+	49700046,
+	49700050,
+	49700054,
+	49700059	
+) then '4970023'
+
+--Conf Finals
+
+when GameID in(
+	49700070,
+	49700072,
+	49700074,
+	49700076,
+	49700078,
+	49700080,
+	49700082	
+) then '4970030'
+when GameID in(
+	49700069,
+	49700071,
+	49700073,
+	49700075	
+) then '4970031'
+
+--Finals
+when GameID in(
+	49700085,
+	49700086,
+	49700087,
+	49700083,
+	49700084,
+	49700088
+) then '4970040'
+else SeriesID end
+where GameType = 'PS' and SeasonID = 1997
+~~~
+
+create procedure UpdateSeries1998
+as
+update Game set SeriesID = 
+case 
+--East First
+when GameID in(
+	49800001,
+	49800009,
+	49800033,
+	49800018,
+	49800025
+) then '4980010'
+when GameID in(
+	49800008,
+	49800015,
+	49800023
+) then '4980011'
+when GameID in(
+	49800005,
+	49800013,
+	49800021,
+	49800030
+) then '4980012'
+when GameID in(
+	49800004,
+	49800010,
+	49800035,
+	49800017,
+	49800026
+) then '4980013'
+--West First
+when GameID in(
+	49800006,
+	49800014,
+	49800022,
+	49800031
+) then '4980014'
+when GameID in(
+	49800002,
+	49800012,
+	49800019
+) then '4980015'
+
+when GameID in(
+	49800003,
+	49800011,
+	49800037,
+	49800020,
+	49800028
+) then '4980016'
+when GameID in(
+	49800007,
+	49800016,
+	49800024,
+	49800032
+) then '4980017'
+
+--Semis
+
+when GameID in(
+	49800041,
+	49800045,
+	49800049,
+	49800052
+) then '4980020'
+when GameID in(
+	49800043,
+	49800047,
+	49800053,
+	49800056
+) then '4980021'
+when GameID in(
+	49800042,
+	49800046,
+	49800051,
+	49800054	
+) then '4980022'
+when GameID in(
+	49800044,
+	49800048,
+	49800058,
+	49800050,
+	49800055,
+	49800062
+) then '4980023'
+
+--Conf Finals
+
+when GameID in(
+	49800069,
+	49800070,
+	49800073,
+	49800071,
+	49800072,
+	49800074
+) then '4980030'
+when GameID in(
+	49800076,
+	49800077,
+	49800078,
+	49800079
+) then '4980031'
+
+--Finals
+when GameID in(
+	49800085,
+	49800086,
+	49800087,
+	49800083,
+	49800084
+) then '4980040'
+else SeriesID end
+where GameType = 'PS' and SeasonID = 1998
+~~~
+
+create procedure UpdateSeries1999
+as
+update Game set SeriesID = 
+case 
+--East First
+when GameID in(
+	49900008,
+	49900015,
+	49900021,
+	49900025,
+	49900033
+) then '4990010'
+when GameID in(
+	49900001,
+	49900011,
+	49900018
+) then '4990011'
+when GameID in(
+	49900005,
+	49900013,
+	49900022
+) then '4990012'
+when GameID in(
+	49900004,
+	49900009,
+	49900017,
+	49900026
+) then '4990013'
+--West First
+when GameID in(
+	49900007,
+	49900016,
+	49900024,
+	49900028,
+	49900039
+) then '4990014'
+when GameID in(
+	49900003,
+	49900010,
+	49900020,
+	49900032,
+	49900040
+) then '4990015'
+
+when GameID in(
+	49900006,
+	49900014,
+	49900023,
+	49900029
+) then '4990016'
+when GameID in(
+	49900002,
+	49900012,
+	49900019,
+	49900030
+) then '4990017'
+
+--Semis
+
+when GameID in(
+	49900048,
+	49900049,
+	49900050,
+	49900051,
+	49900052,
+	49900053
+) then '4990020'
+when GameID in(
+	49900041,
+	49900042,
+	49900043,
+	49900044,
+	49900045,
+	49900046,
+	49900047
+) then '4990021'
+when GameID in(
+	49900055,
+	49900056,
+	49900057,
+	49900058,
+	49900059
+) then '4990022'
+when GameID in(
+	49900062,
+	49900063,
+	49900064,
+	49900065,
+	49900066
+) then '4990023'
+
+--Conf Finals
+
+when GameID in(
+	49900076,
+	49900077,
+	49900078,
+	49900079,
+	49900080,
+	49900081
+) then '4990030'
+when GameID in(
+	49900069,
+	49900070,
+	49900071,
+	49900072,
+	49900073,
+	49900074,
+	49900075
+) then '4990031'
+
+--Finals
+when GameID in(
+	49900085,
+	49900086,
+	49900087,
+	49900083,
+	49900084,
+	49900088
+) then '4990040'
+else SeriesID end
+where GameType = 'PS' and SeasonID = 1999
+~~~
+
+create procedure UpdateSeries2000
+as
+update Game set SeriesID = 
+case 
+--East First
+when GameID in(
+	40000004,
+	40000011,
+	40000021,
+	40000031
+) then '4000010'
+when GameID in(
+	40000006,
+	40000013,
+	40000020,
+	40000029
+) then '4000011'
+when GameID in(
+	40000003,
+	40000009,
+	40000017
+) then '4000012'
+when GameID in(
+	40000008,
+	40000016,
+	40000024,
+	40000032,
+	40000040
+) then '4000013'
+--West First
+when GameID in(
+	40000002,
+	40000010,
+	40000019,
+	40000025
+) then '4000014'
+when GameID in(
+	40000005,
+	40000015,
+	40000022
+) then '4000015'
+
+when GameID in(
+	40000007,
+	40000014,
+	40000023,
+	40000030
+) then '4000016'
+when GameID in(
+	40000001,
+	40000012,
+	40000018,
+	40000028,
+	40000034
+) then '4000017'
+
+--Semis
+
+when GameID in(
+	40000062,
+	40000063,
+	40000064,
+	40000065,
+	40000066,
+	40000067,
+	40000068
+) then '4000020'
+when GameID in(
+	40000041,
+	40000042,
+	40000044,
+	40000045,
+	40000046,
+	40000047,
+	40000048
+) then '4000021'
+when GameID in(
+	40000055,
+	40000056,
+	40000057,
+	40000058,
+	40000059
+) then '4000022'
+when GameID in(
+	40000043,
+	40000049,
+	40000050,
+	40000051
+) then '4000023'
+
+--Conf Finals
+
+when GameID in(
+	40000076,
+	40000077,
+	40000078,
+	40000079,
+	40000080,
+	40000081,
+	40000082
+) then '4000030'
+when GameID in(
+	40000069,
+	40000070,
+	40000071,
+	40000072
+) then '4000031'
+
+--Finals
+when GameID in(
+	40000085,
+	40000086,
+	40000087,
+	40000083,
+	40000084
+) then '4000040'
+else SeriesID end
+where GameType = 'PS' and SeasonID = 2000
+~~~
+
+
+
 */
 
 
