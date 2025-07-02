@@ -552,7 +552,7 @@ namespace NBAdbToolbox
                             root = null;
                             await Task.Run(async () =>      //This sets the root variable to our big file
                             {
-                                await ReadSeasonFile(popup.historic, popup.current);
+                                await ReadSeasonFile(popup.historic, popup.current); 
                             });
                             PopulateDb_2_AfterHistoricRead();
                             await DeleteSeasonData;
