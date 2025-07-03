@@ -1,0 +1,56 @@
+{
+	"WelcomeMessage": {
+		"Name": "Welcome Message",
+		"Title": "Welcome to NBAdb Toolbox",
+		"Text": "Welcome! Click the 'Create Server/Db Connection' to get started",
+		"DialogType": "Info",
+		"Frequency": 3,
+		"Occurrences": 0,
+		"Visibility": "Visible"
+	},
+	"EditCreatePopupExplanation": {
+		"Name": "Edit Create Popup Explanation",
+		"Title": "Connection Configuration Guide",
+		"Text": "Server: The name or public IP address of the server you'll be connecting to\nServer Alias: A nickname for the server to display on UI\nDatabase: Name of Database we will create or connect to\n\tCreate: If checked, it will attempt to create the database. If not, it will try to connect first\n\tSet as Default Db: This connection/configuration will open when launching NBAdb Toolbox\n\tUse Windows Auth: Connect to the server with your windows login\nUsername: If using a SQL Server logon, enter user and password. If Windows Auth, no entry",
+		"DialogType": "Help",
+		"Frequency": 5,
+		"Occurrences": 0,
+		"Visibility": "Visible"
+	},
+	"IntroMessage": {
+		"Name": "Intro Message",
+		"Title": "NBAdb Toolbox Features",
+		"Text": "Database Overview:\n\tClick anywhere on the Database Overview panel to maximize or minimize display\n\tWhen maximized, shows:\n\t\tWhich seasons are populated or not\n\t\tGame/Entity and Row count by Table\n\t\t\"Season Status\", which tells us which tables are missing data, if any.\nPopulate Season Data:\n\tSelect any enabled Season(s) and click Populate to begin data insertion process\nRefresh Current Season:\n\tInstead of reloading all season data, refresh current season with any games played since last insert by clicking 'Refresh 2024 Data'\nDownload Data Files:\n\tTo enable more seasons, first download their respective Data Files by clicking 'Download'\n\tFiles are downloaded from the program's github repo and stored in your program's Content/Historic Data folder\nRepair Incomplete Seasons:\n\tIf the game/entity or row count does not match the expected values, click 'Repair Db' to populate any missing data",
+		"DialogType": "Tutorial",
+		"Frequency": 3,
+		"Occurrences": 0,
+		"Visibility": "Visible"
+	},
+	"BuildDatabaseWalkthrough": {
+		"Name": "Build Database Walkthrough",
+		"Title": "Next Step: Build Database",
+		"Text": "Click 'Build Database' next! We'll connect to the server and create the Db from master.",
+		"DialogType": "Instruction",
+		"Frequency": 3,
+		"Occurrences": 0,
+		"Visibility": "Visible"
+	},
+	"DatabaseOverviewExplanation": {
+		"Name": "Database Overview Explanation",
+		"Title": "Database Overview",
+		"Text": "",
+		"DialogType": "Info",
+		"Frequency": 3,
+		"Occurrences": 0,
+		"Visibility": "Visible"
+	},
+	"EmptyRecord": {
+		"Name": "Empty Record",
+		"Title": "",
+		"Text": "",
+		"DialogType": "Info",
+		"Frequency": 0,
+		"Occurrences": 0,
+		"Visibility": "Visible"
+	}
+}
