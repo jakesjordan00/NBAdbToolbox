@@ -25,11 +25,13 @@ namespace NBAdbToolbox
         {
             this.Text = "Create or Edit Connection";
             this.Width = 300;
+            this.Name = "EditPopup";
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.StartPosition = FormStartPosition.CenterParent;
 
             int top = (int)(this.Height * .1);
             int spacing = (int)(this.Height * .1);
+            ToolTip tip = new ToolTip();
 
             //Server
             Label lblReq = new Label()
@@ -41,43 +43,80 @@ namespace NBAdbToolbox
                 ForeColor = Color.Red,
                 Font = new Font(this.Font.FontFamily, this.Font.Size + 2, FontStyle.Bold)
             };
-            Label lblServer = new Label() { Text = "Server:", Left = 20, Top = top, AutoSize = true };
+            Label lblServer = new Label() { Text = "Server:", Left = 20, Top = top, AutoSize = true};
             TextBox txtServer = new TextBox() { Text = initialServer, Left = 20, Top = top + 20, Width = 240 };
             top += spacing + 20;
+            tip.SetToolTip(lblServer, "If hosting locally, use localhost or your computer's name");
 
             Label lblAlias = new Label() { Text = "Server Alias:", Left = 20, Top = top, AutoSize = true };
             TextBox txtAlias = new TextBox() { Text = initialAlias, Left = 20, Top = top + 20, Width = 240 };
             top += spacing + 20;
+            tip.SetToolTip(lblAlias, "Server nickname to show on UI");
 
             //Database
             Label lblDatabase = new Label() { Text = "Database:", Left = 20, Top = top, AutoSize = true };
             TextBox txtDatabase = new TextBox() { Text = initialDb, Left = 20, Top = top + 20, Width = 240 };
             top += spacing + 20;
+            tip.SetToolTip(lblDatabase, "Name of Database to create or connect to");
 
             //Create DB
             CheckBox chkCreateDb = new CheckBox() { Text = "Create Database?", Left = 20, Top = top, AutoSize = true };
             chkCreateDb.Checked = !fileExists || initialCreateDb == true;
             top += (int)(this.Height * .1);
+            tip.SetToolTip(chkCreateDb, "Check box if Database doesn't exist");
 
             //Default DB
             CheckBox chkDefaultDb = new CheckBox() { Text = "Set as Default Db", Left = 20, Top = top, AutoSize = true };
             chkDefaultDb.Checked = !fileExists || initialDefaultDb == true;
             top += (int)(this.Height * .1);
+            tip.SetToolTip(chkDefaultDb, "Check box if Toolbox should connect to this Db on launch");
 
             //Windows Auth
             CheckBox chkWindowsAuth = new CheckBox() { Text = "Use Windows Authentication", Left = 20, Top = top, AutoSize = true };
             chkWindowsAuth.Checked = initialWindowsAuth == true;
             top += (int)(this.Height * .1);
+            tip.SetToolTip(chkDefaultDb, "Check box to connect with Windows Auth. If unchecked, Username and Password must be filled.");
 
             //Username
             Label lblUsername = new Label() { Text = "Username:", Left = 20, Top = top, AutoSize = true };
             TextBox txtUsername = new TextBox() { Text = initialUser, Left = 20, Top = top + 20, Width = 240 };
             top += spacing + 20;
+            tip.SetToolTip(lblUsername, "Username for your SQL Server connection");
 
             //Password
             Label lblPassword = new Label() { Text = "Password:", Left = 20, Top = top, AutoSize = true };
             TextBox txtPassword = new TextBox() { Text = initialPass, Left = 20, Top = top + 20, Width = 240, UseSystemPasswordChar = true };
             top += spacing + 20;
+            tip.SetToolTip(lblPassword, "Password for your SQL Server connection");
+
+            tip.BackColor = Color.Black;
+            tip.ForeColor = Color.Wheat;
+            tip.IsBalloon = true; // Rounded bubble style
+
+            lblServer.Paint += (s, e) => {
+                ToolTipUnderline(s, e);
+            };
+            lblAlias.Paint += (s, e) => {
+                ToolTipUnderline(s, e);
+            };
+            lblDatabase.Paint += (s, e) => {
+                ToolTipUnderline(s, e);
+            };
+            chkCreateDb.Paint += (s, e) => {
+                ToolTipUnderline(s, e);
+            };
+            chkDefaultDb.Paint += (s, e) => {
+                ToolTipUnderline(s, e);
+            };
+            chkWindowsAuth.Paint += (s, e) => {
+                ToolTipUnderline(s, e);
+            };
+            lblUsername.Paint += (s, e) => {
+                ToolTipUnderline(s, e);
+            };
+            lblPassword.Paint += (s, e) => {
+                ToolTipUnderline(s, e);
+            };
 
             if (initialWindowsAuth == true)
             {
@@ -133,6 +172,34 @@ namespace NBAdbToolbox
             this.AcceptButton = btnOK;
             this.CancelButton = btnCancel;
             this.Height = btnOK.Bottom + 60;
+
+
         }
+
+        public void ToolTipUnderline(object s, PaintEventArgs e)
+        {
+            if (s is Label label)
+            {
+                using (var pen = new Pen(Color.Gray, 1))
+                {
+                    pen.DashStyle = System.Drawing.Drawing2D.DashStyle.Dot;
+                    e.Graphics.DrawLine(pen, 0, label.Height - 2, label.Width, label.Height - 2);
+                }
+            }
+            else if (s is CheckBox checkBox)
+            {
+                //Get the text bounds for the checkbox
+                var textSize = TextRenderer.MeasureText(checkBox.Text, checkBox.Font);
+                var checkBoxSize = 16; //Standard checkbox size
+                var textStart = checkBoxSize + 3; //Space after checkbox
+
+                using (var pen = new Pen(Color.Gray, 1))
+                {
+                    pen.DashStyle = System.Drawing.Drawing2D.DashStyle.Dot;
+                    e.Graphics.DrawLine(pen, textStart, checkBox.Height - 2, textStart + textSize.Width, checkBox.Height - 2);
+                }
+            }
+        }
+
     }
 }

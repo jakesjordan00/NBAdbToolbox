@@ -201,8 +201,15 @@ namespace NBAdbToolbox
         };
         public Label lblDlSelectSeason = new Label();
 
-        public ListBox listSeasons = new ListBox();
-        public ListBox listDownloadSeasonData = new ListBox();
+        public ListBox listSeasons = new ListBox
+        {
+            Name = "listSeasons"
+        };
+        public ListBox listDownloadSeasonData = new ListBox
+        {
+            Name = "listDownloadSeasonData"
+        };
+        
         public Button btnPopulate = new Button();
         public Button btnDownloadSeasonData = new Button();
         public Label lblRefresh = new Label
@@ -419,7 +426,8 @@ namespace NBAdbToolbox
         PictureBox bgCourt = new PictureBox //Create Background image
         {
             SizeMode = PictureBoxSizeMode.StretchImage,
-            Dock = DockStyle.Fill
+            Dock = DockStyle.Fill,
+            Name = "bgCourt"
         };
         public string Theme = "Default";
 
@@ -464,6 +472,7 @@ namespace NBAdbToolbox
         {
             InitializeComponent();
             GetSettings("Main");
+            IntroManager.Initialize(Path.Combine(projectRoot, @"Content"));
             //Set screen size
             #region Set screen size
             #endregion
@@ -472,14 +481,14 @@ namespace NBAdbToolbox
             //Add initial controls before we  attempts connection
             AddControls("Init");
 
+            InitializeElements();//Testing this here for IntroManager functionality, used to be at line 480/481
             //Check for dbconfig - Verify Server/Database Connectivity
             InitializeDbConfig("Main");
 
             //Add controls to panel
-            InitializeElements();
+            //InitializeElements();
             //Set Colors
             SetTheme("Main");
-
 
 
             float fontSize = ((float)(screenFontSize * pnlWelcome.Height * .08) / (96 / 12)) * (72 / 12);
@@ -807,7 +816,8 @@ namespace NBAdbToolbox
             //{
             //    CheckDataFiles(); //GetSeasons();
             //}
-            CheckDataFiles(); //GetSeasons();
+            CheckDataFiles(); 
+            //GetSeasons();
 
             //Edit Button Actions
             btnEdit.Click += (s, e) =>
@@ -827,8 +837,16 @@ namespace NBAdbToolbox
                     fileExist = false;
                 }
                 var popup = new EditPopup("create", fileExist, server, alias, create, def, database, windowsAuth, username, password);
+                var bubbleTimer = new System.Windows.Forms.Timer { Interval = 50 };
+                bubbleTimer.Tick += (s, e) => {
+                    bubbleTimer.Stop();
+                    IntroManager.ShowInfoBubble("EditCreatePopupExplanation", btnEdit, 500, (int)(this.ClientSize.Height / 2.5));
+                };
+                bubbleTimer.Start();
                 if (popup.ShowDialog() == DialogResult.OK)
                 {
+                    IntroManager.HideSpecificBubble("EditCreatePopupExplanation");
+                    IntroManager.SetVisibility("BuildDatabaseWalkthrough", "Visible", false);
                     config = new DbConfig
                     {
                         Server = popup.Server,
@@ -849,6 +867,11 @@ namespace NBAdbToolbox
                     InitializeDbConfig("btnEdit");
                     RefreshDefaultConfigPath("Edit");
                 }
+                else
+                {
+                    //Also hide if cancelled
+                    IntroManager.HideSpecificBubble("EditCreatePopupExplanation");
+                }
             };
 
             btnBuild.Click += (s, e) =>
@@ -861,6 +884,8 @@ namespace NBAdbToolbox
                     btnPopulate.Enabled = true;
                     ButtonChangeState(btnPopulate, true);
                 }
+                IntroManager.SetVisibility("BuildDatabaseWalkthrough", "Hidden", false);
+                IntroManager.HideSpecificBubble("BuildDatabaseWalkthrough");
             };
             #endregion
 
@@ -1056,6 +1081,26 @@ namespace NBAdbToolbox
                 }
                 RefreshCompletion();
             };
+
+
+            this.Shown += AfterLoad;
+
+        }
+        private void AfterLoad(object sender, EventArgs e)
+        {
+            if (UIControllerStatus == "NoConnection")
+            {
+                IntroManager.ShowInfoBubble("WelcomeMessage", btnEdit, 400, 0);
+            }
+            if (UIControllerStatus == "DbMissing")
+            {
+                IntroManager.ShowInfoBubble("BuildDatabaseWalkthrough", btnBuild, 300, 115);
+            }
+            if (UIControllerStatus == "DbExists")
+            {
+                IntroManager.ShowTutorialSequence("DatabaseUtilitiesIntro", pnlDbUtil, 500, 0);
+            }
+            UIControllerStatus = "";
 
         }
         private async Task InsertPlayByPlayWithRetry(NBAdbToolboxHistoric.Game game, string sender)
@@ -1762,17 +1807,17 @@ namespace NBAdbToolbox
                 {
                     configName = "";
                     string db = "";
-                    if (config.Database != null)
+                    if (!string.IsNullOrWhiteSpace(config.Database))
                     {
                         db = " - " + config.Database;
                     }
-                    if (config.Alias != null)
+                    if (!string.IsNullOrWhiteSpace(config.Alias))
                     {
-                        configName = config.Alias + db;
+                        configName = (config.Alias + db).TrimStart();
                     }
                     else
                     {
-                        configName = config.Server + db;
+                        configName = (config.Server + db).TrimStart();
                     }
                     WriteConfig(sender);
                 }
@@ -1785,12 +1830,13 @@ namespace NBAdbToolbox
             {
                 GetConfig(sender);
                 lblStatus.Text = "Welcome Back!";
+                lblStatus.Left = (pnlWelcome.ClientSize.Width - lblStatus.Width) / 2;
                 lblStatus.ForeColor = ThemeColor;
                 btnEdit.Text = "Edit Server/Db Connection";
                 btnEdit.Width = (int)(lblStatus.Width / 1.5);
 
                 //Set label text
-                if (config.Alias != null)
+                if (!string.IsNullOrWhiteSpace(config.Alias))
                 {
                     lblServerName.Text = config.Alias;
                     ToolTip tip = new ToolTip();
@@ -1854,17 +1900,17 @@ namespace NBAdbToolbox
 
             configName = "";
             string db = "";
-            if (config.Database != null)
+            if (!string.IsNullOrWhiteSpace(config.Database))
             {
                 db = " - " + config.Database;
             }
-            if (config.Alias != null)
+            if (!string.IsNullOrWhiteSpace(config.Alias))
             {
-                configName = config.Alias + db;
+                configName = (config.Alias + db).TrimStart();
             }
             else
             {
-                configName = config.Server + db;
+                configName = (config.Server + db).TrimStart();
             }
             //Build connection string
             bob.DataSource = config.Server;
@@ -2067,11 +2113,14 @@ namespace NBAdbToolbox
             btn.AutoSize = true;
         }
         private bool isRefreshing = false;
+        public string UIControllerStatus = "";
         public void UIController(string sender)//If an event occurs that will change the state of the UI, it must run through here
         {
+            bool connection = false;
             float fontSize = ((float)(screenFontSize * pnlWelcome.Height * .08) / (96 / 12)) * (72 / 12);
             if (sender == "NoConnection")
             {
+                UIControllerStatus = "NoConnection";
                 ButtonChangeState(btnBuild, false);
                 isBuildEnabled = false;
                 ButtonChangeState(btnPopulate, false);
@@ -2098,6 +2147,7 @@ namespace NBAdbToolbox
 
             else if (sender == "DbExists")
             {
+                UIControllerStatus = "DbExists";
                 ButtonChangeState(btnBuild, false);
                 isBuildEnabled = false;
                 ButtonChangeState(btnPopulate, true);
@@ -2115,6 +2165,7 @@ namespace NBAdbToolbox
             }
             else if (sender == "DbMissing")
             {
+                UIControllerStatus = "DbMissing";
                 ButtonChangeState(btnBuild, true);
                 isBuildEnabled = true;
                 ButtonChangeState(btnPopulate, false);
@@ -2134,6 +2185,7 @@ namespace NBAdbToolbox
             }
             else if (sender == "BadConnection")
             {
+                UIControllerStatus = "BadConnection";
                 ButtonChangeState(btnBuild, true);
                 isBuildEnabled = true;
                 ButtonChangeState(btnPopulate, false);
@@ -2181,6 +2233,7 @@ namespace NBAdbToolbox
                 lblDbUtil.AutoSize = true;
                 lblDbUtil.Left = (pnlDbUtil.Width - lblDbUtil.Width) / 2;
                 CheckDataFiles(); //GetSeasons();
+                this.BeginInvoke(new System.Action(() => AfterLoad(this, EventArgs.Empty)));
             }
             if (allFilesDownloaded)
             {
@@ -3765,7 +3818,7 @@ namespace NBAdbToolbox
         }
 
         //Set Dynamic Font size
-        public Font SetFontSize(string font, Single size, FontStyle style, int target, Control child)
+        public static Font SetFontSize(string font, Single size, FontStyle style, int target, Control child)
         {
             Font newFont = new Font(font, size, style);
             int targetWidth = target;
@@ -3780,7 +3833,7 @@ namespace NBAdbToolbox
             float bestSize = GetBestFitFontSize(child, child.Text, newFont, targetWidth);
             return new Font(newFont.FontFamily, bestSize, newFont.Style);
         }
-        private float GetBestFitFontSize(Control control, string text, Font baseFont, int targetWidth)
+        private static float GetBestFitFontSize(Control control, string text, Font baseFont, int targetWidth)
         {
             using (Graphics g = control.CreateGraphics())
             {

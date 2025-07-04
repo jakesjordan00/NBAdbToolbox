@@ -84,6 +84,7 @@
     <Compile Include="EditPopup.Designer.cs">
       <DependentUpon>EditPopup.cs</DependentUpon>
     </Compile>
+    <Compile Include="IntroManager.cs" />
     <Compile Include="Main.cs">
       <SubType>Form</SubType>
     </Compile>
