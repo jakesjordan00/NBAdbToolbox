@@ -83,7 +83,10 @@ namespace NBAdbToolbox
 
         #region pnlWelcome - Welcome Panel
         //pnlWelcome items
-        public Panel pnlWelcome = new Panel();
+        public Panel pnlWelcome = new Panel
+        {
+            Name = "pnlWelcome"
+        };
         private string iconFile = "";               //Icon file name
         private string imagePath = "";              //Icon file path
         private string imagePathDb = "";            //Db icon file path
@@ -95,8 +98,14 @@ namespace NBAdbToolbox
         public Label lblDB = new Label();          //Database
         public Label lblDbName = new Label();      //Database name
         public Label lblDbStat = new Label();      //Need to create database/Database created label
-        public Button btnEdit = new Button();      //Edit config file
-        public Button btnBuild = new Button();     //Build Database
+        public Button btnEdit = new Button //Edit config file
+        {
+            Name = "btnEdit"
+        };      
+        public Button btnBuild = new Button //Build Database
+        {
+            Name = "btnBuild"
+        };
         public PictureBox picStatus = new PictureBox();//Connection string icon
         public PictureBox picDbStatus = new PictureBox();//Db Status icon
 
@@ -169,7 +178,10 @@ namespace NBAdbToolbox
 
 
         #region pnlDbUtil - Database Utilities
-        public Panel pnlDbUtil = new Panel();
+        public Panel pnlDbUtil = new Panel
+        {
+            Name = "pnlDbUtil"
+        };
         public Label lblGameUtil = new Label { Text = "Game", Visible = false, Tag = "Table" };
         public Label lblTeamUtil = new Label { Text = "Team", Visible = false, Tag = "Table" };
         public Label lblArenaUtil = new Label { Text = "Arena", Visible = false, Tag = "Table" };
@@ -183,7 +195,10 @@ namespace NBAdbToolbox
 
 
 
-        public Panel pnlDbOverview = new Panel();
+        public Panel pnlDbOverview = new Panel
+        {
+            Name = "pnlDbOverview"
+        };
         #region Labels and Controls
         public Label lblDbUtil = new Label { Text = "Database Utilities" };
         public Label lblDbOverview = new Label();
@@ -216,13 +231,19 @@ namespace NBAdbToolbox
         {
             Text = "Refresh Current Season"
         };
-        public Button btnRefresh = new Button();
+        public Button btnRefresh = new Button
+        {
+            Name = "btnRefresh"
+        };
 
         public Label lblRepair = new Label
         {
             Text = "Repair Incomplete Seasons"
         };
-        public Button btnRepair = new Button();
+        public Button btnRepair = new Button
+        {
+            Name = "btnRepair"
+        };
 
         //pnlDbUtil sub panel Positions and sizes
         public int leftPanelPos = 0;
@@ -244,7 +265,10 @@ namespace NBAdbToolbox
 
 
         #region pnlDbLibrary
-        public Panel pnlDbLibrary = new Panel();
+        public Panel pnlDbLibrary = new Panel
+        {
+            Name = "pnlDbLibrary"
+        };
         public Label lblDbLibrary = new Label { Text = "Library" };
 
         #endregion
@@ -253,7 +277,10 @@ namespace NBAdbToolbox
 
 
         #region PnlLoad
-        public Panel pnlLoad = new Panel();
+        public Panel pnlLoad = new Panel
+        {
+            Name = "pnlLoad"
+        };
         #region Labels and Controls
         public Label lblSeasonStatusLoad = new Label
         {
@@ -474,8 +501,6 @@ namespace NBAdbToolbox
             GetSettings("Main");
             IntroManager.Initialize(Path.Combine(projectRoot, @"Content"));
             //Set screen size
-            #region Set screen size
-            #endregion
             lblDbUtil.ForeColor = ThemeColor;
 
             //Add initial controls before we  attempts connection
@@ -822,6 +847,7 @@ namespace NBAdbToolbox
             //Edit Button Actions
             btnEdit.Click += (s, e) =>
             {
+                IntroManager.HideSpecificBubble("WelcomeMessage");
                 string server = config?.Server ?? "";
                 string alias = config?.Alias ?? "";
                 bool? create = config?.Create;
@@ -831,7 +857,7 @@ namespace NBAdbToolbox
                 string username = config?.Username ?? "";
                 string password = config?.Password ?? "";
                 bool fileExist = true;
-
+                
                 if (!File.Exists(configPath))
                 {
                     fileExist = false;
@@ -840,7 +866,11 @@ namespace NBAdbToolbox
                 var bubbleTimer = new System.Windows.Forms.Timer { Interval = 50 };
                 bubbleTimer.Tick += (s, e) => {
                     bubbleTimer.Stop();
-                    IntroManager.ShowInfoBubble("EditCreatePopupExplanation", btnEdit, 500, (int)(this.ClientSize.Height / 2.5));
+                    int maxWidth = (int)(windowWidth * .223);
+                    int maxHeight = (int)(windowHeight * .5);
+                    IntroManager.ShowInfoBubble("EditCreatePopupExplanation", btnEdit, maxWidth, maxHeight, windowWidth, windowHeight);
+
+
                 };
                 bubbleTimer.Start();
                 if (popup.ShowDialog() == DialogResult.OK)
@@ -886,6 +916,12 @@ namespace NBAdbToolbox
                 }
                 IntroManager.SetVisibility("BuildDatabaseWalkthrough", "Hidden", false);
                 IntroManager.HideSpecificBubble("BuildDatabaseWalkthrough");
+                if(UIControllerStatus == "DbExists")
+                {
+                    int maxWidth = (int)(windowWidth * .3);
+                    int maxHeight = (int)(windowHeight * .105);
+                    IntroManager.ShowTutorialSequence("DatabaseUtilitiesIntro", pnlDbUtil, maxWidth, maxHeight, windowWidth, windowHeight);
+                }
             };
             #endregion
 
@@ -1088,20 +1124,29 @@ namespace NBAdbToolbox
         }
         private void AfterLoad(object sender, EventArgs e)
         {
+            int maxWidth = 0;
+            int maxHeight = 0;
             if (UIControllerStatus == "NoConnection")
             {
-                IntroManager.ShowInfoBubble("WelcomeMessage", btnEdit, 400, 0);
+                maxWidth = (int)(windowWidth * .235);
+                maxHeight = (int)(windowHeight * .1);
+                IntroManager.ShowInfoBubble("WelcomeMessage", btnEdit, maxWidth, maxHeight, windowWidth, windowHeight);
             }
             if (UIControllerStatus == "DbMissing")
             {
-                IntroManager.ShowInfoBubble("BuildDatabaseWalkthrough", btnBuild, 300, 115);
+                maxWidth = (int)(windowWidth * .18);
+                maxHeight = (int)(windowHeight * .11);
+                IntroManager.HideSpecificBubble("DatabaseUtilitiesIntro");
+                IntroManager.ShowInfoBubble("BuildDatabaseWalkthrough", btnBuild, maxWidth, maxHeight, windowWidth, windowHeight);
             }
             if (UIControllerStatus == "DbExists")
             {
-                IntroManager.ShowTutorialSequence("DatabaseUtilitiesIntro", pnlDbUtil, 500, 0);
+                maxWidth = (int)(windowWidth * .3);
+                maxHeight = (int)(windowHeight * .105);
+                //maxWidth = (int)(windowWidth * .3);
+                IntroManager.ShowTutorialSequence("DatabaseUtilitiesIntro", pnlDbUtil, maxWidth, maxHeight, windowWidth, windowHeight);
             }
             UIControllerStatus = "";
-
         }
         private async Task InsertPlayByPlayWithRetry(NBAdbToolboxHistoric.Game game, string sender)
         {
@@ -3011,6 +3056,8 @@ namespace NBAdbToolbox
         #endregion
 
         #region Initializations
+        public int windowWidth = 0;
+        public int windowHeight = 0;
         public void AddControls(string sender)
         {
             if(sender == "Init")
@@ -3027,6 +3074,8 @@ namespace NBAdbToolbox
                 this.FormBorderStyle = FormBorderStyle.FixedDialog;
                 this.MaximizeBox = true;
                 this.MinimizeBox = true;
+                windowWidth = this.Width;
+                windowHeight = this.Height;
             }
             if (screenWidth >= 2240)
             {

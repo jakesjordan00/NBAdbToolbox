@@ -75,7 +75,7 @@ namespace NBAdbToolbox
             CheckBox chkWindowsAuth = new CheckBox() { Text = "Use Windows Authentication", Left = 20, Top = top, AutoSize = true };
             chkWindowsAuth.Checked = initialWindowsAuth == true;
             top += (int)(this.Height * .1);
-            tip.SetToolTip(chkDefaultDb, "Check box to connect with Windows Auth. If unchecked, Username and Password must be filled.");
+            tip.SetToolTip(chkWindowsAuth, "Check box to connect with Windows Auth. If unchecked, Username and Password must be filled.");
 
             //Username
             Label lblUsername = new Label() { Text = "Username:", Left = 20, Top = top, AutoSize = true };
