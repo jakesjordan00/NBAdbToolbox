@@ -435,7 +435,7 @@ namespace NBAdbToolbox
                 textTarget = (int)(this.Width * 1.4);
                 if (windowWidth < 1700)
                 {
-                    textTarget = (int)(this.Width * .9);
+                    textTarget = (int)(this.Width * .85);
                 }
             }
             panel.Controls.Add(lblText);
@@ -504,7 +504,7 @@ namespace NBAdbToolbox
             else if(dialog.Name == "Edit Create Popup Explanation")
             {
                 interval = interval * 12;
-                lblText.Font = Main.SetFontSize("Segoe UI", ((float)(this.Width * 2) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, textTarget, parent);
+                lblText.Font = Main.SetFontSize("Segoe UI", ((float)(textTarget) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, textTarget, parent);
                 int bW = this.Width; //368, unchanged after autosize
                 int bH = this.Height;//420, unchanged
                 lblText.AutoSize = true;

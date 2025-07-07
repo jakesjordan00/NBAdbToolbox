@@ -868,9 +868,12 @@ namespace NBAdbToolbox
                     bubbleTimer.Stop();
                     int maxWidth = (int)(windowWidth * .223);
                     int maxHeight = (int)(windowHeight * .5);
+                    if (windowWidth < 1700)
+                    {
+                        maxWidth = (int)(windowWidth * .275);
+                        maxHeight = (int)(windowHeight * .6);
+                    }
                     IntroManager.ShowInfoBubble("EditCreatePopupExplanation", btnEdit, maxWidth, maxHeight, windowWidth, windowHeight);
-
-
                 };
                 bubbleTimer.Start();
                 if (popup.ShowDialog() == DialogResult.OK)
