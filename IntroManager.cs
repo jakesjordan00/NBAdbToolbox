@@ -412,10 +412,18 @@ namespace NBAdbToolbox
             if (dialog.Name == "Welcome Message")
             {
                 textTarget = (int)(this.Width * 1.5);
+                if (windowWidth < 1700)
+                {
+                    textTarget = this.Width;
+                }
             }
             else if (dialog.Name == "Edit Create Popup Explanation")
             {
                 textTarget = (int)(this.Width * 1.4);
+                if (windowWidth < 1700)
+                {
+                    textTarget = (int)(this.Width * .9);
+                }
             }
             panel.Controls.Add(lblText);
 
@@ -464,9 +472,17 @@ namespace NBAdbToolbox
             bgCourt.Controls.SetChildIndex(this, 0);
 
 
+            if (windowWidth < 1700)
+            {
+                textTarget = (int)(this.Width * .9);
+            }
             if (dialog.Name == "Welcome Message")
             {
-                lblText.Font = Main.SetFontSize("Segoe UI", ((float)(this.Width * 2) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, textTarget, parent);
+                if (windowWidth < 1700)
+                {
+                    textTarget = (int)(this.Width * 1.5);
+                }
+                lblText.Font = Main.SetFontSize("Segoe UI", ((float)(textTarget) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, textTarget, parent);
                 this.AutoSize = true;
                 this.Location = new Point(
                     (bgCourt.Width - this.Width) / 2,
