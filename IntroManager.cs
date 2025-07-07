@@ -381,7 +381,7 @@ namespace NBAdbToolbox
                 Location = new Point(0, 0),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left
             };
-            if (dialog.Name == "Welcome Message" || dialog.Name == "Edit Create Popup Explanation")
+            if (dialog.Name == "Welcome Message")
             {
                 titleTarget = (int)(this.Width * 2);
                 if(windowWidth < 1700)
@@ -389,7 +389,15 @@ namespace NBAdbToolbox
                     titleTarget = (int)(this.Width * 1.6);
                 }
                 lblTitle.Font = Main.SetFontSize("Segoe UI", ((float)(titleTarget) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, titleTarget, parent);
-
+            }
+            else if (dialog.Name == "Edit Create Popup Explanation")
+            {
+                titleTarget = (int)(this.Width * 2);
+                if (windowWidth < 1700)
+                {
+                    titleTarget = (int)(this.Width * 1.3);
+                }
+                lblTitle.Font = Main.SetFontSize("Segoe UI", ((float)(titleTarget) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, titleTarget, parent);
             }
             else if (dialog.Name == "Build Database Walkthrough")
             {
@@ -484,10 +492,6 @@ namespace NBAdbToolbox
             bgCourt.Controls.SetChildIndex(this, 0);
 
 
-            if (windowWidth < 1700)
-            {
-                textTarget = (int)(this.Width * .9);
-            }
             if (dialog.Name == "Welcome Message")
             {
                 if (windowWidth < 1700)
@@ -503,6 +507,10 @@ namespace NBAdbToolbox
             }
             else if(dialog.Name == "Edit Create Popup Explanation")
             {
+                if (windowWidth < 1700)
+                {
+                    textTarget = (int)(this.Width * .6);
+                }
                 interval = interval * 12;
                 lblText.Font = Main.SetFontSize("Segoe UI", ((float)(textTarget) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, textTarget, parent);
                 int bW = this.Width; //368, unchanged after autosize
