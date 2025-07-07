@@ -1133,6 +1133,10 @@ namespace NBAdbToolbox
             {
                 maxWidth = (int)(windowWidth * .235);
                 maxHeight = (int)(windowHeight * .1);
+                if(windowWidth < 1700)
+                {
+                    maxHeight = (int)(windowHeight * .12);
+                }
                 IntroManager.ShowInfoBubble("WelcomeMessage", btnEdit, maxWidth, maxHeight, windowWidth, windowHeight);
             }
             if (UIControllerStatus == "DbMissing")
