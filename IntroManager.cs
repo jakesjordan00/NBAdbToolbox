@@ -549,6 +549,11 @@ namespace NBAdbToolbox
             }
             else if (dialog.Name.StartsWith("Database Overview"))
             {
+                int xLoc = 0;
+                if (windowWidth < 1700)
+                {
+                    textTarget = (int)(this.Width * .6);
+                }
                 titleTarget = (int)(this.Width * .65);
                 lblTitle.Font = Main.SetFontSize("Segoe UI", ((float)(this.Width) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, titleTarget, lblTitle);
                 textTarget = (int)(this.Width * 1.25);
@@ -556,8 +561,12 @@ namespace NBAdbToolbox
                 Control lblDbOverview = FindSpecificControl(parent, "Database Overview");
                 Control lblDbUtil = FindSpecificControl(parent, "Database Utilities");
                 lblText.AutoSize = true;
+                if (windowWidth >= 1700)
+                {
+                    xLoc = (parent.Width - this.Width) / 2;
+                }
                 this.Location = new Point(
-                    (parent.Width - this.Width) / 2,
+                    xLoc,
                     //(int)(parent.Top * 2.8)
                     parent.Top + lblDbUtil.Height + (int)(lblDbOverview.Height * 1.5)
                 );

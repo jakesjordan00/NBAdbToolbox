@@ -5,7 +5,7 @@
     "Text": "Click the 'Create Server/Db Connection' to get started",
     "DialogType": "Info",
     "Frequency": 9999,
-    "Occurrences": 165,
+    "Occurrences": 167,
     "Visibility": "Visible",
     "TutorialSequence": null,
     "TutorialStep": 0
@@ -16,7 +16,7 @@
     "Text": "Server: The name or public IP address of the server you'll be connecting to\nServer Alias: A nickname for the server to display on UI\nDatabase: Name of Database we will create or connect to\n Create Db: If checked, we will attempt to create the database. If not, we will try to connect first\n Set as Default Db: If checked, Toolbox will connect to this Server/Db on Launch\n Use Windows Auth: Connect to the server with your windows login\nUsername: If using a SQL Server logon, enter user and password. If Windows Auth, no entry",
     "DialogType": "Help",
     "Frequency": 5555,
-    "Occurrences": 63,
+    "Occurrences": 65,
     "Visibility": "Visible",
     "TutorialSequence": null,
     "TutorialStep": 0
@@ -27,7 +27,7 @@
     "Text": "Click 'Build Database' next! We'll connect to the server and create the Db from master.",
     "DialogType": "Instruction",
     "Frequency": 33333,
-    "Occurrences": 59,
+    "Occurrences": 60,
     "Visibility": "Hidden",
     "TutorialSequence": null,
     "TutorialStep": 0
@@ -38,7 +38,7 @@
     "Text": "On the left you'll find Database Utilites, home to our Overview and Options sections",
     "DialogType": "Tutorial",
     "Frequency": 333,
-    "Occurrences": 72,
+    "Occurrences": 73,
     "Visibility": "Visible",
     "TutorialSequence": [
       "DatabaseUtilitiesIntro",
@@ -56,7 +56,7 @@
     "Text": "Click anywhere on the Database Overview panel to maximize or minimize display.\nWhen maximized, it shows:\n Which seasons are populated or not\n Game/Entity and Row count by Table\n 'Season Status', which tells us which (if any) tables are missing data",
     "DialogType": "Tutorial",
     "Frequency": 333,
-    "Occurrences": 250,
+    "Occurrences": 251,
     "Visibility": "Visible",
     "TutorialSequence": null,
     "TutorialStep": 2
