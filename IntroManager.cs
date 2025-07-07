@@ -346,6 +346,7 @@ namespace NBAdbToolbox
             };
 
             //Create close button
+            int padding = windowWidth < 1700 ? 2 : 4;
             closeButton = new Label
             {
                 Text = "×",
@@ -367,7 +368,7 @@ namespace NBAdbToolbox
                 AutoSize = true,
                 Height = 25, //Fixed height for the title row
                 Dock = DockStyle.Fill,
-                Margin = new Padding(0, 0, 0, 4)
+                Margin = new Padding(0, 0, 0, padding)
             };
 
             int titleTarget = this.Width;
@@ -438,7 +439,6 @@ namespace NBAdbToolbox
                 }
             }
             panel.Controls.Add(lblText);
-
             //Don't show again checkbox
             var checkboxPanel = new TableLayoutPanel
             {
