@@ -320,7 +320,6 @@ namespace NBAdbToolbox
             int interval = 30000; //Default Timer interval - 30 seconds
             this.BackColor = Color.LightYellow;
             this.Padding = new Padding(4, 8, 8, 0);
-            this.MaximumSize = new Size(maxWidth, maxHeight);
             this.AutoSize = true;
             this.BorderStyle = BorderStyle.FixedSingle;
             this.Visible = false;
@@ -328,20 +327,23 @@ namespace NBAdbToolbox
             float closeButtonFont = 0;
             if (windowWidth < 1700)
             {
+                maxWidth = (int)(maxWidth * 1.3);
+                maxHeight = (int)(maxHeight * 1.1);
                 closeButtonFont = 10f;
             }
             else
             {
                 closeButtonFont = 12f;
             }
+            this.MaximumSize = new Size(maxWidth, maxHeight);
 
-                var panel = new TableLayoutPanel
-                {
-                    Dock = DockStyle.Fill,
-                    AutoSize = true,
-                    ColumnCount = 1,
-                    RowCount = 3
-                };
+            var panel = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                AutoSize = true,
+                ColumnCount = 1,
+                RowCount = 3
+            };
 
             //Create close button
             closeButton = new Label
@@ -490,7 +492,7 @@ namespace NBAdbToolbox
             {
                 if (windowWidth < 1700)
                 {
-                    textTarget = (int)(this.Width);
+                    textTarget = (int)(this.Width * .8);
                 }
                 lblText.Font = Main.SetFontSize("Segoe UI", ((float)(textTarget) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, textTarget, parent);
                 this.AutoSize = true;
