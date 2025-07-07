@@ -327,8 +327,8 @@ namespace NBAdbToolbox
             float closeButtonFont = 0;
             if (windowWidth < 1700)
             {
-                maxWidth = (int)(maxWidth * 1.3);
-                maxHeight = (int)(maxHeight * 1.1);
+                maxWidth = (int)(maxWidth * 1.2);
+                maxHeight = (int)(maxHeight * 1.2);
                 closeButtonFont = 10f;
             }
             else
@@ -385,7 +385,7 @@ namespace NBAdbToolbox
                 titleTarget = (int)(this.Width * 2);
                 if(windowWidth < 1700)
                 {
-                    titleTarget = (int)(this.Width * 1.3);
+                    titleTarget = (int)(this.Width * 1.6);
                 }
                 lblTitle.Font = Main.SetFontSize("Segoe UI", ((float)(titleTarget) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, titleTarget, parent);
 
@@ -492,7 +492,7 @@ namespace NBAdbToolbox
             {
                 if (windowWidth < 1700)
                 {
-                    textTarget = (int)(this.Width * .8);
+                    textTarget = (int)(this.Width * .7);
                 }
                 lblText.Font = Main.SetFontSize("Segoe UI", ((float)(textTarget) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, textTarget, parent);
                 this.AutoSize = true;
