@@ -409,7 +409,7 @@ namespace NBAdbToolbox
 
             //Position close button after adding to panel so we know the panel width
             titlePanel.Resize += (s, e) => {
-                closeButton.Location = new Point(titlePanel.Width - closeButton.Width - 5, 2);
+                new Point(titlePanel.Width - closeButton.Width - 5, 2);
             };
             panel.Controls.Add(titlePanel);
             
