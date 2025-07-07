@@ -1,6 +1,6 @@
 {
-  "ConfigPath": "C:\\Users\\derfj\\Desktop\\Toolbox Library\\Releases\\Toolbox v4 - 0703-1210\\NBAdbToolbox\\Content\\Configuration",
-  "DefaultConfig": "localhost - poopiedoo87.json",
+  "ConfigPath": "C:\\Users\\derfj\\Desktop\\NBAdbToolbox\\Content\\Configuration",
+  "DefaultConfig": "",
   "BackgroundImage": "Court Dark",
   "WindowSize": "Default",
   "Sound": "Default"

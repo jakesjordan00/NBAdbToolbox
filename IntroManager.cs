@@ -372,12 +372,20 @@ namespace NBAdbToolbox
             if (dialog.Name == "Welcome Message" || dialog.Name == "Edit Create Popup Explanation")
             {
                 titleTarget = (int)(this.Width * 2);
-                lblTitle.Font = Main.SetFontSize("Segoe UI", ((float)(this.Width * 2) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, (int)(this.Width * 1.8), parent);
+                if(windowWidth < 1700)
+                {
+                    titleTarget = (int)(this.Width * 1.3);
+                }
+                lblTitle.Font = Main.SetFontSize("Segoe UI", ((float)(titleTarget) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, titleTarget, parent);
             }
             else if (dialog.Name == "Build Database Walkthrough")
             {
                 titleTarget = this.Width;
-                lblTitle.Font = Main.SetFontSize("Segoe UI", ((float)(this.Width ) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, (int)(this.Width), parent);
+                if (windowWidth < 1700)
+                {
+                    titleTarget = (int)(this.Width * .9);
+                }
+                lblTitle.Font = Main.SetFontSize("Segoe UI", ((float)(titleTarget) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, titleTarget, parent);
             }
 
             //Position close button on the right side of title panel
@@ -601,27 +609,13 @@ namespace NBAdbToolbox
                 pnlWelcome.Click += (s, e) => CloseBubble();
                 pnlDbUtil.Click += (s, e) => CloseBubble();
                 pnlDbLibrary.Click += (s, e) => CloseBubble();
-                //Control dialogKeyTest = FindSpecificControl(bgCourt, dialogKey + "Dialog");
-                //if(FindSpecificControl(bgCourt, IntroManager.lastDialogKey + "Dialog") != null)
-                //{
-                //    dialogKeyTest = FindSpecificControl(bgCourt, IntroManager.lastDialogKey + "Dialog");
-                //}
-
-
-                //panel.Click += (s, e) => CloseSpecificBubble(FindSpecificControl(bgCourt, IntroManager.lastDialogKey + "Dialog"));
-                //this.Click += (s, e) => CloseSpecificBubble(FindSpecificControl(bgCourt, IntroManager.lastDialogKey + "Dialog"));
-                //titlePanel.Click += (s, e) => CloseSpecificBubble(FindSpecificControl(bgCourt, IntroManager.lastDialogKey + "Dialog"));
-                //lblTitle.Click += (s, e) => CloseSpecificBubble(FindSpecificControl(bgCourt, IntroManager.lastDialogKey + "Dialog"));
-                //lblText.Click += (s, e) => CloseSpecificBubble(FindSpecificControl(bgCourt, IntroManager.lastDialogKey + "Dialog"));
-                //bgCourt.Click += (s, e) => CloseSpecificBubble(FindSpecificControl(bgCourt, IntroManager.lastDialogKey + "Dialog"));
-                //pnlWelcome.Click += (s, e) => CloseSpecificBubble(FindSpecificControl(bgCourt, IntroManager.lastDialogKey + "Dialog"));
-                //pnlDbUtil.Click += (s, e) => CloseSpecificBubble(FindSpecificControl(bgCourt, IntroManager.lastDialogKey + "Dialog"));
-                //pnlDbLibrary.Click += (s, e) => CloseSpecificBubble(FindSpecificControl(bgCourt, IntroManager.lastDialogKey + "Dialog"));
             }
-
-            chkDontShowTutorial.CheckedChanged += (s, e) => {
-                IntroManager.TutorialCheckChange();
-            };
+            if(dialog.TutorialStep != 0)
+            {
+                chkDontShowTutorial.CheckedChanged += (s, e) => {
+                    IntroManager.TutorialCheckChange();
+                };
+            }
         }
 
 
