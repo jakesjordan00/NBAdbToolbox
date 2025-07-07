@@ -368,7 +368,7 @@ namespace NBAdbToolbox
                 AutoSize = true,
                 Height = 25, //Fixed height for the title row
                 Dock = DockStyle.Fill,
-                Margin = new Padding(0, 0, 0, padding)
+                Margin = new Padding(0, 0, 0, 4)
             };
 
             int titleTarget = this.Width;
