@@ -325,20 +325,29 @@ namespace NBAdbToolbox
             this.BorderStyle = BorderStyle.FixedSingle;
             this.Visible = false;
             this.Name = dialogKey + "Dialog";
-
-            var panel = new TableLayoutPanel
+            float closeButtonFont = 0;
+            if (windowWidth < 1700)
             {
-                Dock = DockStyle.Fill,
-                AutoSize = true,
-                ColumnCount = 1,
-                RowCount = 3
-            };
+                closeButtonFont = 10f;
+            }
+            else
+            {
+                closeButtonFont = 12f;
+            }
+
+                var panel = new TableLayoutPanel
+                {
+                    Dock = DockStyle.Fill,
+                    AutoSize = true,
+                    ColumnCount = 1,
+                    RowCount = 3
+                };
 
             //Create close button
             closeButton = new Label
             {
                 Text = "×",
-                Font = new Font(SystemFonts.DefaultFont.FontFamily, 12, FontStyle.Bold),
+                Font = new Font(SystemFonts.DefaultFont.FontFamily, closeButtonFont, FontStyle.Bold),
                 ForeColor = Color.DarkGray,
                 AutoSize = true,
                 Cursor = Cursors.Hand,
@@ -377,6 +386,7 @@ namespace NBAdbToolbox
                     titleTarget = (int)(this.Width * 1.3);
                 }
                 lblTitle.Font = Main.SetFontSize("Segoe UI", ((float)(titleTarget) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, titleTarget, parent);
+
             }
             else if (dialog.Name == "Build Database Walkthrough")
             {
@@ -480,7 +490,7 @@ namespace NBAdbToolbox
             {
                 if (windowWidth < 1700)
                 {
-                    textTarget = (int)(this.Width * 1.5);
+                    textTarget = (int)(this.Width);
                 }
                 lblText.Font = Main.SetFontSize("Segoe UI", ((float)(textTarget) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, textTarget, parent);
                 this.AutoSize = true;

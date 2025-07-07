@@ -5,7 +5,7 @@
     "Text": "Click the 'Create Server/Db Connection' to get started",
     "DialogType": "Info",
     "Frequency": 9999,
-    "Occurrences": 132,
+    "Occurrences": 136,
     "Visibility": "Visible",
     "TutorialSequence": null,
     "TutorialStep": 0
