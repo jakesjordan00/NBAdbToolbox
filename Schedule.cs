@@ -12,7 +12,7 @@ namespace NBAdbToolboxSchedule
     public class Schedule
     {
         //public async Task<List<Game>> GetJSON(DateTime lastDate)
-        public async Task<List<Game>> GetJSON(List<int> gameList)
+        public async Task<List<Game>> GetJSONList(List<int> gameList)
         {
             string pbpLink = "https://cdn.nba.com/static/json/staticData/scheduleLeagueV2_1.json";
             string json = "";
@@ -50,6 +50,41 @@ namespace NBAdbToolboxSchedule
                 }
             }
             return GameList;
+        }
+    
+    
+        public async Task<string> GetJSON(int SeasonID)
+        {
+            string pbpLink = "https://cdn.nba.com/static/json/staticData/scheduleLeagueV2_2.json";
+            string json = "";
+            string build = "";
+            ScheduleLeagueV2 Schedule = new ScheduleLeagueV2();
+            List<Game> GameList = new List<Game>();
+            using (HttpClient client = new HttpClient())
+            {
+                client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0");
+                client.Timeout = TimeSpan.FromSeconds(3.5);
+                try
+                {
+                    json = await client.GetStringAsync(pbpLink);
+                    Schedule = JsonConvert.DeserializeObject<ScheduleLeagueV2>(json);
+                }
+                catch
+                {
+
+                }
+
+            }
+            foreach (GameDates date in Schedule.LeagueSchedule.GameDates)
+            {
+                foreach (Game game in date.Games)
+                {
+                    build += "update TeamBox set Wins = " + game.HomeTeam.Wins + ", Losses = " + game.HomeTeam.Losses + " where SeasonID = " + SeasonID + " and GameID = " + game.GameId + " and TeamID = " + game.HomeTeam.TeamId + "\n" +
+                        "update TeamBox set Wins = " + game.AwayTeam.Wins + ", Losses = " + game.AwayTeam.Losses + " where SeasonID = " + SeasonID + " and GameID = " + game.GameId + " and TeamID = " + game.AwayTeam.TeamId + "\n";
+
+                }
+            }
+            return build;
         }
     }
 

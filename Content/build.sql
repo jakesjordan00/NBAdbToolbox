@@ -169,6 +169,10 @@ FoulsPersonal int,
 FoulsTeam int,
 FoulsTeamTechnical int,
 FoulsTechnical int,
+Wins int,
+Losses int,
+Win	int,
+Seed int,
 Primary Key (SeasonID, GameID, TeamID, MatchupID),
 Foreign Key (SeasonID) references Season(SeasonID),
 Foreign Key (SeasonID, GameID) references Game(SeasonID, GameID),
@@ -1278,8 +1282,80 @@ else SeriesID end
 where GameType = 'PS' and SeasonID = 2000
 ~~~
 
+create procedure UpdateTeamBoxWinLoss
+as
+begin
+    set nocount on;    
+    update t set 
+        Wins = (
+            select sum(Win) 
+            from teambox t2 inner join 
+		            game g2 on t2.GameID = g2.GameID and t2.SeasonID = g2.SeasonID and (t2.TeamID = g2.HomeID or t2.TeamID = g2.AwayID)  
+            where t.SeasonID = t2.SeasonID and g2.Date <= g.Date and left(g2.GameID, 1) != '6'
+            and t.TeamID = t2.TeamID and g.GameType = g2.GameType and case when g.GameType = 'PS' and left(g.GameID, 1) = 4 then g.SeriesID else 0 end = case when g2.GameType = 'PS' and left(g2.GameID, 1) = 4 then g2.SeriesID else 0 end 
+            ),
+        Losses = (
+            select sum(case when Win = 0 and g2.Date != cast(getdate() as date) then 1 else 0 end) 
+            from teambox t2 inner join 
+		            game g2 on t2.GameID = g2.GameID and t2.SeasonID = g2.SeasonID and (t2.TeamID = g2.HomeID or t2.TeamID = g2.AwayID)  
+            where t.SeasonID = t2.SeasonID and g2.Date <= g.Date and left(g2.GameID, 1) != '6'
+            and t.TeamID = t2.TeamID and g.GameType = g2.GameType and case when g.GameType = 'PS' and left(g.GameID, 1) = 4 then g.SeriesID else 0 end = case when g2.GameType = 'PS' and left(g2.GameID, 1) = 4 then g2.SeriesID else 0 end 
+            )
+    from TeamBox t inner join
+            Game g on t.GameID = g.GameID and t.SeasonID = g.SeasonID and (t.TeamID = g.HomeID or t.TeamID = g.AwayID)  and left(g.GameID, 1) != '6'
+end
+~~~
 
+create procedure UpdateTeamConfDiv
+as
+begin
+   set nocount on;   
+   update Team set 
+       Conference = Case 
+           when TeamID in(1610612737, 1610612738, 1610612741, 1610612739, 1610612748, 1610612749, 1610612751, 1610612752, 1610612753, 1610612754, 
+                          1610612755, 1610612761, 1610612764, 1610612765, 1610612766) then 'East'
+           when TeamID in(1610612742, 1610612743, 1610612744, 1610612745, 1610612746, 1610612747, 1610612750, 1610612756, 1610612757, 
+                          1610612758, 1610612759, 1610612760, 1610612762, 1610612763) then 'West' 
+           when TeamID = 1610612740 and SeasonID < 2004 then 'East'
+           when TeamID = 1610612740 and SeasonID >= 2004 then 'West'
+           else null end,
+       Division = Case 
+           when SeasonID >= 2004 and TeamID in(1610612738,1610612751,1610612752,1610612755,1610612761) then 'Atlantic'
+           when SeasonID >= 2004 and TeamID in(1610612741,1610612739,1610612765,1610612754,1610612749) then 'Central'
+           when SeasonID >= 2004 and TeamID in(1610612737, 1610612766, 1610612748, 1610612753, 1610612764) then 'Southeast'
+           when SeasonID >= 2004 and TeamID in(1610612743, 1610612750, 1610612760, 1610612757, 1610612762) then 'Northwest'
+           when SeasonID >= 2004 and TeamID in(1610612744, 1610612746, 1610612747, 1610612756, 1610612758) then 'Pacific'
+           when SeasonID >= 2004 and TeamID in(1610612742, 1610612745, 1610612763, 1610612740, 1610612759) then 'Southwest' 
+           when SeasonID < 2004 and TeamID in(1610612738, 1610612748, 1610612751, 1610612752, 1610612753, 1610612755, 1610612764) then 'Atlantic'
+           when SeasonID < 2004 and TeamID in(1610612737, 1610612766, 1610612740, 1610612741, 1610612739, 1610612765, 1610612754, 1610612749, 1610612761) then 'Central'
+           when SeasonID < 2004 and TeamID in(1610612742, 1610612743, 1610612745, 1610612750, 1610612759, 1610612763, 1610612762) then 'Midwest'
+           when SeasonID < 2004 and TeamID in(1610612744, 1610612746, 1610612747, 1610612760, 1610612756, 1610612757, 1610612758) then 'Pacific' 
+           else null end
+end
+~~~
 
+create view PlayoffSeries
+as
+select distinct g.SeasonID, g.SeriesID,
+case when Label != 'NBA Finals' then hi.Conference else null end Conference,
+case when cast(left(right(SeriesID, 2), 1) as int) = 1 then '1'
+     when cast(left(right(SeriesID, 2), 1) as int) = 2 then '2'
+     when cast(left(right(SeriesID, 2), 1) as int) = 3 then '3'
+     when cast(left(right(SeriesID, 2), 1) as int) = 4 then '4'
+else 0 end Round, 
+hi.TeamID HighTeamID, hi.FullName HighSeed, th.Seed HSeed, 
+lo.TeamID LowTeamID, lo.FullName LowSeed, tl.Seed LSeed,
+concat(replace(replace(replace(e.Label, ' -', ''), 'East ', ''), 'West ', ''), ' - ', hi.Tricode, ' (', th.Seed, ') vs ', lo.Tricode, ' (', tl.Seed, ')') Description,
+(select top 1 WinnerID from Game g2 where g.SeriesID = g2.SeriesID and g.SeasonID = g2.SeasonID order by GameID desc) WinnerID
+
+from game g inner join
+		GameExt e on g.GameID = e.GameID and g.SeasonID = e.SeasonID and e.LabelDetail like '%1' inner join
+		Team hi on g.HomeID = hi.TeamID and g.SeasonID = hi.SeasonID inner join
+		Team lo on g.AwayID = lo.TeamID and g.SeasonID = lo.SeasonID inner join
+		TeamBox th on g.GameID = th.GameID and hi.TeamID = th.TeamID and g.SeasonID = th.SeasonID inner join
+		TeamBox tl on g.GameID = tl.GameID and lo.TeamID = tl.TeamID and g.SeasonID = tl.SeasonID
+where g.GameType = 'PS'
+~~~
 */
 
 

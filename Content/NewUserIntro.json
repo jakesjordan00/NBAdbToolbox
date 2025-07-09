@@ -16,7 +16,7 @@
     "Text": "Server: The name or public IP address of the server you'll be connecting to\nServer Alias: A nickname for the server to display on UI\nDatabase: Name of Database we will create or connect to\n Create Db: If checked, we will attempt to create the database. If not, we will try to connect first\n Set as Default Db: If checked, Toolbox will connect to this Server/Db on Launch\n Use Windows Auth: Connect to the server with your windows login\nUsername: If using a SQL Server logon, enter user and password. If Windows Auth, no entry",
     "DialogType": "Help",
     "Frequency": 5555,
-    "Occurrences": 65,
+    "Occurrences": 75,
     "Visibility": "Visible",
     "TutorialSequence": null,
     "TutorialStep": 0
@@ -27,7 +27,7 @@
     "Text": "Click 'Build Database' next! We'll connect to the server and create the Db from master.",
     "DialogType": "Instruction",
     "Frequency": 33333,
-    "Occurrences": 60,
+    "Occurrences": 70,
     "Visibility": "Hidden",
     "TutorialSequence": null,
     "TutorialStep": 0
@@ -38,8 +38,8 @@
     "Text": "On the left you'll find Database Utilites, home to our Overview and Options sections",
     "DialogType": "Tutorial",
     "Frequency": 333,
-    "Occurrences": 73,
-    "Visibility": "Visible",
+    "Occurrences": 77,
+    "Visibility": "Hidden",
     "TutorialSequence": [
       "DatabaseUtilitiesIntro",
       "DatabaseOverviewIntro",
@@ -56,8 +56,8 @@
     "Text": "Click anywhere on the Database Overview panel to maximize or minimize display.\nWhen maximized, it shows:\n Which seasons are populated or not\n Game/Entity and Row count by Table\n 'Season Status', which tells us which (if any) tables are missing data",
     "DialogType": "Tutorial",
     "Frequency": 333,
-    "Occurrences": 251,
-    "Visibility": "Visible",
+    "Occurrences": 252,
+    "Visibility": "Hidden",
     "TutorialSequence": null,
     "TutorialStep": 2
   },
@@ -68,7 +68,7 @@
     "DialogType": "Tutorial",
     "Frequency": 3333,
     "Occurrences": 329,
-    "Visibility": "Visible",
+    "Visibility": "Hidden",
     "TutorialSequence": null,
     "TutorialStep": 3
   },
@@ -79,7 +79,7 @@
     "DialogType": "Tutorial",
     "Frequency": 3333,
     "Occurrences": 476,
-    "Visibility": "Visible",
+    "Visibility": "Hidden",
     "TutorialSequence": null,
     "TutorialStep": 4
   },
@@ -90,7 +90,7 @@
     "DialogType": "Tutorial",
     "Frequency": 3333,
     "Occurrences": 994,
-    "Visibility": "Visible",
+    "Visibility": "Hidden",
     "TutorialSequence": null,
     "TutorialStep": 5
   },
@@ -101,7 +101,7 @@
     "DialogType": "Tutorial",
     "Frequency": 3333,
     "Occurrences": 2078,
-    "Visibility": "Visible",
+    "Visibility": "Hidden",
     "TutorialSequence": null,
     "TutorialStep": 6
   },
