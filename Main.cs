@@ -628,23 +628,22 @@ namespace NBAdbToolbox
                                 }
                             }
 
-                            //Task DoMissingPbp = Task.Run(() =>
-                            //{
-
-                            //});
-                            if (missingPbp)
+                            Task DoMissingPbp = Task.Run(async () =>
                             {
-                                lblSeasonStatusLoad.Text = "Catching any missing data";
-                                foreach (var game in root.season.games.regularSeason.Where(g => g.playByPlay != null))
+                                if (missingPbp)
                                 {
-                                    HistoricPlayByPlayStaging(game.playByPlay);
-                                    await InsertPlayByPlayWithRetry(game, "Retry");
-                                    UpdateLoadingImage(imageIteration);
-                                    PopulateDb_4_AfterHistoricGame("Retry");
+                                    lblSeasonStatusLoad.Text = "Catching any missing data";
+                                    foreach (var game in root.season.games.regularSeason.Where(g => g.playByPlay != null))
+                                    {
+                                        HistoricPlayByPlayStaging(game.playByPlay);
+                                        await InsertPlayByPlayWithRetry(game, "Retry");
+                                        UpdateLoadingImage(imageIteration);
+                                        PopulateDb_4_AfterHistoricGame("Retry");
+                                    }
                                 }
-                            }
-                            root.season.games.regularSeason = null;
-                            missingPbp = false;
+                                root.season.games.regularSeason = null;
+                                missingPbp = false;
+                            });
                             lblSeasonStatusLoad.Text = "Inserting " + SeasonID + " Postseason";
 
                             foreach (NBAdbToolboxHistoric.Game game in root.season.games.playoffs)
@@ -680,19 +679,23 @@ namespace NBAdbToolbox
                                     await UpdateSeries(SeasonID);
                                 });
                             }
-                            if (missingPbp)
+                            
+                            Task DoMissingPlayoffPbp = Task.Run(async () =>
                             {
-                                lblSeasonStatusLoad.Text = "Catching any missing data";
-                                foreach (var game in root.season.games.playoffs.Where(g => g.playByPlay != null))
+                                if (missingPbp)
                                 {
-                                    HistoricPlayByPlayStaging(game.playByPlay);
-                                    await InsertPlayByPlayWithRetry(game, "Retry");
-                                    UpdateLoadingImage(imageIteration);
-                                    PopulateDb_4_AfterHistoricGame("Retry");
+                                    lblSeasonStatusLoad.Text = "Catching any missing data";
+                                    foreach (var game in root.season.games.playoffs.Where(g => g.playByPlay != null))
+                                    {
+                                        HistoricPlayByPlayStaging(game.playByPlay);
+                                        await InsertPlayByPlayWithRetry(game, "Retry");
+                                        UpdateLoadingImage(imageIteration);
+                                        PopulateDb_4_AfterHistoricGame("Retry");
+                                    }
                                 }
-                            }
-                            root.season.games.playoffs = null;
-                            missingPbp = false;
+                                root.season.games.playoffs = null;
+                                missingPbp = false;
+                            });
                         }
                         #endregion
                         //Current Data
@@ -1866,23 +1869,23 @@ namespace NBAdbToolbox
         }
         public void DefaultSettings()
         {
-            if (settings.ConfigPath == null)
+            if (string.IsNullOrWhiteSpace(settings.ConfigPath))
             {
                 settings.ConfigPath = Path.Combine(projectRoot, @"Content\Configuration");
             }
-            if (settings.DefaultConfig == null)
+            if (string.IsNullOrWhiteSpace(settings.DefaultConfig))
             {
                 settings.DefaultConfig = "";
             }
-            if (settings.BackgroundImage == null)
+            if (string.IsNullOrWhiteSpace(settings.BackgroundImage))
             {
                 settings.BackgroundImage = "Court Dark";
             }
-            if (settings.WindowSize == null)
+            if (string.IsNullOrWhiteSpace(settings.WindowSize))
             {
                 settings.WindowSize = "Default";
             }
-            if (settings.Sound == null)
+            if (string.IsNullOrWhiteSpace(settings.Sound))
             {
                 settings.Sound = "Default";
             }

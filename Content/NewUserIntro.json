@@ -16,7 +16,7 @@
     "Text": "Server: The name or public IP address of the server you'll be connecting to\nServer Alias: A nickname for the server to display on UI\nDatabase: Name of Database we will create or connect to\n Create Db: If checked, we will attempt to create the database. If not, we will try to connect first\n Set as Default Db: If checked, Toolbox will connect to this Server/Db on Launch\n Use Windows Auth: Connect to the server with your windows login\nUsername: If using a SQL Server logon, enter user and password. If Windows Auth, no entry",
     "DialogType": "Help",
     "Frequency": 5555,
-    "Occurrences": 75,
+    "Occurrences": 76,
     "Visibility": "Visible",
     "TutorialSequence": null,
     "TutorialStep": 0
@@ -27,7 +27,7 @@
     "Text": "Click 'Build Database' next! We'll connect to the server and create the Db from master.",
     "DialogType": "Instruction",
     "Frequency": 33333,
-    "Occurrences": 70,
+    "Occurrences": 71,
     "Visibility": "Hidden",
     "TutorialSequence": null,
     "TutorialStep": 0

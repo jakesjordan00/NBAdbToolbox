@@ -1,5 +1,6 @@
 
-
+create view PlayoffSeries
+as
 select distinct g.SeasonID, g.SeriesID,
 case when Label != 'NBA Finals' then hi.Conference else null end Conference,
 case when cast(left(right(SeriesID, 2), 1) as int) = 1 then '1'
@@ -18,5 +19,4 @@ from game g inner join
 		Team lo on g.AwayID = lo.TeamID and g.SeasonID = lo.SeasonID inner join
 		TeamBox th on g.GameID = th.GameID and hi.TeamID = th.TeamID and g.SeasonID = th.SeasonID inner join
 		TeamBox tl on g.GameID = tl.GameID and lo.TeamID = tl.TeamID and g.SeasonID = tl.SeasonID
-
 where g.GameType = 'PS'

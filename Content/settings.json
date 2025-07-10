@@ -1,7 +1,7 @@
 {
   "ConfigPath": "C:\\Users\\derfj\\Desktop\\NBAdbToolbox\\Content\\Configuration",
-  "DefaultConfig": "localhost - newTBox0709v2.json",
+  "DefaultConfig": "localhost - newTBox0709v3.json",
   "BackgroundImage": "Court Dark",
   "WindowSize": "Default",
-  "Sound": "Muted"
+  "Sound": "Default"
 }
