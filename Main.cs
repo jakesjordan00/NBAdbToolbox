@@ -585,10 +585,18 @@ namespace NBAdbToolbox
                             lblSeasonStatusLoad.Text = SeasonID + " Historic data file";
                             stopwatchRead.Restart();
                             root = null;
-                            await Task.Run(async () =>      //This sets the root variable to our big file
+                            try
                             {
-                                await ReadSeasonFile(popup.historic, popup.current); 
-                            });
+                                await Task.Run(async () =>      //This sets the root variable to our big file
+                                {
+                                    await ReadSeasonFile(popup.historic, popup.current);
+                                });
+                            }
+                            catch(NullReferenceException ne)
+                            {
+                                MessageBox.Show("Error! Please restart application and try again", "Memory Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                return;
+                            }
                             PopulateDb_2_AfterHistoricRead();
                             await DeleteSeasonData;
                             PopulateDb_3_AfterDelete_BeforeGames();
@@ -628,8 +636,8 @@ namespace NBAdbToolbox
                                 }
                             }
 
-                            Task DoMissingPbp = Task.Run(async () =>
-                            {
+                            //Task DoMissingPbp = Task.Run(async () =>
+                            //{
                                 if (missingPbp)
                                 {
                                     lblSeasonStatusLoad.Text = "Catching any missing data";
@@ -643,7 +651,7 @@ namespace NBAdbToolbox
                                 }
                                 root.season.games.regularSeason = null;
                                 missingPbp = false;
-                            });
+                            //});
                             lblSeasonStatusLoad.Text = "Inserting " + SeasonID + " Postseason";
 
                             foreach (NBAdbToolboxHistoric.Game game in root.season.games.playoffs)
@@ -705,10 +713,18 @@ namespace NBAdbToolbox
                             source = "Current";
                             current = 1;
                             PopulateDb_5_BeforeCurrentRead();
-                            await Task.Run(async () =>      //We need to read the big file to get our game list
+                            try
                             {
-                                await ReadSeasonFile(popup.historic, popup.current);
-                            });
+                                await Task.Run(async () =>      //This sets the root variable to our big file
+                                {
+                                    await ReadSeasonFile(popup.historic, popup.current);
+                                });
+                            }
+                            catch (NullReferenceException ne)
+                            {
+                                MessageBox.Show("Error! Please restart application and try again", "Memory Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                return;
+                            }
                             PopulateDb_6_AfterCurrentReadRoot();
                             await DeleteSeasonData;
                             stopwatchInsert.Restart();
