@@ -10,8 +10,7 @@ HistoricLoaded		int,
 CurrentLoaded		int,
 Primary Key(SeasonID))
 
-create table Team(
-SeasonID			int,
+create table Team(SeasonID			int,
 TeamID				int,
 City				varchar(255),
 Name				varchar(255),
@@ -459,7 +458,7 @@ group by s.SeasonID, s.Games, s.PlayoffGames, HistoricLoaded, CurrentLoaded
 	 , PbpRows
 	 , StartingLineupsRows
 	 , TboxLineupRows)
-select SeasonID, Game, Loaded, 
+select SeasonID, Games, Loaded, 
 	   Team, Arena, Player, Official, Game, PlayerBox, TeamBox, PlayByPlay, StartingLineups, TeamBoxLineups, HistoricLoaded, CurrentLoaded
 	 , case when PBoxRows is null then 0 else PBoxRows end PBoxRows
 	 , case when TboxRows is null then 0 else TboxRows end TboxRows
@@ -1355,6 +1354,25 @@ from game g inner join
 		TeamBox th on g.GameID = th.GameID and hi.TeamID = th.TeamID and g.SeasonID = th.SeasonID inner join
 		TeamBox tl on g.GameID = tl.GameID and lo.TeamID = tl.TeamID and g.SeasonID = tl.SeasonID
 where g.GameType = 'PS'
+~~~
+
+create procedure GameExtLabels
+as
+begin
+   set nocount on;   
+   update e set 
+       Label = case when left(right(g.GameID, 3), 1) = '1' then concat(t.Conference, ' - ', 'First Round')
+                    when left(right(g.GameID, 3), 1) = '2' then concat(t.Conference, ' - ', 'Conf. Semifinals')
+                    when left(right(g.GameID, 3), 1) = '3' then concat(t.Conference, ' - ', 'Conf. Finals')
+                    else 'NBA Finals' end,
+       LabelDetail = concat('Game ', right(g.GameID, 1))
+   from GameExt e 
+   inner join Game g on e.SeasonID = g.SeasonID and e.GameID = g.GameID
+   inner join Team t on g.SeasonID = t.SeasonID and g.HomeID = t.TeamID
+   where g.SeasonID >= 2019
+and (Label = '' or Label is null)
+and g.SeriesID is not null
+end
 ~~~
 */
 

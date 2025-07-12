@@ -1167,8 +1167,211 @@ namespace NBAdbToolbox
             };
 
 
+            btnERD.Click += btnERD_Click;
+
             this.Shown += AfterLoad;
 
+        }
+        //Replace your existing btnERD_Click method with this corrected version
+        private void btnERD_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                string erdPath = Path.Combine(projectRoot, @"Content\Images", "Erd.png");
+
+                if (File.Exists(erdPath))
+                {
+                    //Create new form to display the ERD
+                    Form erdForm = new Form();
+                    erdForm.Text = "Entity Relationship Diagram - Mouse Wheel: Zoom | Drag: Pan";
+                    erdForm.WindowState = FormWindowState.Maximized;
+                    erdForm.StartPosition = FormStartPosition.CenterScreen;
+                    erdForm.KeyPreview = true;
+                    erdForm.Icon = this.Icon;
+
+                    //Enable double buffering for smooth scrolling
+                    typeof(Panel).InvokeMember("DoubleBuffered",
+                        BindingFlags.SetProperty | BindingFlags.Instance | BindingFlags.NonPublic,
+                        null, erdForm, new object[] { true });
+
+                    //Create Panel with AutoScroll for zoom functionality
+                    Panel scrollPanel = new Panel();
+                    scrollPanel.Dock = DockStyle.Fill;
+                    scrollPanel.AutoScroll = true;
+                    scrollPanel.BackColor = Color.White;
+
+                    //Enable double buffering for the scroll panel
+                    typeof(Panel).InvokeMember("DoubleBuffered",
+                        BindingFlags.SetProperty | BindingFlags.Instance | BindingFlags.NonPublic,
+                        null, scrollPanel, new object[] { true });
+
+                    //Create PictureBox to display the image
+                    PictureBox picERD = new PictureBox();
+                    picERD.SizeMode = PictureBoxSizeMode.Zoom; //Back to Zoom for proper scaling
+                    picERD.Image = Image.FromFile(erdPath);
+                    picERD.BackColor = Color.White;
+
+                    //Enable double buffering for the picture box
+                    typeof(PictureBox).InvokeMember("DoubleBuffered",
+                        BindingFlags.SetProperty | BindingFlags.Instance | BindingFlags.NonPublic,
+                        null, picERD, new object[] { true });
+
+                    //Get original image dimensions
+                    int originalWidth = picERD.Image.Width;
+                    int originalHeight = picERD.Image.Height;
+
+                    //Calculate initial fit-to-screen size maintaining aspect ratio
+                    float aspectRatio = (float)originalWidth / originalHeight;
+                    int baseWidth = erdForm.ClientSize.Width;
+                    int baseHeight = erdForm.ClientSize.Height;
+
+                    int fitWidth = baseWidth;
+                    int fitHeight = (int)(baseWidth / aspectRatio);
+
+                    if (fitHeight > baseHeight)
+                    {
+                        fitHeight = baseHeight;
+                        fitWidth = (int)(baseHeight * aspectRatio);
+                    }
+
+                    //Set initial size
+                    picERD.Size = new Size(screenWidth, screenHeight - (int)(screenHeight * .02));
+
+                    //Zoom variables
+                    float zoomFactor = 5.5f;
+                    const float zoomIncrement = 1f;
+                    float maxZoom = 20.0f;
+                    float minZoom = 4.5f;
+                    if (windowWidth < 1700)
+                    {
+                        zoomFactor = 4.5f;
+                        minZoom = 4.5f;
+                    }
+                    else
+                    {
+                        minZoom = 5.5f;
+                    }
+
+                    //Drag variables
+                    bool isDragging = false;
+                    Point dragStartPoint = Point.Empty;
+                    Point scrollStartPoint = Point.Empty;
+
+                    //Mouse down event for starting drag
+                    picERD.MouseDown += (dragSender, dragArgs) =>
+                    {
+                        if (dragArgs.Button == MouseButtons.Left)
+                        {
+                            isDragging = true;
+                            dragStartPoint = dragArgs.Location;
+                            scrollStartPoint = new Point(scrollPanel.HorizontalScroll.Value, scrollPanel.VerticalScroll.Value);
+                            picERD.Cursor = Cursors.Hand;
+                        }
+                    };
+
+                    //Mouse move event for dragging
+                    picERD.MouseMove += (dragSender, dragArgs) =>
+                    {
+                        if (isDragging)
+                        {
+                            Point currentPoint = dragArgs.Location;
+                            int deltaX = dragStartPoint.X - currentPoint.X;
+                            int deltaY = dragStartPoint.Y - currentPoint.Y;
+
+                            //Calculate new scroll positions
+                            int newHorizontalScroll = scrollStartPoint.X + deltaX;
+                            int newVerticalScroll = scrollStartPoint.Y + deltaY;
+
+                            //Apply scroll limits
+                            newHorizontalScroll = Math.Max(0, Math.Min(scrollPanel.HorizontalScroll.Maximum, newHorizontalScroll));
+                            newVerticalScroll = Math.Max(0, Math.Min(scrollPanel.VerticalScroll.Maximum, newVerticalScroll));
+
+                            //Set scroll positions
+                            scrollPanel.HorizontalScroll.Value = newHorizontalScroll;
+                            scrollPanel.VerticalScroll.Value = newVerticalScroll;
+                            scrollPanel.PerformLayout(); //Force layout update for smoother scrolling
+                        }
+                    };
+
+                    //Mouse up event for ending drag
+                    picERD.MouseUp += (dragSender, dragArgs) =>
+                    {
+                        if (dragArgs.Button == MouseButtons.Left)
+                        {
+                            isDragging = false;
+                            picERD.Cursor = Cursors.Default;
+                        }
+                    };
+
+                    //Mouse wheel zoom event
+                    picERD.MouseWheel += (wheelSender, wheelArgs) =>
+                    {
+                        if (wheelArgs.Delta > 0)
+                        {
+                            //Zoom in
+                            zoomFactor = Math.Min(maxZoom, zoomFactor + zoomIncrement);
+                        }
+                        else
+                        {
+                            //Zoom out
+                            zoomFactor = Math.Max(minZoom, zoomFactor - zoomIncrement);
+                        }
+
+                        //Apply zoom - scale from the fitted base size
+                        int newWidth = (int)(fitWidth * zoomFactor);
+                        int newHeight = (int)(fitHeight * zoomFactor);
+                        picERD.Size = new Size(newWidth, newHeight);
+
+                        //Update form title with zoom level
+                        erdForm.Text = $"Entity Relationship Diagram - Zoom: {(zoomFactor * 100):F0}% | Mouse Wheel: Zoom | Drag: Pan";
+                    };
+
+                    //Add keyboard shortcuts
+                    erdForm.KeyDown += (keySender, keyArgs) =>
+                    {
+                        if (keyArgs.KeyCode == Keys.Add || keyArgs.KeyCode == Keys.Oemplus)
+                        {
+                            //Zoom in with + key
+                            zoomFactor = Math.Min(maxZoom, zoomFactor + zoomIncrement);
+                            int newWidth = (int)(fitWidth * zoomFactor);
+                            int newHeight = (int)(fitHeight * zoomFactor);
+                            picERD.Size = new Size(newWidth, newHeight);
+                            erdForm.Text = $"Entity Relationship Diagram - Zoom: {(zoomFactor * 100):F0}% | Mouse Wheel: Zoom | Drag: Pan";
+                        }
+                        else if (keyArgs.KeyCode == Keys.Subtract || keyArgs.KeyCode == Keys.OemMinus)
+                        {
+                            //Zoom out with - key
+                            zoomFactor = Math.Max(minZoom, zoomFactor - zoomIncrement);
+                            int newWidth = (int)(fitWidth * zoomFactor);
+                            int newHeight = (int)(fitHeight * zoomFactor);
+                            picERD.Size = new Size(newWidth, newHeight);
+                            erdForm.Text = $"Entity Relationship Diagram - Zoom: {(zoomFactor * 100):F0}% | Mouse Wheel: Zoom | Drag: Pan";
+                        }
+                        else if (keyArgs.KeyCode == Keys.D0 || keyArgs.KeyCode == Keys.NumPad0)
+                        {
+                            //Reset zoom with 0 key
+                            zoomFactor = 1.0f;
+                            picERD.Size = new Size(fitWidth, fitHeight);
+                            erdForm.Text = "Entity Relationship Diagram - Zoom: 100% | Mouse Wheel: Zoom | Drag: Pan";
+                        }
+                    };
+
+                    //Add PictureBox to scroll panel, then panel to form
+                    scrollPanel.Controls.Add(picERD);
+                    erdForm.Controls.Add(scrollPanel);
+
+                    //Show the form
+                    erdForm.Show();
+                }
+                else
+                {
+                    MessageBox.Show("ERD image not found at: " + erdPath, "File Not Found", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error opening ERD: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
         private void AfterLoad(object sender, EventArgs e)
         {
@@ -3431,9 +3634,18 @@ namespace NBAdbToolbox
             lblDbLibrary.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, (int)(pnlDbUtil.Width * .7), lblDbUtil);
             lblDbLibrary.AutoSize = true;
             lblDbLibrary.Left = ((pnlDbLibrary.Width - lblDbLibrary.Width) / 2) + pnlDbLibrary.Left;
+            btnERD.Font = SetFontSize("Segoe UI", (float)(fontSize / 2.7), FontStyle.Bold, (int)(listSeasons.Width * .8), btnERD); //6.5
+            btnERD.AutoSize = true;
+            btnERD.Left =  (int)(btnERD.Width * .1);
+            btnERD.Top = lblDbLibrary.Bottom + (int)(btnERD.Width * .1);
 
 
         }
+        public Button btnERD = new Button
+        {
+            Name = "btnERD",
+            Text = "View ERD"
+        };
 
         public void AddControlsAfterConnection()
         {
@@ -3646,6 +3858,10 @@ namespace NBAdbToolbox
                 }
             };
             pnlDbOverview.AutoScroll = true;
+            //Enable double buffering for pnlDbOverview
+            typeof(Panel).InvokeMember("DoubleBuffered",
+                BindingFlags.SetProperty | BindingFlags.Instance | BindingFlags.NonPublic,
+                null, pnlDbOverview, new object[] { true });
 
             string database = config?.Database ?? "";
             ChangeLabel(ThemeColor, lblDbOvName, pnlDbUtil, new List<string> {
@@ -3862,6 +4078,7 @@ namespace NBAdbToolbox
         public void InitializeElements()
         {
             //Children elements should go above the parents, background image should be last added. AddPanelElement(pnlDbOverview, lblGameUtil);
+            AddPanelElement(pnlDbLibrary, btnERD);
             AddPanelElement(pnlDbLibrary, lblDbLibrary);
             AddPanelElement(pnlDbOverview, lblTeamUtil);
             AddPanelElement(pnlDbOverview, lblArenaUtil);
@@ -5622,24 +5839,6 @@ namespace NBAdbToolbox
                     }
                 }
 
-                //if (!noNamePlayerList.Contains((SeasonID, player.personId)) && string.IsNullOrWhiteSpace(player.firstName))
-                //{
-                //    noNamePlayerList.Add((SeasonID, player.personId));
-                //}
-                //else if (noNamePlayerList.Contains((SeasonID, player.personId)) && !string.IsNullOrWhiteSpace(player.firstName))
-                //{
-                //    index = game.box.homeTeamPlayers.FindIndex(p => p.personId == player.personId);
-                //    if (index == -1)
-                //    {
-                //        HistoricPlayerUpdate(player, player.jerseyNum);
-                //    }
-                //    else
-                //    {
-                //        HistoricPlayerUpdate(player, game.box.homeTeamPlayers[index].jerseyNum);
-                //    }
-                //    noNamePlayerList.Remove((SeasonID, player.personId));
-                //}
-
                 HistoricPlayerBoxInsert(game, player, game.box.homeTeamId, game.box.awayTeamId);
             }
 
@@ -5681,35 +5880,6 @@ namespace NBAdbToolbox
                 HistoricInactiveBoxInsert(game.box.awayTeamId, game.box.homeTeamId, inactive.personId);
             }
         }
-        public void HistoricPlayerProcessor(NBAdbToolboxHistoric.Player player, int teamID, int matchupID, Dictionary<int, string> teamPlayersDict)
-        {
-            int playerID = player.personId;
-            bool isNewPlayer = !playerList.Contains((SeasonID, playerID));
-            bool hasNoName = noNamePlayerList.Contains((SeasonID, playerID));
-            bool playerHasName = !string.IsNullOrWhiteSpace(player.firstName);
-
-            //Get jersey number with single dictionary lookup
-            string jerseyNum = teamPlayersDict.TryGetValue(playerID, out string teamJersey)
-                ? teamJersey
-                : player.jerseyNum;
-
-            if (isNewPlayer)
-            {
-                HistoricPlayerInsert(player, jerseyNum, "Historic");
-            }
-
-            //Handle name status consistently for both teams
-            if (!hasNoName && !playerHasName)
-            {
-                noNamePlayerList.Add((SeasonID, playerID));
-            }
-            else if (hasNoName && playerHasName)
-            {
-                HistoricPlayerUpdate(player, jerseyNum);
-                noNamePlayerList.Remove((SeasonID, playerID));
-            }
-        }
-
 
 
         public void HistoricPlayerInsert(NBAdbToolboxHistoric.Player player, string number, string sender)
