@@ -732,6 +732,15 @@ namespace NBAdbToolbox
                             for (int i = 0; i < RegularSeasonGames; i++)
                             {
                                 GameID = gamesRS[i];
+                                lblCurrentGameCount.Text = gamesRS[i].ToString();
+                                gameLabelH = root.season.games.regularSeason[i].box.gameLabel;
+                                gameLabelDetailH = root.season.games.regularSeason[i].box.gameSubLabel;
+                                homeWins = root.season.games.regularSeason[i].box.homeTeam.teamLosses;
+                                homeLosses = root.season.games.regularSeason[i].box.homeTeam.teamWins;
+                                int homeGames = homeWins + homeLosses;
+                                awayWins = root.season.games.regularSeason[i].box.awayTeam.teamLosses;
+                                awayLosses = root.season.games.regularSeason[i].box.awayTeam.teamWins;
+                                int awayGames = awayWins + awayLosses;
                                 await CurrentGameGPS(gamesRS[i], "");
                                 if (!boxMissing)
                                 {
@@ -748,6 +757,23 @@ namespace NBAdbToolbox
                                         }
                                     }
                                 }
+                                if (homeGames == 82 || //If we've reached the last game of the SeasonID (or over 40 for covid shortened 2019) update Team records 
+                                (SeasonID == 2019 && homeGames >= 40) ||
+                                (SeasonID == 2020 && homeGames == 72))
+                                {
+                                    NBAdbToolboxHistoric.Team team = root.season.games.regularSeason[i].box.homeTeam;
+                                    HistoricTeamUpdate(team, team.teamId, "Current");
+                                    UpdateTeamWins();
+                                }
+                                if (awayGames == 82 ||//If we've reached the last game of the SeasonID (or over 40 for covid shortened 2019) update Team records 
+                                (SeasonID == 2019 && awayGames >= 40) ||
+                                (SeasonID == 2020 && awayGames == 72))
+                                {
+                                    NBAdbToolboxHistoric.Team team = root.season.games.regularSeason[i].box.awayTeam;
+                                    HistoricTeamUpdate(team, team.teamId, "Current");
+                                    UpdateTeamWins();
+                                    
+                                }
                                 root.season.games.regularSeason[i].box = null;
                                 root.season.games.regularSeason[i].playByPlay = null;
                                 PopulateDb_8_AfterCurrentGame(gamesRS[i].ToString());
@@ -756,6 +782,14 @@ namespace NBAdbToolbox
                             {
                                 GameID = gamesPS[i];
                                 lblCurrentGameCount.Text = gamesPS[i].ToString();
+                                gameLabelH = root.season.games.playoffs[i].box.gameLabel;
+                                gameLabelDetailH = root.season.games.playoffs[i].box.gameSubLabel;
+                                homeSeed = root.season.games.playoffs[i].box.homeTeam.seed;
+                                homeWins = root.season.games.playoffs[i].box.homeTeam.teamLosses;
+                                homeLosses = root.season.games.playoffs[i].box.homeTeam.teamWins;
+                                awaySeed = root.season.games.playoffs[i].box.awayTeam.seed;
+                                awayWins = root.season.games.playoffs[i].box.awayTeam.teamLosses;
+                                awayLosses = root.season.games.playoffs[i].box.awayTeam.teamWins;
                                 await CurrentGameGPS(gamesPS[i], "");
                                 if (!boxMissing)
                                 {
@@ -1173,6 +1207,14 @@ namespace NBAdbToolbox
 
         }
         //Replace your existing btnERD_Click method with this corrected version
+        public string gameLabelH = "";
+        public string gameLabelDetailH = "";
+        public int homeSeed = 0;
+        public int homeWins = 0;
+        public int homeLosses = 0;
+        public int awaySeed = 0;
+        public int awayWins = 0;
+        public int awayLosses = 0;
         private void btnERD_Click(object sender, EventArgs e)
         {
             try
@@ -3102,6 +3144,16 @@ namespace NBAdbToolbox
                     Main.Open();
                     BuildLogInsert.ExecuteNonQuery();
                     Main.Close();
+                }
+                if(current == 1)
+                {
+                    using (SqlCommand BuildLogInsert = new SqlCommand("GameExtLabels", Main))
+                    {
+                        BuildLogInsert.CommandType = CommandType.StoredProcedure;
+                        Main.Open();
+                        BuildLogInsert.ExecuteNonQuery();
+                        Main.Close();
+                    }
                 }
                 using (SqlCommand BuildLogInsert = new SqlCommand("BuildLogInsert", Main))
                 {
@@ -5575,14 +5627,14 @@ namespace NBAdbToolbox
             (SeasonID == 2020 && (game.box.homeTeam.teamWins + game.box.homeTeam.teamLosses == 72)))
             {
                 //TeamUpdate(game.box.homeTeam, SeasonID);
-                HistoricTeamUpdate(game.box.homeTeam, game.box.homeTeamId); //5.7 Populate DB Update
+                HistoricTeamUpdate(game.box.homeTeam, game.box.homeTeamId, "Historic"); //5.7 Populate DB Update
             }
             if (game.box.awayTeam.teamWins + game.box.awayTeam.teamLosses == 82 ||  //Same for away team
             (SeasonID == 2019 && (game.box.awayTeam.teamWins + game.box.awayTeam.teamLosses >= 40)) ||
             (SeasonID == 2020 && (game.box.awayTeam.teamWins + game.box.awayTeam.teamLosses == 72)))
             {
                 //TeamUpdate(game.box.awayTeam, SeasonID);
-                HistoricTeamUpdate(game.box.awayTeam, game.box.awayTeamId); //5.7 Populate DB Update
+                HistoricTeamUpdate(game.box.awayTeam, game.box.awayTeamId, "Historic"); //5.7 Populate DB Update
             }
         }
         public void HistoricTeamInsert(NBAdbToolboxHistoric.Team team, int teamID)
@@ -5601,13 +5653,48 @@ namespace NBAdbToolbox
                       .Append(team.teamCity).Append(" ")
                       .Append(team.teamName).Append("', null, null)\n");
         }
-        public void HistoricTeamUpdate(NBAdbToolboxHistoric.Team team, int teamID)
+        public void HistoricTeamUpdate(NBAdbToolboxHistoric.Team team, int teamID, string sender)
         {
-            sqlBuilder.Append("update Team set Wins = ")
-                      .Append(team.teamWins).Append(", Losses = ")
-                      .Append(team.teamLosses).Append(" where TeamID = ")
-                      .Append(teamID).Append(" and SeasonID = ")
-                      .Append(SeasonID).Append("\n");
+            if(sender == "Historic")
+            {
+                sqlBuilder.Append("update Team set Wins = ")
+                          .Append(team.teamWins).Append(", Losses = ")
+                          .Append(team.teamLosses).Append(" where TeamID = ")
+                          .Append(teamID).Append(" and SeasonID = ")
+                          .Append(SeasonID).Append("\n");
+            }
+            else if(sender == "Current")
+            {
+                teamWinsBuilder.Append("update Team set Wins = ")
+                               .Append(team.teamWins).Append(", Losses = ")
+                               .Append(team.teamLosses).Append(" where TeamID = ")
+                               .Append(teamID).Append(" and SeasonID = ")
+                               .Append(SeasonID).Append("\n");
+            }
+        }
+        public void UpdateTeamWins()
+        {
+
+            string hitDb = "set nocount on;\n" + teamWinsBuilder.ToString();
+            teamWinsBuilder.Clear();
+            try
+            {
+                using (SqlConnection bigInserts = new SqlConnection(cString))
+                {
+                    using (SqlCommand AllInOneInsert = new SqlCommand(hitDb))
+                    {
+                        AllInOneInsert.Connection = bigInserts;
+                        AllInOneInsert.CommandType = CommandType.Text;
+                        bigInserts.Open();
+                        AllInOneInsert.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+
+            }
+            hitDb = null;
         }
 
         #endregion
@@ -6284,6 +6371,7 @@ namespace NBAdbToolbox
         #region PlayByPlay Methods
         public StringBuilder sqlBuilder = new StringBuilder(220 * 1024); //Start with roughly .225 MB initial capacity
         public StringBuilder playByPlayBuilder = new StringBuilder(245 * 1024); //Start with about .25MB capacity
+        public StringBuilder teamWinsBuilder = new StringBuilder(); //Start with roughly .225 MB initial capacity
         public void PlayByPlayInsertString(NBAdbToolboxHistoric.Action action, int GameID)
         {
             StringBuilder insert = new StringBuilder("insert into PlayByPlay (SeasonID, GameID, ActionID, ActionNumber, Qtr, Clock, ");
@@ -6541,7 +6629,8 @@ namespace NBAdbToolbox
             foreach (NBAdbToolboxCurrent.Team team in new[] { game.homeTeam, game.awayTeam })
             {
                 int MatchupID = (team == game.homeTeam) ? game.awayTeam.teamId : game.homeTeam.teamId;
-                CurrentTeamBox(team, MatchupID);
+                string homeAway = (team == game.homeTeam) ? "Home": "Away";
+                CurrentTeamBox(team, MatchupID, homeAway);
                 InitiateCurrentPlayerBox(game, team, MatchupID);
             }
             if (!teamsDone)
@@ -6639,9 +6728,12 @@ namespace NBAdbToolbox
         #endregion
 
         #region TeamBox
-        public void CurrentTeamBox(NBAdbToolboxCurrent.Team team, int MatchupID)
+        public void CurrentTeamBox(NBAdbToolboxCurrent.Team team, int MatchupID, string homeAway)
         {
-            sqlBuilderParallel.Append("insert into TeamBox(SeasonID, GameID, TeamID, MatchupID, Assists, AssistsTurnoverRatio, BenchPoints, BiggestLead, BiggestLeadScore, BiggestScoringRun, BiggestScoringRunScore, Blocks, BlocksReceived, FastBreakPointsAttempted, FastBreakPointsMade, FastBreakPointsPercentage, FGA, FieldGoalsEffectiveAdjusted, FGM, [FG%], FoulsOffensive, FoulsDrawn, FoulsPersonal, FoulsTeam, FoulsTechnical, FoulsTeamTechnical, FTA, FTM, [FT%], LeadChanges, Points, PointsAgainst, PointsFastBreak, PointsFromTurnovers, PointsInThePaint, PointsInThePaintAttempted, PointsInThePaintMade, PointsInThePaintPercentage, PointsSecondChance, ReboundsDefensive, ReboundsOffensive, ReboundsPersonal, ReboundsTeam, ReboundsTeamDefensive, ReboundsTeamOffensive, ReboundsTotal, SecondChancePointsAttempted, SecondChancePointsMade, SecondChancePointsPercentage, Steals, FG3A, FG3M, [FG3%], TimeLeading, TimesTied, TrueShootingAttempts, TrueShootingPercentage, Turnovers, TurnoversTeam, TurnoversTotal, FG2A, FG2M, [FG2%], Win) values(")
+
+            int wins = (homeAway == "Home") ? homeWins : awayWins;
+            int losses = (homeAway == "Home") ? homeLosses : awayLosses;
+            sqlBuilderParallel.Append("insert into TeamBox(SeasonID, GameID, TeamID, MatchupID, Assists, AssistsTurnoverRatio, BenchPoints, BiggestLead, BiggestLeadScore, BiggestScoringRun, BiggestScoringRunScore, Blocks, BlocksReceived, FastBreakPointsAttempted, FastBreakPointsMade, FastBreakPointsPercentage, FGA, FieldGoalsEffectiveAdjusted, FGM, [FG%], FoulsOffensive, FoulsDrawn, FoulsPersonal, FoulsTeam, FoulsTechnical, FoulsTeamTechnical, FTA, FTM, [FT%], LeadChanges, Points, PointsAgainst, PointsFastBreak, PointsFromTurnovers, PointsInThePaint, PointsInThePaintAttempted, PointsInThePaintMade, PointsInThePaintPercentage, PointsSecondChance, ReboundsDefensive, ReboundsOffensive, ReboundsPersonal, ReboundsTeam, ReboundsTeamDefensive, ReboundsTeamOffensive, ReboundsTotal, SecondChancePointsAttempted, SecondChancePointsMade, SecondChancePointsPercentage, Steals, FG3A, FG3M, [FG3%], TimeLeading, TimesTied, TrueShootingAttempts, TrueShootingPercentage, Turnovers, TurnoversTeam, TurnoversTotal, FG2A, FG2M, [FG2%], Wins, Losses, Win, Seed) values(")
             // Append values
             .Append(SeasonID).Append(", ")
             .Append(GameID).Append(", ")
@@ -6705,16 +6797,30 @@ namespace NBAdbToolbox
             .Append(team.statistics.turnoversTotal).Append(", ")
             .Append(team.statistics.twoPointersAttempted).Append(", ")
             .Append(team.statistics.twoPointersMade).Append(", ")
-            .Append(team.statistics.twoPointersPercentage).Append(", ");
+            .Append(team.statistics.twoPointersPercentage).Append(", ")
+            .Append(wins).Append(", ")
+            .Append(losses).Append(", ");
 
-            if(team.statistics.points > team.statistics.pointsAgainst)
+            if (team.statistics.points > team.statistics.pointsAgainst)
             {
-                sqlBuilderParallel.Append("1)\n");
+                sqlBuilderParallel.Append("1, ");
             }
             else
             {
-                sqlBuilderParallel.Append("0)\n");
+                sqlBuilderParallel.Append("0, ");
             }
+
+            
+            if (GameID.ToString().Substring(0, 1) != "2")
+            {
+                int seed = (homeAway == "Home") ? homeSeed : awaySeed;
+                sqlBuilderParallel.Append(seed).Append(")\n");
+            }
+            else
+            {
+                sqlBuilderParallel.Append("null)\n");
+            }
+
         }
 
         #endregion
@@ -6960,7 +7066,7 @@ namespace NBAdbToolbox
             gameInsertSB.Append("\n");
 
             // Build the GameExt insert
-            gameExtSB.Append("Insert into GameExt(SeasonID, GameID, ArenaID, Status, Attendance");
+            gameExtSB.Append("Insert into GameExt(SeasonID, GameID, ArenaID, Status, Attendance, Label, LabelDetail");
 
             // Start the values part for GameExt
             StringBuilder gameExtValuesSB = new StringBuilder();
@@ -6969,7 +7075,9 @@ namespace NBAdbToolbox
                            .Append(game.gameId).Append(", ")
                            .Append(game.arena.arenaId).Append(", '")
                            .Append(game.gameStatusText).Append("', ")
-                           .Append(game.attendance);
+                           .Append(game.attendance).Append(", '")
+                           .Append(gameLabelH).Append("', '")
+                           .Append(gameLabelDetailH).Append("'");
 
             // Add sellout if applicable
             if (game.sellout != "")
