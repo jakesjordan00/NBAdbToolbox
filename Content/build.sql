@@ -1359,19 +1359,43 @@ where g.GameType = 'PS'
 create procedure GameExtLabels
 as
 begin
-   set nocount on;   
-   update e set 
-       Label = case when left(right(g.GameID, 3), 1) = '1' then concat(t.Conference, ' - ', 'First Round')
-                    when left(right(g.GameID, 3), 1) = '2' then concat(t.Conference, ' - ', 'Conf. Semifinals')
-                    when left(right(g.GameID, 3), 1) = '3' then concat(t.Conference, ' - ', 'Conf. Finals')
-                    else 'NBA Finals' end,
-       LabelDetail = concat('Game ', right(g.GameID, 1))
-   from GameExt e 
-   inner join Game g on e.SeasonID = g.SeasonID and e.GameID = g.GameID
-   inner join Team t on g.SeasonID = t.SeasonID and g.HomeID = t.TeamID
-   where g.SeasonID >= 2019
-and (Label = '' or Label is null)
-and g.SeriesID is not null
+  set nocount on;   
+  update e set 
+      Label = case when left(right(g.GameID, 3), 1) = '1' then concat(t.Conference, ' - ', 'First Round')
+                   when left(right(g.GameID, 3), 1) = '2' then concat(t.Conference, ' - ', 'Conf. Semifinals')
+                   when left(right(g.GameID, 3), 1) = '3' then concat(t.Conference, ' - ', 'Conf. Finals')
+                   else 'NBA Finals' end,
+      LabelDetail = concat('Game ', right(g.GameID, 1))
+  from GameExt e 
+  inner join Game g on e.SeasonID = g.SeasonID and e.GameID = g.GameID
+  inner join Team t on g.SeasonID = t.SeasonID and g.HomeID = t.TeamID
+  where g.SeasonID >= 2019
+  and (Label = '' or Label is null)
+  and g.SeriesID is not null;
+  update GameExt set Label = 'East Play-In' where GameID in(52000101, 52000111, 52000201,52100101, 52100111, 52100201, 52200101, 52200111, 52200201, 52300101, 52300111, 52300201);
+  update GameExt set Label = 'West Play-In' where GameID in(52000121, 52000131, 52000211, 52100121, 52100131, 52100211, 52200121, 52200131, 52200211, 52300121, 52300131, 52300211);
+  update GameExt set Label = 'NBA Mexico City Game' where GameID in(22300172, 22400147);
+  update GameExt set Label = 'NBA Paris Games' where GameID in(22300527);
+  update GameExt set Label = 'NBA Paris Games' where GameID in(22400621, 22400633);
+  update GameExt set Label = 'Emirates NBA Cup', LabelDetail = 'Championship' where GameID in(62300001, 62400001);
+  update GameExt set Label = 'Emirates NBA Cup', LabelDetail = 'East Group A' where GameID in(22300001, 22300008, 22300018, 22300019, 22300029, 22300030, 22300039, 22300040, 22300047, 22300055, 
+  22400003, 22400004, 22400010, 22400014, 22400022, 22400027, 22400040, 22400043, 22400050, 22400053);
+  update GameExt set Label = 'Emirates NBA Cup', LabelDetail = 'East Group B' where GameID in(22300002, 22300003, 22300009, 22300017, 22300027, 22300028, 22300045, 22300049, 22300056, 22300057,
+  22400002, 22400005, 22400009, 22400011, 22400029, 22400036, 22400045, 22400046, 22400052, 22400054);
+  update GameExt set Label = 'Emirates NBA Cup', LabelDetail = 'East Group C' where GameID in(22300004, 22300010, 22300020, 22300031, 22300033, 22300038, 22300043, 22300046, 22300053, 22300054, 
+  22400001, 22400012, 22400013, 22400021, 22400028, 22400030, 22400035, 22400041, 22400047, 22400051);
+  update GameExt set Label = 'Emirates NBA Cup', LabelDetail = 'East Quarterfinal' where right(GameID, 4) in('1201', '1202');
+  update GameExt set Label = 'Emirates NBA Cup', LabelDetail = 'East Semifinal' where right(GameID, 4) = '1229';
+  update GameExt set Label = 'Emirates NBA Cup', LabelDetail = 'West Group A' where GameID in(22300007, 22300012, 22300015, 22300023, 22300026, 22300035, 22300036, 22300041, 22300042, 22300044,
+  22400008, 22400016, 22400020, 22400031, 22400034, 22400037, 22400044, 22400049, 22400059, 22400060);
+  update GameExt set Label = 'Emirates NBA Cup', LabelDetail = 'West Group B' where GameID in(22300006, 22300011, 22300014, 22300022, 22300024, 22300034, 22300037, 22300048, 22300052, 22300059,
+  22400006, 22400015, 22400018, 22400025, 22400026, 22400038, 22400039, 22400048, 22400055, 22400057);
+  update GameExt set Label = 'Emirates NBA Cup', LabelDetail = 'West Group C' where GameID in(22300005, 22300013, 22300016, 22300021, 22300025, 22300032, 22300050, 22300051, 22300058, 22300060, 
+  22400007, 22400017, 22400019, 22400023, 22400024, 22400032, 22400033, 22400042, 22400056, 22400058);
+  update GameExt set Label = 'Emirates NBA Cup', LabelDetail = 'West Quarterfinal' where right(GameID, 4) in('1203', '1204');
+  update GameExt set Label = 'Emirates NBA Cup', LabelDetail = 'West Semifinal' where right(GameID, 4) = '1230';
+  update GameExt set Label = 'SoFi Play-In Tournament', LabelDetail = 'East' where GameID in(52400101, 52400111, 52400201);
+  update GameExt set Label = 'SoFi Play-In Tournament', LabelDetail = 'West' where GameID in(52400121, 52400131, 52400211);
 end
 ~~~
 */
