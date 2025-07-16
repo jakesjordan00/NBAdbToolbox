@@ -272,7 +272,11 @@ namespace NBAdbToolbox
         };
         public Label lblDbLibrary = new Label { Text = "Library" };
         public Label lblQueries = new Label { Text = "Queries" };
+        public Label lblQGameTitle = new Label { Text = "Working with Game" };
+        public Label lblQBoxTitle = new Label { Text = "Player and Team Boxscore" };
+        public Label lblQPbpTitle = new Label { Text = "Navigating PlayByPlay" };
 
+        public Label lblDataDictionary = new Label { Text = "View Data Dictionary =>" };
         #endregion
 
 
@@ -1232,13 +1236,13 @@ namespace NBAdbToolbox
                 RefreshCompletion();
             };
 
-
-            btnERD.Click += btnERD_Click;
+            lblDataDictionary.Click += lblDataDictionaryClick;
+            lblERD.Click += lblERDClick;
 
             this.Shown += AfterLoad;
 
         }
-        //Replace your existing btnERD_Click method with this corrected version
+        //Replace your existing lblERDClick method with this corrected version
         public string gameLabelH = "";
         public string gameLabelDetailH = "";
         public int homeSeed = 0;
@@ -1247,7 +1251,29 @@ namespace NBAdbToolbox
         public int awaySeed = 0;
         public int awayWins = 0;
         public int awayLosses = 0;
-        private void btnERD_Click(object sender, EventArgs e)
+
+        private void lblDataDictionaryClick(object sender, EventArgs e)
+        {
+            try
+            {
+                string pdfPath = Path.Combine(projectRoot, @"Content\Documentation", "NBAdb Toolbox Data Dictionary.pdf");
+
+                if (File.Exists(pdfPath))
+                {
+                    Process.Start(pdfPath);
+                }
+                else
+                {
+                    MessageBox.Show("Data Dictionary PDF not found.", "File Not Found", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error opening PDF: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ErrorOutput(ex);
+            }
+        }
+        private void lblERDClick(object sender, EventArgs e)
         {
             try
             {
@@ -3711,31 +3737,70 @@ namespace NBAdbToolbox
                     e.Graphics.DrawLine(pen, 0, 0, 0, p.Height);
                 }
             };
+
+            int libWidth = (int)(pnlDbUtil.Width * .7);
             lblDbLibrary.Height = (int)(pnlWelcome.Height * .1);
 
-            lblDbLibrary.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, (int)(pnlDbUtil.Width * .7), lblDbUtil);
+            lblDbLibrary.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, libWidth, lblDbUtil);
             lblDbLibrary.AutoSize = true;
             lblDbLibrary.Left = ((pnlDbLibrary.Width - lblDbLibrary.Width) / 2) + pnlDbLibrary.Left;
 
 
 
-            lblQueries.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, (int)((pnlDbUtil.Width * .7) *.6), lblQueries);
+            lblQueries.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, (int)(libWidth * .6), lblQueries);
             lblQueries.Left = 0;
             lblQueries.Top = lblDbLibrary.Bottom + (int)(lblQueries.Width * .1);
             lblQueries.AutoSize = true;
 
-            btnERD.Font = SetFontSize("Segoe UI", (float)(fontSize / 2.7), FontStyle.Bold, (int)(listSeasons.Width * .8), btnERD); //6.5
-            btnERD.AutoSize = true;
-            btnERD.Left = (int)(btnERD.Width * .1);
-            btnERD.Top = pnlDbLibrary.Height - 500;
-            //btnERD.Top = lblQueries.Bottom + (int)(lblQueries.Width * .3);
+
+            lblQGameTitle.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, (int)(libWidth * .55), lblQGameTitle);
+            lblQGameTitle.Left = (int)(lblQueries.Width * .4);
+            lblQGameTitle.Top = lblQueries.Bottom + lblQueries.Height;
+            lblQGameTitle.AutoSize = true;
+
+            lblQBoxTitle.Font = lblQGameTitle.Font;
+            lblQBoxTitle.Left = (int)(lblQueries.Width * .4);
+            lblQBoxTitle.Top = lblQGameTitle.Bottom + lblQueries.Height;
+            lblQBoxTitle.AutoSize = true;
+
+            lblQPbpTitle.Font = lblQGameTitle.Font;
+            lblQPbpTitle.Left = (int)(lblQueries.Width * .4);
+            lblQPbpTitle.Top = lblQBoxTitle.Bottom + lblQueries.Height;
+            lblQPbpTitle.AutoSize = true;
+
+
+
+
+
+
+
+
+
+
+
+
+            //Data Dictionary linked label
+            lblDataDictionary.Font = SetFontSize("Segoe UI", (float)(fontSize / 1.775), FontStyle.Bold, (int)(pnlDbLibrary.Width * .8), lblDataDictionary);
+            lblDataDictionary.AutoSize = true;
+            lblDataDictionary.Left = (int)(lblDataDictionary.Width * .1);
+            lblDataDictionary.Top = lblQPbpTitle.Bottom + (int)(lblQueries.Width * .3);
+            lblDataDictionary.ForeColor = Color.DodgerBlue;
+            lblDataDictionary.Cursor = Cursors.Hand;
+
+            lblERD.Font = SetFontSize("Segoe UI", (float)(fontSize / 1.5), FontStyle.Bold, (int)(listSeasons.Width * 1.5), lblERD); //6.5
+            lblERD.AutoSize = true;
+            lblERD.Left = (int)(lblERD.Width * .1);
+            lblERD.Top = pnlDbLibrary.Height - 500;
+            lblERD.ForeColor = Color.DodgerBlue;
+            lblERD.Cursor = Cursors.Hand;
+            //lblERD.Top = lblQueries.Bottom + (int)(lblQueries.Width * .3);
 
 
         }
-        public Button btnERD = new Button
+        public Label lblERD = new Label
         {
-            Name = "btnERD",
-            Text = "View ERD"
+            Name = "lblERD",
+            Text = "View ERD =>"
         };
 
         public void AddControlsAfterConnection()
@@ -4169,7 +4234,11 @@ namespace NBAdbToolbox
         public void InitializeElements()
         {
             //Children elements should go above the parents, background image should be last added. AddPanelElement(pnlDbOverview, lblGameUtil);
-            AddPanelElement(pnlDbLibrary, btnERD);
+            AddPanelElement(pnlDbLibrary, lblERD);
+            AddPanelElement(pnlDbLibrary, lblDataDictionary);
+            AddPanelElement(pnlDbLibrary, lblQPbpTitle);
+            AddPanelElement(pnlDbLibrary, lblQBoxTitle);
+            AddPanelElement(pnlDbLibrary, lblQGameTitle);
             AddPanelElement(pnlDbLibrary, lblQueries);
             AddPanelElement(pnlDbLibrary, lblDbLibrary);
             AddPanelElement(pnlDbOverview, lblTeamUtil);
