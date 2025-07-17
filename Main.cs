@@ -272,9 +272,6 @@ namespace NBAdbToolbox
         };
         public Label lblDbLibrary = new Label { Text = "Library" };
         public Label lblQueries = new Label { Text = "Queries" };
-        public Label lblQGameTitle = new Label { Text = "Working with Game" };
-        public Label lblQBoxTitle = new Label { Text = "Player and Team Boxscore" };
-        public Label lblQPbpTitle = new Label { Text = "Navigating PlayByPlay" };
 
         public Label lblDataDictionary = new Label { Text = "View Data Dictionary =>" };
         #endregion
@@ -3753,14 +3750,33 @@ namespace NBAdbToolbox
             lblQueries.AutoSize = true;
 
 
-            lblQGameTitle.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, (int)(libWidth * .55), lblQGameTitle);
-            lblQGameTitle.Left = (int)(lblQueries.Width * .4);
+            lblQGameTitle.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, (int)(libWidth * .75), lblQGameTitle);
+            lblQGameTitle.Left = (int)(lblQueries.Width * .3);
             lblQGameTitle.Top = lblQueries.Bottom + lblQueries.Height;
             lblQGameTitle.AutoSize = true;
+            #region Game Queries
+
+            lblQG1.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, (int)(libWidth * .75), lblQG1);
+            lblQG1.Left = (int)(lblQGameTitle.Left * 1.75);
+            lblQG1.Top = lblQGameTitle.Bottom + (int)(lblQueries.Height * .5);
+            lblQG1.AutoSize = true;
+
+
+
+            lblQG2.Font = lblQG1.Font;
+            lblQG2.Left = lblQG1.Left;
+            lblQG2.Top = lblQG1.Bottom + (int)(lblQG1.Height * .2);
+            lblQG2.AutoSize = true;
+
+            #endregion
+
+
+
+
 
             lblQBoxTitle.Font = lblQGameTitle.Font;
             lblQBoxTitle.Left = (int)(lblQueries.Width * .4);
-            lblQBoxTitle.Top = lblQGameTitle.Bottom + lblQueries.Height;
+            lblQBoxTitle.Top = lblQG2.Bottom + (int)(lblQG2.Height * 1.1);
             lblQBoxTitle.AutoSize = true;
 
             lblQPbpTitle.Font = lblQGameTitle.Font;
@@ -3791,16 +3807,24 @@ namespace NBAdbToolbox
             lblERD.AutoSize = true;
             lblERD.Left = (int)(lblERD.Width * .1);
             lblERD.Top = pnlDbLibrary.Height - 500;
-            lblERD.ForeColor = Color.DodgerBlue;
-            lblERD.Cursor = Cursors.Hand;
+            //lblERD.ForeColor = Color.DodgerBlue;
+            //lblERD.Cursor = Cursors.Hand;
             //lblERD.Top = lblQueries.Bottom + (int)(lblQueries.Width * .3);
 
 
         }
+        public Label lblQGameTitle = new Label { Text = "Working with Game" };
+        public Label lblQG1 = new Label { Text = "Game Details with Team joins =>" };
+        public Label lblQG2 = new Label { Text = "Game Details with Team, GameExt, Arena\n" +
+            "and Official joins" };
+        public Label lblQBoxTitle = new Label { Text = "Player and Team Boxscore" };
+        public Label lblQPbpTitle = new Label { Text = "Navigating PlayByPlay" };
         public Label lblERD = new Label
         {
             Name = "lblERD",
-            Text = "View ERD =>"
+            Text = "View ERD =>",
+            ForeColor = Color.DodgerBlue,
+            Cursor = Cursors.Hand
         };
 
         public void AddControlsAfterConnection()
@@ -4238,6 +4262,8 @@ namespace NBAdbToolbox
             AddPanelElement(pnlDbLibrary, lblDataDictionary);
             AddPanelElement(pnlDbLibrary, lblQPbpTitle);
             AddPanelElement(pnlDbLibrary, lblQBoxTitle);
+            AddPanelElement(pnlDbLibrary, lblQG2);
+            AddPanelElement(pnlDbLibrary, lblQG1);
             AddPanelElement(pnlDbLibrary, lblQGameTitle);
             AddPanelElement(pnlDbLibrary, lblQueries);
             AddPanelElement(pnlDbLibrary, lblDbLibrary);
