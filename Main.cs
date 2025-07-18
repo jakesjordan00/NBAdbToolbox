@@ -34,6 +34,7 @@ using System.Xml.Linq;
 using static NBAdbToolbox.Main;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TaskbarClock;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 
 namespace NBAdbToolbox
 {
@@ -271,9 +272,6 @@ namespace NBAdbToolbox
             Name = "pnlDbLibrary"
         };
         public Label lblDbLibrary = new Label { Text = "Library" };
-        public Label lblQueries = new Label { Text = "Queries" };
-
-        public Label lblDataDictionary = new Label { Text = "View Data Dictionary =>" };
         #endregion
 
 
@@ -379,36 +377,38 @@ namespace NBAdbToolbox
             int PBoxRows, int TBoxRows, int PbpRows, int StartingLineupRows, int TBoxLineupRows))> seasonControl
             = new HashSet<(int, (int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int))>()
             {
-                (2024, (1321, 1, 30, 36, 587, 80, 1321, 1321, 1321, 1321, 1321, 1321, 46138, 2642, 651811, 35115, 5284)),
-                (2023, (1319, 1, 30, 34, 595, 80, 1319, 1319, 1319, 1319, 1319, 1319, 46082, 2638, 640470, 34843, 5276)),
-                (2022, (1320, 1, 30, 35, 554, 82, 1320, 1320, 1320, 1320, 1320, 1320, 43650, 2640, 646971, 34024, 5280)),
-                (2021, (1323, 1, 30, 30, 633, 84, 1323, 1323, 1323, 1323, 1323, 1323, 44738, 2646, 645450, 33848, 5292)),
-                (2020, (1171, 1, 30, 30, 550, 79, 1171, 1171, 1171, 1171, 1171, 1171, 38734, 2342, 570306, 31546, 4684)),
-                (2019, (1142, 1, 30, 34, 549, 74, 1142, 1142, 1142, 1142, 1142, 1142, 37902, 2284, 571071, 28682, 4568)),
-                (2018, (1312, 1, 30, 32, 557, 68, 1312, 1312, 1312, 1312, 1312, 1312, 42850, 2624, 654447, 32928, 5248)),
-                (2017, (1311, 1, 30, 32, 559, 71, 1311, 1311, 1311, 1311, 1311, 1311, 43115, 2622, 631695, 33064, 5244)),
-                (2016, (1309, 1, 30, 31, 493, 67, 1309, 1309, 1309, 1309, 1309, 1309, 39077, 2618, 636059, 33610, 5236)),
-                (2015, (1316, 1, 30, 31, 484, 66, 1316, 1316, 1316, 1316, 1316, 1316, 39124, 2632, 641644, 33659, 5264)),
-                (2014, (1311, 1, 30, 31, 503, 67, 1311, 1311, 1311, 1311, 1311, 1311, 38728, 2622, 633526, 33523, 5244)),
-                (2013, (1319, 1, 30, 30, 495, 66, 1319, 1319, 1319, 1319, 1319, 1319, 38712, 2638, 632199, 33683, 5276)),
-                (2012, (1314, 1, 30, 30, 485, 68, 1314, 1314, 1314, 1314, 1314, 1314, 38351, 2628, 619848, 33551, 5256)),
-                (2011, (1074, 1, 30, 29, 483, 66, 1074, 1074, 1074, 1074, 1074, 1074, 31101, 2148, 504934, 27638, 4296)),
-                (2010, (1311, 1, 30, 30, 469, 64, 1311, 1311, 1311, 1311, 1311, 1311, 37851, 2622, 619179, 31419, 5244)),
-                (2009, (1312, 1, 30, 30, 469, 66, 1312, 1312, 1312, 1312, 1312, 1312, 37246, 2624, 618751, 31482, 5248)),
-                (2008, (1315, 1, 30, 30, 461, 61, 1315, 1315, 1315, 1315, 1315, 1315, 37923, 2630, 616018, 31483, 5260)),
-                (2007, (1316, 1, 30, 30, 469, 58, 1316, 1316, 1316, 1315, 1316, 1316, 37934, 2632, 620365, 31563, 5264)),
-                (2006, (1309, 1, 30, 31, 471, 60, 1309, 1309, 1309, 1308, 1309, 1309, 38160, 2618, 622731, 31382, 5236)),
-                (2005, (1319, 1, 30, 32, 470, 63, 1319, 1319, 1319, 1319, 1319, 1319, 37924, 2638, 625271, 31640, 5276)),
-                (2004, (1314, 1, 30, 29, 469, 62, 1314, 1314, 1314, 1314, 1314, 1314, 31580, 2628, 630209, 31468, 5256)),
-                (2003, (1271, 1, 29, 29, 548, 60, 1271, 1271, 1271, 1270, 1271, 1270, 31309, 2542, 600586, 31257, 5080)),
-                (2002, (1277, 1, 29, 29, 620, 39, 1277, 1277, 1277, 1277, 1277, 1277, 46455, 2554, 606770, 46346, 5108)),
-                (2001, (1260, 1, 29, 28, 650, 56, 1260, 1260, 1260, 1260, 1260, 1260, 45784, 2520, 595588, 45723, 5040)),
-                (2000, (1260, 1, 29, 29, 652, 51, 1260, 1260, 1260, 1260, 1260, 1260, 46011, 2520, 602342, 45913, 5040)),
-                (1999, (1264, 1, 29, 32, 646, 37, 1264, 1264, 1264, 1264, 1264, 1264, 45522, 2528, 615138, 45451, 5056)),
-                (1998, (791,  1, 29, 33, 633, 37,  791,  791,  791,  790,  791,  790, 28594, 1582, 378643, 28556, 3160)),//Need to fix tboxlineups
-                (1997, (1260, 1, 29, 34, 608, 40, 1260, 1260, 1260, 1260, 1260, 1260, 40519, 2520, 605605, 40457, 5040)),
-                (1996, (1261, 1, 29, 33, 715, 40, 1261, 1261, 1261, 1259, 1261, 1259, 43203, 2522, 595362, 43157, 5036)) //Need to fix tboxlineups
+                (2024, (1321, 1, 30, 36, 587, 80, 1321, 1321, 1321, 1321, 1321, 1321, 46138, 2642, 651811, 46138, 5284)),
+                (2023, (1319, 1, 30, 34, 595, 80, 1319, 1319, 1319, 1319, 1319, 1319, 46082, 2638, 640470, 46082, 5276)),
+                (2022, (1320, 1, 30, 35, 554, 82, 1320, 1320, 1320, 1320, 1320, 1320, 43650, 2640, 646971, 43650, 5280)),
+                (2021, (1323, 1, 30, 30, 633, 84, 1323, 1323, 1323, 1323, 1323, 1323, 44738, 2646, 645450, 44738, 5292)),
+                (2020, (1171, 1, 30, 30, 550, 79, 1171, 1171, 1171, 1171, 1171, 1171, 38734, 2342, 570306, 38734, 4684)),
+                (2019, (1142, 1, 30, 34, 549, 74, 1142, 1142, 1142, 1142, 1142, 1142, 37902, 2284, 571071, 37902, 4568)),
+                (2018, (1312, 1, 30, 32, 557, 68, 1312, 1312, 1312, 1312, 1312, 1312, 42850, 2624, 654447, 42850, 5248)),
+                (2017, (1311, 1, 30, 32, 559, 71, 1311, 1311, 1311, 1311, 1311, 1311, 43115, 2622, 631695, 43115, 5244)),
+                (2016, (1309, 1, 30, 31, 493, 67, 1309, 1309, 1309, 1309, 1309, 1309, 39077, 2618, 636059, 39077, 5236)),
+                (2015, (1316, 1, 30, 31, 484, 66, 1316, 1316, 1316, 1316, 1316, 1316, 39124, 2632, 641644, 39124, 5264)),
+                (2014, (1311, 1, 30, 31, 503, 67, 1311, 1311, 1311, 1311, 1311, 1311, 38728, 2622, 633526, 38728, 5244)),
+                (2013, (1319, 1, 30, 30, 495, 66, 1319, 1319, 1319, 1319, 1319, 1319, 38712, 2638, 632199, 38712, 5276)),
+                (2012, (1314, 1, 30, 30, 485, 68, 1314, 1314, 1314, 1314, 1314, 1314, 38351, 2628, 619848, 38351, 5256)),
+                (2011, (1074, 1, 30, 29, 483, 66, 1074, 1074, 1074, 1074, 1074, 1074, 31101, 2148, 504934, 31101, 4296)),
+                (2010, (1311, 1, 30, 30, 469, 64, 1311, 1311, 1311, 1311, 1311, 1311, 37851, 2622, 619179, 37851, 5244)),
+                (2009, (1312, 1, 30, 30, 469, 66, 1312, 1312, 1312, 1312, 1312, 1312, 37246, 2624, 618751, 37246, 5248)),
+                (2008, (1315, 1, 30, 30, 461, 61, 1315, 1315, 1315, 1315, 1315, 1315, 37923, 2630, 616018, 37923, 5260)),
+                (2007, (1316, 1, 30, 30, 469, 58, 1316, 1316, 1316, 1315, 1316, 1316, 37934, 2632, 620365, 37934, 5264)),
+                (2006, (1309, 1, 30, 31, 471, 60, 1309, 1309, 1309, 1308, 1309, 1309, 38160, 2618, 622731, 38160, 5236)),
+                (2005, (1319, 1, 30, 32, 470, 63, 1319, 1319, 1319, 1319, 1319, 1319, 37924, 2638, 625271, 37924, 5276)),
+                (2004, (1314, 1, 30, 29, 469, 62, 1314, 1314, 1314, 1314, 1314, 1314, 31580, 2628, 630209, 31580, 5256)),
+                (2003, (1271, 1, 29, 29, 548, 60, 1271, 1271, 1271, 1270, 1271, 1270, 31309, 2542, 600586, 31309, 5080)),
+                (2002, (1277, 1, 29, 29, 620, 39, 1277, 1277, 1277, 1277, 1277, 1277, 46455, 2554, 606770, 46455, 5108)),
+                (2001, (1260, 1, 29, 28, 650, 56, 1260, 1260, 1260, 1260, 1260, 1260, 45784, 2520, 595588, 45784, 5040)),
+                (2000, (1260, 1, 29, 29, 652, 51, 1260, 1260, 1260, 1260, 1260, 1260, 46011, 2520, 602342, 46011, 5040)),
+                (1999, (1264, 1, 29, 32, 646, 37, 1264, 1264, 1264, 1264, 1264, 1264, 45522, 2528, 615138, 45522, 5056)),
+                (1998, (791,  1, 29, 33, 633, 37,  791,  791,  791,  790,  791,  790, 28594, 1582, 378643, 28594, 3160)),//Need to fix tboxlineups
+                (1997, (1260, 1, 29, 34, 608, 40, 1260, 1260, 1260, 1260, 1260, 1260, 40519, 2520, 605605, 40519, 5040)),
+                (1996, (1261, 1, 29, 33, 715, 40, 1261, 1261, 1261, 1259, 1261, 1259, 43203, 2522, 595362, 43203, 5036)) //Need to fix tboxlineups
             };
+
+
         public HashSet<(int SeasonID, (int Games, int Loaded, int Team, int Arena, int Player, int Official, int Game, int PlayerBox, int TeamBox, int PlayByPlay, int StartingLineups, int TeamBoxLineups,
             int PBoxRows, int TBoxRows, int PbpRows, int StartingLineupRows, int TBoxLineupRows))> seasonCurrentControl
             = new HashSet<(int, (int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int))>()
@@ -418,30 +418,30 @@ namespace NBAdbToolbox
                 (2022, (1320, 1, 30, 35, 554, 83, 1320, 1320, 1320, 1320, 1320, 1320, 43649, 2640, 728421, 43649, 5280)),
                 (2021, (1323, 1, 30, 30, 633, 84, 1323, 1323, 1323, 1323, 1323, 1323, 44737, 2646, 743859, 44737, 5292)),
                 (2020, (1171, 1, 30, 31, 550, 79, 1171, 1171, 1171, 1171, 1171, 1171, 38733, 2342, 656159, 38733, 4684)),
-                (2019, (1142, 1, 30, 37, 549, 74, 1142, 1142, 1142, 1142, 1142, 1142, 37903, 2284, 617483, 35688, 4568)),
-                (2018, (1312, 1, 30, 32, 557, 68, 1312, 1312, 1312, 1312, 1312, 1312, 42850, 2624, 654447, 32928, 5248)),
-                (2017, (1311, 1, 30, 32, 559, 71, 1311, 1311, 1311, 1311, 1311, 1311, 43115, 2622, 631695, 33064, 5244)),
-                (2016, (1309, 1, 30, 31, 493, 67, 1309, 1309, 1309, 1309, 1309, 1309, 39077, 2618, 636059, 33610, 5236)),
-                (2015, (1316, 1, 30, 31, 484, 66, 1316, 1316, 1316, 1316, 1316, 1316, 39124, 2632, 641644, 33659, 5264)),
-                (2014, (1311, 1, 30, 31, 503, 67, 1311, 1311, 1311, 1311, 1311, 1311, 38728, 2622, 633526, 33523, 5244)),
-                (2013, (1319, 1, 30, 30, 495, 66, 1319, 1319, 1319, 1319, 1319, 1319, 38712, 2638, 632199, 33683, 5276)),
-                (2012, (1314, 1, 30, 30, 485, 68, 1314, 1314, 1314, 1314, 1314, 1314, 38351, 2628, 619848, 33551, 5256)),
-                (2011, (1074, 1, 30, 29, 483, 66, 1074, 1074, 1074, 1074, 1074, 1074, 31101, 2148, 504934, 27638, 4296)),
-                (2010, (1311, 1, 30, 30, 469, 64, 1311, 1311, 1311, 1311, 1311, 1311, 37851, 2622, 619179, 31419, 5244)),
-                (2009, (1312, 1, 30, 30, 469, 66, 1312, 1312, 1312, 1312, 1312, 1312, 37246, 2624, 618751, 31482, 5248)),
-                (2008, (1315, 1, 30, 30, 461, 61, 1315, 1315, 1315, 1315, 1315, 1315, 37923, 2630, 616018, 31483, 5260)),
-                (2007, (1316, 1, 30, 30, 469, 58, 1316, 1316, 1316, 1315, 1316, 1316, 37934, 2632, 620365, 31563, 5264)),
-                (2006, (1309, 1, 30, 31, 471, 60, 1309, 1309, 1309, 1308, 1309, 1309, 38160, 2618, 622731, 31382, 5236)),
-                (2005, (1319, 1, 30, 32, 470, 63, 1319, 1319, 1319, 1319, 1319, 1319, 37924, 2638, 625271, 31640, 5276)),
-                (2004, (1314, 1, 30, 29, 469, 62, 1314, 1314, 1314, 1314, 1314, 1314, 31580, 2628, 630209, 31468, 5256)),
-                (2003, (1271, 1, 29, 29, 548, 60, 1271, 1271, 1271, 1270, 1271, 1270, 31309, 2542, 600586, 31257, 5080)),
-                (2002, (1277, 1, 29, 29, 620, 39, 1277, 1277, 1277, 1277, 1277, 1277, 46455, 2554, 606770, 46346, 5108)),
-                (2001, (1260, 1, 29, 28, 650, 56, 1260, 1260, 1260, 1260, 1260, 1260, 45784, 2520, 595588, 45723, 5040)),
-                (2000, (1260, 1, 29, 29, 652, 51, 1260, 1260, 1260, 1260, 1260, 1260, 46011, 2520, 602342, 45913, 5040)),
-                (1999, (1264, 1, 29, 32, 646, 37, 1264, 1264, 1264, 1264, 1264, 1264, 45522, 2528, 615138, 45451, 5056)),
-                (1998, (791,  1, 29, 33, 633, 37,  791,  791,  791,  790,  791,  790, 28594, 1582, 378643, 28556, 3160)),//Need to fix tboxlineups
-                (1997, (1260, 1, 29, 34, 608, 40, 1260, 1260, 1260, 1260, 1260, 1260, 40519, 2520, 605605, 40457, 5040)),
-                (1996, (1261, 1, 29, 33, 715, 40, 1261, 1261, 1261, 1259, 1261, 1259, 43203, 2522, 595362, 43157, 5036)) //Need to fix tboxlineups
+                (2019, (1142, 1, 30, 37, 549, 74, 1142, 1142, 1142, 1142, 1142, 1142, 37902, 2284, 619741, 37902, 4568)),
+                (2018, (1312, 1, 30, 32, 557, 68, 1312, 1312, 1312, 1312, 1312, 1312, 42850, 2624, 654447, 42850, 5248)),
+                (2017, (1311, 1, 30, 32, 559, 71, 1311, 1311, 1311, 1311, 1311, 1311, 43115, 2622, 631695, 43115, 5244)),
+                (2016, (1309, 1, 30, 31, 493, 67, 1309, 1309, 1309, 1309, 1309, 1309, 39077, 2618, 636059, 39077, 5236)),
+                (2015, (1316, 1, 30, 31, 484, 66, 1316, 1316, 1316, 1316, 1316, 1316, 39124, 2632, 641644, 39124, 5264)),
+                (2014, (1311, 1, 30, 31, 503, 67, 1311, 1311, 1311, 1311, 1311, 1311, 38728, 2622, 633526, 38728, 5244)),
+                (2013, (1319, 1, 30, 30, 495, 66, 1319, 1319, 1319, 1319, 1319, 1319, 38712, 2638, 632199, 38712, 5276)),
+                (2012, (1314, 1, 30, 30, 485, 68, 1314, 1314, 1314, 1314, 1314, 1314, 38351, 2628, 619848, 38351, 5256)),
+                (2011, (1074, 1, 30, 29, 483, 66, 1074, 1074, 1074, 1074, 1074, 1074, 31101, 2148, 504934, 31101, 4296)),
+                (2010, (1311, 1, 30, 30, 469, 64, 1311, 1311, 1311, 1311, 1311, 1311, 37851, 2622, 619179, 37851, 5244)),
+                (2009, (1312, 1, 30, 30, 469, 66, 1312, 1312, 1312, 1312, 1312, 1312, 37246, 2624, 618751, 37246, 5248)),
+                (2008, (1315, 1, 30, 30, 461, 61, 1315, 1315, 1315, 1315, 1315, 1315, 37923, 2630, 616018, 37923, 5260)),
+                (2007, (1316, 1, 30, 30, 469, 58, 1316, 1316, 1316, 1315, 1316, 1316, 37934, 2632, 620365, 37934, 5264)),
+                (2006, (1309, 1, 30, 31, 471, 60, 1309, 1309, 1309, 1308, 1309, 1309, 38160, 2618, 622731, 38160, 5236)),
+                (2005, (1319, 1, 30, 32, 470, 63, 1319, 1319, 1319, 1319, 1319, 1319, 37924, 2638, 625271, 37924, 5276)),
+                (2004, (1314, 1, 30, 29, 469, 62, 1314, 1314, 1314, 1314, 1314, 1314, 31580, 2628, 630209, 31580, 5256)),
+                (2003, (1271, 1, 29, 29, 548, 60, 1271, 1271, 1271, 1270, 1271, 1270, 31309, 2542, 600586, 31309, 5080)),
+                (2002, (1277, 1, 29, 29, 620, 39, 1277, 1277, 1277, 1277, 1277, 1277, 46455, 2554, 606770, 46455, 5108)),
+                (2001, (1260, 1, 29, 28, 650, 56, 1260, 1260, 1260, 1260, 1260, 1260, 45784, 2520, 595588, 45784, 5040)),
+                (2000, (1260, 1, 29, 29, 652, 51, 1260, 1260, 1260, 1260, 1260, 1260, 46011, 2520, 602342, 46011, 5040)),
+                (1999, (1264, 1, 29, 32, 646, 37, 1264, 1264, 1264, 1264, 1264, 1264, 45522, 2528, 615138, 45522, 5056)),
+                (1998, (791,  1, 29, 33, 633, 37,  791,  791,  791,  790,  791,  790, 28594, 1582, 378643, 28594, 3160)),//Need to fix tboxlineups
+                (1997, (1260, 1, 29, 34, 608, 40, 1260, 1260, 1260, 1260, 1260, 1260, 40519, 2520, 605605, 40519, 5040)),
+                (1996, (1261, 1, 29, 33, 715, 40, 1261, 1261, 1261, 1259, 1261, 1259, 43203, 2522, 595362, 43203, 5036)) //Need to fix tboxlineups
             };
 
         //public HashSet<(int SeasonID)>
@@ -481,11 +481,20 @@ namespace NBAdbToolbox
         public List<int> gamesRS = new List<int>();
         public List<int> gamesPS = new List<int>();
 
-        #endregion
+        public List<int> badGamesRS = new List<int>
+            {
+                21900821, 21900877, 21900878, 21900879, 21900880, 21900881, 21900882, 21900883, 21901238, 21901248, 21901295, 21901297
+            };
+        public List<int> badGamesPS = new List<int>
+            {
+                41900123, 41900133, 41900174, 41900223
+            };
 
-        #endregion
+#endregion
 
-        public float screenFontSize = 1;
+#endregion
+
+public float screenFontSize = 1;
 
         public string settingsJSON = "";
         public bool defaultConfig = false;
@@ -1235,7 +1244,16 @@ namespace NBAdbToolbox
 
             lblDataDictionary.Click += lblDataDictionaryClick;
             lblERD.Click += lblERDClick;
-
+            lblQG1.Click += (s, e) =>
+            {
+                CopyQueryToClipboard(lblQG1.Name.ToString());
+            };
+            lblQG2.Click += (s, e) =>
+            {
+                CopyQueryToClipboard(lblQG2.Name.ToString());
+            };
+            
+            
             this.Shown += AfterLoad;
 
         }
@@ -3050,13 +3068,13 @@ namespace NBAdbToolbox
             {
                 RegularSeasonGames++;
                 GameID = Int32.Parse(root.season.games.regularSeason[i].game_id);
-                gamesRS.Add(GameID);
+                gamesRS.Add(GameID);                
             }
             for (int i = 0; i < root.season.games.playoffs.Count; i++)
             {
                 PostseasonGames++;
-                GameID = Int32.Parse(root.season.games.playoffs[i].game_id);
-                gamesPS.Add(GameID);
+                GameID = Int32.Parse(root.season.games.playoffs[i].game_id);                
+                gamesPS.Add(GameID);                
             }
             TotalGames = RegularSeasonGames + PostseasonGames;
             TotalGamesCD = TotalGames - 1;
@@ -3746,42 +3764,48 @@ namespace NBAdbToolbox
 
             lblQueries.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, (int)(libWidth * .6), lblQueries);
             lblQueries.Left = 0;
-            lblQueries.Top = lblDbLibrary.Bottom + (int)(lblQueries.Width * .1);
             lblQueries.AutoSize = true;
+            lblQueries.Top = lblDbLibrary.Bottom + (int)(lblQueries.Width * .1);
+
+            //lblQueries.Width = pnlDbLibrary.Width;
+
+            //pnlQueries.Left = 0;
+            //pnlQueries.Top = lblQueries.Top + (int)(lblQueries.Height * .4);
+            //pnlQueries.Height = lblDbLibrary.Height;
+            //pnlQueries.BackColor = ThemeColor;
 
 
-            lblQGameTitle.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, (int)(libWidth * .75), lblQGameTitle);
-            lblQGameTitle.Left = (int)(lblQueries.Width * .3);
-            lblQGameTitle.Top = lblQueries.Bottom + lblQueries.Height;
+
+            lblQGameTitle.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, (int)(libWidth * .8), lblQGameTitle);
+            lblQGameTitle.Top = lblQueries.Bottom + lblQueries.Height + 5;
             lblQGameTitle.AutoSize = true;
             #region Game Queries
 
             lblQG1.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, (int)(libWidth * .75), lblQG1);
             lblQG1.Left = (int)(lblQGameTitle.Left * 1.75);
-            lblQG1.Top = lblQGameTitle.Bottom + (int)(lblQueries.Height * .5);
+            lblQG1.Top = lblQGameTitle.Bottom + (int)(lblQueries.Height * .65);
             lblQG1.AutoSize = true;
 
 
 
             lblQG2.Font = lblQG1.Font;
-            lblQG2.Left = lblQG1.Left;
-            lblQG2.Top = lblQG1.Bottom + (int)(lblQG1.Height * .2);
             lblQG2.AutoSize = true;
 
             #endregion
-
-
-
-
-
             lblQBoxTitle.Font = lblQGameTitle.Font;
-            lblQBoxTitle.Left = (int)(lblQueries.Width * .4);
-            lblQBoxTitle.Top = lblQG2.Bottom + (int)(lblQG2.Height * 1.1);
             lblQBoxTitle.AutoSize = true;
+            lblQB1.Font = lblQG1.Font;
+            lblQB1.AutoSize = true;
+            lblQB2.Font = lblQB1.Font;
+            lblQB2.AutoSize = true;
+
+
+
+
 
             lblQPbpTitle.Font = lblQGameTitle.Font;
-            lblQPbpTitle.Left = (int)(lblQueries.Width * .4);
-            lblQPbpTitle.Top = lblQBoxTitle.Bottom + lblQueries.Height;
+            //lblQPbpTitle.Top = lblQBoxTitle.Bottom + lblQueries.Height;
+            lblQPbpTitle.Top = lblQB2.Bottom;
             lblQPbpTitle.AutoSize = true;
 
 
@@ -3798,27 +3822,49 @@ namespace NBAdbToolbox
             //Data Dictionary linked label
             lblDataDictionary.Font = SetFontSize("Segoe UI", (float)(fontSize / 1.775), FontStyle.Bold, (int)(pnlDbLibrary.Width * .8), lblDataDictionary);
             lblDataDictionary.AutoSize = true;
-            lblDataDictionary.Left = (int)(lblDataDictionary.Width * .1);
-            lblDataDictionary.Top = lblQPbpTitle.Bottom + (int)(lblQueries.Width * .3);
-            lblDataDictionary.ForeColor = Color.DodgerBlue;
-            lblDataDictionary.Cursor = Cursors.Hand;
 
             lblERD.Font = SetFontSize("Segoe UI", (float)(fontSize / 1.5), FontStyle.Bold, (int)(listSeasons.Width * 1.5), lblERD); //6.5
             lblERD.AutoSize = true;
-            lblERD.Left = (int)(lblERD.Width * .1);
-            lblERD.Top = pnlDbLibrary.Height - 500;
-            //lblERD.ForeColor = Color.DodgerBlue;
-            //lblERD.Cursor = Cursors.Hand;
-            //lblERD.Top = lblQueries.Bottom + (int)(lblQueries.Width * .3);
-
 
         }
-        public Label lblQGameTitle = new Label { Text = "Working with Game" };
-        public Label lblQG1 = new Label { Text = "Game Details with Team joins =>" };
-        public Label lblQG2 = new Label { Text = "Game Details with Team, GameExt, Arena\n" +
-            "and Official joins" };
-        public Label lblQBoxTitle = new Label { Text = "Player and Team Boxscore" };
-        public Label lblQPbpTitle = new Label { Text = "Navigating PlayByPlay" };
+
+        public Panel pnlQueries = new Panel();
+        public Label lblQueries = new Label { Text = "Queries", Tag = "Queries" };
+
+        public Label lblDataDictionary = new Label { Text = "View Data Dictionary =>", ForeColor = Color.DodgerBlue, Cursor = Cursors.Hand };
+
+        public Label lblQGameTitle = new Label
+        { 
+            Text = "Working with Game"
+        };
+        public Label lblQG1 = new Label 
+        { 
+            Text = "Game Details with Team joins =>",
+            Name = "Game Details with Team joins" 
+        };
+        public Label lblQG2 = new Label
+        { 
+            Text = "Game Details with Team, GameExt, Arena and\nOfficial joins",
+            Name = "Game Details with Team, GameExt, Arena and Official joins" 
+        };
+        public Label lblQBoxTitle = new Label 
+        { 
+            Text = "Player and Team Boxscore" 
+        };
+        public Label lblQB1 = new Label 
+        { 
+            Text = "Player Boxscores from Nuggets vs Clippers Series =>", 
+            Name = "Player Boxscores from Nuggets vs Clippers Series" 
+        };
+        public Label lblQB2 = new Label 
+        { 
+            Text = "League-wide scoring trends with TeamBox =>",
+            Name = "League-wide scoring trends with TeamBox" 
+        };
+        public Label lblQPbpTitle = new Label 
+        { 
+            Text = "Navigating PlayByPlay" 
+        };
         public Label lblERD = new Label
         {
             Name = "lblERD",
@@ -3826,6 +3872,138 @@ namespace NBAdbToolbox
             ForeColor = Color.DodgerBlue,
             Cursor = Cursors.Hand
         };
+        public void CopyQueryToClipboard(string lblName)
+        {
+            try
+            {
+                //Copy text to clipboard
+                Clipboard.SetText(GetQuery(lblName));
+
+                //Get mouse position relative to form
+                Point mousePos = this.PointToClient(Control.MousePosition);
+
+                //Create popup label
+                Label lblCopied = new Label
+                {
+                    Text = "Copied to Clipboard!",
+                    AutoSize = true,
+                    BackColor = ThemeColor,
+                    ForeColor = SubThemeColor,
+                    BorderStyle = BorderStyle.FixedSingle,
+                    Padding = new Padding(3),
+                    Font = new Font("Segoe UI", 12, FontStyle.Bold)
+                };
+
+                //Position popup at mouse location with offset
+                lblCopied.Location = new Point(
+                    mousePos.X + 10,
+                    mousePos.Y + 25
+                );
+
+                //Add to form
+                this.Controls.Add(lblCopied);
+                lblCopied.BringToFront();
+
+                //Create timer to fade popup after 1 second
+                System.Windows.Forms.Timer fadeTimer = new System.Windows.Forms.Timer { Interval = 1000 };
+                fadeTimer.Tick += (s, e) =>
+                {
+                    fadeTimer.Stop();
+                    this.Controls.Remove(lblCopied);
+                    lblCopied.Dispose();
+                };
+                fadeTimer.Start();
+            }
+            catch (Exception ex)
+            {
+                //Handle any clipboard errors silently
+                Console.WriteLine($"Clipboard error: {ex.Message}");
+            }
+        }
+        public string GetQuery(string lblQuery)
+        {
+            string q = string.Empty;
+            if(lblQuery == "Game Details with Team joins")
+            {
+                q =
+@"select g.SeasonID, g.GameID, g.GameType, g.Date, 
+	   concat(hb.Wins, '-', hb.Losses) HomeRecord,
+	   h.FullName Home, 
+	   g.HScore HomeScore, 
+	   g.AScore AwayScore,
+	   a.FullName Away, 
+	   concat(ab.Wins, '-', ab.Losses) AwayRecord,
+	   w.FullName Winner
+
+from Game g 
+inner join Team h on g.SeasonID = h.SeasonID and g.HomeID = h.TeamID
+inner join Team a on g.SeasonID = a.SeasonID and g.AwayID = a.TeamID
+inner join Team w on g.SeasonID = w.SeasonID and g.WinnerID = w.TeamID
+inner join Team l on g.SeasonID = l.SeasonID and g.LoserID = l.TeamID
+inner join TeamBox hb on g.SeasonID = hb.SeasonID and g.GameID = hb.GameID and h.TeamID = hb.TeamID
+inner join TeamBox ab on g.SeasonID = ab.SeasonID and g.GameID = ab.GameID and a.TeamID = ab.TeamID
+order by SeasonID, Date, GameID";
+            }
+            else if(lblQuery == "Game Details with Team, GameExt, Arena and Official joins")
+            {
+                q =
+@"select g.SeasonID, g.GameID, g.GameType,
+	   g.Date, 
+	   ar.Name,
+	   concat(hb.Wins, '-', hb.Losses) HomeRecord,
+	   h.FullName Home, 
+	   g.HScore HomeScore, 
+	   g.AScore AwayScore, 
+	   a.FullName Away, 
+	   concat(ab.Wins, '-', ab.Losses) AwayRecord,
+	   w.FullName Winner,
+	   e.Label, e.LabelDetail,
+	   o.Name Official1, o2.Name Official2, o3.Name Official3, oAlt.Name OfficialAlt
+
+from Game g
+inner join Team h on g.SeasonID = h.SeasonID and g.HomeID = h.TeamID
+inner join Team a on g.SeasonID = a.SeasonID and g.AwayID = a.TeamID
+inner join Team w on g.SeasonID = w.SeasonID and g.WinnerID = w.TeamID
+inner join Team l on g.SeasonID = l.SeasonID and g.LoserID = l.TeamID
+inner join TeamBox hb on g.SeasonID = hb.SeasonID and g.GameID = hb.GameID and h.TeamID = hb.TeamID
+inner join TeamBox ab on g.SeasonID = ab.SeasonID and g.GameID = ab.GameID and a.TeamID = ab.TeamID
+inner join GameExt e on g.SeasonID = e.SeasonID and g.GameID = e.GameID
+inner join Arena ar on g.SeasonID = ar.SeasonID and e.ArenaID = ar.ArenaID
+left join Official o on g.SeasonID = o.SeasonID and e.OfficialID = o.OfficialID
+left join Official o2 on g.SeasonID = o2.SeasonID and e.Official2ID = o2.OfficialID
+left join Official o3 on g.SeasonID = o3.SeasonID and e.Official3ID = o3.OfficialID
+left join Official oAlt on g.SeasonID = oAlt.SeasonID and e.OfficialAlternateID = oAlt.OfficialID
+order by SeasonID, Date, GameID";
+            }
+            else if (lblQuery == "Player Boxscores from Nuggets vs Clippers Series")
+            {
+
+            }
+            else if (lblQuery == "League-wide scoring trends with TeamBox")
+            {
+
+            }
+            return q;
+        }
+
+        public void ResizeLibraryControls(Label label, int it)
+        {
+            label.Left = 1;
+            int h = label.Height; //23
+            label.AutoSize = false;
+            label.Width = pnlDbLibrary.Width;
+            label.Height = h;
+            if(it == 0)
+            {
+                label.BackColor = ThemeColor;
+                label.ForeColor = SubThemeColor;
+            }
+            else
+            {
+                label.BackColor = SubThemeColor;
+                label.ForeColor = ThemeColor;
+            }
+        }
 
         public void AddControlsAfterConnection()
         {
@@ -3833,6 +4011,41 @@ namespace NBAdbToolbox
 
             pnlDbUtil.Parent = bgCourt;
             pnlDbLibrary.Parent = bgCourt;
+
+
+
+            List<Label> labels = new List<Label> 
+            { 
+                lblQueries, lblQGameTitle, lblQBoxTitle, lblQPbpTitle
+            };
+            int i = 0;
+            foreach(Label label in labels)
+            {
+                ResizeLibraryControls(label, i);
+                i++;
+            }
+
+
+            lblQGameTitle.Top = lblQueries.Bottom;
+
+
+            lblQG1.Top = lblQGameTitle.Bottom;
+            lblQG2.Top = lblQG1.Bottom;
+
+            lblQBoxTitle.Top = lblQG2.Bottom + (int)(lblQG1.Height * .5);
+            lblQB1.Top = lblQBoxTitle.Bottom;
+            lblQB2.Top = lblQB1.Bottom;
+
+
+            lblQPbpTitle.Top = lblQB2.Bottom + (int)(lblQB2.Height * .5);
+
+
+
+
+            lblDataDictionary.Top = lblQPbpTitle.Bottom;
+            lblERD.Top = lblDataDictionary.Bottom;
+
+
 
 
             //Panel Formatting
@@ -4261,11 +4474,14 @@ namespace NBAdbToolbox
             AddPanelElement(pnlDbLibrary, lblERD);
             AddPanelElement(pnlDbLibrary, lblDataDictionary);
             AddPanelElement(pnlDbLibrary, lblQPbpTitle);
+            AddPanelElement(pnlDbLibrary, lblQB2);
+            AddPanelElement(pnlDbLibrary, lblQB1);
             AddPanelElement(pnlDbLibrary, lblQBoxTitle);
             AddPanelElement(pnlDbLibrary, lblQG2);
             AddPanelElement(pnlDbLibrary, lblQG1);
             AddPanelElement(pnlDbLibrary, lblQGameTitle);
             AddPanelElement(pnlDbLibrary, lblQueries);
+            AddPanelElement(pnlDbLibrary, pnlQueries);
             AddPanelElement(pnlDbLibrary, lblDbLibrary);
             AddPanelElement(pnlDbOverview, lblTeamUtil);
             AddPanelElement(pnlDbOverview, lblArenaUtil);
@@ -6216,6 +6432,16 @@ namespace NBAdbToolbox
                       .Append(TeamID).Append(", ")
                       .Append(MatchupID).Append(", ")
                       .Append(InactiveID).Append(", 'INACTIVE')\n");
+
+
+            //StartingLineups insert
+            sqlBuilder.Append("insert into StartingLineups(SeasonID, GameID, TeamID, MatchupID, PlayerID, Unit) values(")
+                      .Append(SeasonID).Append(", ")
+                      .Append(GameID).Append(", ")
+                      .Append(TeamID).Append(", ")
+                      .Append(MatchupID).Append(", ")
+                      .Append(InactiveID).Append(", 'Bench')\n");
+
         }
         public void HistoricPlayerBoxInsert(NBAdbToolboxHistoric.Game game, NBAdbToolboxHistoric.Player player, int TeamID, int MatchupID, int itera)
         {
@@ -6745,6 +6971,21 @@ namespace NBAdbToolbox
             missingData = "";
             //Try to get Current Data
             #region Try to get Current Data
+
+            if (badGamesRS.Contains(GameID))
+            {
+                useHistoricBox = true;
+                useHistoricPBP = true;
+                MissingDataGPS(useHistoricBox, useHistoricPBP);
+                return;
+            }
+            else if (badGamesPS.Contains(GameID))
+            {
+                useHistoricBox = true;
+                useHistoricPBP = true;
+                MissingDataGPS(useHistoricBox, useHistoricPBP);
+                return;
+            }
             rootCPBP = await currentDataPBP.GetJSON(GameID, SeasonID);
             if (rootCPBP.game == null)
             {
@@ -7071,7 +7312,6 @@ namespace NBAdbToolbox
                 if (mIndex > 0)
                 {
                     string minString = minutes.Replace("PT", "").Replace("M", ":").Replace("S", "");
-
                     // Check if we can safely parse
                     if (mIndex + 1 < minutes.Length && mIndex + 6 <= minutes.Length &&
                         double.TryParse(minutes.Substring(2, mIndex - 2), out double mins) &&
@@ -7079,19 +7319,31 @@ namespace NBAdbToolbox
                     {
                         minCalc = Math.Round(mins + (secs / 60), 2);
                     }
+                    else if (minString.Length == 5) //This handles 
+                    {
+                        string[] timeParts = minString.Split(':');
+                        if (timeParts.Length == 2 && int.TryParse(timeParts[0], out int mins2) && int.TryParse(timeParts[1], out int secs2))
+                        {
+                            minCalc = Math.Round(mins2 + (secs2 / 60.0), 2);
+                        }
+                    }
+                    if (!minString.Contains("."))
+                    {
+                        minString = minString + ".00";
+                    }
 
                     // Minutes column
                     sqlBuilderParallel.Append(", Minutes");
                     valuesSB.Append(", '").Append(minString).Append("'");
 
-                    // Plus/minus points if they exist
-                    if (player.statistics.plusMinusPoints != 0)
-                    {
-                        sqlBuilderParallel.Append(", PlusMinusPoints, Plus, Minus");
-                        valuesSB.Append(", ").Append(player.statistics.plusMinusPoints)
-                                .Append(", ").Append(player.statistics.plus)
-                                .Append(", ").Append(player.statistics.minus);
-                    }
+                }
+                // Plus/minus points if they exist
+                if (player.statistics.plus != 0)
+                {
+                    sqlBuilderParallel.Append(", PlusMinusPoints, Plus, Minus");
+                    valuesSB.Append(", ").Append(player.statistics.plusMinusPoints)
+                            .Append(", ").Append(player.statistics.plus)
+                            .Append(", ").Append(player.statistics.minus);
                 }
             }
             else
