@@ -1244,16 +1244,52 @@ public float screenFontSize = 1;
 
             lblDataDictionary.Click += lblDataDictionaryClick;
             lblERD.Click += lblERDClick;
-            lblQG1.Click += (s, e) =>
+
+            //lblQG1.Click += (s, e) =>
+            //{
+            //    CopyQueryToClipboard(lblQG1.Name.ToString());
+            //};
+            //lblQG2.Click += (s, e) =>
+            //{
+            //    CopyQueryToClipboard(lblQG2.Name.ToString());
+            //};
+
+            //lblQB1.Click += (s, e) =>
+            //{
+            //    CopyQueryToClipboard(lblQB1.Name.ToString());
+            //};
+            //lblQB2.Click += (s, e) =>
+            //{
+            //    CopyQueryToClipboard(lblQB2.Name.ToString());
+            //};
+
+            copyG1.Click += (s, e) =>
             {
-                CopyQueryToClipboard(lblQG1.Name.ToString());
+                CopyQueryToClipboard(lblQG1.Name);
             };
-            lblQG2.Click += (s, e) =>
+            copyG2.Click += (s, e) =>
             {
-                CopyQueryToClipboard(lblQG2.Name.ToString());
+                CopyQueryToClipboard(lblQG2.Name);
             };
-            
-            
+
+            copyB1.Click += (s, e) =>
+            {
+                CopyQueryToClipboard(lblQB1.Name);
+            };
+            copyB2.Click += (s, e) =>
+            {
+                CopyQueryToClipboard(lblQB2.Name);
+            };
+            copyP1.Click += (s, e) =>
+            {
+                CopyQueryToClipboard(lblQP1.Name);
+            };
+
+            lblQG1.Paint += (s, e) =>
+            {
+                ToolTipUnderline(s, e, lblQG1);
+            };
+
             this.Shown += AfterLoad;
 
         }
@@ -3805,8 +3841,11 @@ public float screenFontSize = 1;
 
             lblQPbpTitle.Font = lblQGameTitle.Font;
             //lblQPbpTitle.Top = lblQBoxTitle.Bottom + lblQueries.Height;
-            lblQPbpTitle.Top = lblQB2.Bottom;
             lblQPbpTitle.AutoSize = true;
+            lblQP1.Font = lblQG1.Font;
+            lblQP1.AutoSize = true;
+            lblQP2.Font = lblQB1.Font;
+            lblQP2.AutoSize = true;
 
 
 
@@ -3865,11 +3904,60 @@ public float screenFontSize = 1;
         { 
             Text = "Navigating PlayByPlay" 
         };
+        public Label lblQP1 = new Label
+        {
+            Text = "Watch Lebron and Kyrie's iconic 4th quarter\nwith PlayByPlay =>",
+            Name = "Watch Lebron and Kyrie's iconic 4th quarter with PlayByPlay"
+        };
+        public Label lblQP2 = new Label
+        {
+            Text = "",
+            Name = ""
+        };
         public Label lblERD = new Label
         {
             Name = "lblERD",
             Text = "View ERD =>",
             ForeColor = Color.DodgerBlue,
+            Cursor = Cursors.Hand
+        };
+        Image imgCopy = Image.FromFile(Path.Combine(projectRoot, @"Content\Images", "Copy.png"));
+
+        public PictureBox copyG1 = new PictureBox
+        {
+            SizeMode = PictureBoxSizeMode.Zoom,
+            BackColor = Color.Transparent,
+            Cursor = Cursors.Hand
+        };
+        public PictureBox copyG2 = new PictureBox
+        {
+            SizeMode = PictureBoxSizeMode.Zoom,
+            BackColor = Color.Transparent,
+            Cursor = Cursors.Hand
+        };
+
+        public PictureBox copyB1 = new PictureBox
+        {
+            SizeMode = PictureBoxSizeMode.Zoom,
+            BackColor = Color.Transparent,
+            Cursor = Cursors.Hand
+        };
+        public PictureBox copyB2 = new PictureBox
+        {
+            SizeMode = PictureBoxSizeMode.Zoom,
+            BackColor = Color.Transparent,
+            Cursor = Cursors.Hand
+        };
+        public PictureBox copyP1 = new PictureBox
+        {
+            SizeMode = PictureBoxSizeMode.Zoom,
+            BackColor = Color.Transparent,
+            Cursor = Cursors.Hand
+        };
+        public PictureBox copyP2 = new PictureBox
+        {
+            SizeMode = PictureBoxSizeMode.Zoom,
+            BackColor = Color.Transparent,
             Cursor = Cursors.Hand
         };
         public void CopyQueryToClipboard(string lblName)
@@ -3896,8 +3984,8 @@ public float screenFontSize = 1;
 
                 //Position popup at mouse location with offset
                 lblCopied.Location = new Point(
-                    mousePos.X + 10,
-                    mousePos.Y + 25
+                    mousePos.X + 0,
+                    mousePos.Y + 10
                 );
 
                 //Add to form
@@ -3934,7 +4022,6 @@ public float screenFontSize = 1;
 	   a.FullName Away, 
 	   concat(ab.Wins, '-', ab.Losses) AwayRecord,
 	   w.FullName Winner
-
 from Game g 
 inner join Team h on g.SeasonID = h.SeasonID and g.HomeID = h.TeamID
 inner join Team a on g.SeasonID = a.SeasonID and g.AwayID = a.TeamID
@@ -3959,7 +4046,6 @@ order by SeasonID, Date, GameID";
 	   w.FullName Winner,
 	   e.Label, e.LabelDetail,
 	   o.Name Official1, o2.Name Official2, o3.Name Official3, oAlt.Name OfficialAlt
-
 from Game g
 inner join Team h on g.SeasonID = h.SeasonID and g.HomeID = h.TeamID
 inner join Team a on g.SeasonID = a.SeasonID and g.AwayID = a.TeamID
@@ -3977,13 +4063,87 @@ order by SeasonID, Date, GameID";
             }
             else if (lblQuery == "Player Boxscores from Nuggets vs Clippers Series")
             {
+                q =
+@"select  b.SeasonID 
+      , b.GameID 
+      , t.Name Team
+      , m.Name Matchup
+      , case when g.HomeID = t.TeamID then 'Home' else 'Away' end [H/A]
+      , p.Name Player
+      , b.Starter 
+      , b.Position 
+      , b.Minutes 
+      , b.MinutesCalculated 
+      , b.Points 
+      , b.Assists 
+      , b.ReboundsTotal 
+      , b.FG2M, b.FG2A, cast(b.[FG2%] * 100 as decimal(18,1)) [FG2%]
+      , b.FG3M, b.FG3A, cast(b.[FG3%] * 100 as decimal(18,1)) [FG3%]
+      , b.FGM, b.FGA, cast(b.[FG%] * 100 as decimal(18,1)) [FG%]
+      , b.FTM, b.FTA, cast(b.[FT%] * 100 as decimal(18,1)) [FT%]
+      , b.ReboundsDefensive, b.ReboundsOffensive 
+      , b.Blocks, b.BlocksReceived 
+      , b.Steals, b.Turnovers, b.AssistsTurnoverRatio 
+      , b.Plus, b.Minus, b.PlusMinusPoints 
+      , b.PointsFastBreak, b.PointsInThePaint, b.PointsSecondChance
+      , b.FoulsOffensive, b.FoulsDrawn, b.FoulsPersonal, b.FoulsTechnical 
+from PlayerBox b
+inner join Player p on b.SeasonID = p.SeasonID and b.PlayerID = p.PlayerID
+inner join Team t on b.SeasonID = t.SeasonID and b.TeamID = t.TeamID
+inner join Team m on b.SeasonID = m.SeasonID and b.MatchupID = m.TeamID
+inner join game g on b.SeasonID = g.SeasonID and b.GameID = g.GameID
+inner join GameExt e on b.SeasonID = e.SeasonID and g.GameID = e.GameID
 
+where b.SeasonID = 2024 
+and t.Name in('Clippers', 'Nuggets')
+and m.Name in('Clippers', 'Nuggets')
+and g.GameType = 'PS'
+and MinutesCalculated > 0
+
+order by GameID, Starter desc, [H/A] desc, MinutesCalculated desc";
             }
             else if (lblQuery == "League-wide scoring trends with TeamBox")
             {
-
+                q =
+@"select b.SeasonID
+	 , cast(cast(sum(Points) as decimal(18, 2))/COUNT(GameID) as decimal(18, 2)) PPG
+	 , cast(cast(sum(Assists) as decimal(18, 2))/COUNT(GameID) as decimal(18, 2)) APG
+	 , cast(cast(sum(FG2M) as decimal(18, 2))/COUNT(GameID) as decimal(18, 2)) FG2M
+	 , cast(cast(sum(FG2A) as decimal(18, 2))/COUNT(GameID) as decimal(18, 2)) FG2A
+	 , cast(cast(sum(FG3M) as decimal(18, 2))/COUNT(GameID) as decimal(18, 2)) FG3M
+	 , cast(cast(sum(FG3A) as decimal(18, 2))/COUNT(GameID) as decimal(18, 2)) FG3A
+	 , cast(cast(sum(FTM) as decimal(18, 2))/COUNT(GameID) as decimal(18, 2)) FTM
+	 , cast(cast(sum(FTA) as decimal(18, 2))/COUNT(GameID) as decimal(18, 2)) FTA
+from TeamBox b
+inner join Team t on b.SeasonID = t.SeasonID and b.TeamID = t.TeamID
+group by b.SeasonID
+order by SeasonID desc";
             }
-            return q;
+            else if(lblQuery == "Watch Lebron and Kyrie's iconic 4th quarter with PlayByPlay")
+            {
+                q =
+@"select p.SeasonID, p.GameID, 
+	   p.Qtr, p.Clock, 
+	   p.ScoreHome, p.ScoreAway, 
+	   pl.Name, 
+	   p.Description, p.ShotType, p.ActionType,
+concat('https://www.nba.com/stats/events?CFID=&CFPARAMS=&GameEventID=', actionNumber, '&GameID=00', p.GameID, 
+'&Season=', p.SeasonID, '-', p.SeasonID - 2000 + 1, 
+'&flag=1', '&title=',replace(REPLACE(replace(description, concat(Left(pl.Name, 1), '. '), ''), ' ', '%20'), 'S.%20', '')) [Video]
+
+from PlayByPlay p
+inner join Game g on p.SeasonID = g.SeasonID and p.GameID = g.GameID
+inner join GameExt e on p.SeasonID = e.SeasonID and p.GameID = e.GameID
+left join Player pl on p.SeasonID = pl.SeasonID and p.PlayerID = pl.PlayerID  
+inner join Team h on g.HomeID = h.TeamID and p.SeasonID = h.SeasonID 
+inner join Team a on g.AwayID = a.TeamID and p.SeasonID = a.SeasonID
+where p.SeasonID = 2015
+and e.Label = 'NBA Finals' and e.LabelDetail = 'Game 7'
+and Qtr = 4
+and pl.Name in('LeBron James', 'Kyrie Irving')
+order by Clock desc";
+            }
+                return q;
         }
 
         public void ResizeLibraryControls(Label label, int it)
@@ -4005,6 +4165,14 @@ order by SeasonID, Date, GameID";
             }
         }
 
+        public void ToolTipUnderline(object sender, PaintEventArgs e, Label label)
+        {
+            using (var pen = new Pen(Color.Gray, 1))
+            {
+                pen.DashStyle = System.Drawing.Drawing2D.DashStyle.Dot;
+                e.Graphics.DrawLine(pen, 0, label.Height - 2, label.Width, label.Height - 2);
+            }            
+        }
         public void AddControlsAfterConnection()
         {
             float fontSize = ((float)(screenFontSize * pnlWelcome.Height * .08) / (96 / 12)) * (72 / 12);
@@ -4028,21 +4196,88 @@ order by SeasonID, Date, GameID";
 
             lblQGameTitle.Top = lblQueries.Bottom;
 
+            copyG1.Image = imgCopy;
+            copyG1.Height = lblQG1.Height - 3;
+            copyG1.Width = copyG1.Height;
+            copyG1.Left = (int)(copyG1.Width * .5);
+            copyG2.Image = imgCopy;
+            copyG2.Height = copyG1.Height;
+            copyG2.Width = copyG1.Width;
+            copyG2.Left = copyG1.Left;
 
-            lblQG1.Top = lblQGameTitle.Bottom;
-            lblQG2.Top = lblQG1.Bottom;
+            copyB1.Image = imgCopy;
+            copyB1.Height = copyG1.Height;
+            copyB1.Width = copyG1.Width;
+            copyB1.Left = copyG1.Left;
+            copyB2.Image = imgCopy;
+            copyB2.Height = copyG1.Height;
+            copyB2.Width = copyG1.Width;
+            copyB2.Left = copyG1.Left;
+
+
+            copyP1.Image = imgCopy;
+            copyP1.Height = copyG1.Height;
+            copyP1.Width = copyG1.Width;
+            copyP1.Left = copyG1.Left;
+            copyP2.Image = imgCopy;
+            copyP2.Height = copyG1.Height;
+            copyP2.Width = copyG1.Width;
+            copyP2.Left = copyG1.Left;
+
+
+
+
+            int spacer = (int)(copyG1.Height * .5);
+            int iconSpacer = (int)(copyG1.Height * .2);
+
+
+
+            copyG1.Top = lblQGameTitle.Bottom + spacer;
+            lblQG1.Top = copyG1.Top - iconSpacer;
+            lblQG1.Left = copyG1.Right;
+
+            ToolTip tip = new ToolTip();
+            tip.BackColor = Color.Black;
+            tip.ForeColor = Color.Wheat;
+            tip.SetToolTip(lblQG1, GetQuery(lblQG1.Name));
+            tip.SetToolTip(lblQG2, GetQuery(lblQG2.Name));
+            tip.SetToolTip(lblQB1, GetQuery(lblQB1.Name));
+            tip.SetToolTip(lblQB2, GetQuery(lblQB2.Name));
+            tip.SetToolTip(lblQP1, GetQuery(lblQP1.Name));
+            tip.IsBalloon = true; // Rounded bubble style
+
+            copyG2.Top = lblQG1.Bottom + spacer;
+            lblQG2.Top = copyG2.Top - iconSpacer;
+            lblQG2.Left = copyG2.Right;
+
+
 
             lblQBoxTitle.Top = lblQG2.Bottom + (int)(lblQG1.Height * .5);
-            lblQB1.Top = lblQBoxTitle.Bottom;
-            lblQB2.Top = lblQB1.Bottom;
+            copyB1.Top = lblQBoxTitle.Bottom + spacer;
+            lblQB1.Top = copyB1.Top - iconSpacer;
+            lblQB1.Left = copyB1.Right;
+
+
+            copyB2.Top = lblQB1.Bottom + spacer;
+            lblQB2.Top = copyB2.Top - iconSpacer;
+            lblQB2.Left = copyB2.Right;
+
+
 
 
             lblQPbpTitle.Top = lblQB2.Bottom + (int)(lblQB2.Height * .5);
+            copyP1.Top = lblQPbpTitle.Bottom + spacer;
+            lblQP1.Top = copyP1.Top - iconSpacer;
+            lblQP1.Left = copyP1.Right;
+
+
+            copyP2.Top = lblQP1.Bottom + spacer;
+            lblQP2.Top = copyP2.Top - iconSpacer;
+            lblQP2.Left = copyP2.Right;
 
 
 
-
-            lblDataDictionary.Top = lblQPbpTitle.Bottom;
+            lblDataDictionary.Top = lblQP1.Bottom + (spacer * 3);
             lblERD.Top = lblDataDictionary.Bottom;
 
 
@@ -4121,7 +4356,7 @@ order by SeasonID, Date, GameID";
 
             //Welcome
             pnlWelcome.Parent = bgCourt; //Set Panel parent as the image
-            int spacer = (int)(pnlWelcome.Height * .01);
+            spacer = (int)(pnlWelcome.Height * .01);
 
 
 
@@ -4473,12 +4708,18 @@ order by SeasonID, Date, GameID";
             //Children elements should go above the parents, background image should be last added. AddPanelElement(pnlDbOverview, lblGameUtil);
             AddPanelElement(pnlDbLibrary, lblERD);
             AddPanelElement(pnlDbLibrary, lblDataDictionary);
+            AddPanelElement(pnlDbLibrary, lblQP1);
+            AddPanelElement(pnlDbLibrary, copyP1);
             AddPanelElement(pnlDbLibrary, lblQPbpTitle);
             AddPanelElement(pnlDbLibrary, lblQB2);
+            AddPanelElement(pnlDbLibrary, copyB2);
             AddPanelElement(pnlDbLibrary, lblQB1);
+            AddPanelElement(pnlDbLibrary, copyB1);
             AddPanelElement(pnlDbLibrary, lblQBoxTitle);
             AddPanelElement(pnlDbLibrary, lblQG2);
+            AddPanelElement(pnlDbLibrary, copyG2);
             AddPanelElement(pnlDbLibrary, lblQG1);
+            AddPanelElement(pnlDbLibrary, copyG1);
             AddPanelElement(pnlDbLibrary, lblQGameTitle);
             AddPanelElement(pnlDbLibrary, lblQueries);
             AddPanelElement(pnlDbLibrary, pnlQueries);
