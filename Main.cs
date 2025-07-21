@@ -1284,6 +1284,10 @@ public float screenFontSize = 1;
             {
                 CopyQueryToClipboard(lblQP1.Name);
             };
+            copyP2.Click += (s, e) =>
+            {
+                CopyQueryToClipboard(lblQP2.Name);
+            };
 
             lblQG1.Paint += (s, e) =>
             {
@@ -1304,6 +1308,10 @@ public float screenFontSize = 1;
             lblQP1.Paint += (s, e) =>
             {
                 ToolTipUnderlineMultiLine(s, e, lblQP1);
+            };
+            lblQP2.Paint += (s, e) =>
+            {
+                ToolTipUnderlineMultiLine(s, e, lblQP2);
             };
 
             this.Shown += AfterLoad;
@@ -3934,8 +3942,8 @@ public float screenFontSize = 1;
         };
         public Label lblQP2 = new Label
         {
-            Text = "",
-            Name = ""
+            Text = "4th quarter Scoring and Shooting averages with PlayByPlay",
+            Name = "4th quarter Scoring and Shooting averages with PlayByPlay"
         };
         public Label lblERD = new Label
         {
@@ -4166,7 +4174,35 @@ and Qtr = 4
 and pl.Name in('LeBron James', 'Kyrie Irving')
 order by Clock desc";
             }
-                return q;
+            else if (lblQuery == "4th quarter Scoring and Shooting averages with PlayByPlay")
+            {
+                q =
+@"select t.Name, p.Name, SUM(PtsGenerated) Points,
+sum(case when ShotType = 'FG2M' then 1 else 0 end) FG2M,
+sum(case when ShotValue = 2 then 1 else 0 end) FG2A,
+cast(sum(case when ShotType = 'FG2M' then 1 else 0 end) /
+case when sum(case when ShotValue = 2 then 1 else 0 end) = 0 then 1 else 
+cast(sum(case when ShotValue = 2 then 1 else 0 end) as decimal(18,2)) end * 100 as decimal(18,2)) [FG2%],
+sum(case when ShotType = 'FG3M' then 1 else 0 end) FG3M,
+sum(case when ShotValue = 3 then 1 else 0 end) FG3A,
+cast(sum(case when ShotType = 'FG3M' then 1 else 0 end) /
+case when sum(case when ShotValue = 3 then 1 else 0 end) = 0 then 1 else 
+cast(sum(case when ShotValue = 3 then 1 else 0 end) as decimal(18,2)) end * 100 as decimal(18,2)) [FG3%],
+sum(case when ShotType = 'FTM' then 1 else 0 end) FTM,
+sum(case when ShotValue = 1 then 1 else 0 end) FTA,
+cast(sum(case when ShotType = 'FTM' then 1 else 0 end) /
+case when sum(case when ShotValue = 1 then 1 else 0 end) = 0 then 1 else 
+cast(sum(case when ShotValue = 1 then 1 else 0 end) as decimal(18,2)) end * 100 as decimal(18,2)) [FT%]
+from PlayByPlay pbp
+inner join Game g on pbp.SeasonID = g.SeasonID and pbp.GameID = g.GameID
+left join Player p on pbp.SeasonID = p.SeasonID and pbp.PlayerID = p.PlayerID
+left join Team t on pbp.SeasonID = t.SeasonID and pbp.TeamID = t.TeamID
+where pbp.SeasonID = 2024
+and Qtr >= 4
+group by t.Name, p.Name
+order by Points desc";
+            }
+            return q;
         }
 
         public void ResizeLibraryControls(Label label, int it)
@@ -4300,6 +4336,7 @@ order by Clock desc";
             tip.SetToolTip(lblQB1, GetQuery(lblQB1.Name));
             tip.SetToolTip(lblQB2, GetQuery(lblQB2.Name));
             tip.SetToolTip(lblQP1, GetQuery(lblQP1.Name));
+            tip.SetToolTip(lblQP2, GetQuery(lblQP2.Name));
             tip.IsBalloon = true; // Rounded bubble style
 
             copyG2.Top = lblQG1.Bottom + spacer;
@@ -4333,7 +4370,7 @@ order by Clock desc";
 
 
 
-            lblDataDictionary.Top = lblQP1.Bottom + (spacer * 3);
+            lblDataDictionary.Top = lblQP2.Bottom + (spacer * 3);
             lblERD.Top = lblDataDictionary.Bottom;
 
 
@@ -4764,6 +4801,8 @@ order by Clock desc";
             //Children elements should go above the parents, background image should be last added. AddPanelElement(pnlDbOverview, lblGameUtil);
             AddPanelElement(pnlDbLibrary, lblERD);
             AddPanelElement(pnlDbLibrary, lblDataDictionary);
+            AddPanelElement(pnlDbLibrary, lblQP2);
+            AddPanelElement(pnlDbLibrary, copyP2);
             AddPanelElement(pnlDbLibrary, lblQP1);
             AddPanelElement(pnlDbLibrary, copyP1);
             AddPanelElement(pnlDbLibrary, lblQPbpTitle);
