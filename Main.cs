@@ -3833,6 +3833,10 @@ public float screenFontSize = 1;
             lblQGameTitle.AutoSize = true;
             #region Game Queries
 
+            if (windowWidth < 1700)
+            {
+                libWidth = (int)(libWidth * 1.5);
+            }
             lblQG1.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, (int)(libWidth * .75), lblQG1);
             lblQG1.Left = (int)(lblQGameTitle.Left * 1.75);
             lblQG1.Top = lblQGameTitle.Bottom + (int)(lblQueries.Height * .65);
