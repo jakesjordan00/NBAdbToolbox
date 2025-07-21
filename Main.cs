@@ -1356,7 +1356,6 @@ public float screenFontSize = 1;
 
                 if (File.Exists(erdPath))
                 {
-                    //Create new form to display the ERD
                     Form erdForm = new Form();
                     erdForm.Text = "Entity Relationship Diagram - Mouse Wheel: Zoom | Drag: Pan";
                     erdForm.WindowState = FormWindowState.Maximized;
@@ -1364,25 +1363,20 @@ public float screenFontSize = 1;
                     erdForm.KeyPreview = true;
                     erdForm.Icon = this.Icon;
 
-                    //Enable double buffering for smooth scrolling
-                    typeof(Panel).InvokeMember("DoubleBuffered",
-                        BindingFlags.SetProperty | BindingFlags.Instance | BindingFlags.NonPublic,
-                        null, erdForm, new object[] { true });
-
                     //Create Panel with AutoScroll for zoom functionality
                     Panel scrollPanel = new Panel();
                     scrollPanel.Dock = DockStyle.Fill;
                     scrollPanel.AutoScroll = true;
                     scrollPanel.BackColor = Color.White;
 
-                    //Enable double buffering for the scroll panel
+                    //Enable double buffering ONLY for the scroll panel
                     typeof(Panel).InvokeMember("DoubleBuffered",
                         BindingFlags.SetProperty | BindingFlags.Instance | BindingFlags.NonPublic,
                         null, scrollPanel, new object[] { true });
 
                     //Create PictureBox to display the image
                     PictureBox picERD = new PictureBox();
-                    picERD.SizeMode = PictureBoxSizeMode.Zoom; //Back to Zoom for proper scaling
+                    picERD.SizeMode = PictureBoxSizeMode.Zoom;
                     picERD.Image = Image.FromFile(erdPath);
                     picERD.BackColor = Color.White;
 
