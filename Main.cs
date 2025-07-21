@@ -1289,6 +1289,22 @@ public float screenFontSize = 1;
             {
                 ToolTipUnderline(s, e, lblQG1);
             };
+            lblQG2.Paint += (s, e) =>
+            {
+                ToolTipUnderlineMultiLine(s, e, lblQG2);
+            };
+            lblQB1.Paint += (s, e) =>
+            {
+                ToolTipUnderline(s, e, lblQB1);
+            };
+            lblQB2.Paint += (s, e) =>
+            {
+                ToolTipUnderline(s, e, lblQB2);
+            };
+            lblQP1.Paint += (s, e) =>
+            {
+                ToolTipUnderlineMultiLine(s, e, lblQP1);
+            };
 
             this.Shown += AfterLoad;
 
@@ -3906,8 +3922,8 @@ public float screenFontSize = 1;
         };
         public Label lblQP1 = new Label
         {
-            Text = "Watch Lebron and Kyrie's iconic 4th quarter\nwith PlayByPlay =>",
-            Name = "Watch Lebron and Kyrie's iconic 4th quarter with PlayByPlay"
+            Text = "Watch LeBron and Kyrie's iconic 4th quarter\nagainst the Warriors with PlayByPlay =>",
+            Name = "Watch Lebron and Kyrie's iconic 4th quarter against the Warriors with PlayByPlay"
         };
         public Label lblQP2 = new Label
         {
@@ -4119,7 +4135,7 @@ inner join Team t on b.SeasonID = t.SeasonID and b.TeamID = t.TeamID
 group by b.SeasonID
 order by SeasonID desc";
             }
-            else if(lblQuery == "Watch Lebron and Kyrie's iconic 4th quarter with PlayByPlay")
+            else if(lblQuery == "Watch Lebron and Kyrie's iconic 4th quarter against the Warriors with PlayByPlay")
             {
                 q =
 @"select p.SeasonID, p.GameID, 
@@ -4170,8 +4186,41 @@ order by Clock desc";
             using (var pen = new Pen(Color.Gray, 1))
             {
                 pen.DashStyle = System.Drawing.Drawing2D.DashStyle.Dot;
-                e.Graphics.DrawLine(pen, 0, label.Height - 2, label.Width, label.Height - 2);
-            }            
+                e.Graphics.DrawLine(pen, 5, label.Height - 2, label.Width, label.Height - 2);
+            }
+        }
+        public void ToolTipUnderlineMultiLine(object sender, PaintEventArgs e, Label label)
+        {
+            if (string.IsNullOrEmpty(label.Text))
+                return;
+
+            string[] lines = label.Text.Split('\n');
+            using (var pen = new Pen(Color.Gray, 1))
+            {
+                pen.DashStyle = System.Drawing.Drawing2D.DashStyle.Dot;
+
+                //Get the font height including line spacing
+                float fontHeight = label.Font.GetHeight(e.Graphics);
+                float currentY = 0;
+
+                for (int i = 0; i < lines.Length; i++)
+                {
+                    if (!string.IsNullOrWhiteSpace(lines[i]))
+                    {
+                        //Measure the text width for this line
+                        SizeF textSize = e.Graphics.MeasureString(lines[i], label.Font);
+
+                        //Calculate underline Y position (bottom of text line)
+                        float lineY = currentY + fontHeight - 2;
+
+                        //Draw underline only under the text width
+                        e.Graphics.DrawLine(pen, 5, lineY, textSize.Width, lineY);
+                    }
+
+                    //Move to next line using font height (includes line spacing)
+                    currentY += fontHeight;
+                }
+            }
         }
         public void AddControlsAfterConnection()
         {
