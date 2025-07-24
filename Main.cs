@@ -1,6 +1,7 @@
 ﻿using NBAdbToolboxCurrent;
 using NBAdbToolboxCurrentPBP;
 using NBAdbToolboxHistoric;
+using NBAdbToolboxPlayerMovement;
 using NBAdbToolboxSchedule;
 using Newtonsoft.Json;
 using System;
@@ -34,6 +35,7 @@ using System.Xml.Linq;
 using static NBAdbToolbox.Main;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TaskbarClock;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrackBar;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 
 namespace NBAdbToolbox
@@ -45,6 +47,7 @@ namespace NBAdbToolbox
         NBAdbToolboxCurrent.Root rootC = new NBAdbToolboxCurrent.Root();
         NBAdbToolboxCurrentPBP.Root rootCPBP = new NBAdbToolboxCurrentPBP.Root();
         NBAdbToolboxSchedule.ScheduleLeagueV2 schedule = new NBAdbToolboxSchedule.ScheduleLeagueV2();
+        NBAdbToolboxPlayerMovement.PlayerMovementRoot tradeData = new NBAdbToolboxPlayerMovement.PlayerMovementRoot();
         public bool dbConnection = false; //Determine whether or not we have a connection to the Database in dbconfig file
         public bool isConnected = false; //Server Connection status variable
         //static string projectRoot = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..")); //File path for project when DEBUGGING
@@ -242,10 +245,28 @@ namespace NBAdbToolbox
         {
             Text = "Repair Incomplete Seasons"
         };
+
+
         public Button btnRepair = new Button
         {
             Name = "btnRepair"
         };
+
+        public Label lblMovement = new Label
+        {
+            Text = "Load Player Movement Data"
+        };
+        public Label lblMovementDet = new Label
+        {
+            Text = "(Trades/Singings/Waives since 2015)"
+        };
+        public Button btnMovement = new Button
+        {
+            Name = "btnMovement"
+        };
+
+
+
 
         //pnlDbUtil sub panel Positions and sizes
         public int leftPanelPos = 0;
@@ -356,6 +377,7 @@ namespace NBAdbToolbox
         public static DataCurrent currentData = new DataCurrent();
         public static DataCurrentPBP currentDataPBP = new DataCurrentPBP();
         public static Schedule leagueSchedule = new Schedule();
+        public static PlayerMovement playerMovement = new PlayerMovement();
         public static List<NBAdbToolboxSchedule.Game> scheduleGames = new List<NBAdbToolboxSchedule.Game>();
         public float loadFontSize = 0;
         public string completionMessage = "";
@@ -594,6 +616,8 @@ public float screenFontSize = 1;
                             source = "Historic";
                             historic = 1;
                             lblSeasonStatusLoad.Text = SeasonID + " Historic data file";
+                            lblSeasonStatusLoad.ForeColor = ThemeColor;
+                            Application.DoEvents();
                             stopwatchRead.Restart();
                             root = null;
                             try
@@ -1242,6 +1266,49 @@ public float screenFontSize = 1;
                 RefreshCompletion();
             };
 
+            btnMovement.Click += async (s, e) =>
+            {
+                playerMovementRows = 0;
+                if (isPopulating)
+                {
+                }
+                //lblSeasonStatusLoad.Visible = false;
+                //lblCurrentGameCount.Visible = false;
+                //gpm.Visible = false;
+                //gpmValue.Visible = false;
+
+
+                //lblSeasonStatusLoadInfo.Left = 0;
+                //lblSeasonStatusLoadInfo.Visible = true;
+                //lblCurrentGame.Visible = true;
+                //lblCurrentGame.Font = SetFontSize("Segoe UI", (float)(fontSize * .5), FontStyle.Bold, (int)(lblSeasonStatusLoadInfo.Width * .02), lblCurrentGame);
+
+
+                //lblSeasonStatusLoadInfo.Text = "Reading Player Transaction Data...";
+                //tradeData = await playerMovement.GetPlayerMovementAsync();
+                //lblCurrentGame.Text = "Read Transaction Data\n";
+                //lblCurrentGame.ForeColor = SuccessColor;
+                //Application.DoEvents();
+                //await MovementClick();
+                //lblSeasonStatusLoadInfo.ForeColor = SuccessColor;
+                //lblSeasonStatusLoadInfo.Text = "Complete! " + playerMovementRows + " rows inserted";
+
+                lblMovementLoadStatus.Left = 0;
+                lblMovementLoadStatus.Visible = true;
+                lblMovementLoadProgress.Visible = true;
+                lblMovementLoadProgress.Font = SetFontSize("Segoe UI", (float)(fontSize * .5), FontStyle.Bold, (int)(lblSeasonStatusLoadInfo.Width * .02), lblCurrentGame);
+
+                lblMovementLoadStatus.Text = "Reading Player Transaction Data...";
+                tradeData = await playerMovement.GetPlayerMovementAsync();
+                lblMovementLoadProgress.Text = "Read Transaction Data\n";
+                lblMovementLoadProgress.ForeColor = SuccessColor;
+                Application.DoEvents();
+                await MovementClick();
+                lblMovementLoadStatus.ForeColor = SuccessColor;
+                lblMovementLoadStatus.Text = "Complete! " + playerMovementRows + " rows inserted";
+            };
+            #region putting this region block here for ease of access, pls delete and leave code
+
             lblDataDictionary.Click += lblDataDictionaryClick;
             lblERD.Click += lblERDClick;
 
@@ -1315,7 +1382,82 @@ public float screenFontSize = 1;
             };
 
             this.Shown += AfterLoad;
-
+            #endregion
+        }
+        public Label lblMovementLoadStatus = new Label();
+        public Label lblMovementLoadProgress = new Label();
+        public int playerMovementRows = 0;
+        public int playerMovementRowsDeleted = 0;
+        public async Task MovementClick()
+        {
+            await DeleteMovementRows();
+            lblMovementLoadProgress.Text += "Deleted " + playerMovementRowsDeleted + " existing rows from PlayerMovement\n";
+            Application.DoEvents();
+            TradeBuilder();
+            lblMovementLoadProgress.Text += "Inserted " + playerMovementRows + " rows into PlayerMovement\n";
+            lblMovementLoadProgress.Text += (playerMovementRows - playerMovementRowsDeleted) + " new Transactions";
+            Application.DoEvents();
+        }
+        public async Task DeleteMovementRows()
+        {
+            try
+            {
+                using (SqlConnection Main = new SqlConnection(bob.ToString()))
+                using (SqlCommand PlayerMovementDelete = new SqlCommand("delete from PlayerMovement", Main))
+                {
+                    PlayerMovementDelete.CommandType = CommandType.Text;
+                    Main.Open();
+                    playerMovementRowsDeleted = PlayerMovementDelete.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                lblMovementLoadProgress.ForeColor = ErrorColor;
+            }
+        }
+        public async void InsertMovement(string insert)
+        {
+            try
+            {
+                using (SqlConnection Main = new SqlConnection(bob.ToString()))
+                using (SqlCommand InsertPlayerMovement = new SqlCommand(insert, Main))
+                {
+                    InsertPlayerMovement.CommandType = CommandType.Text;
+                    Main.Open();
+                    playerMovementRows += InsertPlayerMovement.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                lblMovementLoadStatus.ForeColor = ErrorColor;
+                lblMovementLoadProgress.ForeColor = ErrorColor;
+            }
+        }
+        public StringBuilder tradeBuilder = new StringBuilder(1024);
+        public void TradeBuilder()
+        {
+            int iter = 0;
+            foreach (NBAdbToolboxPlayerMovement.Transaction transaction in tradeData.NBA_Player_Movement.rows)
+            {
+                string teamID = transaction.TEAM_ID == 0 ? "null" : transaction.TEAM_ID.ToString();
+                string playerID = transaction.PLAYER_ID == 0 ? "null" : transaction.PLAYER_ID.ToString();
+                string addTeamID = transaction.Additional_Sort == 0 ? "null" : transaction.Additional_Sort.ToString();
+                tradeBuilder.Append("insert into PlayerMovement values('")
+                    .Append(transaction.TRANSACTION_DATE.ToShortDateString()).Append("', '")
+                    .Append(transaction.Transaction_Type).Append("', '")
+                    .Append(transaction.TRANSACTION_DESCRIPTION.Replace("'", "''")).Append("', ")
+                    .Append(teamID).Append(", ")
+                    .Append(playerID).Append(", ")
+                    .Append(addTeamID).Append(", '")
+                    .Append(transaction.GroupSort).Append("')\n");
+                if(iter % 1000 == 0 || iter == tradeData.NBA_Player_Movement.rows.Count - 1)
+                {
+                    string insert = tradeBuilder.ToString();
+                    tradeBuilder.Clear();
+                    InsertMovement(insert);                    
+                }
+                iter++;
+            }
         }
         //Replace your existing lblERDClick method with this corrected version
         public string gameLabelH = "";
@@ -1327,6 +1469,7 @@ public float screenFontSize = 1;
         public int awayWins = 0;
         public int awayLosses = 0;
 
+        
         private void lblDataDictionaryClick(object sender, EventArgs e)
         {
             try
@@ -1695,6 +1838,7 @@ public float screenFontSize = 1;
             ButtonChangeState(btnPopulate, true);
             ButtonChangeState(btnEdit, true);
             ButtonChangeState(btnDownloadSeasonData, true);
+            ButtonChangeState(btnMovement, true);
 
         }
         public void InitializeDbLoad()
@@ -1722,7 +1866,8 @@ public float screenFontSize = 1;
             gpm.Visible = true;
             gpmValue.Visible = true;
             lblCurrentGameCount.Visible = true;
-            lblSeasonStatusLoadInfo.Visible = true;
+            lblSeasonStatusLoad.Visible = true;
+            lblSeasonStatusLoadInfo.Visible = false;
             picLoad.Visible = true;
             #region ChangeLabel
 
@@ -2058,8 +2203,8 @@ public float screenFontSize = 1;
             if (settings.BackgroundImage == "Court Dark")
             {
                 Theme = "Dark";
-                ThemeColor = Color.Ivory;
-                SubThemeColor = Color.Black;
+                ThemeColor = Color.MintCream; //MintCream, PapayaWhip, Ivory
+                SubThemeColor = Color.FromArgb(255, 50, 50, 50);
                 SuccessColor = Color.FromArgb(255, 100, 220, 100);
                 LastSuccessColor = Color.FromArgb(255, 20, 100, 20);
                 ErrorColor = Color.FromArgb(255, 200, 50, 50);
@@ -2068,8 +2213,8 @@ public float screenFontSize = 1;
             else if (settings.BackgroundImage == "Court Light")
             {
                 Theme = "Default";
-                ThemeColor = Color.Black;
-                SubThemeColor = Color.Ivory;
+                ThemeColor = Color.FromArgb(255, 50, 50, 50);
+                SubThemeColor = Color.MintCream; //MintCream, PapayaWhip, Ivory
                 SuccessColor = Color.FromArgb(255, 20, 100, 20);
                 LastSuccessColor = Color.FromArgb(255, 100, 220, 100);
                 ErrorColor = Color.FromArgb(255, 120, 30, 30);
@@ -2078,8 +2223,8 @@ public float screenFontSize = 1;
             else
             {
                 Theme = "Default";
-                ThemeColor = Color.Black;
-                SubThemeColor = Color.Ivory;
+                ThemeColor = Color.FromArgb(255, 50, 50, 50);
+                SubThemeColor = Color.MintCream; //MintCream, PapayaWhip
             }
         }
         public void SetTheme(string sender)
@@ -2094,7 +2239,7 @@ public float screenFontSize = 1;
             //update labels
             foreach (Label lbl in labels)
             {
-                if (lbl.ForeColor.ToArgb() == Color.Black.ToArgb() || lbl.ForeColor.ToArgb() == Color.Ivory.ToArgb())
+                if (lbl.ForeColor.ToArgb() == Color.Black.ToArgb() || lbl.ForeColor.ToArgb() == Color.MintCream.ToArgb() || lbl.ForeColor == Color.FromArgb(255, 50, 50, 50))
                 {
                     lbl.ForeColor = ThemeColor;
                 }
@@ -2113,6 +2258,19 @@ public float screenFontSize = 1;
                 if (lbl.Tag != null && lbl.Tag.ToString() != "Server Connection")
                 {
                     lbl.BackColor = SubThemeColor;
+                }
+                if(lbl.AccessibleName != null)
+                {
+                    if(lbl.Tag != null)
+                    {
+                        lbl.ForeColor = SubThemeColor;
+                        lbl.BackColor = ThemeColor;
+                    }
+                    else if (lbl.Name != null)
+                    {
+                        lbl.ForeColor = ThemeColor;
+                        lbl.BackColor = SubThemeColor;
+                    }
                 }
             }
 
@@ -2150,7 +2308,7 @@ public float screenFontSize = 1;
             foreach (ListBox lb in listBoxes)
             {
                 lb.ForeColor = ThemeColor;
-                lb.BackColor = SubThemeColor;
+                lb.BackColor = Color.FromArgb(255, 50, 50, 50);
             }
         }
         #endregion
@@ -2636,6 +2794,7 @@ public float screenFontSize = 1;
                 ButtonChangeState(btnPopulate, false);
                 ButtonChangeState(btnRefresh, false);
                 ButtonChangeState(btnRepair, false);
+                ButtonChangeState(btnMovement, true);
                 listSeasons.Items.Clear();
 
                 lblServerName.ForeColor = ErrorColor;
@@ -2681,6 +2840,7 @@ public float screenFontSize = 1;
                 ButtonChangeState(btnPopulate, false);
                 ButtonChangeState(btnRefresh, false);
                 ButtonChangeState(btnRepair, false);
+                ButtonChangeState(btnMovement, true);
                 lblDbOvName.Visible = false;
                 listSeasons.Items.Clear();
                 lblDbOvName.ForeColor = WarningColor;
@@ -2701,6 +2861,7 @@ public float screenFontSize = 1;
                 ButtonChangeState(btnPopulate, false);
                 ButtonChangeState(btnRefresh, false);
                 ButtonChangeState(btnRepair, false);
+                ButtonChangeState(btnMovement, true);
                 lblDbOvName.Visible = false;
                 listSeasons.Items.Clear();
 
@@ -3025,6 +3186,7 @@ public float screenFontSize = 1;
             ButtonChangeState(btnPopulate, false);
             ButtonChangeState(btnEdit, false);
             ButtonChangeState(btnRefresh, false);
+            ButtonChangeState(btnMovement, true);
             listSeasons.Enabled = false;
             iterator = 0;
             imageIteration = 1;
@@ -3400,6 +3562,7 @@ public float screenFontSize = 1;
             ButtonChangeState(btnPopulate, true);
             ButtonChangeState(btnEdit, true);
             ButtonChangeState(btnRefresh, true);
+            ButtonChangeState(btnMovement, true);
             listSeasons.Enabled = true;
 
             lblStatus.Text = "Welcome Back!";
@@ -3407,9 +3570,9 @@ public float screenFontSize = 1;
 
             //lblCurrentGame
 
-            ChangeLabel(ThemeColor, lblSeasonStatusLoadInfo, pnlLoad, new List<string> { "", ".", ".", ".", ".", ".", ".", ".", "false", "." });
+            ChangeLabel(ThemeColor, lblSeasonStatusLoadInfo, pnlLoad, new List<string> { "", ".", ".", ".", ".", ".", ".", ThemeColor.ToString(), "false", "." });
             //...............................................................Text,  FontStyle, FontSize, Width, AutoSize, Left, Top, Color, Visible, Height
-            ChangeLabel(ThemeColor, lblCurrentGameCount, pnlLoad, new List<string> { "", ".", ".", ".", ".", ".", ".", ".", "false", "." });
+            ChangeLabel(ThemeColor, lblCurrentGameCount, pnlLoad, new List<string> { "", ".", ".", ".", ".", ".", ".", ThemeColor.ToString(), "false", "." });
             //...........................................................Text,  FontStyle, FontSize, Width, AutoSize, Left, Top, Color, Visible, Height
             ChangeLabel(SuccessColor, lblCurrentGame, pnlLoad, new List<string> {
                         "Full Load: " + elapsedStringFull,
@@ -3876,9 +4039,7 @@ public float screenFontSize = 1;
 
 
 
-
-
-
+            lblResources.Font = lblQueries.Font;
 
 
 
@@ -3893,18 +4054,35 @@ public float screenFontSize = 1;
         }
 
         public Panel pnlQueries = new Panel();
-        public Label lblQueries = new Label { Text = "Queries", Tag = "Queries" };
+        public Label lblQueries = new Label 
+        { 
+            Text = "Queries", 
+            Tag = "Queries",
+            AccessibleName = "Queries"
+        };
+        public Label lblResources = new Label 
+        { 
+            Text = "Resources", 
+            Tag = "Resources",
+            AccessibleName = "Resources"
+        };
 
-        public Label lblDataDictionary = new Label { Text = "View Data Dictionary =>", ForeColor = Color.DodgerBlue, Cursor = Cursors.Hand };
-
+        public Label lblDataDictionary = new Label 
+        {            
+            Text = "View Data Dictionary =>", 
+            ForeColor = Color.DodgerBlue, 
+            Cursor = Cursors.Hand 
+        };
         public Label lblQGameTitle = new Label
         { 
-            Text = "Working with Game"
+            Text = "Working with Game",
+            Name = "Game Title",
+            AccessibleName = "Game"
         };
         public Label lblQG1 = new Label 
         { 
             Text = "Game Details with Team joins =>",
-            Name = "Game Details with Team joins" 
+            Name = "Game Details with Team joins"
         };
         public Label lblQG2 = new Label
         { 
@@ -3913,7 +4091,9 @@ public float screenFontSize = 1;
         };
         public Label lblQBoxTitle = new Label 
         { 
-            Text = "Player and Team Boxscore" 
+            Text = "Player and Team Boxscore",
+            Name = "Box Title",
+            AccessibleName = "Box"
         };
         public Label lblQB1 = new Label 
         { 
@@ -3927,7 +4107,9 @@ public float screenFontSize = 1;
         };
         public Label lblQPbpTitle = new Label 
         { 
-            Text = "Navigating PlayByPlay" 
+            Text = "Navigating PlayByPlay",
+            Name = "Pbp Title",
+            AccessibleName = "Pbp"
         };
         public Label lblQP1 = new Label
         {
@@ -4206,7 +4388,7 @@ order by Points desc";
             label.AutoSize = false;
             label.Width = pnlDbLibrary.Width;
             label.Height = h;
-            if(it == 0)
+            if(it == 0 || it == 4)
             {
                 label.BackColor = ThemeColor;
                 label.ForeColor = SubThemeColor;
@@ -4270,7 +4452,7 @@ order by Points desc";
 
             List<Label> labels = new List<Label> 
             { 
-                lblQueries, lblQGameTitle, lblQBoxTitle, lblQPbpTitle
+                lblQueries, lblQGameTitle, lblQBoxTitle, lblQPbpTitle, lblResources
             };
             int i = 0;
             foreach(Label label in labels)
@@ -4364,7 +4546,10 @@ order by Points desc";
 
 
 
-            lblDataDictionary.Top = lblQP2.Bottom + (spacer * 3);
+            lblResources.Height = lblQueries.Height;
+            lblResources.Width = lblQueries.Width;
+            lblResources.Top = lblQP2.Bottom + (spacer * 3);
+            lblDataDictionary.Top = lblResources.Bottom;
             lblERD.Top = lblDataDictionary.Bottom;
 
 
@@ -4751,8 +4936,17 @@ order by Points desc";
             btnRepair.Font = SetFontSize("Segoe UI", (float)(fontSize), FontStyle.Bold, (int)(lblRepair.Width * .85), btnRepair);
             btnRepair.AutoSize = true;
 
+            lblMovement.Font = lblRepair.Font;
+            lblMovement.AutoSize = true;
+            btnMovement.Font = btnRepair.Font;
+            btnMovement.Text = "Load transactions";
+            btnMovement.AutoSize = true;
 
-
+            lblMovementLoadStatus.Left = 0;
+            lblMovementLoadProgress.Left = 0;
+            lblMovementLoadStatus.Font = lblSeasonStatusLoadInfo.Font;
+            lblMovementLoadStatus.AutoSize = true;
+            lblMovementLoadProgress.AutoSize = true;
 
             ArrangeOverviewControls();
         }
@@ -4789,12 +4983,27 @@ order by Points desc";
             lblRepair.Left = lblDownloadSeasonData.Left;
             btnRepair.Top = lblRepair.Bottom;
             btnRepair.Left = btnDownloadSeasonData.Left;
+
+            float fontSize = ((float)(screenFontSize * lblServer.Height) / (96 / 12)) * (72 / 12) / 2;
+            lblMovement.Left = lblRefresh.Left;
+            lblMovement.Top = btnRefresh.Bottom + (int)(btnRefresh.Height / 2);
+            lblMovementDet.Font = SetFontSize("Segoe UI", (float)(fontSize * 1.05), FontStyle.Bold, (int)(lblMovement.Width * .9), lblMovementDet);
+            lblMovementDet.AutoSize = true;
+            lblMovementDet.Top = lblMovement.Bottom;
+            lblMovementDet.Left = (lblMovement.Width - lblMovementDet.Width) / 2;
+            btnMovement.Top = lblMovementDet.Bottom;
+            btnMovement.Left = btnRefresh.Left;
+
+
+            lblMovementLoadStatus.Top = btnMovement.Bottom + spacer;
+            lblMovementLoadProgress.Top = lblMovementLoadStatus.Bottom;
         }
         public void InitializeElements()
         {
             //Children elements should go above the parents, background image should be last added. AddPanelElement(pnlDbOverview, lblGameUtil);
             AddPanelElement(pnlDbLibrary, lblERD);
             AddPanelElement(pnlDbLibrary, lblDataDictionary);
+            AddPanelElement(pnlDbLibrary, lblResources);
             AddPanelElement(pnlDbLibrary, lblQP2);
             AddPanelElement(pnlDbLibrary, copyP2);
             AddPanelElement(pnlDbLibrary, lblQP1);
@@ -4821,6 +5030,8 @@ order by Points desc";
             AddPanelElement(pnlDbOverview, lblPbUtil);
             AddPanelElement(pnlDbOverview, lblPbpUtil);
             AddPanelElement(pnlDbOverview, lblEmpty);
+            AddPanelElement(pnlDbUtil, lblMovementLoadProgress);
+            AddPanelElement(pnlDbUtil, lblMovementLoadStatus);
             AddPanelElement(pnlLoad, gpmValue);
             AddPanelElement(pnlLoad, gpm);
             AddPanelElement(pnlLoad, lblWorkingOn);
@@ -4828,7 +5039,10 @@ order by Points desc";
             AddPanelElement(pnlLoad, lblCurrentGame);
             AddPanelElement(pnlLoad, lblSeasonStatusLoadInfo);
             AddPanelElement(pnlLoad, lblSeasonStatusLoad);
-            AddPanelElement(pnlLoad, picLoad);
+            AddPanelElement(pnlLoad, picLoad); 
+            AddPanelElement(pnlDbUtil, btnMovement);
+            AddPanelElement(pnlDbUtil, lblMovementDet);
+            AddPanelElement(pnlDbUtil, lblMovement);
             AddPanelElement(pnlDbUtil, btnRepair);
             AddPanelElement(pnlDbUtil, lblRepair);
             AddPanelElement(pnlDbUtil, btnDownloadSeasonData);
@@ -5325,6 +5539,13 @@ order by Points desc";
                 btnRepair.Top = lblRepair.Bottom;
                 btnRepair.Left = btnDownloadSeasonData.Left;
 
+                lblMovement.Left = lblRefresh.Left;
+                lblMovement.Top = btnRefresh.Bottom + (int)(btnRefresh.Height / 2);
+                lblMovementDet.Top = lblMovement.Bottom;
+                lblMovementDet.Left = (lblMovement.Width - lblMovementDet.Width) / 2;
+                btnMovement.Top = lblMovementDet.Bottom;
+                btnMovement.Left = btnRefresh.Left;
+
                 if (dbConnection)
                 {
                     lblDbOvName.ForeColor = SuccessColor;
@@ -5368,6 +5589,12 @@ order by Points desc";
                 lblRepair.Left = lblDownloadSeasonData.Left;
                 btnRepair.Top = lblRepair.Bottom;
                 btnRepair.Left = btnDownloadSeasonData.Left;
+                lblMovement.Left = lblRefresh.Left;
+                lblMovement.Top = btnRefresh.Bottom + (int)(btnRefresh.Height / 2);
+                lblMovementDet.Top = lblMovement.Bottom;
+                lblMovementDet.Left = (lblMovement.Width - lblMovementDet.Width) / 2;
+                btnMovement.Top = lblMovementDet.Bottom;
+                btnMovement.Left = btnRefresh.Left;
             }
 
             //show and build overview
@@ -5416,6 +5643,12 @@ order by Points desc";
                 lblRepair.Left = lblDownloadSeasonData.Left;
                 btnRepair.Top = lblRepair.Bottom;
                 btnRepair.Left = btnDownloadSeasonData.Left;
+                lblMovement.Left = lblRefresh.Left;
+                lblMovement.Top = btnRefresh.Bottom + (int)(btnRefresh.Height / 2);
+                lblMovementDet.Top = lblMovement.Bottom;
+                lblMovementDet.Left = (lblMovement.Width - lblMovementDet.Width) / 2;
+                btnMovement.Top = lblMovementDet.Bottom;
+                btnMovement.Left = btnRefresh.Left;
             }
             else if (vis)
             {
@@ -5440,6 +5673,12 @@ order by Points desc";
                 lblRepair.Left = lblDownloadSeasonData.Left;
                 btnRepair.Top = lblRepair.Bottom;
                 btnRepair.Left = btnDownloadSeasonData.Left;
+                lblMovement.Left = lblRefresh.Left;
+                lblMovement.Top = btnRefresh.Bottom + (int)(btnRefresh.Height / 2);
+                lblMovementDet.Top = lblMovement.Bottom;
+                lblMovementDet.Left = (lblMovement.Width - lblMovementDet.Width) / 2;
+                btnMovement.Top = lblMovementDet.Bottom;
+                btnMovement.Left = btnRefresh.Left;
             }
         }
         private void BuildOverview()
@@ -5905,11 +6144,6 @@ order by Points desc";
         private void CreateGridLines(List<int> columnPositions, List<int> rowPositions, int topTable, int rowHeight)
         {
             ClearGridLines();
-
-            //calculate height for vertical lines
-
-
-
             //create vertical lines
             foreach (int x in columnPositions)
             {
@@ -6023,6 +6257,11 @@ order by Points desc";
             pnlSettings.Visible = vis;
         }
 
+        public async Task ReadPlayerMovement()
+        {
+            tradeData = null;
+            tradeData = await playerMovement.GetPlayerMovementAsync();
+        }
 
         #endregion
 
@@ -7290,7 +7529,7 @@ order by Points desc";
         #endregion
         public bool boxMissing = false;
         public HashSet<int> missingBoxes = new HashSet<int>();
-        public async Task CurrentGameGPS(int GameID, string sender)
+        public async Task CurrentGameGPS(int gameID, string sender)
         {
             bool doBox = true;
             bool doPBP = true;
@@ -7302,28 +7541,28 @@ order by Points desc";
             //Try to get Current Data
             #region Try to get Current Data
 
-            if (badGamesRS.Contains(GameID))
+            if (badGamesRS.Contains(gameID))
             {
                 useHistoricBox = true;
                 useHistoricPBP = true;
-                MissingDataGPS(useHistoricBox, useHistoricPBP);
+                MissingDataGPS(useHistoricBox, useHistoricPBP, gameID);
                 return;
             }
-            else if (badGamesPS.Contains(GameID))
+            else if (badGamesPS.Contains(gameID))
             {
                 useHistoricBox = true;
                 useHistoricPBP = true;
-                MissingDataGPS(useHistoricBox, useHistoricPBP);
+                MissingDataGPS(useHistoricBox, useHistoricPBP, gameID);
                 return;
             }
-            rootCPBP = await currentDataPBP.GetJSON(GameID, SeasonID);
+            rootCPBP = await currentDataPBP.GetJSON(gameID, SeasonID);
             if (rootCPBP.game == null)
             {
                 doPBP = false;
                 useHistoricPBP = true;
                 missingNote = "'No file available from NBA')\n";
             }
-            rootC = await currentData.GetJSON(GameID, SeasonID);
+            rootC = await currentData.GetJSON(gameID, SeasonID);
             if (rootC.game == null)
             {
                 boxMissing = true;
@@ -7351,8 +7590,8 @@ order by Points desc";
             }
             else
             {
-                missingBoxes.Add(GameID);
-                missingData += "insert into util.MissingData values(" + SeasonID + ", " + GameID + ", 'Current', 'Box', " + missingNote + "\n";
+                missingBoxes.Add(gameID);
+                missingData += "insert into util.MissingData values(" + SeasonID + ", " + gameID + ", 'Current', 'Box', " + missingNote + "\n";
             }
             #endregion
 
@@ -7373,8 +7612,8 @@ order by Points desc";
             }
             else
             {
-                missingPbps.Add(GameID);
-                missingData += "insert into util.MissingData values(" + SeasonID + ", " + GameID + ", 'Current', 'PlayByPlay', " + missingNote + "\n";
+                missingPbps.Add(gameID);
+                missingData += "insert into util.MissingData values(" + SeasonID + ", " + gameID + ", 'Current', 'PlayByPlay', " + missingNote + "\n";
             }
             #endregion
 
@@ -7382,7 +7621,7 @@ order by Points desc";
 
             if (SeasonID == 2019 && (useHistoricBox || useHistoricPBP))
             {
-                MissingDataGPS(useHistoricBox, useHistoricPBP);
+                MissingDataGPS(useHistoricBox, useHistoricPBP, gameID);
             }
             #endregion
         }
@@ -8222,7 +8461,7 @@ order by Points desc";
         //If Current Data is Missing, use Historic Data
         #region Missing Data Inserts
 
-        public void MissingDataGPS(bool box, bool pbp)
+        public void MissingDataGPS(bool box, bool pbp, int gameID)
         {
             string missingInstructions = "";
             if (box)
@@ -8236,13 +8475,13 @@ order by Points desc";
             if (box || pbp)
             {
                 NBAdbToolboxHistoric.Game game = null;
-                if (GameID.ToString().Substring(0, 1) == "2")
+                if (gameID.ToString().Substring(0, 1) == "2")
                 {
-                    game = root.season.games.regularSeason.FirstOrDefault(g => Int32.Parse(g.game_id) == GameID);
+                    game = root.season.games.regularSeason.FirstOrDefault(g => Int32.Parse(g.game_id) == gameID);
                 }
                 else
                 {
-                    game = root.season.games.playoffs.FirstOrDefault(g => Int32.Parse(g.game_id) == GameID);
+                    game = root.season.games.playoffs.FirstOrDefault(g => Int32.Parse(g.game_id) == gameID);
                 }
                 GetMissingDataDetails(game, missingInstructions);
             }

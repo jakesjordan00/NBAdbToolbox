@@ -332,6 +332,15 @@ Foreign Key (SeasonID, GameID, TeamID, MatchupID, PlayerID) references PlayerBox
 
 
 
+create table PlayerMovement(
+Date date,
+Type varchar(255),
+Description varchar(355),
+TeamID int,
+PlayerID int,
+AddTeamID int,
+GroupSort varchar(255))
+
 /*
 --The below section will be used to create a new string for procedure creation
 ~create procedure SeasonInsert

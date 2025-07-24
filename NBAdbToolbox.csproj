@@ -94,6 +94,7 @@
     <Compile Include="PanelOpacity.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="PlayerMovement.cs" />
     <Compile Include="PopulatePopup.cs">
       <SubType>Form</SubType>
     </Compile>
