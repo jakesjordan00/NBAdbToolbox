@@ -1272,26 +1272,6 @@ public float screenFontSize = 1;
                 if (isPopulating)
                 {
                 }
-                //lblSeasonStatusLoad.Visible = false;
-                //lblCurrentGameCount.Visible = false;
-                //gpm.Visible = false;
-                //gpmValue.Visible = false;
-
-
-                //lblSeasonStatusLoadInfo.Left = 0;
-                //lblSeasonStatusLoadInfo.Visible = true;
-                //lblCurrentGame.Visible = true;
-                //lblCurrentGame.Font = SetFontSize("Segoe UI", (float)(fontSize * .5), FontStyle.Bold, (int)(lblSeasonStatusLoadInfo.Width * .02), lblCurrentGame);
-
-
-                //lblSeasonStatusLoadInfo.Text = "Reading Player Transaction Data...";
-                //tradeData = await playerMovement.GetPlayerMovementAsync();
-                //lblCurrentGame.Text = "Read Transaction Data\n";
-                //lblCurrentGame.ForeColor = SuccessColor;
-                //Application.DoEvents();
-                //await MovementClick();
-                //lblSeasonStatusLoadInfo.ForeColor = SuccessColor;
-                //lblSeasonStatusLoadInfo.Text = "Complete! " + playerMovementRows + " rows inserted";
 
                 lblMovementLoadStatus.Left = 0;
                 lblMovementLoadStatus.Visible = true;
@@ -1307,7 +1287,6 @@ public float screenFontSize = 1;
                 lblMovementLoadStatus.ForeColor = SuccessColor;
                 lblMovementLoadStatus.Text = "Complete! " + playerMovementRows + " rows inserted";
             };
-            #region putting this region block here for ease of access, pls delete and leave code
 
             lblDataDictionary.Click += lblDataDictionaryClick;
             lblERD.Click += lblERDClick;
@@ -1382,7 +1361,6 @@ public float screenFontSize = 1;
             };
 
             this.Shown += AfterLoad;
-            #endregion
         }
         public Label lblMovementLoadStatus = new Label();
         public Label lblMovementLoadProgress = new Label();
@@ -1459,7 +1437,7 @@ public float screenFontSize = 1;
                 iter++;
             }
         }
-        //Replace your existing lblERDClick method with this corrected version
+
         public string gameLabelH = "";
         public string gameLabelDetailH = "";
         public int homeSeed = 0;
@@ -5546,6 +5524,9 @@ order by Points desc";
                 btnMovement.Top = lblMovementDet.Bottom;
                 btnMovement.Left = btnRefresh.Left;
 
+                lblMovementLoadStatus.Top = btnMovement.Bottom + (int)(btnMovement.Height * .2);
+                lblMovementLoadProgress.Top = lblMovementLoadStatus.Bottom;
+
                 if (dbConnection)
                 {
                     lblDbOvName.ForeColor = SuccessColor;
@@ -5595,6 +5576,8 @@ order by Points desc";
                 lblMovementDet.Left = (lblMovement.Width - lblMovementDet.Width) / 2;
                 btnMovement.Top = lblMovementDet.Bottom;
                 btnMovement.Left = btnRefresh.Left;
+                lblMovementLoadStatus.Top = btnMovement.Bottom + (int)(btnMovement.Height * .2);
+                lblMovementLoadProgress.Top = lblMovementLoadStatus.Bottom;
             }
 
             //show and build overview
@@ -5649,6 +5632,8 @@ order by Points desc";
                 lblMovementDet.Left = (lblMovement.Width - lblMovementDet.Width) / 2;
                 btnMovement.Top = lblMovementDet.Bottom;
                 btnMovement.Left = btnRefresh.Left;
+                lblMovementLoadStatus.Top = btnMovement.Bottom + (int)(btnMovement.Height * .2);
+                lblMovementLoadProgress.Top = lblMovementLoadStatus.Bottom;
             }
             else if (vis)
             {
@@ -5679,6 +5664,8 @@ order by Points desc";
                 lblMovementDet.Left = (lblMovement.Width - lblMovementDet.Width) / 2;
                 btnMovement.Top = lblMovementDet.Bottom;
                 btnMovement.Left = btnRefresh.Left;
+                lblMovementLoadStatus.Top = btnMovement.Bottom + (int)(btnMovement.Height * .2);
+                lblMovementLoadProgress.Top = lblMovementLoadStatus.Bottom;
             }
         }
         private void BuildOverview()
