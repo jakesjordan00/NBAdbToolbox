@@ -26,6 +26,7 @@ using System.Runtime;
 using System.Runtime.ConstrainedExecution;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
+using System.Runtime.Remoting.Metadata.W3cXsd2001;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -106,7 +107,7 @@ namespace NBAdbToolbox
         public Button btnEdit = new Button //Edit config file
         {
             Name = "btnEdit"
-        };      
+        };
         public Button btnBuild = new Button //Build Database
         {
             Name = "btnBuild"
@@ -229,7 +230,7 @@ namespace NBAdbToolbox
         {
             Name = "listDownloadSeasonData"
         };
-        
+
         public Button btnPopulate = new Button();
         public Button btnDownloadSeasonData = new Button();
         public Label lblRefresh = new Label
@@ -512,11 +513,11 @@ namespace NBAdbToolbox
                 41900123, 41900133, 41900174, 41900223
             };
 
-#endregion
+        #endregion
 
-#endregion
+        #endregion
 
-public float screenFontSize = 1;
+        public float screenFontSize = 1;
 
         public string settingsJSON = "";
         public bool defaultConfig = false;
@@ -624,10 +625,10 @@ public float screenFontSize = 1;
                             {
                                 await Task.Run(async () =>      //This sets the root variable to our big file
                                 {
-                                    await ReadSeasonFile(popup.historic, popup.current);
+                                    await ReadSeasonFile();
                                 });
                             }
-                            catch(NullReferenceException ne)
+                            catch (NullReferenceException ne)
                             {
                                 MessageBox.Show("Error! Please restart application and try again", "Memory Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                                 return;
@@ -666,7 +667,7 @@ public float screenFontSize = 1;
                                 UpdateLoadingImage(imageIteration);
                                 #endregion
                                 PopulateDb_4_AfterGame("RS");
-                                if(iterator == RegularSeasonGames)
+                                if (iterator == RegularSeasonGames)
                                 {
                                     await SecondInsert;
                                 }
@@ -705,20 +706,20 @@ public float screenFontSize = 1;
                                 {
                                     await InsertPlayByPlayWithRetry(game, "PS");
                                 });
-                                
+
 
                                 UpdateLoadingImage(imageIteration);
 
                                 #endregion
                                 PopulateDb_4_AfterGame("PS");
                                 //if (iterator == TotalGames)
-                                if(it == PostseasonGames)
+                                if (it == PostseasonGames)
                                 {
                                     await SecondInsert;
                                 }
                                 it++;
                             }
-                            if(SeasonID < 2001)
+                            if (SeasonID < 2001)
                             {
                                 lblSeasonStatusLoad.Text = "Normalizing any 1996-2000 SeriesIDs values";
                                 Task UpdateOldPlayoffSeries = Task.Run(async () =>
@@ -726,22 +727,22 @@ public float screenFontSize = 1;
                                     await UpdateSeries(SeasonID);
                                 });
                             }
-                            
+
                             //await Task.Run(async () =>
                             //{
-                                if (missingPbp)
+                            if (missingPbp)
+                            {
+                                lblSeasonStatusLoad.Text = "Catching any missing data";
+                                foreach (var game in root.season.games.playoffs.Where(g => g.playByPlay != null))
                                 {
-                                    lblSeasonStatusLoad.Text = "Catching any missing data";
-                                    foreach (var game in root.season.games.playoffs.Where(g => g.playByPlay != null))
-                                    {
-                                        HistoricPlayByPlayStaging(game.playByPlay);
-                                        await InsertPlayByPlayWithRetry(game, "Retry");
-                                        UpdateLoadingImage(imageIteration);
-                                        PopulateDb_4_AfterGame("Retry");
-                                    }
+                                    HistoricPlayByPlayStaging(game.playByPlay);
+                                    await InsertPlayByPlayWithRetry(game, "Retry");
+                                    UpdateLoadingImage(imageIteration);
+                                    PopulateDb_4_AfterGame("Retry");
                                 }
-                                root.season.games.playoffs = null;
-                                missingPbp = false;
+                            }
+                            root.season.games.playoffs = null;
+                            missingPbp = false;
                             //});
                         }
                         #endregion
@@ -756,7 +757,7 @@ public float screenFontSize = 1;
                             {
                                 await Task.Run(async () =>      //This sets the root variable to our big file
                                 {
-                                    await ReadSeasonFile(popup.historic, popup.current);
+                                    await ReadSeasonFile();
                                 });
                             }
                             catch (NullReferenceException ne)
@@ -819,7 +820,7 @@ public float screenFontSize = 1;
                                     NBAdbToolboxHistoric.Team team = root.season.games.regularSeason[i].box.awayTeam;
                                     HistoricTeamUpdate(team, team.teamId, "Current");
                                     UpdateTeamWins();
-                                    
+
                                 }
                                 root.season.games.regularSeason[i].box = null;
                                 root.season.games.regularSeason[i].playByPlay = null;
@@ -869,7 +870,7 @@ public float screenFontSize = 1;
                                 UpdateLoadingImage(imageIteration);
                                 PopulateDb_4_AfterGame("PS");
                             }
-                             
+
 
 
                             sqlBuilder.Clear();
@@ -897,7 +898,7 @@ public float screenFontSize = 1;
                                     PopulateDb_4_AfterGame("Retry");
                                 }
                             }
-                            if (missingPbps.Count> 0)
+                            if (missingPbps.Count > 0)
                             {
                                 lblSeasonStatusLoad.Text = "Retrying any games missing PBP data";
                                 foreach (int pbp in missingPbps)
@@ -968,7 +969,7 @@ public float screenFontSize = 1;
             //{
             //    CheckDataFiles(); //GetSeasons();
             //}
-            CheckDataFiles(); 
+            CheckDataFiles();
             //GetSeasons();
 
             //Edit Button Actions
@@ -984,7 +985,7 @@ public float screenFontSize = 1;
                 string username = config?.Username ?? "";
                 string password = config?.Password ?? "";
                 bool fileExist = true;
-                
+
                 if (!File.Exists(configPath))
                 {
                     fileExist = false;
@@ -1046,7 +1047,7 @@ public float screenFontSize = 1;
                 }
                 IntroManager.SetVisibility("BuildDatabaseWalkthrough", "Hidden", false);
                 IntroManager.HideSpecificBubble("BuildDatabaseWalkthrough");
-                if(UIControllerStatus == "DbExists")
+                if (UIControllerStatus == "DbExists")
                 {
                     int maxWidth = (int)(windowWidth * .3);
                     int maxHeight = (int)(windowHeight * .105);
@@ -1244,18 +1245,14 @@ public float screenFontSize = 1;
                 await RepairClick();//blah
                 if (dbOverviewOpened)
                 {
-                    lblDbOptions.Invoke((MethodInvoker)(() =>
-                    {
-                        lblDbOptions.Text = "Loading Season info";
-                        CenterElement(pnlDbUtil, lblDbOptions);
-                    }));
+                    lblDbOptions.Text = "Loading Season info";
+                    CenterElement(pnlDbUtil, lblDbOptions);
+                    Application.DoEvents();
                     await Task.Run(() => GetSeasonInfo());
                     CheckDataFiles(); //GetSeasons();
-                    lblDbOptions.Invoke((MethodInvoker)(() =>
-                    {
-                        lblDbOptions.Text = "Options";
-                        CenterElement(pnlDbUtil, lblDbOptions);
-                    }));
+                    lblDbOptions.Text = "Options";
+                    CenterElement(pnlDbUtil, lblDbOptions);
+                    Application.DoEvents();
                     dbOverviewFirstOpen = false;
                     DbOverviewVisibility(dbOverviewOpened, "Refresh");
                 }
@@ -1428,11 +1425,11 @@ public float screenFontSize = 1;
                     .Append(playerID).Append(", ")
                     .Append(addTeamID).Append(", '")
                     .Append(transaction.GroupSort).Append("')\n");
-                if(iter % 1000 == 0 || iter == tradeData.NBA_Player_Movement.rows.Count - 1)
+                if (iter % 1000 == 0 || iter == tradeData.NBA_Player_Movement.rows.Count - 1)
                 {
                     string insert = tradeBuilder.ToString();
                     tradeBuilder.Clear();
-                    InsertMovement(insert);                    
+                    InsertMovement(insert);
                 }
                 iter++;
             }
@@ -1447,7 +1444,7 @@ public float screenFontSize = 1;
         public int awayWins = 0;
         public int awayLosses = 0;
 
-        
+
         private void lblDataDictionaryClick(object sender, EventArgs e)
         {
             try
@@ -1671,7 +1668,7 @@ public float screenFontSize = 1;
             {
                 maxWidth = (int)(windowWidth * .235);
                 maxHeight = (int)(windowHeight * .1);
-                if(windowWidth < 1700)
+                if (windowWidth < 1700)
                 {
                     maxHeight = (int)(windowHeight * .12);
                 }
@@ -1724,7 +1721,7 @@ public float screenFontSize = 1;
 
                     await bigInsertsPBP.OpenAsync();
                     int rowsInserted = await PBPInsert.ExecuteNonQueryAsync();
-                    if(rowsInserted == game.playByPlay.actions.Count)
+                    if (rowsInserted == game.playByPlay.actions.Count)
                     {
                         success = true;
                     }
@@ -1756,9 +1753,9 @@ public float screenFontSize = 1;
             {
                 game.box = null;
                 game.playByPlay = null;
-                
+
             }
-            else if(sender != "Retry")
+            else if (sender != "Retry")
             {
                 missingPbp = true;
             }
@@ -1893,17 +1890,342 @@ public float screenFontSize = 1;
         }
         public async Task RepairClick()
         {
-            GetSeasonInfo();
-            List<int> nonOperationalSeasons = new List<int>();
 
+            ButtonChangeState(btnPopulate, false);
+            ButtonChangeState(btnEdit, false);
+            ButtonChangeState(btnRefresh, false);
+            ButtonChangeState(btnMovement, true);
+            ButtonChangeState(btnRepair, true);
+            listSeasons.Enabled = false;
+
+
+            lblSeasonStatusLoadInfo.Left = 0;
+            lblSeasonStatusLoadInfo.Text = "Retrieving Season Info";
+            lblSeasonStatusLoadInfo.Visible = true;
+            Application.DoEvents();
+            await Task.Run(() => GetSeasonInfo());
+            List<int> nonOperationalSeasons = new List<int>();
+            string source = "";
+            List<string> missingGames = new List<string>();
+            List<string> missingRows = new List<string>();
+            List<int> missingRowDiffs = new List<int>();
+            string[] controlItems =
+            {
+                    "Game",                             //0
+                    "Team",                             //1
+                    "Arena",                            //2
+                    "Player",                           //3
+                    "Official",                         //4
+                    "PlayerBox",                        //5
+                    "TeamBox",                          //6
+                    "PlayByPlay",                       //7
+                    "StartingLineups",                  //8
+                    "TeamBoxLineups",                   //9
+                    "Games",                            //10
+                    //Rows
+                    "PlayerBox",                        //11
+                    "TeamBox",                          //12
+                    "PlayByPlay",                       //13
+                    "StartingLineups",                  //14
+                    "TeamBoxLineups",                   //15
+            };
             foreach (var season in seasonInfo)
             {
-                if (season.Item2.Status != "Operational")
+                if (seasonWarningString.Contains(season.SeasonID.ToString()))
                 {
+                    source = season.Item2.CurrentLoaded == 1 ? "Current" : (season.Item2.HistoricLoaded == 1 ? "Historic" : "Unknown");
                     nonOperationalSeasons.Add(season.SeasonID);
                 }
             }
+            int nonOps = nonOperationalSeasons.Count;
+            lblSeasonStatusLoadInfo.Text = nonOps == 1 ? nonOps + " season needing Repairs: " + nonOperationalSeasons[0] : nonOps + " seasons needing Repairs: " + string.Join(", ", nonOperationalSeasons.ToString());
+            Application.DoEvents();
+            for (int i = 0; i < nonOps; i++)
+            {
+                int season = nonOperationalSeasons[i];
+                int[] dataValues = DataValues(season, "dataValues");
+                int[] dataValueRows = DataValues(season, "dataValueRows");
+                int[] controlValues = DataValues(season, "controlValues");
+                int[] controlCurrentValues = DataValues(season, "controlCurrentValues");
+                lblCurrentGameCount.Top = lblSeasonStatusLoadInfo.Bottom;
+                lblCurrentGameCount.Left = 0;
+                lblCurrentGameCount.Text = "Looking for Game and Row counts not aligned with expected values...";
+                lblCurrentGameCount.Visible = true;
+                Label gamesMissing = new Label
+                {
+                    Visible = true,
+                    ForeColor = ThemeColor,
+                    Font = lblCurrentGameCount.Font,
+                    Parent = pnlLoad,
+                    Top = lblCurrentGameCount.Bottom,
+                    AutoSize = true
+                };
+                Label rowsMissing = new Label
+                {
+                    Visible = true,
+                    ForeColor = ThemeColor,
+                    Font = lblCurrentGameCount.Font,
+                    Parent = pnlLoad,
+                    Top = gamesMissing.Bottom,
+                    AutoSize = true
+                };
+
+                //Determine if missing full games or just rows
+                if (source == "Historic")
+                {
+                    for (int j = 0; j < controlValues.Length; j++)
+                    {
+                        if (j < 10)
+                        {
+                            if (dataValues[j] != controlValues[j])
+                            {
+                                missingGames.Add(controlItems[j]);
+                                if (j == 0)
+                                {
+                                    ButtonChangeState(btnPopulate, true);
+                                    ButtonChangeState(btnEdit, true);
+                                    ButtonChangeState(btnRefresh, true);
+                                    ButtonChangeState(btnMovement, true);
+                                    ButtonChangeState(btnRepair, false);
+                                    listSeasons.Enabled = true;
+                                    rowsMissing.Dispose();
+                                    gamesMissing.Dispose();
+                                    lblCurrentGameCount.Text = "Games found missing from Game table, Repair cancelled. Please try to Populate this season again instead of Repair.";
+                                    return;
+                                }
+                            }
+                        }
+                        else if (j > 10)
+                        {
+                            if (dataValueRows[j - 6] != controlValues[j])
+                            {
+                                missingRows.Add(controlItems[j]);
+                                missingRowDiffs.Add(controlValues[j] - dataValueRows[j - 6]);
+                            }
+                        }
+                    }
+
+
+                    if (missingGames.Count > 0)
+                    {
+                        gamesMissing.Text = missingGames.Count == 1 ? missingGames.Count + " Game missing from " + string.Join(", ", missingGames) :
+                            missingGames.Count + " Games missing from " + string.Join(", ", missingGames);
+                    }
+                    else
+                    {
+                        gamesMissing.Text = "No Tables found missing entire Games";
+                    }
+                    if (missingRows.Count > 0)
+                    {
+                        rowsMissing.Text = string.Join(", ", missingRowDiffs) + " rows missing from " + string.Join(", ", missingRows);
+                    }
+                    else
+                    {
+                        rowsMissing.Text = "No Tables found missing rows";
+                    }
+
+                    for (int a = 0; a < missingRows.Count; a++)
+                    {
+                        if (missingGames.Contains(missingRows[a]))
+                        {
+                            missingRows.RemoveAt(a);
+                        }
+                    }
+
+                }
+                else if (source == "Current")
+                {
+
+                }
+                foreach (string table in missingGames)
+                {
+                    if (table != "Team" && table != "Arena" && table != "Player" && table != "Official")
+                    {
+                        await FindMissingGames(season, source, rowsMissing, table);
+                    }
+                }
+                foreach (string row in missingRows)
+                {
+                    if (row == "PlayByPlay")
+                    {
+                        await RepairPbpRows(season, source, rowsMissing);
+                    }
+                }
+            }
         }
+        public async Task FindMissingGames(int seasonID, string source, Label lbl, string table)
+        {
+            string query = "select distinct g.GameID Game, missing.GameID " + table +
+@"
+from Game g
+left join " + table + @" missing on g.SeasonID = missing.SeasonID and g.GameID = missing.GameID
+where g.SeasonID = " + seasonID + @" and missing.GameID is null
+order by g.GameID
+";
+            List<int> Games = new List<int>();
+            try
+            {
+                lbl.Text += "\nFinding missing Games...\n";
+                Application.DoEvents();
+                SqlConnection RepairConnect = new SqlConnection(bob.ToString());
+                using (SqlCommand FindRepairs = new SqlCommand(query, RepairConnect))
+                {
+                    FindRepairs.CommandType = CommandType.Text;
+                    RepairConnect.Open();
+                    using (SqlDataReader reader = FindRepairs.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            Games.Add(reader.GetInt32(0));
+                        }
+                    }
+                    RepairConnect.Close();
+                }
+                string found = Games.Count == 1 ? Games.Count + " missing Game found" : Games.Count + " missing Games found";
+                lbl.Text += found;
+                Application.DoEvents();
+            }
+            catch
+            {
+
+            }
+
+            SeasonID = seasonID;
+            if (source == "Historic")
+            {
+                lbl.Text += "\nReading data file...One moment please";
+                Application.DoEvents();
+                await RepairPbpHistoric(seasonID, lbl, Games);
+            }
+            else if (source == "Current")
+            {
+                if(table == "PlayByPlay")
+                {
+                    lbl.Text += "\nHitting PlayByPlay Endpoint";
+                    Application.DoEvents();
+                    await RepairPbpCurrent(seasonID, lbl, Games);
+                }
+                else
+                {
+                    lbl.Text += "\nHitting Boxscore Endpoint";
+                    Application.DoEvents();
+                }
+            }
+        }
+
+
+        public async Task RepairPbpRows(int seasonID, string source, Label lbl)
+        {
+            List<int> Games = new List<int>();
+            try
+            {
+                lbl.Text += "\nExecuting FindPbpRepairs... ";
+                Application.DoEvents();
+                SqlConnection RepairConnect = new SqlConnection(bob.ToString());
+                using (SqlCommand FindRepairs = new SqlCommand("FindPbpRepairs", RepairConnect))
+                {
+                    FindRepairs.CommandType = CommandType.StoredProcedure;
+                    FindRepairs.Parameters.AddWithValue("@SeasonID", seasonID);
+                    RepairConnect.Open();
+                    using (SqlDataReader reader = FindRepairs.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            Games.Add(reader.GetInt32(1));
+                        }
+                    }
+                    RepairConnect.Close();
+                }
+                //lbl.Text += Games.Count + " Games found missing rows";
+                string found = Games.Count == 1 ? Games.Count + " Game found missing rows" : Games.Count + " Games found missing rows";
+                lbl.Text += found;
+                Application.DoEvents();
+                int deletedRows = 0;
+                if (Games.Count > 0)
+                {
+                    string del = "delete from PlayByPlay where GameID in(";
+                    foreach (int g in Games)
+                    {
+                        del += g + ",";
+                    }
+                    del = del.Remove(del.Length - 1) + ")";
+
+                    using (SqlCommand DeleteGames = new SqlCommand(del, RepairConnect))
+                    {
+                        DeleteGames.CommandType = CommandType.Text;
+                        RepairConnect.Open();
+                        deletedRows = DeleteGames.ExecuteNonQuery();
+                        RepairConnect.Close();
+                    }
+                }
+                lbl.Text += "\n" + deletedRows + " rows deleted from PlayByPlay";
+                Application.DoEvents();
+            }
+            catch (Exception ex)
+            {
+
+                lbl.Text += "\nError deleting from PlayByPlay";
+            }
+            if (source == "Historic")
+            {
+                lbl.Text += "\nReading data file...One moment please";
+                Application.DoEvents();
+                SeasonID = seasonID;
+                await RepairPbpHistoric(seasonID, lbl, Games);
+            }
+        }
+
+        public async Task RepairPbpHistoric(int seasonID, Label lbl, List<int> Games)
+        {
+            await Task.Run(async () =>      //This sets the root variable to our big file
+            {
+                await ReadSeasonFile();
+            });//Regular season games
+            foreach (NBAdbToolboxHistoric.Game game in root.season.games.regularSeason.Where(g => Games.Contains(Int32.Parse(g.game_id))))
+            {
+                HistoricPlayByPlayStaging(game.playByPlay);
+                await Task.Run(async () =>
+                {
+                    await InsertPlayByPlayWithRetry(game, "RS");
+                });
+            }
+            //Postseason games  
+            foreach (NBAdbToolboxHistoric.Game game in root.season.games.playoffs.Where(g => Games.Contains(Int32.Parse(g.game_id))))
+            {
+                HistoricPlayByPlayStaging(game.playByPlay);
+                await Task.Run(async () =>
+                {
+                    await InsertPlayByPlayWithRetry(game, "PS");
+                });
+            }
+        }
+        public async Task RepairPbpCurrent(int seasonID, Label lbl, List<int> Games)
+        {
+            int it = 0;
+            foreach (int g in Games)
+            {
+                if(it == 0)
+                {
+                    lbl.Text += ": " + g;
+                }
+                else
+                {
+                    lbl.Text = lbl.Text.Remove(lbl.Text.Length - 9) + g;
+                }
+                rootCPBP = await currentDataPBP.GetJSON(g, seasonID);
+                try
+                {
+                    await InitiateCurrentPlayByPlay(rootCPBP.game, "Repair");
+                }
+                catch
+                {
+
+                }
+                it++;
+            }
+
+        }
+
         public string GetLowestTable(int seasonID)
         {
             var season = seasonInfo.FirstOrDefault(s => s.SeasonID == seasonID);
@@ -2143,7 +2465,7 @@ public float screenFontSize = 1;
             btnDownloadSeasonData.Enabled = true;
             listDownloadSeasonData.Enabled = true;
             CheckDataFiles();
-            
+
 
             //Check if all files downloaded
             if (listDownloadSeasonData.Items.Count == 0)
@@ -2237,9 +2559,9 @@ public float screenFontSize = 1;
                 {
                     lbl.BackColor = SubThemeColor;
                 }
-                if(lbl.AccessibleName != null)
+                if (lbl.AccessibleName != null)
                 {
-                    if(lbl.Tag != null)
+                    if (lbl.Tag != null)
                     {
                         lbl.ForeColor = SubThemeColor;
                         lbl.BackColor = ThemeColor;
@@ -2264,7 +2586,7 @@ public float screenFontSize = 1;
             {
                 btn.ForeColor = SubThemeColor;
                 btn.BackColor = ThemeColor;
-                
+
                 if (!btn.Enabled)
                 {
                     btn.BackColor = Color.Gainsboro;
@@ -2326,7 +2648,7 @@ public float screenFontSize = 1;
             {
                 return false;
             }
-            else 
+            else
             {
                 return config.Server != configControl.Server ||
                        config.Alias != configControl.Alias ||
@@ -2381,7 +2703,7 @@ public float screenFontSize = 1;
                         defaultConfig = true;
                     }
                 }
-                else if(!Directory.Exists(settings.ConfigPath))
+                else if (!Directory.Exists(settings.ConfigPath))
                 {
                     Directory.CreateDirectory(Path.Combine(projectRoot, @"Content\Configuration"));
                     settings.ConfigPath = Path.Combine(projectRoot, @"Content\Configuration");
@@ -2449,7 +2771,7 @@ public float screenFontSize = 1;
         {
             if (!File.Exists(configPath) || defaultConfig) //If our file doesnt exist
             {
-                if(sender == "btnEdit")
+                if (sender == "btnEdit")
                 {
                     configName = "";
                     string db = "";
@@ -2747,7 +3069,7 @@ public float screenFontSize = 1;
             btn.FlatStyle = FlatStyle.Flat;
             btn.FlatAppearance.BorderSize = 2;
             btn.FlatAppearance.BorderColor = Color.DodgerBlue;
-            if(btn.Text == "Populate Db")
+            if (btn.Text == "Populate Db")
             {
 
             }
@@ -2962,7 +3284,7 @@ public float screenFontSize = 1;
                         connectionString = bob.ToString();
                     }
                 }
-                catch(SqlException e)
+                catch (SqlException e)
                 {
                     exception = e.Number;
                     config.Create = false;
@@ -2978,7 +3300,7 @@ public float screenFontSize = 1;
                     WriteConfig("FirstDbConTest");
                 }
                 //CheckServer(connectionString, "create");
-                if(exception != 1801)
+                if (exception != 1801)
                 {
                     try
                     {
@@ -3033,7 +3355,7 @@ public float screenFontSize = 1;
                     writeConfig = true;
                     DbExists();
                     MessageBox.Show("Database already existed, now connected.", "Database Status",
-                                    MessageBoxButtons.OK, MessageBoxIcon.Information);                    
+                                    MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
 
 
@@ -3041,7 +3363,7 @@ public float screenFontSize = 1;
                 {
                     WriteConfig("After SeasonInsert");
                 }
-                if(exception == 0)
+                if (exception == 0)
                 {
                     DbExists();
                 }
@@ -3165,6 +3487,7 @@ public float screenFontSize = 1;
             ButtonChangeState(btnEdit, false);
             ButtonChangeState(btnRefresh, false);
             ButtonChangeState(btnMovement, true);
+            ButtonChangeState(btnRepair, false);
             listSeasons.Enabled = false;
             iterator = 0;
             imageIteration = 1;
@@ -3223,7 +3546,7 @@ public float screenFontSize = 1;
         public void PopulateDb_4_AfterGame(string sender)
         {
             ImageDriver();
-            if(sender == "Retry")
+            if (sender == "Retry")
             {
                 iterator--;
             }
@@ -3262,13 +3585,13 @@ public float screenFontSize = 1;
             {
                 RegularSeasonGames++;
                 GameID = Int32.Parse(root.season.games.regularSeason[i].game_id);
-                gamesRS.Add(GameID);                
+                gamesRS.Add(GameID);
             }
             for (int i = 0; i < root.season.games.playoffs.Count; i++)
             {
                 PostseasonGames++;
-                GameID = Int32.Parse(root.season.games.playoffs[i].game_id);                
-                gamesPS.Add(GameID);                
+                GameID = Int32.Parse(root.season.games.playoffs[i].game_id);
+                gamesPS.Add(GameID);
             }
             TotalGames = RegularSeasonGames + PostseasonGames;
             TotalGamesCD = TotalGames - 1;
@@ -3410,7 +3733,7 @@ public float screenFontSize = 1;
                     BuildLogInsert.ExecuteNonQuery();
                     Main.Close();
                 }
-                if(current == 1)
+                if (current == 1)
                 {
                     using (SqlCommand BuildLogInsert = new SqlCommand("GameExtLabels", Main))
                     {
@@ -3458,7 +3781,7 @@ public float screenFontSize = 1;
             #endregion
             #region Completion Message
             completionMessage += elapsedStringSeason + ". ";
-            if(source == "Current Refresh")
+            if (source == "Current Refresh")
             {
                 completionMessage += iterator + " games.";
             }
@@ -3481,11 +3804,11 @@ public float screenFontSize = 1;
              /*Height*/     "."
                         });
             lblWorkingOn.Left = pnlLoad.Width - lblWorkingOn.Width;
-            if(source == "Current")
+            if (source == "Current")
             {
                 lblWorkingOn.Top = lblSeasonStatusLoad.Bottom;
             }
-            else 
+            else
             {
                 lblWorkingOn.Top = 0;
             }
@@ -3669,7 +3992,7 @@ public float screenFontSize = 1;
         public int windowHeight = 0;
         public void AddControls(string sender)
         {
-            if(sender == "Init")
+            if (sender == "Init")
             {
                 screenWidth = Screen.PrimaryScreen.WorkingArea.Width;
                 screenHeight = Screen.PrimaryScreen.WorkingArea.Height;
@@ -3840,7 +4163,7 @@ public float screenFontSize = 1;
             });
 
 
-            listSeasons.SelectionMode = SelectionMode.MultiExtended; 
+            listSeasons.SelectionMode = SelectionMode.MultiExtended;
             listSeasons.KeyDown += (sender, e) => SelectAllListItems(sender, e, listSeasons);
             listSeasons.DrawMode = DrawMode.OwnerDrawFixed;
 
@@ -4032,59 +4355,59 @@ public float screenFontSize = 1;
         }
 
         public Panel pnlQueries = new Panel();
-        public Label lblQueries = new Label 
-        { 
-            Text = "Queries", 
+        public Label lblQueries = new Label
+        {
+            Text = "Queries",
             Tag = "Queries",
             AccessibleName = "Queries"
         };
-        public Label lblResources = new Label 
-        { 
-            Text = "Resources", 
+        public Label lblResources = new Label
+        {
+            Text = "Resources",
             Tag = "Resources",
             AccessibleName = "Resources"
         };
 
-        public Label lblDataDictionary = new Label 
-        {            
-            Text = "View Data Dictionary =>", 
-            ForeColor = Color.DodgerBlue, 
-            Cursor = Cursors.Hand 
+        public Label lblDataDictionary = new Label
+        {
+            Text = "View Data Dictionary =>",
+            ForeColor = Color.DodgerBlue,
+            Cursor = Cursors.Hand
         };
         public Label lblQGameTitle = new Label
-        { 
+        {
             Text = "Working with Game",
             Name = "Game Title",
             AccessibleName = "Game"
         };
-        public Label lblQG1 = new Label 
-        { 
+        public Label lblQG1 = new Label
+        {
             Text = "Game Details with Team joins =>",
             Name = "Game Details with Team joins"
         };
         public Label lblQG2 = new Label
-        { 
+        {
             Text = "Game Details with Team, GameExt, Arena and\nOfficial joins",
-            Name = "Game Details with Team, GameExt, Arena and Official joins" 
+            Name = "Game Details with Team, GameExt, Arena and Official joins"
         };
-        public Label lblQBoxTitle = new Label 
-        { 
+        public Label lblQBoxTitle = new Label
+        {
             Text = "Player and Team Boxscore",
             Name = "Box Title",
             AccessibleName = "Box"
         };
-        public Label lblQB1 = new Label 
-        { 
-            Text = "Player Boxscores from Nuggets vs Clippers Series =>", 
-            Name = "Player Boxscores from Nuggets vs Clippers Series" 
+        public Label lblQB1 = new Label
+        {
+            Text = "Player Boxscores from Nuggets vs Clippers Series =>",
+            Name = "Player Boxscores from Nuggets vs Clippers Series"
         };
-        public Label lblQB2 = new Label 
-        { 
+        public Label lblQB2 = new Label
+        {
             Text = "League-wide scoring trends with TeamBox =>",
-            Name = "League-wide scoring trends with TeamBox" 
+            Name = "League-wide scoring trends with TeamBox"
         };
-        public Label lblQPbpTitle = new Label 
-        { 
+        public Label lblQPbpTitle = new Label
+        {
             Text = "Navigating PlayByPlay",
             Name = "Pbp Title",
             AccessibleName = "Pbp"
@@ -4196,7 +4519,7 @@ public float screenFontSize = 1;
         public string GetQuery(string lblQuery)
         {
             string q = string.Empty;
-            if(lblQuery == "Game Details with Team joins")
+            if (lblQuery == "Game Details with Team joins")
             {
                 q =
 @"select g.SeasonID, g.GameID, g.GameType, g.Date, 
@@ -4216,7 +4539,7 @@ inner join TeamBox hb on g.SeasonID = hb.SeasonID and g.GameID = hb.GameID and h
 inner join TeamBox ab on g.SeasonID = ab.SeasonID and g.GameID = ab.GameID and a.TeamID = ab.TeamID
 order by SeasonID, Date, GameID";
             }
-            else if(lblQuery == "Game Details with Team, GameExt, Arena and Official joins")
+            else if (lblQuery == "Game Details with Team, GameExt, Arena and Official joins")
             {
                 q =
 @"select g.SeasonID, g.GameID, g.GameType,
@@ -4304,7 +4627,7 @@ inner join Team t on b.SeasonID = t.SeasonID and b.TeamID = t.TeamID
 group by b.SeasonID
 order by SeasonID desc";
             }
-            else if(lblQuery == "Watch Lebron and Kyrie's iconic 4th quarter against the Warriors with PlayByPlay")
+            else if (lblQuery == "Watch Lebron and Kyrie's iconic 4th quarter against the Warriors with PlayByPlay")
             {
                 q =
 @"select p.SeasonID, p.GameID, 
@@ -4366,7 +4689,7 @@ order by Points desc";
             label.AutoSize = false;
             label.Width = pnlDbLibrary.Width;
             label.Height = h;
-            if(it == 0 || it == 4)
+            if (it == 0 || it == 4)
             {
                 label.BackColor = ThemeColor;
                 label.ForeColor = SubThemeColor;
@@ -4428,12 +4751,12 @@ order by Points desc";
 
 
 
-            List<Label> labels = new List<Label> 
-            { 
+            List<Label> labels = new List<Label>
+            {
                 lblQueries, lblQGameTitle, lblQBoxTitle, lblQPbpTitle, lblResources
             };
             int i = 0;
-            foreach(Label label in labels)
+            foreach (Label label in labels)
             {
                 ResizeLibraryControls(label, i);
                 i++;
@@ -4899,7 +5222,7 @@ order by Points desc";
             btnDownloadSeasonData.Font = SetFontSize("Segoe UI", (float)(fontSize), FontStyle.Bold, (int)(listDownloadSeasonData.Width * .85), btnDownloadSeasonData);
             btnDownloadSeasonData.Text = "Download";
             btnDownloadSeasonData.AutoSize = true;
-            if(listDownloadSeasonData.Items.Count > 0)
+            if (listDownloadSeasonData.Items.Count > 0)
             {
                 ButtonChangeState(btnDownloadSeasonData, true);
             }
@@ -5017,7 +5340,7 @@ order by Points desc";
             AddPanelElement(pnlLoad, lblCurrentGame);
             AddPanelElement(pnlLoad, lblSeasonStatusLoadInfo);
             AddPanelElement(pnlLoad, lblSeasonStatusLoad);
-            AddPanelElement(pnlLoad, picLoad); 
+            AddPanelElement(pnlLoad, picLoad);
             AddPanelElement(pnlDbUtil, btnMovement);
             AddPanelElement(pnlDbUtil, lblMovementDet);
             AddPanelElement(pnlDbUtil, lblMovement);
@@ -5199,14 +5522,14 @@ order by Points desc";
                 {
                     list.SetSelected(i, true);
                 }
-                
+
                 // Mark the event as handled to prevent further processing
                 e.Handled = true;
-            }            
+            }
         }
 
         public HashSet<(int GameID, string builder, double mb, long len)> gameBytes = new HashSet<(int, string builder, double, long)>();
-        
+
         public void ChangeLabel(Color color, Label label, Control parent, List<string> structions)
         {
             float fontSize = 0;
@@ -5458,24 +5781,18 @@ order by Points desc";
                 }
                 else
                 {
-                    if (dbOverviewFirstOpen)
-                    {
-                        lblDbOptions.Invoke((MethodInvoker)(() =>
-                        {
-                            lblDbOptions.Text = "Loading Season info";
-                            CenterElement(pnlDbUtil, lblDbOptions);
-                        }));
-                        await Task.Run(() => GetSeasonInfo());
-                        lblDbOptions.Invoke((MethodInvoker)(() =>
-                        {
-                            lblDbOptions.Text = "Options";
-                            CenterElement(pnlDbUtil, lblDbOptions);
-                        }));
-                        dbOverviewFirstOpen = false;
-                    }
+                    lblDbOptions.Text = "Loading Season info";
+                    CenterElement(pnlDbUtil, lblDbOptions);
+                    Application.DoEvents();
+                    await Task.Run(() => GetSeasonInfo());
+                    lblDbOptions.Text = "Options";
+                    CenterElement(pnlDbUtil, lblDbOptions);
+                    Application.DoEvents();
+                    dbOverviewFirstOpen = false;
                     parent.Focus();
                     growShrink.Text = "-";
                     dbOverviewOpened = true;
+                    Application.DoEvents();
                     DbOverviewVisibility(true, "Click Open");
                 }
 
@@ -5671,6 +5988,7 @@ order by Points desc";
         private void BuildOverview()
         {
             popCount = 0;
+            seasonWarningString = "";
             float fontSize = ((float)(lblDbOverview.Height * .6) / (96 / 12)) * (72 / 12);
             int leftTable = pnlDbUtil.Width / 7;
             int topTable = lblDbOverview.Height;
@@ -5793,7 +6111,7 @@ order by Points desc";
                 topYear += heightMod + (int)(heightMod * .1);
                 singleLineHeight = heightMod + (int)(heightMod * .1);
 
-                if(it == 0)
+                if (it == 0)
                 {
                     yearStatusLabel.Top = tableHeaders[0].Bottom + (int)(yearLabel.Height * .1);
                 }
@@ -5913,81 +6231,119 @@ order by Points desc";
         }
 
         public string yearStatus = "";
+
+
+        public int[] DataValues(int season, string sender)
+        {
+            if (sender == "dataValues")
+            {
+                var seasonData = seasonInfo.FirstOrDefault(s => s.SeasonID == season);
+                int[] dataValues =
+                {
+                    seasonData.Item2.Game,                                              //0
+                    seasonData.Item2.Team,                                              //1
+                    seasonData.Item2.Arena,                                             //2
+                    seasonData.Item2.Player,                                            //3
+                    seasonData.Item2.Official,                                          //4
+                    seasonData.Item2.PlayerBox,                                         //5
+                    seasonData.Item2.TeamBox,                                           //6
+                    seasonData.Item2.PlayByPlay,                                        //7
+                    seasonData.Item2.StartingLineups,                                   //8
+                    seasonData.Item2.TeamBoxLineups,                                    //9
+                    seasonData.Item2.Games,                                             //10
+                    seasonData.Item2.HistoricLoaded,                                    //11
+                    seasonData.Item2.CurrentLoaded                                      //12
+                };
+                return dataValues;
+            }
+            else if (sender == "dataValueRows")
+            {
+                var seasonData = seasonInfo.FirstOrDefault(s => s.SeasonID == season);
+                int[] dataValueRows =
+                {
+                    0,                                                                  //0
+                    0,                                                                  //1
+                    0,                                                                  //2
+                    0,                                                                  //3
+                    0,                                                                  //4
+                    seasonData.Item2.PBoxRows,                                          //5
+                    seasonData.Item2.TBoxRows,                                          //6
+                    seasonData.Item2.PbpRows,                                           //7
+                    seasonData.Item2.StartingLineupRows,                                //8
+                    seasonData.Item2.TBoxLineupRows                                     //9
+                };
+                return dataValueRows;
+            }
+            else if (sender == "controlValues")
+            {
+                var seasonDataControl = seasonControl.FirstOrDefault(s => s.SeasonID == season);
+                int[] controlValues =
+                {
+                    seasonDataControl.Item2.Game,                                       //0
+                    seasonDataControl.Item2.Team,                                       //1
+                    seasonDataControl.Item2.Arena,                                      //2
+                    seasonDataControl.Item2.Player,                                     //3
+                    seasonDataControl.Item2.Official,                                   //4
+                    seasonDataControl.Item2.PlayerBox,                                  //5
+                    seasonDataControl.Item2.TeamBox,                                    //6
+                    seasonDataControl.Item2.PlayByPlay,                                 //7
+                    seasonDataControl.Item2.StartingLineups,                            //8
+                    seasonDataControl.Item2.TeamBoxLineups,                             //9
+                    seasonDataControl.Item2.Games,                                      //10
+                    seasonDataControl.Item2.PBoxRows,                                   //11
+                    seasonDataControl.Item2.TBoxRows,                                   //12
+                    seasonDataControl.Item2.PbpRows,                                    //13
+                    seasonDataControl.Item2.StartingLineupRows,                         //14
+                    seasonDataControl.Item2.TBoxLineupRows                              //15
+                };
+                return controlValues;
+            }
+            else if (sender == "controlCurrentValues")
+            {
+                var seasonCurrentDataControl = seasonCurrentControl.FirstOrDefault(s => s.SeasonID == season);
+                int[] controlCurrentValues =
+                {
+                    seasonCurrentDataControl.Item2.Game,                                //0
+                    seasonCurrentDataControl.Item2.Team,                                //1
+                    seasonCurrentDataControl.Item2.Arena,                               //2
+                    seasonCurrentDataControl.Item2.Player,                              //3
+                    seasonCurrentDataControl.Item2.Official,                            //4
+                    seasonCurrentDataControl.Item2.PlayerBox,                           //5
+                    seasonCurrentDataControl.Item2.TeamBox,                             //6
+                    seasonCurrentDataControl.Item2.PlayByPlay,                          //7
+                    seasonCurrentDataControl.Item2.StartingLineups,                     //8
+                    seasonCurrentDataControl.Item2.TeamBoxLineups,                      //9
+                    seasonCurrentDataControl.Item2.Games,                               //10
+                    seasonCurrentDataControl.Item2.PBoxRows,                            //11
+                    seasonCurrentDataControl.Item2.TBoxRows,                            //12
+                    seasonCurrentDataControl.Item2.PbpRows,                             //13
+                    seasonCurrentDataControl.Item2.StartingLineupRows,                  //14
+                    seasonCurrentDataControl.Item2.TBoxLineupRows                       //15
+                };
+                return controlCurrentValues;
+            }
+            else
+            {
+                return null;
+            }
+
+
+
+        }
         private void AddDataLabelsForYear(int year, int topYear, List<int> columnPositions, int rowPosition, float fontSize)
         {
             seasonDataWarning = false;
             seasonDataError = false;
             seasonDataSuccess = false;
             //find the season data for this year
-            var seasonData = seasonInfo.FirstOrDefault(s => s.SeasonID == year);
-            var seasonDataControl = seasonControl.FirstOrDefault(s => s.SeasonID == year);
-            var seasonCurrentDataControl = seasonCurrentControl.FirstOrDefault(s => s.SeasonID == year);
 
             //data values in order: Game, Team, Arena, Player, Official, TeamBox, PlayerBox, PlayByPlay
-            int[] dataValues = {
-                seasonData.Item2.Game,
-                seasonData.Item2.Team,
-                seasonData.Item2.Arena,
-                seasonData.Item2.Player,
-                seasonData.Item2.Official,
-                seasonData.Item2.PlayerBox,
-                seasonData.Item2.TeamBox,
-                seasonData.Item2.PlayByPlay,
-                seasonData.Item2.StartingLineups,
-                seasonData.Item2.TeamBoxLineups,
-                seasonData.Item2.Games,
-                seasonData.Item2.HistoricLoaded,
-                seasonData.Item2.CurrentLoaded
-            };
-            int[] dataValueRows =
-            {
-                0,
-                0,
-                0,
-                0,
-                0,
-                seasonData.Item2.PBoxRows,
-                seasonData.Item2.TBoxRows,
-                seasonData.Item2.PbpRows,
-                seasonData.Item2.StartingLineupRows,
-                seasonData.Item2.TBoxLineupRows
-            };
-            int[] controlValues = {
-                seasonDataControl.Item2.Game,
-                seasonDataControl.Item2.Team,
-                seasonDataControl.Item2.Arena,
-                seasonDataControl.Item2.Player,
-                seasonDataControl.Item2.Official,
-                seasonDataControl.Item2.PlayerBox,
-                seasonDataControl.Item2.TeamBox,
-                seasonDataControl.Item2.PlayByPlay,
-                seasonDataControl.Item2.StartingLineups,
-                seasonDataControl.Item2.TeamBoxLineups,
-                seasonDataControl.Item2.Games,
-                seasonDataControl.Item2.PBoxRows,
-                seasonDataControl.Item2.TBoxRows,
-                seasonDataControl.Item2.PbpRows,
-                seasonDataControl.Item2.StartingLineupRows,
-                seasonDataControl.Item2.TBoxLineupRows
-            };
-            int[] controlCurrentValues = {
-                seasonCurrentDataControl.Item2.Game,
-                seasonCurrentDataControl.Item2.Team,
-                seasonCurrentDataControl.Item2.Arena,
-                seasonCurrentDataControl.Item2.Player,
-                seasonCurrentDataControl.Item2.Official,
-                seasonCurrentDataControl.Item2.PlayerBox,
-                seasonCurrentDataControl.Item2.TeamBox,
-                seasonCurrentDataControl.Item2.PlayByPlay,
-                seasonCurrentDataControl.Item2.StartingLineups,
-                seasonCurrentDataControl.Item2.TeamBoxLineups,
-                seasonCurrentDataControl.Item2.Games,
-                seasonCurrentDataControl.Item2.PBoxRows,
-                seasonCurrentDataControl.Item2.TBoxRows,
-                seasonCurrentDataControl.Item2.PbpRows,
-                seasonCurrentDataControl.Item2.StartingLineupRows,
-                seasonCurrentDataControl.Item2.TBoxLineupRows
-            };
+            int[] dataValues = DataValues(year, "dataValues");
+            int[] dataValueRows = DataValues(year, "dataValueRows");
+            int[] controlValues = DataValues(year, "controlValues");
+            int[] controlCurrentValues = DataValues(year, "controlCurrentValues");
+
+
             string[] textValues =
             {
                 "Games", "Teams", "Arenas", "Players", "Officials", "Games", "Games", "Games", "Games", "Games"
@@ -6006,7 +6362,7 @@ order by Points desc";
                     dataLabel.Text = dataValues[i].ToString() + " " + textValues[i] + "\n";
                     dataLabelRows.Text = dataValueRows[i].ToString() + " Rows";
                 }
-                else if(i == 0)
+                else if (i == 0)
                 {
                     dataLabel.Text = dataValues[i].ToString() + " " + textValues[i];
                     dataLabel.AutoSize = true;
@@ -6033,7 +6389,7 @@ order by Points desc";
                     {
                         dataLabel.ForeColor = ThemeColor;
                     }
-                    if(i >= 5)
+                    if (i >= 5)
                     {
                         dataLabelRows.AutoSize = true;
                         dataLabelRows.Left = columnPositions[i]; //center under column
@@ -6050,7 +6406,7 @@ order by Points desc";
                         }
                     }
                 }
-                else if(dataValues[12] == 1 && dataValues[11] == 0)
+                else if (dataValues[12] == 1 && dataValues[11] == 0)
                 {
                     if (dataValues[i] != controlCurrentValues[i])
                     {
@@ -6107,11 +6463,17 @@ order by Points desc";
                     }
                 }
             }
-            if(!seasonDataWarning && !seasonDataError)
+            if (!seasonDataWarning && !seasonDataError)
             {
                 seasonDataSuccess = true;
             }
+            else
+            {
+                seasonWarningString += year;
+                ButtonChangeState(btnRepair, true);
+            }
         }
+        public string seasonWarningString = "";
         private Label GetOrCreateDataLabel(string key, float fontSize)
         {
             if (!dataLabels.ContainsKey(key))
@@ -6459,7 +6821,7 @@ order by Points desc";
 
         [DllImport("psapi.dll")]
         static extern bool EmptyWorkingSet(IntPtr process);
-        public async Task ReadSeasonFile(bool bHistoric, bool bCurrent)
+        public async Task ReadSeasonFile()
         {
             root = null;
             string filePath = Path.Combine(projectRoot, "Content\\", "dbconfig.json");              //Line 2050 is TESTing data, 2049 normal
@@ -6591,7 +6953,7 @@ order by Points desc";
         }
         public void HistoricTeamUpdate(NBAdbToolboxHistoric.Team team, int teamID, string sender)
         {
-            if(sender == "Historic")
+            if (sender == "Historic")
             {
                 sqlBuilder.Append("update Team set Wins = ")
                           .Append(team.teamWins).Append(", Losses = ")
@@ -6599,7 +6961,7 @@ order by Points desc";
                           .Append(teamID).Append(" and SeasonID = ")
                           .Append(SeasonID).Append("\n");
             }
-            else if(sender == "Current")
+            else if (sender == "Current")
             {
                 teamWinsBuilder.Append("update Team set Wins = ")
                                .Append(team.teamWins).Append(", Losses = ")
@@ -6662,7 +7024,7 @@ order by Points desc";
         public void HistoricOfficialInsert(NBAdbToolboxHistoric.Official official, string sender)
         {
             officialList.Add((SeasonID, official.personId));
-            
+
 
             // Properly escape single quotes in the official's name using StringBuilder
             string escapedName = official.name.Replace("'", "''");
@@ -6756,7 +7118,7 @@ order by Points desc";
                 sqlBuilder.Append("'RS', null)\n");
             }
             else if (gType == "4")
-            { 
+            {
                 sqlBuilder.Append("'PS', '" + SeriesID + "')\n");
             }
             else if (gType == "5")
@@ -6912,7 +7274,7 @@ order by Points desc";
         {
             //Add player to appropriate tracking list
             playerList.Add((SeasonID, player.personId));
-            
+
 
             //Basic player information
             sqlBuilder.Append("Insert into Player values(")
@@ -7138,7 +7500,7 @@ order by Points desc";
             {
                 sqlBuilder.Append("Bench', null)\n");
             }
-            else if(itera > 4)
+            else if (itera > 4)
             {
                 sqlBuilder.Append("Bench', '")
                           .Append(player.position)
@@ -7618,7 +7980,7 @@ order by Points desc";
             foreach (NBAdbToolboxCurrent.Team team in new[] { game.homeTeam, game.awayTeam })
             {
                 int MatchupID = (team == game.homeTeam) ? game.awayTeam.teamId : game.homeTeam.teamId;
-                string homeAway = (team == game.homeTeam) ? "Home": "Away";
+                string homeAway = (team == game.homeTeam) ? "Home" : "Away";
                 CurrentTeamBox(team, MatchupID, homeAway);
                 InitiateCurrentPlayerBox(game, team, MatchupID);
             }
@@ -7799,7 +8161,7 @@ order by Points desc";
                 sqlBuilderParallel.Append("0, ");
             }
 
-            
+
             if (GameID.ToString().Substring(0, 1) != "2")
             {
                 int seed = (homeAway == "Home") ? homeSeed : awaySeed;
@@ -8183,7 +8545,7 @@ order by Points desc";
                 int currentAttempt = 0;
                 bool success = false;
                 string inserts = playByPlayBuilder.ToString();
-                if(sender == "Missing")
+                if (sender == "Missing")
                 {
                     inserts = "delete from PlayByPlay where SeasonID = " + SeasonID + " and GameID = " + game.gameId + "\n" + inserts;
                 }
@@ -8228,7 +8590,7 @@ order by Points desc";
                 }
             });
 
-            if (iterator == TotalGamesCD || sender == "Missing")
+            if (iterator == TotalGamesCD || sender == "Missing" || sender == "Repair")
             {
                 await DoPbp;
             }

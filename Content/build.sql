@@ -1407,6 +1407,43 @@ begin
   update GameExt set Label = 'SoFi Play-In Tournament', LabelDetail = 'West' where GameID in(52400121, 52400131, 52400211);
 end
 ~~~
+
+
+--Find bad PlayByPlay games
+create procedure FindPbpRepairs @SeasonID int
+as
+--Get the last ActionID for each Game
+with GameLastAction as(
+select p.SeasonID, p.GameID, max(ActionID) MaxAction
+from PlayByPlay p 
+where SeasonID = @SeasonID
+group by p.SeasonID, p.GameID),
+--Get the First ActionID for each Game. Should be 1, but just to make sure.
+GameFirstAction as(
+select p.SeasonID, p.GameID, min(ActionID) MinAction
+from PlayByPlay p 
+where SeasonID = @SeasonID
+group by p.SeasonID, p.GameID)
+--Using the last (max) ActionID, look for any games where the Clock doesnt hit all zeros
+select g.SeasonID, g.GameID, g.MaxAction Action, p.Qtr, p.Clock
+from GameLastAction g
+inner join PlayByPlay p on g.SeasonID = p.SeasonID and g.GameID = p.GameID and g.MaxAction = p.ActionID
+where p.Clock != '00:00.00' and g.SeasonID = @SeasonID
+union
+--Using the first (min) ActionID, look for any games where the Clock doesnt start at 12:00.00
+select g.SeasonID, g.GameID, g.MinAction Action, p.Qtr, p.Clock
+from GameFirstAction g
+inner join PlayByPlay p on g.SeasonID = p.SeasonID and g.GameID = p.GameID and g.MinAction = p.ActionID
+where p.Clock != '12:00.00' and g.SeasonID = @SeasonID
+union
+--Make sure we get any games where the count of Actions doesn't equal the last ActionID. Make sure we arent getting the games from GameFirstAction too
+select p.SeasonID, p.GameID, count(p.ActionID) Actions, 1 Qtr, 'Placehold' Clock
+from PlayByPlay p
+left join GameFirstAction g on p.SeasonID = g.SeasonID and p.GameID = g.GameID
+where p.GameID != g.GameID and p.SeasonID = @SeasonID
+group by p.SeasonID, p.GameID
+having count(p.ActionID) < max(p.ActionID)
+~~~
 */
 
 
