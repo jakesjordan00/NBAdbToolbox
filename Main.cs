@@ -441,7 +441,7 @@ namespace NBAdbToolbox
                 (2022, (1320, 1, 30, 35, 554, 83, 1320, 1320, 1320, 1320, 1320, 1320, 43649, 2640, 728421, 43649, 5280)),
                 (2021, (1323, 1, 30, 30, 633, 84, 1323, 1323, 1323, 1323, 1323, 1323, 44737, 2646, 743859, 44737, 5292)),
                 (2020, (1171, 1, 30, 31, 550, 79, 1171, 1171, 1171, 1171, 1171, 1171, 38733, 2342, 656159, 38733, 4684)),
-                (2019, (1142, 1, 30, 37, 549, 74, 1142, 1142, 1142, 1142, 1142, 1142, 37902, 2284, 619741, 37902, 4568)),
+                (2019, (1142, 1, 30, 37, 549, 74, 1142, 1142, 1142, 1142, 1142, 1142, 37902, 2284, 619791, 37902, 4568)),
                 (2018, (1312, 1, 30, 32, 557, 68, 1312, 1312, 1312, 1312, 1312, 1312, 42850, 2624, 654447, 42850, 5248)),
                 (2017, (1311, 1, 30, 32, 559, 71, 1311, 1311, 1311, 1311, 1311, 1311, 43115, 2622, 631695, 43115, 5244)),
                 (2016, (1309, 1, 30, 31, 493, 67, 1309, 1309, 1309, 1309, 1309, 1309, 39077, 2618, 636059, 39077, 5236)),
@@ -600,7 +600,9 @@ namespace NBAdbToolbox
                     foreach (int season in seasons)
                     {
                         missingPbps.Clear();
+                        missingBoxes.Clear();
                         missingPbp = false;
+                        boxMissing = false;
                         SeasonID = season;
                         seasonIterator++;
                         Task DeleteSeasonData = Task.Run(() =>
@@ -866,6 +868,11 @@ namespace NBAdbToolbox
                                 }
                                 //Task TeamBoxLineupTask = TeamBoxLineupCalculation(GameID);
                                 root.season.games.playoffs[i].box = null;
+                                if(GameID == 41900305)
+                                {
+                                    PlayByPlayCompleteGame(root.season.games.playoffs[i].playByPlay, 466);
+                                    await InsertPlayByPlayWithRetry(root.season.games.playoffs[i], "PS");
+                                }
                                 root.season.games.playoffs[i].playByPlay = null;
                                 UpdateLoadingImage(imageIteration);
                                 PopulateDb_4_AfterGame("PS");
@@ -1359,6 +1366,20 @@ namespace NBAdbToolbox
 
             this.Shown += AfterLoad;
         }
+
+        public void PlayByPlayCompleteGame(NBAdbToolboxHistoric.PlayByPlay pbp, int start)
+        {
+            int actions = pbp.actions.Count;
+            for (int i = start; i < actions; i++)
+            {
+                pbp.actions[i].actionId += 71;
+                PlayByPlayInsertString(pbp.actions[i], Int32.Parse(pbp.gameId));
+            }
+
+        }
+
+
+
         public Label lblMovementLoadStatus = new Label();
         public Label lblMovementLoadProgress = new Label();
         public int playerMovementRows = 0;
@@ -1943,6 +1964,7 @@ namespace NBAdbToolbox
             for (int i = 0; i < nonOps; i++)
             {
                 int season = nonOperationalSeasons[i];
+                SeasonID = season;
                 int[] dataValues = DataValues(season, "dataValues");
                 int[] dataValueRows = DataValues(season, "dataValueRows");
                 int[] controlValues = DataValues(season, "controlValues");
@@ -1969,15 +1991,16 @@ namespace NBAdbToolbox
                     Top = gamesMissing.Bottom,
                     AutoSize = true
                 };
+                int[] selectedControlValues = source == "Historic" ? controlValues : controlCurrentValues;
 
                 //Determine if missing full games or just rows
-                if (source == "Historic")
-                {
-                    for (int j = 0; j < controlValues.Length; j++)
+                //if (source == "Historic")
+                //{
+                    for (int j = 0; j < selectedControlValues.Length; j++)
                     {
                         if (j < 10)
                         {
-                            if (dataValues[j] != controlValues[j])
+                            if (dataValues[j] != selectedControlValues[j])
                             {
                                 missingGames.Add(controlItems[j]);
                                 if (j == 0)
@@ -1997,10 +2020,10 @@ namespace NBAdbToolbox
                         }
                         else if (j > 10)
                         {
-                            if (dataValueRows[j - 6] != controlValues[j])
+                            if (dataValueRows[j - 6] != selectedControlValues[j])
                             {
                                 missingRows.Add(controlItems[j]);
-                                missingRowDiffs.Add(controlValues[j] - dataValueRows[j - 6]);
+                                missingRowDiffs.Add(selectedControlValues[j] - dataValueRows[j - 6]);
                             }
                         }
                     }
@@ -2032,11 +2055,11 @@ namespace NBAdbToolbox
                         }
                     }
 
-                }
-                else if (source == "Current")
-                {
+                //}
+                //else if (source == "Current")
+                //{
 
-                }
+                //}
                 foreach (string table in missingGames)
                 {
                     if (table != "Team" && table != "Arena" && table != "Player" && table != "Official")
@@ -2053,6 +2076,10 @@ namespace NBAdbToolbox
                 }
             }
         }
+
+
+
+
         public async Task FindMissingGames(int seasonID, string source, Label lbl, string table)
         {
             string query = "select distinct g.GameID Game, missing.GameID " + table +
@@ -2095,7 +2122,19 @@ order by g.GameID
             {
                 lbl.Text += "\nReading data file...One moment please";
                 Application.DoEvents();
-                await RepairPbpHistoric(seasonID, lbl, Games);
+                await Task.Run(async () =>      //This sets the root variable to our big file
+                {
+                    await ReadSeasonFile();
+                });//Regular season games
+                lbl.Text.Replace("Reading data file...One moment please", "Reading data file...Complete!");
+                Application.DoEvents();
+
+                if (table == "PlayByPlay")
+                {
+                    lbl.Text += "\nRepairing PlayByPlay...";
+                    Application.DoEvents();
+                    await RepairPbpHistoric(seasonID, lbl, Games);
+                }
             }
             else if (source == "Current")
             {
@@ -2112,6 +2151,7 @@ order by g.GameID
                 }
             }
         }
+
 
 
         public async Task RepairPbpRows(int seasonID, string source, Label lbl)
@@ -2177,10 +2217,7 @@ order by g.GameID
 
         public async Task RepairPbpHistoric(int seasonID, Label lbl, List<int> Games)
         {
-            await Task.Run(async () =>      //This sets the root variable to our big file
-            {
-                await ReadSeasonFile();
-            });//Regular season games
+            int it = 0;
             foreach (NBAdbToolboxHistoric.Game game in root.season.games.regularSeason.Where(g => Games.Contains(Int32.Parse(g.game_id))))
             {
                 HistoricPlayByPlayStaging(game.playByPlay);
@@ -2188,7 +2225,11 @@ order by g.GameID
                 {
                     await InsertPlayByPlayWithRetry(game, "RS");
                 });
+                it++; 
             }
+            lbl.Text += it == 1 ? "\nRegular Season done! " + it + " game repaired." : "\nRegular Season done! " + it + " games repaired.";
+            Application.DoEvents();
+            it = 0;
             //Postseason games  
             foreach (NBAdbToolboxHistoric.Game game in root.season.games.playoffs.Where(g => Games.Contains(Int32.Parse(g.game_id))))
             {
@@ -2198,10 +2239,14 @@ order by g.GameID
                     await InsertPlayByPlayWithRetry(game, "PS");
                 });
             }
+            lbl.Text += it == 1 ? "\nPlayoffs done! " + it + " game repaired." : "\nPlayoffs done! " + it + " games repaired.";
+            Application.DoEvents();
         }
         public async Task RepairPbpCurrent(int seasonID, Label lbl, List<int> Games)
         {
             int it = 0;
+            SeasonID = seasonID;
+            List<int> missingRepairs = new List<int>();
             foreach (int g in Games)
             {
                 if(it == 0)
@@ -2212,16 +2257,39 @@ order by g.GameID
                 {
                     lbl.Text = lbl.Text.Remove(lbl.Text.Length - 9) + g;
                 }
-                rootCPBP = await currentDataPBP.GetJSON(g, seasonID);
-                try
-                {
-                    await InitiateCurrentPlayByPlay(rootCPBP.game, "Repair");
-                }
-                catch
-                {
 
+                if (seasonID == 2019 && Missing2019Games.Contains(g))
+                {
+                    missingRepairs.Add(g);
+                }
+                else
+                {
+                    lbl.Text.Replace("\nHitting endpoint...Inserting...Done!", "");
+                    lbl.Text += "\nHitting endpoint...";
+                    rootCPBP = await currentDataPBP.GetJSON(g, seasonID);
+                    try
+                    {
+                        lbl.Text += "Inserting...";
+                        await InitiateCurrentPlayByPlay(rootCPBP.game, "Repair");
+                        lbl.Text += "Done!";
+                    }
+                    catch (NullReferenceException e)
+                    {                        
+
+                    }
                 }
                 it++;
+            }
+            if(missingRepairs.Count > 0)
+            {
+                lbl.Text += "\nCouldn't read endpoint for " + missingRepairs.Count + " games. Reading data file...";
+                await Task.Run(async () =>
+                {
+                    await ReadSeasonFile();
+                });
+                lbl.Text += "Complete!";
+                Application.DoEvents();
+                await RepairPbpHistoric(seasonID, lbl, missingRepairs);
             }
 
         }
@@ -8616,10 +8684,17 @@ order by Points desc";
                     .Append(action.actionType).Append("'");
 
             // Optional fields - Description
-            if (action.description != null && action.description != "")
+            if ((action.description != null && action.description != "") || action.actionType == "memo")
             {
                 playByPlayBuilder.Append(", Description");
-                valuesSB.Append(", '").Append(action.description.Replace("'", "''")).Append("'");
+                if (action.actionType == "memo")
+                {
+                    valuesSB.Append(", '").Append(action.value.Replace("'", "''")).Append("'");
+                }
+                else
+                {
+                    valuesSB.Append(", '").Append(action.description.Replace("'", "''")).Append("'");
+                }
             }
 
             // Side

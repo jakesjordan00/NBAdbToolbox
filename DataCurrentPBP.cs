@@ -162,6 +162,7 @@ namespace NBAdbToolboxCurrentPBP
         public int? stealPersonId { get; set; }
         public string? blockPlayerName { get; set; }
         public int? blockPersonId { get; set; }
+        public string? value { get; set; }
     }
 
 }
