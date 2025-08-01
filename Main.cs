@@ -54,7 +54,6 @@ namespace NBAdbToolbox
         //static string projectRoot = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..")); //File path for project when DEBUGGING
 
         static string projectRoot = AppDomain.CurrentDomain.BaseDirectory.Replace(@"\bin\Debug\", "").Replace(@"\bin\Release\", ""); //File path for project on FINAL RELEASE and DEBUG
-        //C:\Users\derfj\Desktop\NBAdbToolbox\bin\Debug\
 
         public string settingsPath = Path.Combine(projectRoot, @"Content", "settings.json");
         private Settings settings;
@@ -2484,7 +2483,6 @@ order by g.GameID
         }
         public async Task DownloadSeasonFiles()
         {
-            string gitToken = "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";
             //Disable controls during download
             btnDownloadSeasonData.Enabled = false;
             ButtonChangeState(btnDownloadSeasonData, false);
@@ -2534,7 +2532,6 @@ order by g.GameID
             using (HttpClient client = new HttpClient())
             {
                 client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0");
-                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", gitToken);
                 foreach (string season in listDownloadSeasonData.SelectedItems)
                 {
                     int seasonID = int.Parse(season);
