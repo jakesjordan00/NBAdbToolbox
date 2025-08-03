@@ -244,7 +244,7 @@ namespace NBAdbToolbox
             {
                 maxHeight = (int)(windowHeight * .11);
             }
-
+            //Player Movement
 
 
             //Override the close behavior to advance to next step
@@ -274,7 +274,7 @@ namespace NBAdbToolbox
             if (InfoBubble.chkDontShowTutorial.Checked)
             {
                 dialogPublic.Visibility = "Hidden";
-                for (int i = 0; i < 6; i++)
+                for (int i = 0; i < 7; i++) //Player Movement. Change from 6 -> 7?
                 {
                     string tutorialDialogKey = sequencePublic[i];
                     var tutorialDialog = dialogs[tutorialDialogKey];
@@ -285,7 +285,7 @@ namespace NBAdbToolbox
             else
             {                
                 dialogPublic.Visibility = "Visible";
-                for (int i = 0; i < 5; i++)
+                for (int i = 0; i < 6; i++) //Player Movement. Change from 5 -> 6?
                 {
                     string tutorialDialogKey = sequencePublic[i];
                     var tutorialDialog = dialogs[tutorialDialogKey];
@@ -571,7 +571,7 @@ namespace NBAdbToolbox
                     parent.Top + lblDbUtil.Height + (int)(lblDbOverview.Height * 1.5)
                 );
             }
-            else if (dialog.Name.StartsWith("Database Options Populate"))
+            else if (dialog.Name == "Database Options Populate")
             {
                 titleTarget = this.Width;
                 lblTitle.Font = Main.SetFontSize("Segoe UI", ((float)(this.Width) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, titleTarget, lblTitle);
@@ -583,7 +583,7 @@ namespace NBAdbToolbox
                     parent.Top + listSeasons.Top + ((listSeasons.Height - this.Height) / 2)
                 );
             }
-            else if (dialog.Name.StartsWith("Database Options Refresh"))
+            else if (dialog.Name == "Database Options Refresh")
             {
                 titleTarget = this.Width;
                 lblTitle.Font = Main.SetFontSize("Segoe UI", ((float)(this.Width) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, titleTarget, lblTitle);
@@ -595,7 +595,7 @@ namespace NBAdbToolbox
                     parent.Top + btnRefresh.Top + btnRefresh.Height
                 );
             }
-            else if (dialog.Name.StartsWith("Database Options Download"))
+            else if (dialog.Name == "Database Options Download")
             {
                 titleTarget = (int)(this.Width);
                 lblTitle.Font = Main.SetFontSize("Segoe UI", ((float)(this.Width) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, titleTarget, lblTitle);
@@ -607,7 +607,7 @@ namespace NBAdbToolbox
                     parent.Top + listDownloadSeasonData.Top + ((listDownloadSeasonData.Height - this.Height) / 2)
                 );
             }
-            else if (dialog.Name.StartsWith("Database Options Repair"))
+            else if (dialog.Name == "Database Options Repair")
             {
                 titleTarget = (int)(this.Width);
                 lblTitle.Font = Main.SetFontSize("Segoe UI", ((float)(this.Width) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, titleTarget, lblTitle);
@@ -619,6 +619,20 @@ namespace NBAdbToolbox
                     parent.Top + btnRepair.Top + btnRepair.Height
                 );
             }
+            else if (dialog.Name =="Database Options Movement")
+            {
+                titleTarget = (int)(this.Width * 1.3);
+                lblTitle.Font = Main.SetFontSize("Segoe UI", ((float)(this.Width) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, titleTarget, lblTitle);
+                textTarget = (int)(this.Width * .8);
+                lblText.Font = Main.SetFontSize("Segoe UI", ((float)(this.Width) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, textTarget, lblText);
+                Control btnMovement = FindSpecificControl(parent, "btnMovement");
+                this.Location = new Point(
+                    btnMovement.Left,
+                    parent.Top + btnMovement.Top + btnMovement.Height
+                );
+            }
+
+
             //lblTitle.Font = Main.SetFontSize("Segoe UI", ((float)(this.Width) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, titleTarget, lblTitle);
             this.Visible = true;
 

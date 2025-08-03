@@ -16,8 +16,8 @@
     "Text": "Server: The name or public IP address of the server you'll be connecting to\nServer Alias: A nickname for the server to display on UI\nDatabase: Name of Database we will create or connect to\n Create Db: If checked, we will attempt to create the database. If not, we will try to connect first\n Set as Default Db: If checked, Toolbox will connect to this Server/Db on Launch\n Use Windows Auth: Connect to the server with your windows login\nUsername: If using a SQL Server logon, enter user and password. If Windows Auth, no entry",
     "DialogType": "Help",
     "Frequency": 5,
-    "Occurrences": 5,
-    "Visibility": "Hidden",
+    "Occurrences": 2,
+    "Visibility": "Visible",
     "TutorialSequence": null,
     "TutorialStep": 0
   },
@@ -27,7 +27,7 @@
     "Text": "Click 'Build Database' next! We'll connect to the server and create the Db from master.",
     "DialogType": "Instruction",
     "Frequency": 5,
-    "Occurrences": 5,
+    "Occurrences": 2,
     "Visibility": "Hidden",
     "TutorialSequence": null,
     "TutorialStep": 0
@@ -46,7 +46,8 @@
       "DatabaseOptionsPopulate",
       "DatabaseOptionsRefresh",
       "DatabaseOptionsDownload",
-      "DatabaseOptionsRepair"
+      "DatabaseOptionsRepair",
+      "DatabaseOptionsMovement"
     ],
     "TutorialStep": 1
   },
@@ -78,7 +79,7 @@
     "Text": "Instead of reloading all season data, refresh current season with any games played since last insert by clicking 'Refresh 2024 Data'",
     "DialogType": "Tutorial",
     "Frequency": 5,
-    "Occurrences": 3,
+    "Occurrences": 1,
     "Visibility": "Hidden",
     "TutorialSequence": null,
     "TutorialStep": 4
@@ -89,7 +90,7 @@
     "Text": "To enable more seasons, first download their respective Data Files by clicking 'Download'\nFiles are downloaded from the program's github repo and stored in your program's Content/Historic Data folder",
     "DialogType": "Tutorial",
     "Frequency": 5,
-    "Occurrences": 2,
+    "Occurrences": 1,
     "Visibility": "Hidden",
     "TutorialSequence": null,
     "TutorialStep": 5
@@ -100,21 +101,21 @@
     "Text": "If the game/entity or row count doesn't match the expected values, click 'Repair Db' to populate any missing data",
     "DialogType": "Tutorial",
     "Frequency": 5,
-    "Occurrences": 2,
+    "Occurrences": 1,
     "Visibility": "Hidden",
     "TutorialSequence": null,
     "TutorialStep": 6
   },
-  "DatabaseOverviewExplanation": {
-    "Name": "Database Overview Explanation",
-    "Title": "Database Overview",
-    "Text": "Empty Record",
-    "DialogType": "Info",
-    "Frequency": 3,
-    "Occurrences": 0,
-    "Visibility": "Visible",
+  "DatabaseOptionsMovement": {
+    "Name": "Database Options Movement",
+    "Title": "Database Options - Player Movement",
+    "Text": "Populates all Player Transactions since 07/01/2015.\nIncludes all Trades, Signings and Waives.\nPulled from NBA Player Movement endpoint.",
+    "DialogType": "Tutorial",
+    "Frequency": 5,
+    "Occurrences": 1,
+    "Visibility": "Hidden",
     "TutorialSequence": null,
-    "TutorialStep": 0
+    "TutorialStep": 7
   },
   "EmptyRecord": {
     "Name": "Empty Record",

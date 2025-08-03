@@ -575,6 +575,8 @@ namespace NBAdbToolbox
                 var popup = new PopulatePopup(dialog, seasons);
                 if (popup.ShowDialog() == DialogResult.OK)
                 {
+                    gamesMissing.Visible = false;
+                    rowsMissing.Visible = false;
                     isPopulating = true;
                     int historic = 0;
                     int current = 0;
@@ -1833,6 +1835,7 @@ namespace NBAdbToolbox
             ButtonChangeState(btnEdit, true);
             ButtonChangeState(btnDownloadSeasonData, true);
             ButtonChangeState(btnMovement, true);
+            listSeasons.Enabled = true;
 
         }
         public void InitializeDbLoad()
@@ -1859,6 +1862,7 @@ namespace NBAdbToolbox
             }
             gpm.Visible = true;
             gpmValue.Visible = true;
+            lblCurrentGameCount.Text = "";
             lblCurrentGameCount.Visible = true;
             lblSeasonStatusLoad.Visible = true;
             lblSeasonStatusLoadInfo.Visible = false;
@@ -1879,6 +1883,7 @@ namespace NBAdbToolbox
                     }); //Current game: 
             gpm.Top = lblCurrentGame.Bottom;
             gpmValue.Top = gpm.Bottom;
+            lblCurrentGameCount.Left = lblCurrentGame.Right - (int)(pnlLoad.Width * .02);
             ChangeLabel(ThemeColor, lblSeasonStatusLoad, pnlLoad, new List<string> {
                         "Checking util.BuildLog", //Text
                         "Bold", //FontStyle
@@ -1905,15 +1910,18 @@ namespace NBAdbToolbox
                     }); //No text yet
             #endregion
 
+            Application.DoEvents();
             #endregion
         }
+        public Label gamesMissing = new Label();
+        public Label rowsMissing = new Label();
         public async Task RepairClick()
         {
 
             ButtonChangeState(btnPopulate, false);
             ButtonChangeState(btnEdit, false);
             ButtonChangeState(btnRefresh, false);
-            ButtonChangeState(btnMovement, true);
+            ButtonChangeState(btnMovement, false);
             ButtonChangeState(btnRepair, true);
             listSeasons.Enabled = false;
 
@@ -1925,9 +1933,6 @@ namespace NBAdbToolbox
             await Task.Run(() => GetSeasonInfo());
             List<int> nonOperationalSeasons = new List<int>();
             string source = "";
-            List<string> missingGames = new List<string>();
-            List<string> missingRows = new List<string>();
-            List<int> missingRowDiffs = new List<int>();
             string[] controlItems =
             {
                     "Game",                             //0
@@ -1957,10 +1962,16 @@ namespace NBAdbToolbox
                 }
             }
             int nonOps = nonOperationalSeasons.Count;
-            lblSeasonStatusLoadInfo.Text = nonOps == 1 ? nonOps + " season needing Repairs: " + nonOperationalSeasons[0] : nonOps + " seasons needing Repairs: " + string.Join(", ", nonOperationalSeasons.ToString());
+            lblSeasonStatusLoadInfo.Text = nonOps == 1 ? nonOps + " season needing Repairs: " + nonOperationalSeasons[0] : nonOps + " seasons needing Repairs: " + string.Join(", ", nonOperationalSeasons);
             Application.DoEvents();
             for (int i = 0; i < nonOps; i++)
             {
+                gamesMissing.Dispose();
+                rowsMissing.Dispose();
+                List<string> missingGames = new List<string>();
+                List<int> missingGameDiffs = new List<int>();
+                List<string> missingRows = new List<string>();
+                List<int> missingRowDiffs = new List<int>();
                 int season = nonOperationalSeasons[i];
                 SeasonID = season;
                 int[] dataValues = DataValues(season, "dataValues");
@@ -1969,18 +1980,21 @@ namespace NBAdbToolbox
                 int[] controlCurrentValues = DataValues(season, "controlCurrentValues");
                 lblCurrentGameCount.Top = lblSeasonStatusLoadInfo.Bottom;
                 lblCurrentGameCount.Left = 0;
-                lblCurrentGameCount.Text = "Looking for Game and Row counts not aligned with expected values...";
+                lblCurrentGameCount.Text = season + ": Looking for Game and Row counts not aligned with expected values...";
                 lblCurrentGameCount.Visible = true;
-                Label gamesMissing = new Label
+                gamesMissing = new Label
                 {
                     Visible = true,
                     ForeColor = ThemeColor,
                     Font = lblCurrentGameCount.Font,
                     Parent = pnlLoad,
-                    Top = lblCurrentGameCount.Bottom,
+                    Top = lblSeasonStatusLoadInfo.Bottom,
+                    Left = 0,
                     AutoSize = true
                 };
-                Label rowsMissing = new Label
+
+
+                rowsMissing = new Label
                 {
                     Visible = true,
                     ForeColor = ThemeColor,
@@ -2002,22 +2016,30 @@ namespace NBAdbToolbox
                 {
                     if (j < 10)
                     {
-                        if (dataValues[j] != selectedControlValues[j])
+                        if (dataValues[j] != selectedControlValues[j])  //If value does equal our expected control value for GAMES
                         {
-                            missingGames.Add(controlItems[j]);
-                            if (j == 0)
+                            missingGames.Add(controlItems[j]);      //Add Table Name
+                            if (missingGameDiffs.Count == 0)     //If we have no entries in missingGameDiff
+                            {
+                                missingGameDiffs.Add(selectedControlValues[j] - dataValues[j]); //Add the difference between the control and how many games we have
+                            }
+                            else if (selectedControlValues[j] - dataValues[j] != missingGameDiffs[0]) //If we have an entry and it's different than this one, add.
+                            {
+                                missingGameDiffs.Add(selectedControlValues[j] - dataValues[j]);
+                            }
+                            if (j == 0) //Table = Game
                             {
                                 gameMissing = true;
                             }
-                            else if (j == 5)
+                            else if (j == 5) //Table = PlayerBox
                             {
                                 pboxMissing = true;
                             }
-                            else if (j == 6)
+                            else if (j == 6) //Table = TeamBox
                             {
                                 tboxMissing = true;
                             }
-                            else if(j == 7)
+                            else if (j == 7) //Table = PlayByPlay
                             {
                                 pbpMissing = true;
                             }
@@ -2036,35 +2058,39 @@ namespace NBAdbToolbox
 
                 if (missingGames.Count > 0)
                 {
-                    gamesMissing.Text = missingGames.Count == 1 ? missingGames.Count + " Game missing from " + string.Join(", ", missingGames) :
-                        missingGames.Count + " Games missing from " + string.Join(", ", missingGames);
+                    gamesMissing.Text = missingGameDiffs.Count == 1 ? missingGameDiffs.Count + " Game missing from " + string.Join(", ", missingGames) :
+                        missingGameDiffs.Count + " Games missing from " + string.Join(", ", missingGames);
                 }
                 else
                 {
                     gamesMissing.Text = "No Tables found missing entire Games";
                 }
+
+                for (int a = 0; a < missingGames.Count; a++)
+                {
+                    if (missingRows.Contains(missingGames[a]))
+                    {
+                        missingRows.Remove(missingGames[a]);
+                    }
+                }
+
                 if (missingRows.Count > 0)
                 {
                     rowsMissing.Text = string.Join(", ", missingRowDiffs) + " rows missing from " + string.Join(", ", missingRows);
                 }
-                else
+                else if (missingGames.Count == 0)
                 {
                     rowsMissing.Text = "No Tables found missing rows";
                 }
 
-                for (int a = 0; a < missingRows.Count; a++)
-                {
-                    if (missingGames.Contains(missingRows[a]))
-                    {
-                        missingRows.RemoveAt(a);
-                    }
-                }
+
+
 
                 string goodTable = !gameMissing ? "Game" : !pboxMissing ? "PlayerBox" : !pbpMissing ? "PlayByPlay" : "";
 
                 if (gameMissing && tboxMissing && dataValues[0] == dataValues[6])
                 {
-                    await FindMissingGames(season, source, rowsMissing, "Game", goodTable, missingGames, "Game+");
+                    await FindMissingGames(season, source, rowsMissing, "Game", goodTable, missingGames, "Game, TeamBox, TBoxLineups");
                     missingGames.Remove("Game");
                     missingGames.Remove("TeamBox");
                     missingGames.Remove("TeamBoxLineups");
@@ -2085,9 +2111,9 @@ namespace NBAdbToolbox
                         await RepairPbpRows(season, source, rowsMissing);
                     }
                 }
+                Application.DoEvents();
             }
         }
-
 
 
 
@@ -2103,7 +2129,7 @@ order by g.GameID
             List<int> Games = new List<int>();
             try
             {
-                lbl.Text += "\nFinding missing Games...\n";
+                lbl.Text += "Finding missing Games...\n";
                 Application.DoEvents();
                 SqlConnection RepairConnect = new SqlConnection(bob.ToString());
                 using (SqlCommand FindRepairs = new SqlCommand(query, RepairConnect))
@@ -2120,6 +2146,10 @@ order by g.GameID
                     RepairConnect.Close();
                 }
                 string found = Games.Count == 1 ? Games.Count + " missing Game found" : Games.Count + " missing Games found";
+                if(Games.Count <= 10)
+                {
+                    found += ": " + string.Join(", ", Games);
+                }
                 lbl.Text += found;
                 Application.DoEvents();
             }
@@ -2155,16 +2185,17 @@ order by g.GameID
                     Application.DoEvents();
                     await RepairPbpCurrent(seasonID, lbl, Games);
                 }
-                else if(table == "Game")
+                else if(table == "Game" || table == "GameExt" || table.Contains("Box"))
                 {
-                    lbl.Text += "\nHitting BoxScore Endpoint";
+                    lbl.Text += "\nHitting BoxScore Endpoint...";
                     Application.DoEvents();
                     await RepairGameCurrent(seasonID, lbl, Games, tables, instructions);
+                    lbl.Text += "\nRepairs Complete!";
+                    Application.DoEvents();
                 }
                 else
                 {
-                    lbl.Text += "\nHitting Boxscore Endpoint";
-                    Application.DoEvents();
+
                 }
             }
         }
@@ -2172,11 +2203,14 @@ order by g.GameID
         {
             int it = 0;
             SeasonID = seasonID;
-            foreach(int gameID in Games)
+            string execute = "";
+            foreach (int gameID in Games)
             {
                 GameID = gameID;
                 rootC = await currentData.GetJSON(gameID, SeasonID);
-                if (instructions == "Game+")
+                lbl.Text += "Done!";
+                Application.DoEvents();
+                if (instructions.Contains("Game"))
                 {
                     Dictionary<int, string> officials = new Dictionary<int, string>();
                     foreach (NBAdbToolboxCurrent.Official official in rootC.game.officials)
@@ -2184,23 +2218,34 @@ order by g.GameID
                         officials.Add(official.personId, official.assignment);
                     }
                     CurrentGame(rootC.game, officials);
+                }
+                if (instructions.Contains("TeamBox"))
+                {
                     foreach (NBAdbToolboxCurrent.Team team in new[] { rootC.game.homeTeam, rootC.game.awayTeam })
                     {
                         int MatchupID = (team == rootC.game.homeTeam) ? rootC.game.awayTeam.teamId : rootC.game.homeTeam.teamId;
                         string homeAway = (team == rootC.game.homeTeam) ? "Home" : "Away";
                         CurrentTeamBox(team, MatchupID, homeAway);
+                        if (instructions.Contains("PlayerBox"))
+                        {
+                            InitiateCurrentPlayerBox(rootC.game, team, MatchupID);
+                        }
                     }
-                    sqlBuilder.Append("\n").Append(sqlBuilderParallel.ToString());
-                    sqlBuilderParallel.Clear();
-                    string execute = sqlBuilder.ToString();
-                    await CurrentDataInsert(execute);
-                    sqlBuilder.Clear();
+                }
 
 
+
+                sqlBuilder.Append("\n").Append(sqlBuilderParallel.ToString());
+                sqlBuilderParallel.Clear();
+                execute = sqlBuilder.ToString();
+                await CurrentDataInsert(execute);
+                sqlBuilder.Clear();
+                if (instructions.Contains("TBoxLineups"))
+                {
                     await TeamBoxLineupCalculation(gameID);
                     execute = LineupCalc.ToString();
                     LineupCalc.Clear();
-                    Task CalculateTeamBoxLineupsInsert = CalculatedTeamBoxLineupInsert(execute);
+                    await CalculatedTeamBoxLineupInsert(execute);
 
                 }
             }
@@ -5327,7 +5372,7 @@ order by Points desc";
             lblRefresh.AutoSize = true;
             if (listSeasons.Items.Count > 0)
             {
-                btnRefresh.Text = "Refresh " + listSeasons.Items[0].ToString() + " data";
+                btnRefresh.Text = "Refresh data"; /*+ listSeasons.Items[0].ToString() + " data";*/
             }
             else
             {

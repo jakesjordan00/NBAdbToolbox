@@ -46,7 +46,8 @@
       "DatabaseOptionsPopulate",
       "DatabaseOptionsRefresh",
       "DatabaseOptionsDownload",
-      "DatabaseOptionsRepair"
+      "DatabaseOptionsRepair",
+	  "DatabaseOptionsMovement"
     ],
     "TutorialStep": 1
   },
@@ -105,16 +106,16 @@
     "TutorialSequence": null,
     "TutorialStep": 6
   },
-  "DatabaseOverviewExplanation": {
-    "Name": "Database Overview Explanation",
-    "Title": "Database Overview",
-    "Text": "Empty Record",
-    "DialogType": "Info",
-    "Frequency": 3,
+  "DatabaseOptionsMovement": {
+    "Name": "Database Options Movement",
+    "Title": "Database Options - Player Movement",
+    "Text": "Populates all Player Transactions since 07/01/2015.\nIncludes all Trades, Signings and Waives.\nPulled from NBA Player Movement endpoint.",
+    "DialogType": "Tutorial",
+    "Frequency": 5,
     "Occurrences": 0,
     "Visibility": "Visible",
     "TutorialSequence": null,
-    "TutorialStep": 0
+    "TutorialStep": 7
   },
   "EmptyRecord": {
     "Name": "Empty Record",
