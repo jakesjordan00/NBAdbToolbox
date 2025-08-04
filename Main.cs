@@ -1491,7 +1491,7 @@ namespace NBAdbToolbox
         {
             try
             {
-                string erdPath = Path.Combine(projectRoot, @"Content\Images", "Erd.png");
+                string erdPath = Path.Combine(projectRoot, @"Content\Documentation", "Erd.png");
 
                 if (File.Exists(erdPath))
                 {
