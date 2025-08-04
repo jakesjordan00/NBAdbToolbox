@@ -67,7 +67,7 @@ namespace NBAdbToolbox
             ToolTip tip = new ToolTip();
             tip.BackColor = Color.Black;
             tip.ForeColor = Color.Wheat;
-            tip.SetToolTip(lbl2, "2012-2018 is sourced from Data Files only, 2019-2024 can be sourced by either.");
+            tip.SetToolTip(lbl2, "1996-2018 is sourced from Data Files only, 2019-2024 can be sourced by either.");
             tip.SetToolTip(chkHistoric, "Data gathered from NBA game pages. " +
                 "\nMUCH faster than Endpoints. " +
                 "\nValid source for all seasons. " +

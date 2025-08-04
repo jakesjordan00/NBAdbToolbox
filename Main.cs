@@ -2088,7 +2088,23 @@ namespace NBAdbToolbox
 
                 string goodTable = !gameMissing ? "Game" : !pboxMissing ? "PlayerBox" : !pbpMissing ? "PlayByPlay" : "";
 
-                if (gameMissing && tboxMissing && dataValues[0] == dataValues[6])
+                if (gameMissing && tboxMissing && pboxMissing && dataValues[0] == dataValues[6])
+                {
+                    await FindMissingGames(season, source, rowsMissing, "Game", goodTable, missingGames, "Game, TeamBox, TBoxLineups, PlayerBox, StartingLineups");
+                    missingGames.Remove("Game");
+                    missingGames.Remove("TeamBox");
+                    missingGames.Remove("TeamBoxLineups");
+                    missingGames.Remove("PlayerBox");
+                    missingGames.Remove("StartingLineups");
+                }
+                //else if (tboxMissing && pboxMissing)
+                //{
+                //    await FindMissingGames(season, source, rowsMissing, "Game", goodTable, missingGames, "Game, TeamBox, TBoxLineups");
+                //    missingGames.Remove("Game");
+                //    missingGames.Remove("TeamBox");
+                //    missingGames.Remove("TeamBoxLineups");
+                //}
+                else if (gameMissing && tboxMissing && dataValues[0] == dataValues[6])
                 {
                     await FindMissingGames(season, source, rowsMissing, "Game", goodTable, missingGames, "Game, TeamBox, TBoxLineups");
                     missingGames.Remove("Game");
@@ -2210,14 +2226,18 @@ order by g.GameID
                 rootC = await currentData.GetJSON(gameID, SeasonID);
                 lbl.Text += "Done!";
                 Application.DoEvents();
-                if (instructions.Contains("Game"))
+                if (instructions == "Game")
+                {
+                    CurrentGameOnly(rootC.game);
+                }
+                if (instructions == "GameExt")
                 {
                     Dictionary<int, string> officials = new Dictionary<int, string>();
                     foreach (NBAdbToolboxCurrent.Official official in rootC.game.officials)
                     {
                         officials.Add(official.personId, official.assignment);
                     }
-                    CurrentGame(rootC.game, officials);
+                    CurrentGameExt(rootC.game, officials);
                 }
                 if (instructions.Contains("TeamBox"))
                 {
@@ -2226,10 +2246,14 @@ order by g.GameID
                         int MatchupID = (team == rootC.game.homeTeam) ? rootC.game.awayTeam.teamId : rootC.game.homeTeam.teamId;
                         string homeAway = (team == rootC.game.homeTeam) ? "Home" : "Away";
                         CurrentTeamBox(team, MatchupID, homeAway);
-                        if (instructions.Contains("PlayerBox"))
-                        {
-                            InitiateCurrentPlayerBox(rootC.game, team, MatchupID);
-                        }
+                    }
+                }
+                if (instructions.Contains("PlayerBox"))
+                {
+                    foreach (NBAdbToolboxCurrent.Team team in new[] { rootC.game.homeTeam, rootC.game.awayTeam })
+                    {
+                        int MatchupID = (team == rootC.game.homeTeam) ? rootC.game.awayTeam.teamId : rootC.game.homeTeam.teamId;
+                        InitiateCurrentPlayerBox(rootC.game, team, MatchupID);                        
                     }
                 }
 
@@ -4583,8 +4607,8 @@ order by g.GameID
         };
         public Label lblQP2 = new Label
         {
-            Text = "4th quarter Scoring and Shooting averages with PlayByPlay",
-            Name = "4th quarter Scoring and Shooting averages with PlayByPlay"
+            Text = "Relive every made basket with 0s on the clock\nusing PlayByPlay =>",
+            Name = "Relive every made basket with 0s on the clock using PlayByPlay"
         };
         public Label lblERD = new Label
         {
@@ -4815,33 +4839,33 @@ and Qtr = 4
 and pl.Name in('LeBron James', 'Kyrie Irving')
 order by Clock desc";
             }
-            else if (lblQuery == "4th quarter Scoring and Shooting averages with PlayByPlay")
+            else if (lblQuery == "Relive every made basket with 0s on the clock using PlayByPlay")
             {
                 q =
-@"select t.Name, p.Name, SUM(PtsGenerated) Points,
-sum(case when ShotType = 'FG2M' then 1 else 0 end) FG2M,
-sum(case when ShotValue = 2 then 1 else 0 end) FG2A,
-cast(sum(case when ShotType = 'FG2M' then 1 else 0 end) /
-case when sum(case when ShotValue = 2 then 1 else 0 end) = 0 then 1 else 
-cast(sum(case when ShotValue = 2 then 1 else 0 end) as decimal(18,2)) end * 100 as decimal(18,2)) [FG2%],
-sum(case when ShotType = 'FG3M' then 1 else 0 end) FG3M,
-sum(case when ShotValue = 3 then 1 else 0 end) FG3A,
-cast(sum(case when ShotType = 'FG3M' then 1 else 0 end) /
-case when sum(case when ShotValue = 3 then 1 else 0 end) = 0 then 1 else 
-cast(sum(case when ShotValue = 3 then 1 else 0 end) as decimal(18,2)) end * 100 as decimal(18,2)) [FG3%],
-sum(case when ShotType = 'FTM' then 1 else 0 end) FTM,
-sum(case when ShotValue = 1 then 1 else 0 end) FTA,
-cast(sum(case when ShotType = 'FTM' then 1 else 0 end) /
-case when sum(case when ShotValue = 1 then 1 else 0 end) = 0 then 1 else 
-cast(sum(case when ShotValue = 1 then 1 else 0 end) as decimal(18,2)) end * 100 as decimal(18,2)) [FT%]
-from PlayByPlay pbp
-inner join Game g on pbp.SeasonID = g.SeasonID and pbp.GameID = g.GameID
-left join Player p on pbp.SeasonID = p.SeasonID and pbp.PlayerID = p.PlayerID
-left join Team t on pbp.SeasonID = t.SeasonID and pbp.TeamID = t.TeamID
-where pbp.SeasonID = 2024
-and Qtr >= 4
-group by t.Name, p.Name
-order by Points desc";
+@"select p.SeasonID, p.GameID, 
+	   p.Qtr, p.Clock, 
+	   p.ScoreHome, p.ScoreAway, 
+	   pl.Name, 
+	   p.Description, p.ShotType, p.ActionType,
+	   p.ShotDistance,
+	   cast(p.X as decimal(18,2)) X, 
+	   cast(p.Y as decimal(18,2)) Y, p.Xlegacy, p.Ylegacy,
+case when p.SeasonID >= 2014 then concat('https://www.nba.com/stats/events?CFID=&CFPARAMS=&GameEventID=', actionNumber, '&GameID=00', p.GameID, 
+'&Season=', p.SeasonID, '-', p.SeasonID - 2000 + 1, 
+'&flag=1', '&title=',replace(REPLACE(replace(description, concat(Left(pl.Name, 1), '. '), ''), ' ', '%20'), 'S.%20', '')) 
+else 'No Shot Videos available before 2014' end Video,
+	   case when p.SeasonID >= 2014 then 1 else 0 end HasVideo
+from PlayByPlay p
+inner join Game g on p.SeasonID = g.SeasonID and p.GameID = g.GameID
+inner join GameExt e on p.SeasonID = e.SeasonID and p.GameID = e.GameID
+left join Player pl on p.SeasonID = pl.SeasonID and p.PlayerID = pl.PlayerID  
+inner join Team h on g.HomeID = h.TeamID and p.SeasonID = h.SeasonID 
+inner join Team a on g.AwayID = a.TeamID and p.SeasonID = a.SeasonID
+where p.Qtr = 4 
+and LEFT(p.Clock, 2) = '00'
+and cast(right(left(p.Clock, 5), 2) as int) = 0
+and p.PtsGenerated > 1
+order by HasVideo desc, ShotDistance desc";
             }
             return q;
         }
@@ -8526,6 +8550,128 @@ order by Points desc";
         #endregion
 
         #region Game
+        public void CurrentGameExt(NBAdbToolboxCurrent.Game game, Dictionary<int, string> officials)
+        {
+
+            StringBuilder gameExtSB = new StringBuilder();
+            // Build the GameExt insert
+            gameExtSB.Append("Insert into GameExt(SeasonID, GameID, ArenaID, Status, Attendance, Label, LabelDetail");
+
+            // Start the values part for GameExt
+            StringBuilder gameExtValuesSB = new StringBuilder();
+            gameExtValuesSB.Append(") values(")
+                           .Append(SeasonID).Append(", ")
+                           .Append(game.gameId).Append(", ")
+                           .Append(game.arena.arenaId).Append(", '")
+                           .Append(game.gameStatusText).Append("', ")
+                           .Append(game.attendance).Append(", '")
+                           .Append(gameLabelH).Append("', '")
+                           .Append(gameLabelDetailH).Append("'");
+
+            // Add sellout if applicable
+            if (game.sellout != "")
+            {
+                gameExtSB.Append(", Sellout");
+                gameExtValuesSB.Append(", ").Append(game.sellout);
+            }
+
+            // Add officials
+            foreach (KeyValuePair<int, string> kvp in officials)
+            {
+                if (kvp.Value == "OFFICIAL1")
+                {
+                    gameExtSB.Append(", OfficialID");
+                    gameExtValuesSB.Append(", ").Append(kvp.Key);
+                }
+                if (kvp.Value == "OFFICIAL2")
+                {
+                    gameExtSB.Append(", Official2ID");
+                    gameExtValuesSB.Append(", ").Append(kvp.Key);
+                }
+                if (kvp.Value == "OFFICIAL3")
+                {
+                    gameExtSB.Append(", Official3ID");
+                    gameExtValuesSB.Append(", ").Append(kvp.Key);
+                }
+                if (kvp.Value == "ALTERNATE")
+                {
+                    gameExtSB.Append(", OfficialAlternateID");
+                    gameExtValuesSB.Append(", ").Append(kvp.Key);
+                }
+            }
+
+            // Complete the GameExt statement
+            gameExtValuesSB.Append(")\n");
+            sqlBuilder.Append(gameExtSB).Append(gameExtValuesSB);
+        }
+
+        public void CurrentGameOnly(NBAdbToolboxCurrent.Game game)
+        {
+            // Create StringBuilder for Game table insert
+            StringBuilder gameInsertSB = new StringBuilder();
+
+            // Parse the datetime values
+            SqlDateTime datetime = SqlDateTime.Parse(game.gameTimeUTC);
+            SqlDateTime gameDate = SqlDateTime.Parse(game.gameEt.Remove(game.gameEt.IndexOf('T')));
+
+            // Build the Game insert statement
+            gameInsertSB.Append("Insert into Game(SeasonID, GameID, Date, HomeID, HScore, AwayID, AScore, Datetime, WinnerID, WScore, LoserID, Lscore, GameType, SeriesID) values(")
+                        .Append(SeasonID).Append(", ")
+                        .Append(GameID).Append(", '")
+                        .Append(gameDate).Append("', ")
+                        .Append(game.homeTeam.teamId).Append(", ")
+                        .Append(game.homeTeam.score).Append(", ")
+                        .Append(game.awayTeam.teamId).Append(", ")
+                        .Append(game.awayTeam.score).Append(", '")
+                        .Append(datetime).Append("', ");
+
+            // Determine winner/loser
+            if (game.homeTeam.score > game.awayTeam.score)
+            {
+                gameInsertSB.Append(game.homeTeam.teamId).Append(", ")
+                            .Append(game.homeTeam.score).Append(", ")
+                            .Append(game.awayTeam.teamId).Append(", ")
+                            .Append(game.awayTeam.score).Append(", ");
+            }
+            else
+            {
+                gameInsertSB.Append(game.awayTeam.teamId).Append(", ")
+                            .Append(game.awayTeam.score).Append(", ")
+                            .Append(game.homeTeam.teamId).Append(", ")
+                            .Append(game.homeTeam.score).Append(", ");
+            }
+
+            // Handle game type and series ID
+            //GameType
+            string gType = GameID.ToString().Substring(0, 1);
+            if (gType == "2")
+            {
+                gameInsertSB.Append("'RS', null)");
+            }
+            else if (gType == "4")
+            {
+                string SeriesID = GameID.ToString().Remove(7);
+                gameInsertSB.Append("'PS', '").Append(SeriesID).Append("')");
+            }
+            else if (gType == "5")
+            {
+                gameInsertSB.Append("'PI', null)");
+            }
+            else if (gType == "6")
+            {
+                gameInsertSB.Append("'CUP', null)");
+            }
+            else
+            {
+                gameInsertSB.Append("null, null)");
+            }
+
+            // Add newline
+            gameInsertSB.Append("\n");
+            sqlBuilder.Append(gameInsertSB);
+
+        }
+
         public void CurrentGame(NBAdbToolboxCurrent.Game game, Dictionary<int, string> officials)
         {
             // Create StringBuilder for Game table insert

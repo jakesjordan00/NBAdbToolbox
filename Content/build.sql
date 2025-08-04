@@ -443,6 +443,7 @@ select s.SeasonID, s.Games + s.PlayoffGames Games, case when s.HistoricLoaded = 
 	 , PbpRows
 	 , StartingLineupsRows
 	 , TboxLineupRows
+     , (select COUNT(distinct ge.GameID) Game from GameExt ge where s.SeasonID = ge.SeasonID) GameExt
 
 from Season s left join
 		Game g on s.SeasonID = g.SeasonID left join(
@@ -492,7 +493,7 @@ select SeasonID, Games, Loaded,
                     (case when Games != TeamBoxLineups then ', TeamBoxLineups' else '' end)
                     , 1, 2, '')
         end
-  end Status
+  end Status, GameExt
 from Seasons s
 Order by SeasonID desc
 ~~~
@@ -1428,13 +1429,13 @@ group by p.SeasonID, p.GameID)
 select g.SeasonID, g.GameID, g.MaxAction Action, p.Qtr, p.Clock
 from GameLastAction g
 inner join PlayByPlay p on g.SeasonID = p.SeasonID and g.GameID = p.GameID and g.MaxAction = p.ActionID
-where p.Clock != '00:00.00' and ActionType != 'memo' and g.SeasonID = @SeasonID
+where (p.Clock != '00:00.00' or (p.Clock = '00:00.00' and p.Qtr < 4)) and ActionType != 'memo' and g.SeasonID = @SeasonID 
 union
 --Using the first (min) ActionID, look for any games where the Clock doesnt start at 12:00.00
 select g.SeasonID, g.GameID, g.MinAction Action, p.Qtr, p.Clock
 from GameFirstAction g
 inner join PlayByPlay p on g.SeasonID = p.SeasonID and g.GameID = p.GameID and g.MinAction = p.ActionID
-where p.Clock != '12:00.00' and ActionType != 'memo' and g.SeasonID = @SeasonID
+where (p.Clock != '12:00.00' or (p.Clock = '12:00.00' and p.Qtr > 1)) and ActionType != 'memo' and g.SeasonID = @SeasonID 
 union
 --Make sure we get any games where the count of Actions doesn't equal the last ActionID. Make sure we arent getting the games from GameFirstAction too
 select p.SeasonID, p.GameID, count(p.ActionID) Actions, 1 Qtr, 'Placehold' Clock
