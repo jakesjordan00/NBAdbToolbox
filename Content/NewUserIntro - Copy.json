@@ -76,7 +76,7 @@
   "DatabaseOptionsRefresh": {
     "Name": "Database Options Refresh",
     "Title": "Database Options - Refresh Data",
-    "Text": "Instead of reloading all season data, refresh current season with any games played since last insert by clicking 'Refresh 2024 Data'",
+    "Text": "Instead of reloading all season data, refresh current season with any games played since last insert by clicking 'Refresh Data'",
     "DialogType": "Tutorial",
     "Frequency": 5,
     "Occurrences": 0,
