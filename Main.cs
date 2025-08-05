@@ -3044,7 +3044,7 @@ order by g.GameID
             UIController("NoConnection");
 
         }
-        public void GetConfig(string sender) //Gets config file
+        public async void GetConfig(string sender) //Gets config file
         {
             if (sender == "Main")
             {
@@ -3084,63 +3084,24 @@ order by g.GameID
             cString = bob.ToString();
             if (config.Server != "" && ((config.Username != "" && config.Password != "") || config.UseWindowsAuth == true))
             {
-                isConnected = TestConnectionString(cString, "isConnected");
+                isConnected = await TestConnectionString(cString, "isConnected");
             }
-
-
-
-            if (isConnected) //If the connection string works for master
-            {
-                if (config.Create == false) //and if the config file says we dont need to create database, 
-                {
-                    bob.InitialCatalog = config.Database; //have the connection string use the database
-                    dbConnection = TestConnectionString(bob.ToString(), "dbConnection");
-                }
-            }
-            else //If the connection string doesnt work on master for whatever reason and our config file says we have a db, double check the db only connection string to make sure.
-            {
-                if (config.Create == false) //same as above
-                {
-                    bob.InitialCatalog = config.Database; //same as above
-                    dbConnection = TestConnectionString(bob.ToString(), "dbConnection");
-                }
-            }
-
-
 
 
             if(isConnected && config.Create == false)//If the connection string works for master and the config file says we dont need to create database, 
             {
                 bob.InitialCatalog = config.Database; //have the connection string use the database
-                dbConnection = TestConnectionString(bob.ToString(), "dbConnection");
+                dbConnection = await TestConnectionString(bob.ToString(), "dbConnection");
             }
             else if(!isConnected && config.Create == false)//If the connection string didn't work on master and our config file says we have a db, double check the db only connection string to make sure.
             {
                 bob.InitialCatalog = config.Database; //same as above
-                dbConnection = TestConnectionString(bob.ToString(), "dbConnection");
+                dbConnection = await TestConnectionString(bob.ToString(), "dbConnection");
             }
             else if (!isConnected && config.Create == true)//If we aren't connected and still need to create the database, throw error
             {
                 dbConnection = false;
             }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
             if (config.Create == true)
             {
@@ -3163,7 +3124,7 @@ order by g.GameID
 
             UIController("GetConfig");
         }
-        public bool TestConnectionString(string connectionString, string sender) //Test Server connection
+        public async Task<bool> TestConnectionString(string connectionString, string sender) //Test Server connection
         {
             try
             {
@@ -3487,7 +3448,7 @@ order by g.GameID
 
 
         //Create Database using build.sql file
-        public void CreateDB(string connectionString)
+        public async void CreateDB(string connectionString)
         {
             int exception = 0;
             using (SqlConnection conn = new SqlConnection(connectionString))
@@ -3521,7 +3482,7 @@ order by g.GameID
                     connectionString = bob.ToString();
                 }
             }
-            dbConnection = TestConnectionString(connectionString, "dbConnection");
+            dbConnection = await TestConnectionString(connectionString, "dbConnection");
             if (dbConnection)
             {
                 if (ConfigChanged("dbConnection")) //If the config file has changed, write update to file
