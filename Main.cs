@@ -3068,6 +3068,7 @@ order by g.GameID
             {
                 configName = (config.Server + db).TrimStart();
             }
+
             //Build connection string
             bob.DataSource = config.Server;
             if (config.UseWindowsAuth == true)
@@ -3085,6 +3086,9 @@ order by g.GameID
             {
                 isConnected = TestConnectionString(cString, "isConnected");
             }
+
+
+
             if (isConnected) //If the connection string works for master
             {
                 if (config.Create == false) //and if the config file says we dont need to create database, 
@@ -3101,6 +3105,43 @@ order by g.GameID
                     dbConnection = TestConnectionString(bob.ToString(), "dbConnection");
                 }
             }
+
+
+
+
+            if(isConnected && config.Create == false)//If the connection string works for master and the config file says we dont need to create database, 
+            {
+                bob.InitialCatalog = config.Database; //have the connection string use the database
+                dbConnection = TestConnectionString(bob.ToString(), "dbConnection");
+            }
+            else if(!isConnected && config.Create == false)//If the connection string didn't work on master and our config file says we have a db, double check the db only connection string to make sure.
+            {
+                bob.InitialCatalog = config.Database; //same as above
+                dbConnection = TestConnectionString(bob.ToString(), "dbConnection");
+            }
+            else if (!isConnected && config.Create == true)//If we aren't connected and still need to create the database, throw error
+            {
+                dbConnection = false;
+            }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             if (config.Create == true)
             {
                 dbConnection = false;

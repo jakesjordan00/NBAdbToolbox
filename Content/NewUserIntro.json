@@ -27,8 +27,8 @@
     "Text": "Click 'Build Database' next! We'll connect to the server and create the Db from master.",
     "DialogType": "Instruction",
     "Frequency": 5,
-    "Occurrences": 2,
-    "Visibility": "Visible",
+    "Occurrences": 3,
+    "Visibility": "Hidden",
     "TutorialSequence": null,
     "TutorialStep": 0
   },
