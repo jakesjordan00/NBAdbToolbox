@@ -138,6 +138,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="JJs old.ico" />
     <Content Include="jjs v2.ico" />
     <Content Include="JJs.ico" />
   </ItemGroup>

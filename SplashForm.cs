@@ -28,12 +28,12 @@ namespace NBAdbToolbox
 
             // Add your splash image (use any existing image from your Content\Images folder)
             string projectRoot = AppDomain.CurrentDomain.BaseDirectory.Replace(@"\bin\Debug\", "").Replace(@"\bin\Release\", "");
-            string imagePath = Path.Combine(projectRoot, @"Content\Images", "Success.png"); // Use any existing image
-
+            string splashPath = Path.Combine(projectRoot, @"Content\Images", "Splash.png"); // Use any existing image
+            this.Icon = new Icon(Path.Combine(projectRoot, @"Content\Images", "JJs.ico"));
             PictureBox splashImage = new PictureBox();
-            if (File.Exists(imagePath))
+            if (File.Exists(splashPath))
             {
-                splashImage.Image = Image.FromFile(imagePath);
+                splashImage.Image = Image.FromFile(splashPath);
                 splashImage.SizeMode = PictureBoxSizeMode.Zoom;
                 splashImage.BackColor = Color.Transparent;
                 splashImage.Dock = DockStyle.Fill;
@@ -44,7 +44,7 @@ namespace NBAdbToolbox
             Label loadingLabel = new Label();
             loadingLabel.Text = "Loading NBAdbToolbox...";
             loadingLabel.ForeColor = Color.White;
-            loadingLabel.BackColor = Color.Black;
+            loadingLabel.BackColor = Color.Transparent;
             loadingLabel.Font = new Font("Arial", 14);
             loadingLabel.TextAlign = ContentAlignment.MiddleCenter;
             //loadingLabel.Dock = DockStyle.Bottom;

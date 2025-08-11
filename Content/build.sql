@@ -332,7 +332,9 @@ Foreign Key (SeasonID, GameID, TeamID, MatchupID, PlayerID) references PlayerBox
 
 
 
+
 create table PlayerMovement(
+SeasonID int,
 Date date,
 Type varchar(255),
 Description varchar(355),
@@ -374,6 +376,7 @@ insert into Season values(2021, 1610612744, 1230, 93, 0, 0)
 insert into Season values(2022, 1610612743, 1230, 90, 0, 0)
 insert into Season values(2023, 1610612738, 1230, 89, 0, 0)
 insert into Season values(2024, 1610612760, 1230, 91, 0, 0)
+insert into Season values(2025, null, 0, 0, 0, 0)
 ~~~
 
 create schema util

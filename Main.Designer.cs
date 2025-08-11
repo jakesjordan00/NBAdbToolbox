@@ -1,4 +1,7 @@
-﻿namespace NBAdbToolbox
+﻿using System.Drawing;
+using System.IO;
+
+namespace NBAdbToolbox
 {
     partial class Main
     {
@@ -36,7 +39,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.Icon = new Icon(Path.Combine(projectRoot, @"Content\Images", "JJs.ico"));
             this.Name = "Main";
             this.Text = "NBAdb Toolbox";
             this.ResumeLayout(false);
