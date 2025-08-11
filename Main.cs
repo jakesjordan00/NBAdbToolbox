@@ -2031,6 +2031,8 @@ namespace NBAdbToolbox
                 int i = 0;
                 foreach (int gameID in boxEndpoints)
                 {
+                    rootC = null;
+                    GameID = gameID;
                     if (i == 0)
                     {
                         lbl.Text += "Hitting BoxScore Endpoint for " + gameID + "...";
@@ -2040,7 +2042,6 @@ namespace NBAdbToolbox
                         lbl.Text = lbl.Text.Replace("Hitting BoxScore Endpoint for " + GameID, "Hitting BoxScore Endpoint for " + gameID);
                     }
                     Application.DoEvents();
-                    GameID = gameID;
                     string execute = "";
                     rootC = await currentData.GetJSON(gameID, SeasonID);
                     lbl.Text += "Done!";
@@ -4660,16 +4661,6 @@ order by g.GameID
                     using (SqlCommand BuildLogInsert = new SqlCommand("GameExtLabels", Main))
                     {
                         BuildLogInsert.CommandType = CommandType.StoredProcedure;
-                        Main.Open();
-                        BuildLogInsert.ExecuteNonQuery();
-                        Main.Close();
-                    }
-                }
-                if(SeasonID == 2015) //If SeasonID == 2015, delete the last action of this game. For some reason that data acts as if there's an Overtime period on the last row and it messes up FindPbpRepairs
-                {//The action is just that Period 5 is starting, which did not happen as the game ended in regular time.
-                    using (SqlCommand BuildLogInsert = new SqlCommand("delete from PlayByPlay where GameID = 21500916 and ActionNumber = 646", Main))
-                    {
-                        BuildLogInsert.CommandType = CommandType.Text;
                         Main.Open();
                         BuildLogInsert.ExecuteNonQuery();
                         Main.Close();
