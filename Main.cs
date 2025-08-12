@@ -1224,18 +1224,14 @@ namespace NBAdbToolbox
                 await RefreshClick();
                 if (dbOverviewOpened)
                 {
-                    lblDbOptions.Invoke((MethodInvoker)(() =>
-                    {
-                        lblDbOptions.Text = "Loading Season info";
-                        CenterElement(pnlDbUtil, lblDbOptions);
-                    }));
+                    lblDbOptions.Text = "Loading Season info";
+                    CenterElement(pnlDbUtil, lblDbOptions);
+                    Application.DoEvents();
                     await Task.Run(() => GetSeasonInfo());
                     CheckDataFiles(); //GetSeasons();
-                    lblDbOptions.Invoke((MethodInvoker)(() =>
-                    {
-                        lblDbOptions.Text = "Options";
-                        CenterElement(pnlDbUtil, lblDbOptions);
-                    }));
+                    lblDbOptions.Text = "Options";
+                    CenterElement(pnlDbUtil, lblDbOptions);
+                    Application.DoEvents();
                     dbOverviewFirstOpen = false;
                     DbOverviewVisibility(dbOverviewOpened, "Refresh");
                 }
@@ -1250,7 +1246,7 @@ namespace NBAdbToolbox
             btnRepair.Click += async (s, e) =>
             {
                 await RepairClick();//blah
-                yearStatusLabels.Clear();
+                PlayCompletionSound("Repair");
                 if (dbOverviewOpened)
                 {
                     lblDbOptions.Text = "Loading Season info";
@@ -1261,7 +1257,7 @@ namespace NBAdbToolbox
                     lblDbOptions.Text = "Options";
                     CenterElement(pnlDbUtil, lblDbOptions);
                     Application.DoEvents();
-                    dbOverviewFirstOpen = true;
+                    dbOverviewFirstOpen = false;
                     DbOverviewVisibility(dbOverviewOpened, "Refresh");
                 }
                 else
@@ -1784,7 +1780,7 @@ namespace NBAdbToolbox
             ButtonChangeState(btnEdit, false);
             ButtonChangeState(btnRefresh, false);
             ButtonChangeState(btnMovement, false);
-            ButtonChangeState(btnRepair, true);
+            ButtonChangeState(btnRepair, false);
             listSeasons.Enabled = false;
 
 
@@ -6725,6 +6721,7 @@ order by HasVideo desc, ShotDistance desc";
         {
             pnlDbOverview.MaximumSize = new Size(pnlWelcome.Left, (int)(pnlDbUtil.Height / 2));
             ClearOverview();
+            DropOverview();
             pnlDbOverview.Refresh();
             if (!vis)
             {
@@ -7491,9 +7488,21 @@ order by HasVideo desc, ShotDistance desc";
             {
                 lblUnpopulated.Visible = false;
             }
-
             ClearGridLines();
         }
+
+        public void DropOverview()
+        {
+            foreach (Label dataLabel in yearStatusLabels.Values)
+            {
+                dataLabel.Text = "";
+                dataLabel.Visible = false;
+                dataLabel.Dispose();                
+            }
+            yearStatusLabels.Clear();
+
+        }
+
         #endregion
         public void SettingsClick(Control control, PictureBox picture, float fontSize)
         {
