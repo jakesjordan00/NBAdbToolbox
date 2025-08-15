@@ -1688,10 +1688,10 @@ namespace NBAdbToolbox
 
         public void RefreshCompletion()
         {
-            ButtonChangeState(btnRefresh, true);
+            ButtonChangeState(btnRefresh, false); //was true, changing to false for release. Change this for 2025 season!
             ButtonChangeState(btnPopulate, true);
             ButtonChangeState(btnEdit, true);
-            ButtonChangeState(btnDownloadSeasonData, true);
+            ButtonChangeState(btnDownloadSeasonData, btnDownloadSeasonData.Enabled);
             ButtonChangeState(btnMovement, true);
             listSeasons.Enabled = true;
 
@@ -1775,12 +1775,15 @@ namespace NBAdbToolbox
         public Label rowsMissing = new Label();
         public async Task RepairClick()
         {
-
             ButtonChangeState(btnPopulate, false);
             ButtonChangeState(btnEdit, false);
             ButtonChangeState(btnRefresh, false);
             ButtonChangeState(btnMovement, false);
             ButtonChangeState(btnRepair, false);
+            if (btnDownloadSeasonData.Enabled)
+            {
+                ButtonChangeState(btnDownloadSeasonData, false);
+            }
             listSeasons.Enabled = false;
 
 
@@ -4040,7 +4043,7 @@ order by g.GameID
                 ButtonChangeState(btnBuild, false);
                 isBuildEnabled = false;
                 ButtonChangeState(btnPopulate, true);
-                ButtonChangeState(btnRefresh, true);
+                ButtonChangeState(btnRefresh, false); //was true, changing to false for release. Change this for 2025 season!
                 ButtonChangeState(btnRepair, true);
                 lblDbOvName.Visible = true;
 
@@ -4781,7 +4784,7 @@ order by g.GameID
             #region Enable buttons and clear label text
             ButtonChangeState(btnPopulate, true);
             ButtonChangeState(btnEdit, true);
-            ButtonChangeState(btnRefresh, true);
+            ButtonChangeState(btnRefresh, false); //was true, changing to false for release. Change this for 2025 season!
             ButtonChangeState(btnMovement, true);
             listSeasons.Enabled = true;
 
@@ -5500,20 +5503,20 @@ order by SeasonID, Date, GameID";
       , b.Starter 
       , b.Position 
       , b.Minutes 
-      , b.MinutesCalculated 
+      , b.MinutesCalculated MinCalc
       , b.Points 
       , b.Assists 
-      , b.ReboundsTotal 
+      , b.ReboundsTotal RebTotal
       , b.FG2M, b.FG2A, cast(b.[FG2%] * 100 as decimal(18,1)) [FG2%]
       , b.FG3M, b.FG3A, cast(b.[FG3%] * 100 as decimal(18,1)) [FG3%]
       , b.FGM, b.FGA, cast(b.[FG%] * 100 as decimal(18,1)) [FG%]
       , b.FTM, b.FTA, cast(b.[FT%] * 100 as decimal(18,1)) [FT%]
-      , b.ReboundsDefensive, b.ReboundsOffensive 
-      , b.Blocks, b.BlocksReceived 
-      , b.Steals, b.Turnovers, b.AssistsTurnoverRatio 
-      , b.Plus, b.Minus, b.PlusMinusPoints 
-      , b.PointsFastBreak, b.PointsInThePaint, b.PointsSecondChance
-      , b.FoulsOffensive, b.FoulsDrawn, b.FoulsPersonal, b.FoulsTechnical 
+      , b.ReboundsDefensive RebDef, b.ReboundsOffensive RebOff
+      , b.Blocks Blocks, b.BlocksReceived Blocked
+      , b.Steals, b.Turnovers TOs, b.AssistsTurnoverRatio ATR
+      , b.Plus, b.Minus, b.PlusMinusPoints [+/-]
+      , b.PointsFastBreak PtsFastBreak, b.PointsInThePaint PtsPaint, b.PointsSecondChance Pts2ndChance
+      , b.FoulsOffensive FoulOff, b.FoulsDrawn FoulDrawn, b.FoulsPersonal FoulPers, b.FoulsTechnical FoulTech
 from PlayerBox b
 inner join Player p on b.SeasonID = p.SeasonID and b.PlayerID = p.PlayerID
 inner join Team t on b.SeasonID = t.SeasonID and b.TeamID = t.TeamID
@@ -7603,6 +7606,14 @@ order by HasVideo desc, ShotDistance desc";
                         allFilesDownloaded = false;
                         ButtonChangeState(btnDownloadSeasonData, true);
                     }
+                }
+                if(k == -1)
+                {
+                    ButtonChangeState(btnDownloadSeasonData, true);
+                }
+                else
+                {
+                    ButtonChangeState(btnDownloadSeasonData, false);
                 }
             }
             else
