@@ -258,7 +258,7 @@ namespace NBAdbToolbox
         };
         public Label lblMovementDet = new Label
         {
-            Text = "(Trades/Singings/Waives since 2015)"
+            Text = "(Trades/Signings/Waives since 2015)"
         };
         public Button btnMovement = new Button
         {
@@ -974,7 +974,7 @@ namespace NBAdbToolbox
             #region Edit Connection & Build DB
             //if (dbConnection)
             //{
-            //    CheckDataFiles(); //GetSeasons();
+            //   CheckDataFiles(); //GetSeasons();
             //}
             CheckDataFiles();
             //GetSeasons();
@@ -1296,6 +1296,7 @@ namespace NBAdbToolbox
 
             lblDataDictionary.Click += lblDataDictionaryClick;
             lblERD.Click += lblERDClick;
+            lblWiki.Click += lblWikiClick;
 
             //lblQG1.Click += (s, e) =>
             //{
@@ -1537,7 +1538,17 @@ namespace NBAdbToolbox
                 MessageBox.Show($"Error opening PDF: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 ErrorOutput(ex);
             }
-
+        }
+        private void lblWikiClick(object sender, EventArgs e)
+        {
+            try
+            {
+                Process.Start("https://github.com/jakesjordan00/NBAdbToolbox/wiki/Documentation");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Unable to open link: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
         }
         private void AfterLoad(object sender, EventArgs e)
         {
@@ -1702,10 +1713,10 @@ namespace NBAdbToolbox
             imagePath = Path.Combine(projectRoot, @"Content\Images\Loading", "kawhi1.png");
             using (var img = Image.FromFile(imagePath))
             {
-                // Create and assign the Bitmap
+                //Create and assign the Bitmap
                 var bitmap = new Bitmap(img);
 
-                // Dispose of previous image to prevent memory leaks
+                //Dispose of previous image to prevent memory leaks
                 if (picLoad.Image != null)
                 {
                     var oldImage = picLoad.Image;
@@ -2998,10 +3009,10 @@ order by g.GameID
 
         public void RepairPlayerboxOnly(NBAdbToolboxCurrent.Player player, int GameID, int TeamID, int MatchupID)
         {
-            // Main SQL builder
+            //Main SQL builder
             sqlBuilderParallel.Append("insert into PlayerBox(SeasonID, GameID, TeamID, MatchupID, PlayerID, FGM, FGA, [FG%], FG2M, FG2A, [FG2%], FG3M, FG3A, [FG3%], FTM, FTA, [FT%], ReboundsDefensive, ReboundsOffensive, ReboundsTotal, Assists, Turnovers, Steals, Blocks, Points, FoulsPersonal");
 
-            // Values builder
+            //Values builder
             StringBuilder valuesSB = new StringBuilder();
             valuesSB.Append(SeasonID).Append(", ")
                     .Append(GameID).Append(", ")
@@ -3030,19 +3041,19 @@ order by g.GameID
                     .Append(player.statistics.points).Append(", ")
                     .Append(player.statistics.foulsPersonal);
 
-            // Calculate minutes values - avoid exceptions with null/empty checks
+            //Calculate minutes values - avoid exceptions with null/empty checks
             double minCalc = 0;
             string minutes = player.statistics.minutes;
             bool hasMinutes = !string.IsNullOrEmpty(minutes);
 
             if (hasMinutes)
             {
-                // Only try to parse if we have minutes
+                //Only try to parse if we have minutes
                 int mIndex = minutes.IndexOf("M");
                 if (mIndex > 0)
                 {
                     string minString = minutes.Replace("PT", "").Replace("M", ":").Replace("S", "");
-                    // Check if we can safely parse
+                    //Check if we can safely parse
                     if (mIndex + 1 < minutes.Length && mIndex + 6 <= minutes.Length &&
                         double.TryParse(minutes.Substring(2, mIndex - 2), out double mins) &&
                         double.TryParse(minutes.Substring(mIndex + 1, 5), out double secs))
@@ -3062,12 +3073,12 @@ order by g.GameID
                         minString = minString + ".00";
                     }
 
-                    // Minutes column
+                    //Minutes column
                     sqlBuilderParallel.Append(", Minutes");
                     valuesSB.Append(", '").Append(minString).Append("'");
 
                 }
-                // Plus/minus points if they exist
+                //Plus/minus points if they exist
                 if (player.statistics.plus != 0)
                 {
                     sqlBuilderParallel.Append(", PlusMinusPoints, Plus, Minus");
@@ -3078,12 +3089,12 @@ order by g.GameID
             }
             else
             {
-                // No minutes data available
+                //No minutes data available
                 sqlBuilderParallel.Append(", Minutes");
                 valuesSB.Append(", '0'");
             }
 
-            // Handle assists/turnover ratio
+            //Handle assists/turnover ratio
             sqlBuilderParallel.Append(", AssistsTurnoverRatio");
             if (player.statistics.turnovers > 0)
             {
@@ -3094,7 +3105,7 @@ order by g.GameID
                 valuesSB.Append(", 0");
             }
 
-            // Handle position (if exists)
+            //Handle position (if exists)
             if (!string.IsNullOrEmpty(player.position))
             {
                 sqlBuilderParallel.Append(", Starter");
@@ -3103,11 +3114,11 @@ order by g.GameID
                 valuesSB.Append(", '").Append(player.position).Append("'");
             }
 
-            // Handle status
+            //Handle status
             sqlBuilderParallel.Append(", Status");
             valuesSB.Append(", '").Append(player.status).Append("'");
 
-            // Handle status reason/description (if they exist)
+            //Handle status reason/description (if they exist)
             if (!string.IsNullOrEmpty(player.notPlayingReason))
             {
                 sqlBuilderParallel.Append(", StatusReason");
@@ -3120,7 +3131,7 @@ order by g.GameID
                 }
             }
 
-            // Add remaining columns
+            //Add remaining columns
             sqlBuilderParallel.Append(", MinutesCalculated, BlocksReceived, PointsFastBreak, PointsInThePaint, PointsSecondChance, FoulsOffensive, FoulsDrawn, FoulsTechnical")
                              .Append(") values(")
                              .Append(valuesSB.ToString())
@@ -3138,7 +3149,7 @@ order by g.GameID
 
         public void RepairStartingLineupsOnly(NBAdbToolboxCurrent.Player player, int GameID, int TeamID, int MatchupID)
         {
-            // Add the starting lineups insert
+            //Add the starting lineups insert
             sqlBuilderParallel.Append("\ninsert into StartingLineups values(")
                 .Append(SeasonID).Append(", ")
                 .Append(GameID).Append(", ")
@@ -3508,7 +3519,7 @@ order by g.GameID
                 if (!btn.Enabled)
                 {
                     btn.BackColor = Color.Gainsboro;
-                    // Use FlatStyle to have more control
+                    //Use FlatStyle to have more control
                     btn.FlatStyle = FlatStyle.Flat;
                     btn.FlatAppearance.BorderSize = 2;
                     btn.FlatAppearance.BorderColor = Color.Black;
@@ -3742,7 +3753,7 @@ order by g.GameID
                 {
                     lblCStatus.Text = "Connected";
                     lblCStatus.ForeColor = SuccessColor;
-                    // Load image
+                    //Load image
                     imagePath = Path.Combine(projectRoot, @"Content\Images", "Success.png");
                     picStatus.Image = Image.FromFile(imagePath);
                 }
@@ -3750,7 +3761,7 @@ order by g.GameID
                 {
                     lblCStatus.Text = "Disconnected";
                     lblCStatus.ForeColor = ErrorColor;
-                    // Load image
+                    //Load image
                     imagePath = Path.Combine(projectRoot, @"Content\Images", "Error.png");
                     picStatus.Image = Image.FromFile(imagePath);
                 }
@@ -4265,7 +4276,7 @@ order by g.GameID
                         writeConfig = true;
                         DbExists();
                         exception = ex.Number;
-                        if (ex.Number == 2714) // Object already exists error
+                        if (ex.Number == 2714) //Object already exists error
                         {
                             MessageBox.Show("Database already existed, now connected.", "Database Status",
                                            MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -4856,7 +4867,7 @@ order by g.GameID
                         "true",//Visible
                         "." } //Height
             );//No text
-            // 8.11199951 works for 99
+            //8.11199951 works for 99
             //Clear out image if it exists
             if (picLoad.Image != null)
             {
@@ -4874,7 +4885,7 @@ order by g.GameID
                         picLoad.Image = new Bitmap(img);
                     }
 
-                    // Update layout calculations here - assuming they need to happen each time
+                    //Update layout calculations here - assuming they need to happen each time
                     picLoad.Width = (int)(pnlLoad.Height * .5);
                     picLoad.Height = (int)(pnlLoad.Height * .5);
                     picLoad.Top = gpm.Bottom + (int)(picLoad.Height * .25);
@@ -4882,7 +4893,7 @@ order by g.GameID
                 }
                 catch
                 {
-                    // Handle loading failure gracefully
+                    //Handle loading failure gracefully
                 }
             }
             #endregion
@@ -5274,6 +5285,9 @@ order by g.GameID
             lblERD.Font = SetFontSize("Segoe UI", (float)(fontSize / 1.5), FontStyle.Bold, (int)(listSeasons.Width * 1.5), lblERD); //6.5
             lblERD.AutoSize = true;
 
+            lblWiki.Font = SetFontSize("Segoe UI", (float)(fontSize / 1.65), FontStyle.Bold, pnlDbLibrary.Width, lblWiki);
+            lblWiki.AutoSize = true;
+
         }
 
         public Panel pnlQueries = new Panel();
@@ -5293,6 +5307,12 @@ order by g.GameID
         public Label lblDataDictionary = new Label
         {
             Text = "View Data Dictionary =>",
+            ForeColor = Color.DodgerBlue,
+            Cursor = Cursors.Hand
+        };
+        public Label lblWiki = new Label
+        {
+            Text = "View Walkthrough and Documentation =>",
             ForeColor = Color.DodgerBlue,
             Cursor = Cursors.Hand
         };
@@ -5434,7 +5454,6 @@ order by g.GameID
             }
             catch (Exception ex)
             {
-                //Handle any clipboard errors silently
                 Console.WriteLine($"Clipboard error: {ex.Message}");
             }
         }
@@ -5736,7 +5755,7 @@ order by HasVideo desc, ShotDistance desc";
             tip.SetToolTip(lblQB2, GetQuery(lblQB2.Name));
             tip.SetToolTip(lblQP1, GetQuery(lblQP1.Name));
             tip.SetToolTip(lblQP2, GetQuery(lblQP2.Name));
-            tip.IsBalloon = true; // Rounded bubble style
+            tip.IsBalloon = true; //Rounded bubble style
 
             copyG2.Top = lblQG1.Bottom + spacer;
             lblQG2.Top = copyG2.Top - iconSpacer;
@@ -5774,6 +5793,7 @@ order by HasVideo desc, ShotDistance desc";
             lblResources.Top = lblQP2.Bottom + (spacer * 3);
             lblDataDictionary.Top = lblResources.Bottom;
             lblERD.Top = lblDataDictionary.Bottom;
+            lblWiki.Top = lblERD.Bottom;
 
 
 
@@ -6224,6 +6244,7 @@ order by HasVideo desc, ShotDistance desc";
         public void InitializeElements()
         {
             //Children elements should go above the parents, background image should be last added. AddPanelElement(pnlDbOverview, lblGameUtil);
+            AddPanelElement(pnlDbLibrary, lblWiki);
             AddPanelElement(pnlDbLibrary, lblERD);
             AddPanelElement(pnlDbLibrary, lblDataDictionary);
             AddPanelElement(pnlDbLibrary, lblResources);
@@ -6348,11 +6369,11 @@ order by HasVideo desc, ShotDistance desc";
             int targetWidth = target;
             //if (parent.Text == "Options")
             //{
-            //    targetWidth = (int)(parent.Width * 0.8);
+            //   targetWidth = (int)(parent.Width * 0.8);
             //}
             //else
             //{
-            //    targetWidth = (int)(parent.Width * 0.7);
+            //   targetWidth = (int)(parent.Width * 0.7);
             //}
             float bestSize = GetBestFitFontSize(child, child.Text, newFont, targetWidth);
             return new Font(newFont.FontFamily, bestSize, newFont.Style);
@@ -6374,7 +6395,7 @@ order by HasVideo desc, ShotDistance desc";
                     fontSize -= 0.5f;
                 }
 
-                return baseFont.Size; // fallback
+                return baseFont.Size; //fallback
             }
         }
         #endregion
@@ -6420,7 +6441,7 @@ order by HasVideo desc, ShotDistance desc";
         {
             if (keyData == Keys.Escape)
             {
-                this.Close(); // or Application.Exit();
+                this.Close(); //or Application.Exit();
                 return true;
             }
 
@@ -6436,16 +6457,16 @@ order by HasVideo desc, ShotDistance desc";
         }
         private void SelectAllListItems(object sender, KeyEventArgs e, ListBox list)//Allows us to select all seasons to populate
         {
-            // Check if Ctrl+A was pressed
+            //Check if Ctrl+A was pressed
             if (e.Control && e.KeyCode == Keys.A)
             {
-                // Select all items
+                //Select all items
                 for (int i = 0; i < list.Items.Count; i++)
                 {
                     list.SetSelected(i, true);
                 }
 
-                // Mark the event as handled to prevent further processing
+                //Mark the event as handled to prevent further processing
                 e.Handled = true;
             }
         }
@@ -6650,9 +6671,9 @@ order by HasVideo desc, ShotDistance desc";
         public void ErrorOutput(Exception e)
         {
             var st = new System.Diagnostics.StackTrace(e, true);
-            var frame = st.GetFrame(0); // Get the top stack frame where the exception occurred
+            var frame = st.GetFrame(0); //Get the top stack frame where the exception occurred
 
-            // Output file name, method name, and line number
+            //Output file name, method name, and line number
             if (frame != null)
             {
                 string fileName = frame.GetFileName();
@@ -6667,7 +6688,7 @@ order by HasVideo desc, ShotDistance desc";
             Console.WriteLine($"Error message: {e.Message}");
             Console.WriteLine($"Stack trace: {e.StackTrace}");
 
-            // If there's an inner exception, show that too
+            //If there's an inner exception, show that too
             if (e.InnerException != null)
             {
                 Console.WriteLine($"Inner exception: {e.InnerException.Message}");
@@ -7713,7 +7734,7 @@ order by HasVideo desc, ShotDistance desc";
                             alterDeletePbp.ExecuteNonQuery();
                         }
                         stopwatchAlterDelete.Stop();
-                        // Second: Delete other tables' data
+                        //Second: Delete other tables' data
                         using (SqlCommand deleteOthers = new SqlCommand("DeleteSeasonData", connection))
                         {
                             deleteOthers.CommandType = CommandType.StoredProcedure;
@@ -7788,7 +7809,7 @@ order by HasVideo desc, ShotDistance desc";
         //For each game, this method checks each of our tables and determines what to do, Insert, update, or nothing.
         public void GetGameDetails(NBAdbToolboxHistoric.Game game, string sender)
         {
-            // Clear the StringBuilder before starting
+            //Clear the StringBuilder before starting
 
             //Check Db and build strings for Inserts & Updates
             #region Check Db and build strings for Inserts & Updates
@@ -7828,7 +7849,7 @@ order by HasVideo desc, ShotDistance desc";
 
             //Insert data into Main tables and wait for execution
             #region Insert data into Main tables and wait for execution
-            // Get the SQL string from the StringBuilder
+            //Get the SQL string from the StringBuilder
             string hitDb = "set nocount on;\n" + sqlBuilder.ToString();
             sqlBuilder.Clear();
             try
@@ -7972,7 +7993,7 @@ order by HasVideo desc, ShotDistance desc";
             officialList.Add((SeasonID, official.personId));
 
 
-            // Properly escape single quotes in the official's name using StringBuilder
+            //Properly escape single quotes in the official's name using StringBuilder
             string escapedName = official.name.Replace("'", "''");
 
             sqlBuilder.Append("insert into Official values(")
@@ -8783,14 +8804,14 @@ order by HasVideo desc, ShotDistance desc";
                      .Append(action.yLegacy).Append(", ");
             }
 
-            // Remove trailing comma and space
+            //Remove trailing comma and space
             insert.Length = insert.Length - 2;
             values.Length = values.Length - 2;
 
-            // Finalize the values part
+            //Finalize the values part
             values.Append(") ");
 
-            // Append to the main builder 
+            //Append to the main builder 
             playByPlayBuilder.Append(insert)
                             .Append(values)
                             .Append("\n");
@@ -8952,7 +8973,7 @@ order by HasVideo desc, ShotDistance desc";
             CurrentGame(game, officials);
             CurrentPlayer(game);
 
-            // Append the parallel builder content to the main SQL builder
+            //Append the parallel builder content to the main SQL builder
             //CheckStringBuildSize(GameID, "sqlBuilderParallel", sqlBuilderParallel);
             //CheckStringBuildSize(GameID, "sqlBuilder", sqlBuilder);
 
@@ -9031,7 +9052,7 @@ order by HasVideo desc, ShotDistance desc";
             int wins = (homeAway == "Home") ? homeWins : awayWins;
             int losses = (homeAway == "Home") ? homeLosses : awayLosses;
             sqlBuilderParallel.Append("insert into TeamBox(SeasonID, GameID, TeamID, MatchupID, Assists, AssistsTurnoverRatio, BenchPoints, BiggestLead, BiggestLeadScore, BiggestScoringRun, BiggestScoringRunScore, Blocks, BlocksReceived, FastBreakPointsAttempted, FastBreakPointsMade, FastBreakPointsPercentage, FGA, FieldGoalsEffectiveAdjusted, FGM, [FG%], FoulsOffensive, FoulsDrawn, FoulsPersonal, FoulsTeam, FoulsTechnical, FoulsTeamTechnical, FTA, FTM, [FT%], LeadChanges, Points, PointsAgainst, PointsFastBreak, PointsFromTurnovers, PointsInThePaint, PointsInThePaintAttempted, PointsInThePaintMade, PointsInThePaintPercentage, PointsSecondChance, ReboundsDefensive, ReboundsOffensive, ReboundsPersonal, ReboundsTeam, ReboundsTeamDefensive, ReboundsTeamOffensive, ReboundsTotal, SecondChancePointsAttempted, SecondChancePointsMade, SecondChancePointsPercentage, Steals, FG3A, FG3M, [FG3%], TimeLeading, TimesTied, TrueShootingAttempts, TrueShootingPercentage, Turnovers, TurnoversTeam, TurnoversTotal, FG2A, FG2M, [FG2%], Wins, Losses, Win, Seed) values(")
-            // Append values
+            //Append values
             .Append(SeasonID).Append(", ")
             .Append(GameID).Append(", ")
             .Append(team.teamId).Append(", ")
@@ -9132,10 +9153,10 @@ order by HasVideo desc, ShotDistance desc";
         }
         public void CurrentPlayerBox(NBAdbToolboxCurrent.Player player, int GameID, int TeamID, int MatchupID)
         {
-            // Main SQL builder
+            //Main SQL builder
             sqlBuilderParallel.Append("insert into PlayerBox(SeasonID, GameID, TeamID, MatchupID, PlayerID, FGM, FGA, [FG%], FG2M, FG2A, [FG2%], FG3M, FG3A, [FG3%], FTM, FTA, [FT%], ReboundsDefensive, ReboundsOffensive, ReboundsTotal, Assists, Turnovers, Steals, Blocks, Points, FoulsPersonal");
 
-            // Values builder
+            //Values builder
             StringBuilder valuesSB = new StringBuilder();
             valuesSB.Append(SeasonID).Append(", ")
                     .Append(GameID).Append(", ")
@@ -9164,19 +9185,19 @@ order by HasVideo desc, ShotDistance desc";
                     .Append(player.statistics.points).Append(", ")
                     .Append(player.statistics.foulsPersonal);
 
-            // Calculate minutes values - avoid exceptions with null/empty checks
+            //Calculate minutes values - avoid exceptions with null/empty checks
             double minCalc = 0;
             string minutes = player.statistics.minutes;
             bool hasMinutes = !string.IsNullOrEmpty(minutes);
 
             if (hasMinutes)
             {
-                // Only try to parse if we have minutes
+                //Only try to parse if we have minutes
                 int mIndex = minutes.IndexOf("M");
                 if (mIndex > 0)
                 {
                     string minString = minutes.Replace("PT", "").Replace("M", ":").Replace("S", "");
-                    // Check if we can safely parse
+                    //Check if we can safely parse
                     if (mIndex + 1 < minutes.Length && mIndex + 6 <= minutes.Length &&
                         double.TryParse(minutes.Substring(2, mIndex - 2), out double mins) &&
                         double.TryParse(minutes.Substring(mIndex + 1, 5), out double secs))
@@ -9196,12 +9217,12 @@ order by HasVideo desc, ShotDistance desc";
                         minString = minString + ".00";
                     }
 
-                    // Minutes column
+                    //Minutes column
                     sqlBuilderParallel.Append(", Minutes");
                     valuesSB.Append(", '").Append(minString).Append("'");
 
                 }
-                // Plus/minus points if they exist
+                //Plus/minus points if they exist
                 if (player.statistics.plus != 0)
                 {
                     sqlBuilderParallel.Append(", PlusMinusPoints, Plus, Minus");
@@ -9212,12 +9233,12 @@ order by HasVideo desc, ShotDistance desc";
             }
             else
             {
-                // No minutes data available
+                //No minutes data available
                 sqlBuilderParallel.Append(", Minutes");
                 valuesSB.Append(", '0'");
             }
 
-            // Handle assists/turnover ratio
+            //Handle assists/turnover ratio
             sqlBuilderParallel.Append(", AssistsTurnoverRatio");
             if (player.statistics.turnovers > 0)
             {
@@ -9228,7 +9249,7 @@ order by HasVideo desc, ShotDistance desc";
                 valuesSB.Append(", 0");
             }
 
-            // Handle position (if exists)
+            //Handle position (if exists)
             if (!string.IsNullOrEmpty(player.position))
             {
                 sqlBuilderParallel.Append(", Starter");
@@ -9237,11 +9258,11 @@ order by HasVideo desc, ShotDistance desc";
                 valuesSB.Append(", '").Append(player.position).Append("'");
             }
 
-            // Handle status
+            //Handle status
             sqlBuilderParallel.Append(", Status");
             valuesSB.Append(", '").Append(player.status).Append("'");
 
-            // Handle status reason/description (if they exist)
+            //Handle status reason/description (if they exist)
             if (!string.IsNullOrEmpty(player.notPlayingReason))
             {
                 sqlBuilderParallel.Append(", StatusReason");
@@ -9254,7 +9275,7 @@ order by HasVideo desc, ShotDistance desc";
                 }
             }
 
-            // Add remaining columns
+            //Add remaining columns
             sqlBuilderParallel.Append(", MinutesCalculated, BlocksReceived, PointsFastBreak, PointsInThePaint, PointsSecondChance, FoulsOffensive, FoulsDrawn, FoulsTechnical")
                              .Append(") values(")
                              .Append(valuesSB.ToString())
@@ -9268,7 +9289,7 @@ order by HasVideo desc, ShotDistance desc";
                              .Append(", ").Append(player.statistics.foulsTechnical)
                              .Append(")\n");
 
-            // Add the starting lineups insert
+            //Add the starting lineups insert
             sqlBuilderParallel.Append("insert into StartingLineups values(")
                 .Append(SeasonID).Append(", ")
                 .Append(GameID).Append(", ")
@@ -9312,10 +9333,10 @@ order by HasVideo desc, ShotDistance desc";
         {
 
             StringBuilder gameExtSB = new StringBuilder();
-            // Build the GameExt insert
+            //Build the GameExt insert
             gameExtSB.Append("Insert into GameExt(SeasonID, GameID, ArenaID, Status, Attendance, Label, LabelDetail");
 
-            // Start the values part for GameExt
+            //Start the values part for GameExt
             StringBuilder gameExtValuesSB = new StringBuilder();
             gameExtValuesSB.Append(") values(")
                            .Append(SeasonID).Append(", ")
@@ -9326,14 +9347,14 @@ order by HasVideo desc, ShotDistance desc";
                            .Append(gameLabelH).Append("', '")
                            .Append(gameLabelDetailH).Append("'");
 
-            // Add sellout if applicable
+            //Add sellout if applicable
             if (game.sellout != "")
             {
                 gameExtSB.Append(", Sellout");
                 gameExtValuesSB.Append(", ").Append(game.sellout);
             }
 
-            // Add officials
+            //Add officials
             foreach (KeyValuePair<int, string> kvp in officials)
             {
                 if (kvp.Value == "OFFICIAL1")
@@ -9358,21 +9379,21 @@ order by HasVideo desc, ShotDistance desc";
                 }
             }
 
-            // Complete the GameExt statement
+            //Complete the GameExt statement
             gameExtValuesSB.Append(")\n");
             sqlBuilder.Append(gameExtSB).Append(gameExtValuesSB);
         }
 
         public void CurrentGameOnly(NBAdbToolboxCurrent.Game game)
         {
-            // Create StringBuilder for Game table insert
+            //Create StringBuilder for Game table insert
             StringBuilder gameInsertSB = new StringBuilder();
 
-            // Parse the datetime values
+            //Parse the datetime values
             SqlDateTime datetime = SqlDateTime.Parse(game.gameTimeUTC);
             SqlDateTime gameDate = SqlDateTime.Parse(game.gameEt.Remove(game.gameEt.IndexOf('T')));
 
-            // Build the Game insert statement
+            //Build the Game insert statement
             gameInsertSB.Append("Insert into Game(SeasonID, GameID, Date, HomeID, HScore, AwayID, AScore, Datetime, WinnerID, WScore, LoserID, Lscore, GameType, SeriesID) values(")
                         .Append(SeasonID).Append(", ")
                         .Append(GameID).Append(", '")
@@ -9383,7 +9404,7 @@ order by HasVideo desc, ShotDistance desc";
                         .Append(game.awayTeam.score).Append(", '")
                         .Append(datetime).Append("', ");
 
-            // Determine winner/loser
+            //Determine winner/loser
             if (game.homeTeam.score > game.awayTeam.score)
             {
                 gameInsertSB.Append(game.homeTeam.teamId).Append(", ")
@@ -9399,7 +9420,7 @@ order by HasVideo desc, ShotDistance desc";
                             .Append(game.homeTeam.score).Append(", ");
             }
 
-            // Handle game type and series ID
+            //Handle game type and series ID
             //GameType
             string gType = GameID.ToString().Substring(0, 1);
             if (gType == "2")
@@ -9424,7 +9445,7 @@ order by HasVideo desc, ShotDistance desc";
                 gameInsertSB.Append("null, null)");
             }
 
-            // Add newline
+            //Add newline
             gameInsertSB.Append("\n");
             sqlBuilder.Append(gameInsertSB);
 
@@ -9432,15 +9453,15 @@ order by HasVideo desc, ShotDistance desc";
 
         public void CurrentGame(NBAdbToolboxCurrent.Game game, Dictionary<int, string> officials)
         {
-            // Create StringBuilder for Game table insert
+            //Create StringBuilder for Game table insert
             StringBuilder gameInsertSB = new StringBuilder();
             StringBuilder gameExtSB = new StringBuilder();
 
-            // Parse the datetime values
+            //Parse the datetime values
             SqlDateTime datetime = SqlDateTime.Parse(game.gameTimeUTC);
             SqlDateTime gameDate = SqlDateTime.Parse(game.gameEt.Remove(game.gameEt.IndexOf('T')));
 
-            // Build the Game insert statement
+            //Build the Game insert statement
             gameInsertSB.Append("Insert into Game(SeasonID, GameID, Date, HomeID, HScore, AwayID, AScore, Datetime, WinnerID, WScore, LoserID, Lscore, GameType, SeriesID) values(")
                         .Append(SeasonID).Append(", ")
                         .Append(GameID).Append(", '")
@@ -9451,7 +9472,7 @@ order by HasVideo desc, ShotDistance desc";
                         .Append(game.awayTeam.score).Append(", '")
                         .Append(datetime).Append("', ");
 
-            // Determine winner/loser
+            //Determine winner/loser
             if (game.homeTeam.score > game.awayTeam.score)
             {
                 gameInsertSB.Append(game.homeTeam.teamId).Append(", ")
@@ -9467,7 +9488,7 @@ order by HasVideo desc, ShotDistance desc";
                             .Append(game.homeTeam.score).Append(", ");
             }
 
-            // Handle game type and series ID
+            //Handle game type and series ID
             //GameType
             string gType = GameID.ToString().Substring(0, 1);
             if (gType == "2")
@@ -9492,13 +9513,13 @@ order by HasVideo desc, ShotDistance desc";
                 gameInsertSB.Append("null, null)");
             }
 
-            // Add newline
+            //Add newline
             gameInsertSB.Append("\n");
 
-            // Build the GameExt insert
+            //Build the GameExt insert
             gameExtSB.Append("Insert into GameExt(SeasonID, GameID, ArenaID, Status, Attendance, Label, LabelDetail");
 
-            // Start the values part for GameExt
+            //Start the values part for GameExt
             StringBuilder gameExtValuesSB = new StringBuilder();
             gameExtValuesSB.Append(") values(")
                            .Append(SeasonID).Append(", ")
@@ -9509,14 +9530,14 @@ order by HasVideo desc, ShotDistance desc";
                            .Append(gameLabelH).Append("', '")
                            .Append(gameLabelDetailH).Append("'");
 
-            // Add sellout if applicable
+            //Add sellout if applicable
             if (game.sellout != "")
             {
                 gameExtSB.Append(", Sellout");
                 gameExtValuesSB.Append(", ").Append(game.sellout);
             }
 
-            // Add officials
+            //Add officials
             foreach (KeyValuePair<int, string> kvp in officials)
             {
                 if (kvp.Value == "OFFICIAL1")
@@ -9541,10 +9562,10 @@ order by HasVideo desc, ShotDistance desc";
                 }
             }
 
-            // Complete the GameExt statement
+            //Complete the GameExt statement
             gameExtValuesSB.Append(")\n");
 
-            // Append both statements to the main sqlBuilder
+            //Append both statements to the main sqlBuilder
             sqlBuilder.Append(gameInsertSB)
                       .Append(gameExtSB)
                       .Append(gameExtValuesSB);
@@ -9554,26 +9575,26 @@ order by HasVideo desc, ShotDistance desc";
         #region Player
         public void CurrentPlayer(NBAdbToolboxCurrent.Game game)
         {
-            // Process players from both home and away teams
+            //Process players from both home and away teams
             foreach (NBAdbToolboxCurrent.Team team in new[] { game.homeTeam, game.awayTeam })
             {
-                // Calculate the matchup ID (opposing team)
+                //Calculate the matchup ID (opposing team)
                 int MatchupID = (team == game.homeTeam) ? game.awayTeam.teamId : game.homeTeam.teamId;
 
-                // Process each player on the team
+                //Process each player on the team
                 foreach (NBAdbToolboxCurrent.Player player in team.players)
                 {
-                    // Only insert player if they're not in our tracking list
+                    //Only insert player if they're not in our tracking list
                     if (!playerList.Contains((SeasonID, player.personId)))
                     {
                         if (string.IsNullOrEmpty(player.firstName) || string.IsNullOrEmpty(player.familyName))
                         {
                             continue;
                         }
-                        // Add player to our tracking list
+                        //Add player to our tracking list
                         playerList.Add((SeasonID, player.personId));
 
-                        // Build the player insert statement
+                        //Build the player insert statement
                         sqlBuilder.Append("Insert into Player values(")
                                   .Append(SeasonID).Append(", ")
                                   .Append(player.personId).Append(", '")
@@ -9581,7 +9602,7 @@ order by HasVideo desc, ShotDistance desc";
                                   .Append(player.familyName.Replace("'", "''")).Append("', '")
                                   .Append(player.jerseyNum).Append("', ");
 
-                        // Handle the position (which might be null)
+                        //Handle the position (which might be null)
                         if (player.position != null && player.position != "")
                         {
                             sqlBuilder.Append("'").Append(player.position).Append("')\n");
@@ -9602,7 +9623,7 @@ order by HasVideo desc, ShotDistance desc";
         {
             int i = 1;
             repairRowsPbp = 0;
-            // Process each play-by-play action
+            //Process each play-by-play action
             foreach (NBAdbToolboxCurrentPBP.Action action in game.actions)
             {
                 CurrentPlayByPlay(action, Int32.Parse(game.gameId), i);
@@ -9629,16 +9650,16 @@ order by HasVideo desc, ShotDistance desc";
                         using (SqlCommand insert = new SqlCommand("set nocount on;\n" + inserts, connection))
                         {
                             insert.CommandType = CommandType.Text;
-                            insert.CommandTimeout = 120; // 2 minutes
+                            insert.CommandTimeout = 120; //2 minutes
                             connection.Open();
                             insert.ExecuteNonQuery();
                             success = true;
                         }
                     }
-                    catch (SqlException ex) when (ex.Number == 1205) // Deadlock victim error code
+                    catch (SqlException ex) when (ex.Number == 1205) //Deadlock victim error code
                     {
                         Console.WriteLine($"Deadlock detected (attempt {currentAttempt}/{retryAttempts}): {ex.Message}");
-                        // Wait a bit before retrying to allow other transactions to complete
+                        //Wait a bit before retrying to allow other transactions to complete
                         await Task.Delay(500 * currentAttempt);
                     }
                     catch (Exception e)
@@ -9646,13 +9667,13 @@ order by HasVideo desc, ShotDistance desc";
                         ErrorOutput(e);
                         if (currentAttempt < retryAttempts)
                         {
-                            // For other exceptions, also retry but log the error
+                            //For other exceptions, also retry but log the error
                             Console.WriteLine($"Error in DoPbp (attempt {currentAttempt}/{retryAttempts}): {e.Message}");
                             await Task.Delay(500 * currentAttempt);
                         }
                         else
                         {
-                            // Final error handling for when all retries have failed
+                            //Final error handling for when all retries have failed
                             i = 0;
                         }
                     }
@@ -9666,10 +9687,10 @@ order by HasVideo desc, ShotDistance desc";
         }
         public void CurrentPlayByPlay(NBAdbToolboxCurrentPBP.Action action, int GameID, int iteration)
         {
-            // Start building column names
+            //Start building column names
             playByPlayBuilder.Append("insert into PlayByPlay(SeasonID, GameID, ActionID, ActionNumber, Qtr, QtrType, Clock, TimeActual, ScoreHome, ScoreAway, ActionType");
 
-            // Start building values part
+            //Start building values part
             StringBuilder valuesSB = new StringBuilder();
             valuesSB.Append(") values(")
                     .Append(SeasonID).Append(", ")
@@ -9684,7 +9705,7 @@ order by HasVideo desc, ShotDistance desc";
                     .Append(action.scoreAway).Append(", '")
                     .Append(action.actionType).Append("'");
 
-            // Optional fields - Description
+            //Optional fields - Description
             if ((action.description != null && action.description != "") || action.actionType == "memo")
             {
                 playByPlayBuilder.Append(", Description");
@@ -9698,21 +9719,21 @@ order by HasVideo desc, ShotDistance desc";
                 }
             }
 
-            // Side
+            //Side
             if (action.side != null && action.side != "")
             {
                 playByPlayBuilder.Append(", Side");
                 valuesSB.Append(", '").Append(action.side).Append("'");
             }
 
-            // SubType
+            //SubType
             if (action.subType != "")
             {
                 playByPlayBuilder.Append(", SubType");
                 valuesSB.Append(", '").Append(action.subType).Append("'");
             }
 
-            // Area and AreaDetail
+            //Area and AreaDetail
             if (action.area != null && action.area != null)
             {
                 playByPlayBuilder.Append(", Area, AreaDetail");
@@ -9720,7 +9741,7 @@ order by HasVideo desc, ShotDistance desc";
                         .Append(action.areaDetail).Append("'");
             }
 
-            // Coordinates
+            //Coordinates
             if (action.x != null)
             {
                 playByPlayBuilder.Append(", X");
@@ -9745,7 +9766,7 @@ order by HasVideo desc, ShotDistance desc";
                 valuesSB.Append(", ").Append(action.yLegacy);
             }
 
-            // Field goal information
+            //Field goal information
             if (action.isFieldGoal == 1)
             {
                 playByPlayBuilder.Append(", IsFieldGoal");
@@ -9785,7 +9806,7 @@ order by HasVideo desc, ShotDistance desc";
                 }
             }
 
-            // Entity references
+            //Entity references
             if (action.teamId != 0 && action.teamId != null)
             {
                 playByPlayBuilder.Append(", TeamID, Tricode");
@@ -9847,7 +9868,7 @@ order by HasVideo desc, ShotDistance desc";
                 valuesSB.Append(", ").Append(action.foulDrawnPersonId);
             }
 
-            // Qualifiers
+            //Qualifiers
             int q = 1;
             foreach (object qual in action.qualifiers)
             {
@@ -9859,24 +9880,24 @@ order by HasVideo desc, ShotDistance desc";
                 q++;
             }
 
-            // Descriptor
+            //Descriptor
             if (action.descriptor != null)
             {
                 playByPlayBuilder.Append(", Descriptor");
                 valuesSB.Append(", '").Append(action.descriptor).Append("'");
             }
 
-            // Shot action number
+            //Shot action number
             if (action.shotActionNumber != null)
             {
                 playByPlayBuilder.Append(", ShotActionNbr");
                 valuesSB.Append(", ").Append(action.shotActionNumber);
             }
 
-            // Complete the SQL statement
+            //Complete the SQL statement
             valuesSB.Append(")\n");
 
-            // Append values to the main builder
+            //Append values to the main builder
             playByPlayBuilder.Append(valuesSB);
         }
         #endregion
