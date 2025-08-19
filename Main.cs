@@ -4668,6 +4668,21 @@ order by g.GameID
                 }
                 if (current == 1) //Populates Label information for Games sourced from current data/endpoints. Labels are those values had the data been loaded via data file
                 {
+                    if (SeasonID == 2023)
+                    {
+                        string fix22301104 =
+                            @"update Game set WinnerID = 1610612737, LoserID = 1610612765, HScore = 121, AScore = 113, WScore = 121, LScore = 113
+                            where SeasonID = 2023 and GameID = 22301104;
+                            update GameExt set Attendance = 17899, Sellout = 1
+                            where SeasonID = 2023 and GameID = 22301104;";
+                        using (SqlCommand BuildLogInsert = new SqlCommand(fix22301104, Main))
+                        {
+                            BuildLogInsert.CommandType = CommandType.Text;
+                            Main.Open();
+                            BuildLogInsert.ExecuteNonQuery();
+                            Main.Close();
+                        }
+                    }
                     using (SqlCommand BuildLogInsert = new SqlCommand("GameExtLabels", Main))
                     {
                         BuildLogInsert.CommandType = CommandType.StoredProcedure;
