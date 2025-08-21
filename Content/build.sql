@@ -10,7 +10,8 @@ HistoricLoaded		int,
 CurrentLoaded		int,
 Primary Key(SeasonID))
 
-create table Team(SeasonID			int,
+create table Team(
+SeasonID			int,
 TeamID				int,
 City				varchar(255),
 Name				varchar(255),
@@ -91,6 +92,7 @@ Official2ID			int,
 Official3ID			int,
 OfficialAlternateID int,
 Status				varchar(50),
+Periods				int,
 Primary Key(SeasonID, GameID),
 Foreign Key (SeasonID) references Season(SeasonID),
 Foreign Key (SeasonID, GameID) references Game(SeasonID, GameID),

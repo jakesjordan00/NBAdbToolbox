@@ -43,6 +43,8 @@ namespace NBAdbToolbox
 {
     public partial class Main : Form
     {
+        public static string ToolboxVersion = "1.01";
+        public string DatabaseToolboxVersion = "";
         #region Global Declarations
         NBAdbToolboxHistoric.Root root = new NBAdbToolboxHistoric.Root();
         NBAdbToolboxCurrent.Root rootC = new NBAdbToolboxCurrent.Root();
@@ -574,7 +576,7 @@ namespace NBAdbToolbox
                 }
                 var popup = new PopulatePopup(dialog, seasons);
                 if (popup.ShowDialog() == DialogResult.OK)
-                {
+                {                    
                     gamesMissing.Visible = false;
                     rowsMissing.Visible = false;
                     isPopulating = true;
@@ -2319,7 +2321,7 @@ namespace NBAdbToolbox
         public void RepairHistoricGameExtOnly(NBAdbToolboxHistoric.Game game, List<int> officials)
         {
             //GameExt
-            sqlBuilder.Append("Insert into GameExt(SeasonID, GameID, ArenaID, Status, Attendance, Sellout, Label, LabelDetail");
+            sqlBuilder.Append("Insert into GameExt(SeasonID, GameID, ArenaID, Status, Attendance, Sellout, Label, LabelDetail, Periods");
 
             //Officials
             for (int o = 0; o < officials.Count && o < 4; o++)
@@ -2347,7 +2349,8 @@ namespace NBAdbToolbox
                       .Append(game.box.attendance).Append(", ")
                       .Append(game.box.sellout).Append(", '")
                       .Append(game.box.gameLabel).Append("', '")
-                      .Append(game.box.gameSubLabel).Append("'");
+                      .Append(game.box.gameSubLabel).Append("', ")
+                      .Append(game.box.period);
             //Add official values
             for (int o = 0; o < officials.Count && o < 4; o++)
             {
@@ -3865,8 +3868,10 @@ order by g.GameID
 
             UIController("GetConfig");
         }
+
         public async Task<bool> TestConnectionString(string connectionString, string sender) //Test Server connection
         {
+            bool built = false;
             try
             {
                 SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder(connectionString);
@@ -3886,13 +3891,60 @@ order by g.GameID
                             {
                                 config.Create = false;
                                 bob.InitialCatalog = config.Database;
+                                built = true;
                             }
                             else
                             {
                                 config.Create = true;
                             }
                         }
-                        conn.Dispose();
+                        conn.Close(); 
+                        if(connectionString.Contains("Initial Catalog") && built)
+                        {
+                            string dbVersionCheck =
+                                "select count(COLUMN_NAME) PeriodsExists\n" +
+                                "from INFORMATION_SCHEMA.COLUMNS\n" +
+                                "where TABLE_NAME = 'GameExt' and COLUMN_NAME = 'Periods'";
+                            using (SqlCommand BuildLogCheck = new SqlCommand(dbVersionCheck, conn))
+                            {
+                                BuildLogCheck.CommandType = CommandType.Text;
+                                conn.Open();
+                                using (SqlDataReader reader = BuildLogCheck.ExecuteReader())
+                                {
+                                    while (reader.Read())
+                                    {
+                                        if (reader.GetInt32(0) == 1)
+                                        {
+                                            DatabaseToolboxVersion = "1.01";
+                                        }
+                                        else
+                                        {
+                                            DatabaseToolboxVersion = "1.0";
+                                        }
+                                    }
+                                }
+                                conn.Close();
+                            }
+                            if (DatabaseToolboxVersion == "1.0")
+                            {
+                                try
+                                {
+                                    Application.DoEvents();
+                                    using (SqlCommand alterGameExt = new SqlCommand("alter table GameExt add Periods int", conn))
+                                    {
+                                        alterGameExt.CommandType = CommandType.Text;
+                                        conn.Open();
+                                        alterGameExt.ExecuteNonQuery();
+                                        conn.Close();
+                                    }
+                                }
+                                catch
+                                {
+                                    lblSeasonStatusLoad.Visible = true;
+                                    lblSeasonStatusLoad.Text = "Database update to v1.01 failed!";
+                                }
+                            }
+                        }
                         return true; //connected successfully
                     }
                 }
@@ -4673,7 +4725,7 @@ order by g.GameID
                         string fix22301104 =
                             @"update Game set WinnerID = 1610612737, LoserID = 1610612765, HScore = 121, AScore = 113, WScore = 121, LScore = 113
                             where SeasonID = 2023 and GameID = 22301104;
-                            update GameExt set Attendance = 17899, Sellout = 1
+                            update GameExt set Attendance = 17899, Sellout = 1, Periods = 4
                             where SeasonID = 2023 and GameID = 22301104;";
                         using (SqlCommand BuildLogInsert = new SqlCommand(fix22301104, Main))
                         {
@@ -8117,7 +8169,7 @@ order by HasVideo desc, ShotDistance desc";
             }
 
             //GameExt
-            sqlBuilder.Append("Insert into GameExt(SeasonID, GameID, ArenaID, Status, Attendance, Sellout, Label, LabelDetail");
+            sqlBuilder.Append("Insert into GameExt(SeasonID, GameID, ArenaID, Status, Attendance, Sellout, Label, LabelDetail, Periods");
 
             //Officials
             for (int o = 0; o < officials.Count && o < 4; o++)
@@ -8145,7 +8197,8 @@ order by HasVideo desc, ShotDistance desc";
                       .Append(game.box.attendance).Append(", ")
                       .Append(game.box.sellout).Append(", '")
                       .Append(game.box.gameLabel).Append("', '")
-                      .Append(game.box.gameSubLabel).Append("'");
+                      .Append(game.box.gameSubLabel).Append("', ")
+                      .Append(game.box.period);
             //Add official values
             for (int o = 0; o < officials.Count && o < 4; o++)
             {
@@ -9349,7 +9402,7 @@ order by HasVideo desc, ShotDistance desc";
 
             StringBuilder gameExtSB = new StringBuilder();
             //Build the GameExt insert
-            gameExtSB.Append("Insert into GameExt(SeasonID, GameID, ArenaID, Status, Attendance, Label, LabelDetail");
+            gameExtSB.Append("Insert into GameExt(SeasonID, GameID, ArenaID, Status, Attendance, Label, LabelDetail, Periods");
 
             //Start the values part for GameExt
             StringBuilder gameExtValuesSB = new StringBuilder();
@@ -9360,7 +9413,8 @@ order by HasVideo desc, ShotDistance desc";
                            .Append(game.gameStatusText).Append("', ")
                            .Append(game.attendance).Append(", '")
                            .Append(gameLabelH).Append("', '")
-                           .Append(gameLabelDetailH).Append("'");
+                           .Append(gameLabelDetailH).Append("', ")
+                           .Append(game.period);
 
             //Add sellout if applicable
             if (game.sellout != "")
@@ -9532,7 +9586,7 @@ order by HasVideo desc, ShotDistance desc";
             gameInsertSB.Append("\n");
 
             //Build the GameExt insert
-            gameExtSB.Append("Insert into GameExt(SeasonID, GameID, ArenaID, Status, Attendance, Label, LabelDetail");
+            gameExtSB.Append("Insert into GameExt(SeasonID, GameID, ArenaID, Status, Attendance, Label, LabelDetail, Periods");
 
             //Start the values part for GameExt
             StringBuilder gameExtValuesSB = new StringBuilder();
@@ -9543,7 +9597,8 @@ order by HasVideo desc, ShotDistance desc";
                            .Append(game.gameStatusText).Append("', ")
                            .Append(game.attendance).Append(", '")
                            .Append(gameLabelH).Append("', '")
-                           .Append(gameLabelDetailH).Append("'");
+                           .Append(gameLabelDetailH).Append("', ")
+                           .Append(game.period);
 
             //Add sellout if applicable
             if (game.sellout != "")
