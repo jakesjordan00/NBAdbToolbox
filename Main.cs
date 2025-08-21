@@ -44,6 +44,10 @@ namespace NBAdbToolbox
     public partial class Main : Form
     {
         public static string ToolboxVersion = "1.01";
+        public Label lblVersion = new Label
+        {
+            Text = "v1.01"
+        };
         public string DatabaseToolboxVersion = "";
         #region Global Declarations
         NBAdbToolboxHistoric.Root root = new NBAdbToolboxHistoric.Root();
@@ -6035,6 +6039,12 @@ order by HasVideo desc, ShotDistance desc";
             lblCStatus.Left = picStatus.Right - 2; //Position label on the right
             pnlWelcome.Controls.SetChildIndex(picStatus, 1);
 
+            lblVersion.Font = SetFontSize("Segoe UI", ((float)(screenFontSize * lblServer.Height * .9) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, (int)(pnlWelcome.Width * .7), lblVersion);
+            lblVersion.AutoSize = true;
+            lblVersion.Left = pnlWelcome.Width - lblVersion.Width;
+            lblVersion.Top = lblCStatus.Bottom;
+            lblVersion.ForeColor = ThemeColor;
+
             //Build Database Button
             btnBuild.Text = "Build Database";
             btnBuild.Font = SetFontSize("Segoe UI", (float)(fontSize * 1.3), FontStyle.Bold, (int)(pnlWelcome.Width * .7), btnBuild);
@@ -6387,7 +6397,8 @@ order by HasVideo desc, ShotDistance desc";
             AddPanelElement(pnlWelcome, picSettings);
             AddPanelElement(pnlWelcome, lblSettings);
             AddPanelElement(pnlWelcome, lblDbStat);
-            AddPanelElement(pnlWelcome, btnBuild);
+            AddPanelElement(pnlWelcome, btnBuild); 
+            AddPanelElement(pnlWelcome, lblVersion);
             AddPanelElement(pnlWelcome, lblCStatus);
             AddPanelElement(pnlWelcome, picStatus);
             AddPanelElement(pnlWelcome, picDbStatus);
