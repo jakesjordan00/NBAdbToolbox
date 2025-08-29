@@ -447,7 +447,7 @@ namespace NBAdbToolbox
                 (2022, (1320, 1, 30, 35, 554, 83, 1320, 1320, 1320, 1320, 1320, 1320, 43649, 2640, 728421, 43649, 5280)),
                 (2021, (1323, 1, 30, 30, 633, 84, 1323, 1323, 1323, 1323, 1323, 1323, 44737, 2646, 743859, 44737, 5292)),
                 (2020, (1171, 1, 30, 31, 550, 79, 1171, 1171, 1171, 1171, 1171, 1171, 38733, 2342, 656159, 38733, 4684)),
-                (2019, (1142, 1, 30, 37, 549, 74, 1142, 1142, 1142, 1142, 1142, 1142, 37902, 2284, 619791, 37902, 4568)),
+                (2019, (1142, 1, 30, 37, 549, 74, 1142, 1142, 1142, 1142, 1142, 1142, 37902, 2284, 619790, 37902, 4568)),
                 (2018, (1312, 1, 30, 32, 557, 68, 1312, 1312, 1312, 1312, 1312, 1312, 42850, 2624, 654447, 42850, 5248)),
                 (2017, (1311, 1, 30, 32, 559, 71, 1311, 1311, 1311, 1311, 1311, 1311, 43115, 2622, 631695, 43115, 5244)),
                 (2016, (1309, 1, 30, 31, 493, 67, 1309, 1309, 1309, 1309, 1309, 1309, 39077, 2618, 636059, 39077, 5236)),
@@ -895,8 +895,9 @@ namespace NBAdbToolbox
                                 lblSeasonStatusLoad.Text = "Retrying any games missing Box data";
                                 foreach (int box in missingBoxes)
                                 {
-                                    rootC = await currentData.GetJSON(box, SeasonID);
+                                    GameID = box;
                                     lblCurrentGameCount.Text = GameID.ToString();
+                                    rootC = await currentData.GetJSON(box, SeasonID);
                                     try
                                     {
                                         CurrentDataDriver(rootC.game);
@@ -917,6 +918,7 @@ namespace NBAdbToolbox
                                 lblSeasonStatusLoad.Text = "Retrying any games missing PBP data";
                                 foreach (int pbp in missingPbps)
                                 {
+                                    GameID = pbp;
                                     lblCurrentGameCount.Text = GameID.ToString();
                                     rootCPBP = await currentDataPBP.GetJSON(pbp, SeasonID);
                                     try
@@ -1385,6 +1387,8 @@ namespace NBAdbToolbox
                 pbp.actions[i].actionId += 71;
                 PlayByPlayInsertString(pbp.actions[i], Int32.Parse(pbp.gameId));
             }
+            scoreHome = "-1";
+            scoreAway = "-1";
 
         }
 
@@ -3904,7 +3908,7 @@ order by g.GameID
                             }
                         }
                         conn.Close(); 
-                        if(connectionString.Contains("Initial Catalog") && built)
+                        if(connectionString.Contains("Initial Catalog") && built && sender != "BuildClick")
                         {
                             string dbVersionCheck =
                                 "select count(COLUMN_NAME) PeriodsExists\n" +
@@ -3971,6 +3975,40 @@ order by g.GameID
                 return false;
             }
         }
+        public void CheckVersion(string connectionString) //Test Server connection
+        {
+            SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder(connectionString);
+            builder.ConnectTimeout = 3; //set 3 second timeout
+            string dbVersionCheck =
+                                "select count(COLUMN_NAME) PeriodsExists\n" +
+                                "from INFORMATION_SCHEMA.COLUMNS\n" +
+                                "where TABLE_NAME = 'GameExt' and COLUMN_NAME = 'Periods'";
+
+            using (SqlConnection conn = new SqlConnection(builder.ToString()))
+            using (SqlCommand BuildLogCheck = new SqlCommand(dbVersionCheck, conn))
+            {
+                BuildLogCheck.CommandType = CommandType.Text;
+                conn.Open();
+                using (SqlDataReader reader = BuildLogCheck.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        if (reader.GetInt32(0) == 1)
+                        {
+                            DatabaseToolboxVersion = "1.01";
+                        }
+                        else
+                        {
+                            DatabaseToolboxVersion = "1.0";
+                        }
+                    }
+                }
+                conn.Close();
+            }
+        }
+
+        
+
         public void DbExists() //If the Database exists: Set variables, disable build btn, enable populate
         {
             config.Create = false;
@@ -4282,7 +4320,7 @@ order by g.GameID
                     connectionString = bob.ToString();
                 }
             }
-            dbConnection = await TestConnectionString(connectionString, "dbConnection");
+            dbConnection = await TestConnectionString(connectionString, "BuildClick");
             if (dbConnection)
             {
                 if (ConfigChanged("dbConnection")) //If the config file has changed, write update to file
@@ -4355,6 +4393,7 @@ order by g.GameID
                 }
                 if (exception == 0)
                 {
+                    CheckVersion(connectionString);
                     DbExists();
                 }
             }
@@ -4715,12 +4754,23 @@ order by g.GameID
             #region Build Log Insert
             try
             {
+                lblSeasonStatusLoad.Text = "Validating Team Conference and Divisions";
+                Application.DoEvents();
                 SqlConnection Main = new SqlConnection(bob.ToString());
                 using (SqlCommand BuildLogInsert = new SqlCommand("UpdateTeamConfDiv", Main))
                 {
                     BuildLogInsert.CommandType = CommandType.StoredProcedure;
                     Main.Open();
                     BuildLogInsert.ExecuteNonQuery();
+                    Main.Close();
+                }
+                lblSeasonStatusLoad.Text = "Consolidating any differing player names";
+                Application.DoEvents();
+                using (SqlCommand ConsolidatePlayerNames = new SqlCommand("PlayerNames", Main))
+                {
+                    ConsolidatePlayerNames.CommandType = CommandType.StoredProcedure;
+                    Main.Open();
+                    ConsolidatePlayerNames.ExecuteNonQuery();
                     Main.Close();
                 }
                 if (current == 1) //Populates Label information for Games sourced from current data/endpoints. Labels are those values had the data been loaded via data file
@@ -4740,6 +4790,8 @@ order by g.GameID
                             Main.Close();
                         }
                     }
+                    lblSeasonStatusLoad.Text = "Populating Label fields in GameExt";
+                    Application.DoEvents();
                     using (SqlCommand BuildLogInsert = new SqlCommand("GameExtLabels", Main))
                     {
                         BuildLogInsert.CommandType = CommandType.StoredProcedure;
@@ -8852,17 +8904,48 @@ order by HasVideo desc, ShotDistance desc";
                 }
             }
 
-            if (action.scoreAway != "")
+
+            if (!string.IsNullOrWhiteSpace(action.scoreAway) && action.scoreAway != "0")
             {
-                insert.Append("ScoreAway, ");
-                values.Append(action.scoreAway).Append(", ");
+                scoreAway = action.scoreAway;
+            }
+            if (!string.IsNullOrWhiteSpace(action.scoreHome) && action.scoreHome != "0")
+            {
+                scoreHome = action.scoreHome;
             }
 
-            if (action.scoreHome != "")
+            if (scoreAway == "-1")
+            {
+                insert.Append("ScoreAway, ");
+                values.Append("0, ");
+            }
+            else
+            {
+                insert.Append("ScoreAway, ");
+                values.Append(scoreAway).Append(", ");
+            }
+            if (scoreHome == "-1")
             {
                 insert.Append("ScoreHome, ");
-                values.Append(action.scoreHome).Append(", ");
+                values.Append("0, ");
             }
+            else
+            {
+                insert.Append("ScoreHome, ");
+                values.Append(scoreHome).Append(", ");
+            }
+
+
+            //if (action.scoreAway != "")
+            //{
+            //    insert.Append("ScoreAway, ");
+            //    values.Append(action.scoreAway).Append(", ");
+            //}
+            //if (action.scoreHome != "")
+            //{
+            //    insert.Append("ScoreHome, ");
+            //    values.Append(action.scoreHome).Append(", ");
+            //}
 
             if (action.teamId != 0)
             {
@@ -8898,6 +8981,8 @@ order by HasVideo desc, ShotDistance desc";
             pbpActions++;
         }
         public static int pbpActions = 0;
+        public string scoreHome = "-1";
+        public string scoreAway = "-1";
         public void HistoricPlayByPlayStaging(NBAdbToolboxHistoric.PlayByPlay pbp)
         {
             int actions = pbp.actions.Count;
@@ -8905,6 +8990,8 @@ order by HasVideo desc, ShotDistance desc";
             {
                 PlayByPlayInsertString(pbp.actions[i], Int32.Parse(pbp.gameId));
             }
+            scoreHome = "-1";
+            scoreAway = "-1";
 
         }
         #endregion
@@ -8986,7 +9073,7 @@ order by HasVideo desc, ShotDistance desc";
             }
             else
             {
-                missingBoxes.Add(gameID);
+                missingBoxes.Add(gameID);                
                 missingData += "insert into util.MissingData values(" + SeasonID + ", " + gameID + ", 'Current', 'Box', " + missingNote + "\n";
             }
             #endregion
@@ -9018,6 +9105,11 @@ order by HasVideo desc, ShotDistance desc";
             if (SeasonID == 2019 && (useHistoricBox || useHistoricPBP))
             {
                 MissingDataGPS(useHistoricBox, useHistoricPBP, gameID);
+                if (useHistoricBox)
+                {
+                    missingBoxes.Remove(gameID);
+                    missingPbps.Remove(gameID);
+                }
             }
             #endregion
         }
@@ -9706,10 +9798,32 @@ order by HasVideo desc, ShotDistance desc";
             int i = 1;
             repairRowsPbp = 0;
             //Process each play-by-play action
-            foreach (NBAdbToolboxCurrentPBP.Action action in game.actions)
+            if(GameID != 41900111)
             {
-                CurrentPlayByPlay(action, Int32.Parse(game.gameId), i);
-                i++; repairRowsPbp++;
+                foreach (NBAdbToolboxCurrentPBP.Action action in game.actions)
+                {
+                    CurrentPlayByPlay(action, Int32.Parse(game.gameId), i);
+                    i++; 
+                    repairRowsPbp++;
+                }
+            }
+            else
+            {
+                int it = 0;
+                foreach (NBAdbToolboxCurrentPBP.Action action in game.actions)
+                {
+                    if(it != 366)
+                    {
+                        CurrentPlayByPlay(action, Int32.Parse(game.gameId), i);
+                    }
+                    else
+                    {
+
+                    }
+                    it++;
+                    i++; 
+                    repairRowsPbp++;
+                }
             }
             Task DoPbp = Task.Run(async () =>
             {
@@ -9871,6 +9985,30 @@ order by HasVideo desc, ShotDistance desc";
                         .Append(action.actionType.Substring(0, 1)).Append(", ")
                         .Append(action.shotDistance);
             }
+            else if (SeasonID == 2019 && !string.IsNullOrWhiteSpace(action.shotResult) && action.actionType != "freethrow")
+            {
+                playByPlayBuilder.Append(", IsFieldGoal");
+                valuesSB.Append(", 1");
+                string result = "";
+                if (action.shotResult.Contains("Made"))
+                {
+                    playByPlayBuilder.Append(", ShotType, PtsGenerated");
+                    valuesSB.Append(", 'FG").Append(action.actionType.Substring(0, 1)).Append("M', ")
+                            .Append(action.actionType.Substring(0, 1));
+                    result = "Made";
+                }
+                else if (action.shotResult.Contains("Missed"))
+                {
+                    playByPlayBuilder.Append(", ShotType, PtsGenerated");
+                    valuesSB.Append(", 'FG").Append(action.actionType.Substring(0, 1)).Append("A', 0");
+                    result = "Missed";
+                }
+                playByPlayBuilder.Append(", ShotResult, ShotValue, ShotDistance");
+                valuesSB.Append(", '").Append(result).Append("', ")
+                        .Append(action.actionType.Substring(0, 1)).Append(", ")
+                        .Append(action.shotDistance);
+
+            }
             else if (action.actionType == "freethrow")
             {
                 if (action.description.Length >= 4)
@@ -9881,6 +10019,11 @@ order by HasVideo desc, ShotDistance desc";
                         valuesSB.Append(", 'FTM', 1, 'Made', 1");
                     }
                     else if (action.description.Length >= 4 && action.description.Substring(0, 4) == "MISS")
+                    {
+                        playByPlayBuilder.Append(", ShotType, PtsGenerated, ShotResult, ShotValue");
+                        valuesSB.Append(", 'FTA', 0, 'Missed', 1");
+                    }
+                    else if (action.description.Contains("Missed"))
                     {
                         playByPlayBuilder.Append(", ShotType, PtsGenerated, ShotResult, ShotValue");
                         valuesSB.Append(", 'FTA', 0, 'Missed', 1");

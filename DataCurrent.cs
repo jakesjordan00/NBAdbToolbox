@@ -26,7 +26,7 @@ namespace NBAdbToolboxCurrent
             string boxLink = "https://cdn.nba.com/static/json/liveData/boxscore/boxscore_00" + GameID + ".json";
             string json = "";
             Root root = new Root();
-            if (season == 2019 && Missing2019Games.Contains(GameID))
+            if (GameID == 21900884)
             {
                 return root;
             }
