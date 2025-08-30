@@ -46,8 +46,9 @@ namespace NBAdbToolbox
         public static string ToolboxVersion = "1.01";
         public Label lblVersion = new Label
         {
-            Text = "v1.01"
+            Text = "v1.02"
         };
+        public Label lblVersionStatus = new Label();
         public string DatabaseToolboxVersion = "";
         #region Global Declarations
         NBAdbToolboxHistoric.Root root = new NBAdbToolboxHistoric.Root();
@@ -1042,7 +1043,9 @@ namespace NBAdbToolbox
                     }
                     //configPath = Path.Combine(settings.ConfigPath, 
                     InitializeDbConfig("btnEdit");
+                    sentViaBtnEdit = true;
                     RefreshDefaultConfigPath("Edit");
+                    sentViaBtnEdit = false;
                 }
                 else
                 {
@@ -1109,7 +1112,10 @@ namespace NBAdbToolbox
                     //Load the selected config
                     config = JsonConvert.DeserializeObject<DbConfig>(File.ReadAllText(configPath));
                     defaultConfig = false;
-                    InitializeDbConfig("boxChangeConfig");
+                    if (!sentViaBtnEdit)
+                    {
+                        InitializeDbConfig("boxChangeConfig");
+                    }
                     if (dbOverviewOpened)
                     {
                         lblDbOptions.Invoke((MethodInvoker)(() =>
@@ -3470,7 +3476,14 @@ order by g.GameID
         }
         public void SetTheme(string sender)
         {
-
+            if (lblVersionStatus.ForeColor == WarningColor && settings.BackgroundImage == "Court Light")
+            {
+                lblVersionStatus.BackColor = ThemeColor;
+            }
+            else
+            {
+                lblVersionStatus.BackColor = Color.Transparent;
+            }
             //get controls by type
             List<Label> labels = GetAllControlsOfType<Label>(this);
             List<ComboBox> comboBoxes = GetAllControlsOfType<ComboBox>(this);
@@ -3708,6 +3721,7 @@ order by g.GameID
 
         #region Config
         public string configName = "";
+        public bool sentViaBtnEdit = false;
         public void InitializeDbConfig(string sender)
         {
             if (!File.Exists(configPath) || defaultConfig) //If our file doesnt exist
@@ -3834,14 +3848,22 @@ order by g.GameID
                 bob.Password = config.Password;
                 bob.IntegratedSecurity = false;
             }
-            cString = bob.ToString();
+            if(sender != "Main")
+            {
+                bob.InitialCatalog = "";
+                cString = bob.ToString().Replace("Initial Catalog=;", "");
+            }
+            else
+            {
+                cString = bob.ToString();
+            }
             if (config.Server != "" && ((config.Username != "" && config.Password != "") || config.UseWindowsAuth == true))
             {
                 isConnected = await TestConnectionString(cString, "isConnected");
             }
 
 
-            if(isConnected && config.Create == false)//If the connection string works for master and the config file says we dont need to create database, 
+            if(isConnected && config.Create == false && !cString.Contains("Initial Catalog"))//If the connection string works for master and the config file says we dont need to create database, 
             {
                 bob.InitialCatalog = config.Database; //have the connection string use the database
                 dbConnection = await TestConnectionString(bob.ToString(), "dbConnection");
@@ -3910,49 +3932,7 @@ order by g.GameID
                         conn.Close(); 
                         if(connectionString.Contains("Initial Catalog") && built && sender != "BuildClick")
                         {
-                            string dbVersionCheck =
-                                "select count(COLUMN_NAME) PeriodsExists\n" +
-                                "from INFORMATION_SCHEMA.COLUMNS\n" +
-                                "where TABLE_NAME = 'GameExt' and COLUMN_NAME = 'Periods'";
-                            using (SqlCommand BuildLogCheck = new SqlCommand(dbVersionCheck, conn))
-                            {
-                                BuildLogCheck.CommandType = CommandType.Text;
-                                conn.Open();
-                                using (SqlDataReader reader = BuildLogCheck.ExecuteReader())
-                                {
-                                    while (reader.Read())
-                                    {
-                                        if (reader.GetInt32(0) == 1)
-                                        {
-                                            DatabaseToolboxVersion = "1.01";
-                                        }
-                                        else
-                                        {
-                                            DatabaseToolboxVersion = "1.0";
-                                        }
-                                    }
-                                }
-                                conn.Close();
-                            }
-                            if (DatabaseToolboxVersion == "1.0")
-                            {
-                                try
-                                {
-                                    Application.DoEvents();
-                                    using (SqlCommand alterGameExt = new SqlCommand("alter table GameExt add Periods int", conn))
-                                    {
-                                        alterGameExt.CommandType = CommandType.Text;
-                                        conn.Open();
-                                        alterGameExt.ExecuteNonQuery();
-                                        conn.Close();
-                                    }
-                                }
-                                catch
-                                {
-                                    lblSeasonStatusLoad.Visible = true;
-                                    lblSeasonStatusLoad.Text = "Database update to v1.01 failed!";
-                                }
-                            }
+                            CheckVersion(connectionString);
                         }
                         return true; //connected successfully
                     }
@@ -3977,15 +3957,14 @@ order by g.GameID
         }
         public void CheckVersion(string connectionString) //Test Server connection
         {
-            SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder(connectionString);
-            builder.ConnectTimeout = 3; //set 3 second timeout
-            string dbVersionCheck =
-                                "select count(COLUMN_NAME) PeriodsExists\n" +
-                                "from INFORMATION_SCHEMA.COLUMNS\n" +
-                                "where TABLE_NAME = 'GameExt' and COLUMN_NAME = 'Periods'";
-
-            using (SqlConnection conn = new SqlConnection(builder.ToString()))
-            using (SqlCommand BuildLogCheck = new SqlCommand(dbVersionCheck, conn))
+            string versionStatus = "";
+            lblVersionStatus.Visible = true;
+            SqlConnection conn = new SqlConnection(connectionString);
+            string dbVersionCheck1_01 =
+                "select count(COLUMN_NAME) PeriodsExists\n" +
+                "from INFORMATION_SCHEMA.COLUMNS\n" +
+                "where TABLE_NAME = 'GameExt' and COLUMN_NAME = 'Periods'";
+            using (SqlCommand BuildLogCheck = new SqlCommand(dbVersionCheck1_01, conn))
             {
                 BuildLogCheck.CommandType = CommandType.Text;
                 conn.Open();
@@ -4004,6 +3983,197 @@ order by g.GameID
                     }
                 }
                 conn.Close();
+            }
+            string getSeasonWithData = "select top 1 * from Season where CurrentLoaded = 1 or HistoricLoaded = 1";
+            string dbVersionCheck1_02 = "select top 1 * from PlayByPlay where ScoreHome is null";
+            using (SqlCommand SeasonDataCheck = new SqlCommand(getSeasonWithData, conn))
+            {
+                SeasonDataCheck.CommandType = CommandType.Text;
+                conn.Open();
+                using (SqlDataReader reader = SeasonDataCheck.ExecuteReader())
+                {
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            dbVersionCheck1_02 += " and SeasonID = " + reader.GetInt32(0);
+                        }
+                        reader.Close(); //If we've loaded data, check to see if the ScoreHome and ScoreAway functionality is implemented in PlayByPlay
+                        using (SqlCommand CheckPbpScores = new SqlCommand(dbVersionCheck1_02, conn))
+                        {
+                            CheckPbpScores.CommandType = CommandType.Text;
+                            using (SqlDataReader PbpRowsReader = CheckPbpScores.ExecuteReader())
+                            {
+                                if (!PbpRowsReader.HasRows) //If there aren't any null records, we're on version 1.02!
+                                {
+                                    DatabaseToolboxVersion = "1.02";
+                                    lblVersionStatus.Text = "NBAdbToolbox Database v1.02";
+                                    lblVersionStatus.ForeColor = SuccessColor;
+                                }
+                                else
+                                {
+                                    versionStatus = "NBAdbToolbox found null ScoreHome values in PlayByPlay! \n"
+                                        + "Repopulate any Seasons you've loaded with Data files to resolve";
+                                    lblVersionStatus.ForeColor = WarningColor;
+                                    PbpRowsReader.Close();
+                                    string checkForProcedure = "select * from sys.procedures p where p.name = 'PlayerNames'";
+                                    try
+                                    {
+                                        using (SqlCommand CheckProcedure = new SqlCommand(checkForProcedure, conn))
+                                        {
+                                            CheckProcedure.CommandType = CommandType.Text;
+                                            using (SqlDataReader ProcReader = CheckProcedure.ExecuteReader())
+                                            {
+                                                if (ProcReader.HasRows) //If there aren't any null records, we're on version 1.02!
+                                                {
+                                                    DatabaseToolboxVersion = "1.02";
+                                                    lblVersionStatus.Text = "NBAdbToolbox Database v1.02";
+                                                }
+                                                else
+                                                {
+                                                    DatabaseToolboxVersion = "1.01";
+                                                    lblVersionStatus.Text = "NBAdbToolbox Database v1.01";
+                                                }
+                                            }
+                                        }
+                                    }
+                                    catch
+                                    {
+
+                                    }
+
+                                }
+                            }
+                        }
+
+                    }
+                }
+                conn.Close();
+            }
+            if (DatabaseToolboxVersion == "1.0")
+            {
+                try
+                {
+                    Application.DoEvents();
+                    using (SqlCommand alterGameExt = new SqlCommand("alter table GameExt add Periods int", conn))
+                    {
+                        alterGameExt.CommandType = CommandType.Text;
+                        conn.Open();
+                        alterGameExt.ExecuteNonQuery();
+                        conn.Close();
+                        DatabaseToolboxVersion = "1.01";
+                    }
+                }
+                catch
+                {
+                    lblVersionStatus.Text = "NBAdbToolbox Database v1.0\n"
+                        + "Database update to v1.01 failed!\n"
+                        + "Couldn't add Periods to GameExt";
+                    Application.DoEvents();
+                }
+            }
+
+
+            if (DatabaseToolboxVersion == "1.01")
+            {
+                string issueCaught = "";
+                string playerNames =
+                    @"create procedure PlayerNames
+as
+update Player set Name = 'Nene Hilario' where PlayerID = 2403;
+update Player set Name = 'P.J. Tucker' where PlayerID = 200782;
+update Player set Name = 'Enes Freedom' where PlayerID = 202683;
+update Player set Name = 'Jimmy Butler' where PlayerID = 202710;
+update Player set Name = 'Dennis Schröder' where PlayerID = 203471;
+update Player set Name = 'Reggie Bullock Jr.' where PlayerID = 203493;
+update Player set Name = 'Danté Exum' where PlayerID = 203957;
+update Player set Name = 'Dario Šaric' where PlayerID = 203967;
+update Player set Name = 'Michael Frazier' where PlayerID = 1626187;
+update Player set Name = 'Jakob Poeltl' where PlayerID = 1627751;
+update Player set Name = 'OG Anunoby' where PlayerID = 1628384;
+update Player set Name = 'T.J. Leaf' where PlayerID = 1628388;
+update Player set Name = 'P.J. Dozier' where PlayerID = 1628408;
+update Player set Name = 'Frank Mason III' where PlayerID = 1628412;
+update Player set Name = 'Monté Morris' where PlayerID = 1628420;
+update Player set Name = 'Cameron Reynolds' where PlayerID = 1629244;
+update Player set Name = 'Cam Reddish' where PlayerID = 1629629;
+update Player set Name = 'Nic Claxton' where PlayerID = 1629651;
+update Player set Name = 'Marcos Louzada Silva' where PlayerID = 1629712;
+update Player set Name = 'Charlie Brown Jr.' where PlayerID = 1629718;
+update Player set Name = 'KJ Martin' where PlayerID = 1630231;
+update Player set Name = 'Vít Krejcí' where PlayerID = 1630249;
+update Player set Name = 'Jeff Dowtin Jr.' where PlayerID = 1630288;
+update Player set Name = 'Orlando Robinson' where PlayerID = 1631115;
+update Player set Name = 'Moussa Diabaté' where PlayerID = 1631217;
+update Player set Name = 'AJ Green' where PlayerID = 1631260;
+update Player set Name = 'Tazé Moore' where PlayerID = 1631386;
+update Player set Name = 'Nate Williams' where PlayerID = 1631466;
+update Player set Name = 'Craig Porter Jr.' where PlayerID = 1641854;
+update Player set Name = 'Trey Jemison III' where PlayerID = 1641998;";
+
+                string dupePbpRow = "delete from PlayByPlay\n" +
+                    "where SeasonID = 2019 and GameID = 41900111 and ActionID = 367 and ActionNumber = 507\n" +
+                    "and PlayerIDAst is null and TimeActual = '2020-08-17 18:01:32.000'";
+                try
+                {
+                    using (SqlCommand PlayerNamesCreate = new SqlCommand(playerNames, conn))
+                    {
+                        PlayerNamesCreate.CommandType = CommandType.Text;
+                        conn.Open();
+                        PlayerNamesCreate.ExecuteNonQuery();
+                        conn.Close();
+                    }
+                    try
+                    {
+                        using (SqlCommand UpdatePlayerNames = new SqlCommand("PlayerNames", conn))
+                        {
+                            UpdatePlayerNames.CommandType = CommandType.StoredProcedure;
+                            conn.Open();
+                            UpdatePlayerNames.ExecuteNonQuery();
+                            conn.Close();
+                        }
+                    }
+                    catch
+                    {
+                        issueCaught += "\nCouldn't execute PlayerNames procedure.";
+                    }
+                    try
+                    {
+                        using (SqlCommand DeleteDupePbp = new SqlCommand(dupePbpRow, conn))
+                        {
+                            DeleteDupePbp.CommandType = CommandType.Text;
+                            conn.Open();
+                            DeleteDupePbp.ExecuteNonQuery();
+                            conn.Close();
+                        }
+                    }
+                    catch
+                    {
+                        issueCaught += "\nCouldn't delete duplicate row from Game 41900111 in PlayByPlay.";
+                    }
+                }
+                catch
+                {
+                    issueCaught += "\nPlayerNames procedure was already created.";
+                }
+                lblVersionStatus.Text = "NBAdbToolbox Database v1.02";
+            }
+
+            lblVersionStatus.Text += "\n" + versionStatus;
+            lblVersionStatus.Font = SetFontSize("Segoe UI", ((float)(screenFontSize * lblServer.Height * 1.5) / (96 / 12)) * (72 / 12) / 2, FontStyle.Bold, (int)(pnlWelcome.Width * .9), lblVersionStatus);
+            lblVersionStatus.AutoSize = true;
+            lblVersionStatus.Left = pnlWelcome.Left + ((pnlWelcome.Width - lblVersionStatus.Width) / 2);
+            lblVersionStatus.Top = pnlWelcome.Top - lblVersionStatus.Height;
+            lblVersionStatus.Parent = bgCourt;
+            lblVersionStatus.BackColor = Color.Transparent;
+            lblVersionStatus.TextAlign = ContentAlignment.MiddleCenter;
+            if(settings.BackgroundImage == "Court Light")
+            {
+                lblVersionStatus.BackColor = ThemeColor;
+            }
+            else
+            {
+                lblVersionStatus.BackColor = Color.Transparent;
             }
         }
 
@@ -6449,7 +6619,7 @@ order by HasVideo desc, ShotDistance desc";
             AddPanelElement(pnlWelcome, picSettings);
             AddPanelElement(pnlWelcome, lblSettings);
             AddPanelElement(pnlWelcome, lblDbStat);
-            AddPanelElement(pnlWelcome, btnBuild); 
+            AddPanelElement(pnlWelcome, btnBuild);
             AddPanelElement(pnlWelcome, lblVersion);
             AddPanelElement(pnlWelcome, lblCStatus);
             AddPanelElement(pnlWelcome, picStatus);
@@ -6460,6 +6630,7 @@ order by HasVideo desc, ShotDistance desc";
             AddPanelElement(pnlWelcome, lblServer);
             AddPanelElement(pnlWelcome, btnEdit);
             AddPanelElement(pnlWelcome, lblStatus);
+            AddMainElement(this, lblVersionStatus);
             AddMainElement(this, pnlLoad);   //Adding Welcome panel
             AddMainElement(this, pnlDbLibrary);   //Adding Database Library panel
             AddMainElement(this, pnlWelcome);   //Adding Welcome panel
