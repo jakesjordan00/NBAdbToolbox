@@ -1420,6 +1420,7 @@ namespace NBAdbToolbox
                 if (do2024Schedule)
                 {
                     schedule = null;
+                    scheduleRows = 0;
 
                     lblSchedule24Header.Font = lblScheduleHeader.Font;
                     lblSchedule24Detail.Font = lblScheduleLoadDetail.Font;
@@ -1442,7 +1443,13 @@ namespace NBAdbToolbox
                     lblSchedule24Header.BackColor = SubThemeColor;
                     lblSchedule24Detail.Text += "\nComplete! " + scheduleRows + " rows inserted";
                     do2024Schedule = false;
-
+                }
+                else if(lblSchedule24Header.Text == "2024-2025 Schedule")
+                {
+                    lblSchedule24Detail.Text = "No changes";
+                    lblSchedule24Header.Top = lblScheduleLoadDetail.Bottom;
+                    lblSchedule24Detail.Top = lblSchedule24Header.Bottom;
+                    Application.DoEvents();
                 }
                 ButtonChangeState(btnGetSchedule, true);
             };
@@ -1488,8 +1495,11 @@ namespace NBAdbToolbox
             if (!do2024Schedule)
             {
                 await CheckDeleteSchedule();
-                Details.Text += "\nDeleted " + scheduleDeletedRows + " existing rows from 2025-26 Schedule";
-                Application.DoEvents();
+                if(scheduleDeletedRows != 0)
+                {
+                    Details.Text += "\nDeleted " + scheduleDeletedRows + " existing rows from 2025-26 Schedule";
+                    Application.DoEvents();
+                }
             }
             BuildSchedule(SeasonID, Details);
         }
