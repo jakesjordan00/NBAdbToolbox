@@ -51,8 +51,34 @@ namespace NBAdbToolboxSchedule
             }
             return GameList;
         }
-    
-    
+
+
+        public async Task<ScheduleLeagueV2> GetSchedule(int version)
+        {
+            //If Version = 1, 2024
+            //If Version = 2, 2025
+            string pbpLink = "https://cdn.nba.com/static/json/staticData/scheduleLeagueV2_" + version + ".json";
+            string json = "";
+            ScheduleLeagueV2 Schedule = new ScheduleLeagueV2();
+            List<Game> GameList = new List<Game>();
+            using (HttpClient client = new HttpClient())
+            {
+                client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0");
+                client.Timeout = TimeSpan.FromSeconds(3.5);
+                try
+                {
+                    json = await client.GetStringAsync(pbpLink);
+                    Schedule = JsonConvert.DeserializeObject<ScheduleLeagueV2>(json);
+                }
+                catch
+                {
+
+                }
+
+            }
+
+            return Schedule;
+        }
         public async Task<string> GetJSON(int SeasonID)
         {
             string pbpLink = "https://cdn.nba.com/static/json/staticData/scheduleLeagueV2_2.json";
@@ -184,6 +210,7 @@ namespace NBAdbToolboxSchedule
         public Team HomeTeam { get; set; }
         public Team AwayTeam { get; set; }
         public List<PointsLeader> PointsLeaders { get; set; }
+        public bool isNeutral { get; set; }
     }
 
     public class GameDates

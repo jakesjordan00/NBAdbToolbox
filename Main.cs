@@ -56,6 +56,7 @@ namespace NBAdbToolbox
         NBAdbToolboxCurrentPBP.Root rootCPBP = new NBAdbToolboxCurrentPBP.Root();
         NBAdbToolboxSchedule.ScheduleLeagueV2 schedule = new NBAdbToolboxSchedule.ScheduleLeagueV2();
         NBAdbToolboxPlayerMovement.PlayerMovementRoot tradeData = new NBAdbToolboxPlayerMovement.PlayerMovementRoot();
+
         public bool dbConnection = false; //Determine whether or not we have a connection to the Database in dbconfig file
         public bool isConnected = false; //Server Connection status variable
         //static string projectRoot = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..")); //File path for project when DEBUGGING
@@ -272,6 +273,18 @@ namespace NBAdbToolbox
             Name = "btnMovement"
         };
 
+        public Label lblGetSchedule = new Label
+        {
+            Text = "Load latest Schedule data"
+        };
+        public Label lblScheduleDet = new Label
+        {
+            Text = "Full 2024 and latest 2025 Schedule"
+        };
+        public Button btnGetSchedule = new Button
+        {
+            Name = "btnGetSchedule"
+        };
 
 
 
@@ -1284,11 +1297,16 @@ namespace NBAdbToolbox
 
             btnMovement.Click += async (s, e) =>
             {
+                lblScheduleHeader.Visible = false;
+                lblScheduleLoadDetail.Visible = false;
+                lblSchedule24Header.Visible = false;
+                lblSchedule24Detail.Visible = false;
                 ButtonChangeState(btnMovement, false);
                 lblMovementLoadProgress.Visible = false;
                 playerMovementRows = 0;
                 if (isPopulating)
                 {
+
                 }
 
                 lblMovementLoadStatus.Left = 0;
@@ -1313,23 +1331,7 @@ namespace NBAdbToolbox
             lblERD.Click += lblERDClick;
             lblWiki.Click += lblWikiClick;
 
-            //lblQG1.Click += (s, e) =>
-            //{
-            //    CopyQueryToClipboard(lblQG1.Name.ToString());
-            //};
-            //lblQG2.Click += (s, e) =>
-            //{
-            //    CopyQueryToClipboard(lblQG2.Name.ToString());
-            //};
 
-            //lblQB1.Click += (s, e) =>
-            //{
-            //    CopyQueryToClipboard(lblQB1.Name.ToString());
-            //};
-            //lblQB2.Click += (s, e) =>
-            //{
-            //    CopyQueryToClipboard(lblQB2.Name.ToString());
-            //};
 
             copyG1.Click += (s, e) =>
             {
@@ -1382,6 +1384,68 @@ namespace NBAdbToolbox
                 ToolTipUnderlineMultiLine(s, e, lblQP2);
             };
 
+
+
+
+            btnGetSchedule.Click += async (s, e) =>
+            {
+                //Uses:
+                //      lblMovementLoadStatus, lblMovementLoadProgress
+                //          lblMovementLoadStatus = lblScheduleHeader
+                //          lblMovementLoadProgress = lblScheduleLoadDetail
+
+                ButtonChangeState(btnGetSchedule, false);
+                lblScheduleHeader = lblMovementLoadStatus;
+                lblScheduleLoadDetail = lblMovementLoadProgress;
+
+                lblScheduleHeader.Visible = true;
+                lblScheduleLoadDetail.Visible = true;
+                scheduleRows = 0;
+                scheduleDeletedRows = 0;
+                lblScheduleHeader.Left = 0;
+                lblScheduleLoadDetail.Font = SetFontSize("Segoe UI", (float)(fontSize * .5), FontStyle.Bold, (int)(lblSeasonStatusLoadInfo.Width * .02), lblCurrentGame);
+
+                lblScheduleHeader.ForeColor = ThemeColor;
+                lblScheduleLoadDetail.ForeColor = ThemeColor;
+
+
+                lblScheduleHeader.Text = "2025-26 Schedule";
+                Application.DoEvents();
+                await ScheduleInit(1, "2025-26", lblScheduleLoadDetail);
+                lblScheduleHeader.ForeColor = SuccessColor;
+                lblScheduleHeader.BackColor = SubThemeColor;
+                lblScheduleLoadDetail.Text += "\nComplete! " + scheduleRows + " rows inserted";
+                Application.DoEvents();
+
+                if (do2024Schedule)
+                {
+                    schedule = null;
+
+                    lblSchedule24Header.Font = lblScheduleHeader.Font;
+                    lblSchedule24Detail.Font = lblScheduleLoadDetail.Font;
+
+                    lblSchedule24Header.Top = lblScheduleLoadDetail.Bottom;
+                    lblSchedule24Header.AutoSize = true;
+                    lblSchedule24Header.ForeColor = ThemeColor;
+                    lblSchedule24Header.Text = "2024-2025 Schedule";
+                    lblSchedule24Header.Visible = true;
+
+                    lblSchedule24Detail.Top = lblSchedule24Header.Bottom;
+                    lblSchedule24Detail.AutoSize = true;
+                    lblSchedule24Detail.ForeColor = ThemeColor;
+                    lblSchedule24Detail.Visible = true;
+
+                    Application.DoEvents();
+
+                    await ScheduleInit(2, "2024-25", lblSchedule24Detail);
+                    lblSchedule24Header.ForeColor = SuccessColor;
+                    lblSchedule24Header.BackColor = SubThemeColor;
+                    lblSchedule24Detail.Text += "\nComplete! " + scheduleRows + " rows inserted";
+                    do2024Schedule = false;
+
+                }
+                ButtonChangeState(btnGetSchedule, true);
+            };
             this.Shown += AfterLoad;
         }
 
@@ -1398,6 +1462,191 @@ namespace NBAdbToolbox
 
         }
 
+        public bool do2024Schedule = false;
+        public int scheduleRows = 0;
+        public int scheduleDeletedRows = 0;
+
+
+        public Label lblScheduleHeader = new Label();
+        public Label lblScheduleLoadDetail = new Label();
+        public Label lblSchedule24Header = new Label();
+        public Label lblSchedule24Detail = new Label();
+        public async Task ScheduleInit(int version, string seasonText, Label Details)
+        {
+            Details.Text = "Reading " + seasonText + " Schedule...";
+            Application.DoEvents();
+            schedule = await leagueSchedule.GetSchedule(version);
+            Details.Text += "Done!";
+            Details.Visible = true;
+            Details.ForeColor = SuccessColor;
+            Application.DoEvents();
+            int SeasonID = Int32.Parse(seasonText.Substring(0, 4));
+            await ScheduleClick(SeasonID, Details);
+        }
+        public async Task ScheduleClick(int SeasonID, Label Details)
+        {
+            if (!do2024Schedule)
+            {
+                await CheckDeleteSchedule();
+                Details.Text += "\nDeleted " + scheduleDeletedRows + " existing rows from 2025-26 Schedule";
+                Application.DoEvents();
+            }
+            BuildSchedule(SeasonID, Details);
+        }
+
+        public async Task CheckDeleteSchedule()
+        {
+            try
+            {
+                using (SqlConnection Main = new SqlConnection(bob.ToString()))
+                {
+                    Main.Open();
+                    using (SqlCommand ScheduleDelete = new SqlCommand("delete from Schedule where SeasonID = 2025", Main))
+                    {
+                        ScheduleDelete.CommandType = CommandType.Text;
+                        scheduleDeletedRows = ScheduleDelete.ExecuteNonQuery();
+                    }
+                    using (SqlCommand Check2024Schedule = new SqlCommand("select top 1 * from Schedule where SeasonID = 2024", Main))
+                    {
+                        Check2024Schedule.CommandType = CommandType.Text;
+                        using (SqlDataReader reader = Check2024Schedule.ExecuteReader())
+                        {
+                            if (!reader.Read()) //If we dont have any 2024 rows, we'll insert these now.
+                            {
+                                do2024Schedule = true;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                lblScheduleLoadDetail.ForeColor = ErrorColor;
+                lblScheduleLoadDetail.Text += "\n" + ex.Message;
+            }
+        }
+        public StringBuilder scheduleBuilder = new StringBuilder(1024);
+        public async Task BuildSchedule(int SeasonID, Label Details)
+        {
+            foreach (GameDates date in schedule.LeagueSchedule.GameDates)
+            {
+                foreach (NBAdbToolboxSchedule.Game game in date.Games)
+                {
+                    StringBuilder insertBuilder = new StringBuilder();
+                    StringBuilder valuesBuilder = new StringBuilder();
+                    int GameID = Int32.Parse(game.GameId);
+                    string gameType = "";
+                    string gameChar = GameID.ToString().Substring(0, 1);
+                    if (gameChar == "1")
+                    {
+                        gameType = "PRE";
+                    }
+                    else if (gameChar == "2")
+                    {
+                        gameType = "RS";
+                    }
+                    else if (gameChar == "3")
+                    {
+                        gameType = "AS";
+                    }
+                    else if (gameChar == "4")
+                    {
+                        gameType = "PS";
+                    }
+                    else if (gameChar == "5")
+                    {
+                        gameType = "PI";
+                    }
+                    else if (gameChar == "6")
+                    {
+                        gameType = "CUP";
+                    }
+
+                    int isNeutral = game.isNeutral ? 1: 0;
+                    int ifNecessary = game.IfNecessary ? 1 : 0;
+
+
+                    insertBuilder.Append("insert into Schedule(SeasonID, GameID, GameType, Status, Sequence, GameTimeEST, GameTimeUTC, Day, Week" +
+                        ", IsNeutral, HomeID, HomeWins, HomeLosses, HomeScore, AwayID, AwayWins, AwayLosses, AwayScore, IfNecessary");
+                    valuesBuilder.Append(")values(").Append(SeasonID).Append(", ")
+                        .Append(GameID).Append(", '")
+                        .Append(gameType).Append("', '")
+                        .Append(game.GameStatusText).Append("', ")
+                        .Append(game.GameSequence).Append(", '")
+                        .Append(game.GameDateTimeEst).Append("', '")
+                        .Append(game.GameDateTimeUTC).Append("', '")
+                        .Append(game.Day).Append("', ")
+                        .Append(game.WeekNumber).Append(", ")
+                        .Append(isNeutral).Append(", ")
+                        .Append(game.HomeTeam.TeamId).Append(", ")
+                        .Append(game.HomeTeam.Wins).Append(", ")
+                        .Append(game.HomeTeam.Losses).Append(", ")
+                        .Append(game.HomeTeam.Score).Append(", ")
+                        .Append(game.AwayTeam.TeamId).Append(", ")
+                        .Append(game.AwayTeam.Wins).Append(", ")
+                        .Append(game.AwayTeam.Losses).Append(", ")
+                        .Append(game.AwayTeam.Score).Append(", ")
+                        .Append(ifNecessary);
+
+                    if(game.HomeTeamTime != DateTime.Parse("1/1/0001 12:00:00 AM"))
+                    {
+                        insertBuilder.Append(", GameTimeHome");
+                        valuesBuilder.Append(", '").Append(game.HomeTeamTime).Append("'");
+
+                    }
+                    if (game.AwayTeamTime != DateTime.Parse("1/1/0001 12:00:00 AM"))
+                    {
+                        insertBuilder.Append(", GameTimeAway");
+                        valuesBuilder.Append(", '").Append(game.AwayTeamTime).Append("'");
+                    }
+                    if (!string.IsNullOrWhiteSpace(game.GameLabel))
+                    {
+                        insertBuilder.Append(", Label");
+                        valuesBuilder.Append(", '").Append(game.GameLabel).Append("'");
+                    }
+                    if (!string.IsNullOrWhiteSpace(game.GameSubLabel))
+                    {
+                        insertBuilder.Append(", LabelDetail");
+                        valuesBuilder.Append(", '").Append(game.GameSubLabel).Append("'");
+                    }
+                    if(game.HomeTeam.Seed != 0)
+                    {
+                        insertBuilder.Append(", HomeSeed, AwaySeed");
+                        valuesBuilder.Append(", ").Append(game.HomeTeam.Seed).Append(", ").Append(game.AwayTeam.Seed);
+                    }
+                    if (!string.IsNullOrWhiteSpace(game.SeriesText))
+                    {
+                        insertBuilder.Append(", SeriesText");
+                        valuesBuilder.Append(", '").Append(game.SeriesText).Append("'");
+                    }
+                    scheduleBuilder.Append(insertBuilder.Append(valuesBuilder).Append(")\n"));
+                }
+                string insert = scheduleBuilder.ToString();
+                await InsertSchedule(insert, Details);
+                scheduleBuilder.Clear();
+            }
+
+        }
+        public async Task InsertSchedule(string insert, Label Details)
+        {
+            try
+            {
+                using (SqlConnection Main = new SqlConnection(bob.ToString()))
+                using (SqlCommand InsertPlayerMovement = new SqlCommand(insert, Main))
+                {
+                    InsertPlayerMovement.CommandType = CommandType.Text;
+                    Main.Open();
+                    scheduleRows += InsertPlayerMovement.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                string error = insert;
+                Details.ForeColor = ErrorColor;
+                Details.ForeColor = ErrorColor;
+            }
+
+        }
 
 
         public Label lblMovementLoadStatus = new Label();
@@ -6491,6 +6740,13 @@ order by HasVideo desc, ShotDistance desc";
             lblMovementLoadStatus.AutoSize = true;
             lblMovementLoadProgress.AutoSize = true;
 
+
+            lblGetSchedule.Font = lblRepair.Font;
+            lblGetSchedule.AutoSize = true;
+            btnGetSchedule.Font = btnRepair.Font;
+            btnGetSchedule.Text = "Get Schedule";
+            btnGetSchedule.AutoSize = true;
+
             ArrangeOverviewControls();
         }
 
@@ -6540,6 +6796,16 @@ order by HasVideo desc, ShotDistance desc";
 
             lblMovementLoadStatus.Top = btnMovement.Bottom + spacer;
             lblMovementLoadProgress.Top = lblMovementLoadStatus.Bottom;
+
+            lblGetSchedule.Left = lblRepair.Left;
+            lblGetSchedule.Top = lblMovement.Top;
+            lblScheduleDet.Font = SetFontSize("Segoe UI", (float)(fontSize * 1.05), FontStyle.Bold, (int)(lblGetSchedule.Width * .9), lblScheduleDet);
+            lblScheduleDet.AutoSize = true;
+            lblScheduleDet.Top = lblGetSchedule.Bottom;
+            lblScheduleDet.Left = lblGetSchedule.Left + ((lblGetSchedule.Width - lblScheduleDet.Width) / 2);
+            btnGetSchedule.Top = lblScheduleDet.Bottom;
+            btnGetSchedule.Left = btnRepair.Left;
+
         }
         public void InitializeElements()
         {
@@ -6574,6 +6840,10 @@ order by HasVideo desc, ShotDistance desc";
             AddPanelElement(pnlDbOverview, lblPbUtil);
             AddPanelElement(pnlDbOverview, lblPbpUtil);
             AddPanelElement(pnlDbOverview, lblEmpty);
+            AddPanelElement(pnlDbUtil, lblSchedule24Detail);
+            AddPanelElement(pnlDbUtil, lblSchedule24Header);
+            AddPanelElement(pnlDbUtil, lblScheduleLoadDetail);
+            AddPanelElement(pnlDbUtil, lblScheduleHeader);
             AddPanelElement(pnlDbUtil, lblMovementLoadProgress);
             AddPanelElement(pnlDbUtil, lblMovementLoadStatus);
             AddPanelElement(pnlLoad, gpmValue);
@@ -6584,6 +6854,9 @@ order by HasVideo desc, ShotDistance desc";
             AddPanelElement(pnlLoad, lblSeasonStatusLoadInfo);
             AddPanelElement(pnlLoad, lblSeasonStatusLoad);
             AddPanelElement(pnlLoad, picLoad);
+            AddPanelElement(pnlDbUtil, btnGetSchedule);
+            AddPanelElement(pnlDbUtil, lblScheduleDet);
+            AddPanelElement(pnlDbUtil, lblGetSchedule);
             AddPanelElement(pnlDbUtil, btnMovement);
             AddPanelElement(pnlDbUtil, lblMovementDet);
             AddPanelElement(pnlDbUtil, lblMovement);
@@ -7090,6 +7363,17 @@ order by HasVideo desc, ShotDistance desc";
                 lblMovementLoadStatus.Top = btnMovement.Bottom + (int)(btnMovement.Height * .2);
                 lblMovementLoadProgress.Top = lblMovementLoadStatus.Bottom;
 
+                lblGetSchedule.Left = lblRepair.Left;
+                lblGetSchedule.Top = lblMovement.Top;
+                lblScheduleDet.Top = lblGetSchedule.Bottom;
+                lblScheduleDet.Left = lblGetSchedule.Left + ((lblGetSchedule.Width - lblScheduleDet.Width) / 2);
+                btnGetSchedule.Top = lblScheduleDet.Bottom;
+                btnGetSchedule.Left = btnRepair.Left;
+                lblScheduleHeader.Top = lblMovementLoadStatus.Top;
+                lblScheduleLoadDetail.Top = lblMovementLoadProgress.Top;
+                lblSchedule24Header.Top = lblScheduleLoadDetail.Bottom;
+                lblSchedule24Detail.Top = lblSchedule24Header.Bottom;
+
                 if (dbConnection)
                 {
                     lblDbOvName.ForeColor = SuccessColor;
@@ -7141,6 +7425,18 @@ order by HasVideo desc, ShotDistance desc";
                 btnMovement.Left = btnRefresh.Left;
                 lblMovementLoadStatus.Top = btnMovement.Bottom + (int)(btnMovement.Height * .2);
                 lblMovementLoadProgress.Top = lblMovementLoadStatus.Bottom;
+
+
+                lblGetSchedule.Left = lblRepair.Left;
+                lblGetSchedule.Top = lblMovement.Top;
+                lblScheduleDet.Top = lblGetSchedule.Bottom;
+                lblScheduleDet.Left = lblGetSchedule.Left + ((lblGetSchedule.Width - lblScheduleDet.Width) / 2);
+                btnGetSchedule.Top = lblScheduleDet.Bottom;
+                btnGetSchedule.Left = btnRepair.Left;
+                lblScheduleHeader.Top = lblMovementLoadStatus.Top;
+                lblScheduleLoadDetail.Top = lblMovementLoadProgress.Top;
+                lblSchedule24Header.Top = lblScheduleLoadDetail.Bottom;
+                lblSchedule24Detail.Top = lblSchedule24Header.Bottom;
             }
 
             //show and build overview
@@ -7197,6 +7493,18 @@ order by HasVideo desc, ShotDistance desc";
                 btnMovement.Left = btnRefresh.Left;
                 lblMovementLoadStatus.Top = btnMovement.Bottom + (int)(btnMovement.Height * .2);
                 lblMovementLoadProgress.Top = lblMovementLoadStatus.Bottom;
+
+
+                lblGetSchedule.Left = lblRepair.Left;
+                lblGetSchedule.Top = lblMovement.Top;
+                lblScheduleDet.Top = lblGetSchedule.Bottom;
+                lblScheduleDet.Left = lblGetSchedule.Left + ((lblGetSchedule.Width - lblScheduleDet.Width) / 2);
+                btnGetSchedule.Top = lblScheduleDet.Bottom;
+                btnGetSchedule.Left = btnRepair.Left;
+                lblScheduleHeader.Top = lblMovementLoadStatus.Top;
+                lblScheduleLoadDetail.Top = lblMovementLoadProgress.Top;
+                lblSchedule24Header.Top = lblScheduleLoadDetail.Bottom;
+                lblSchedule24Detail.Top = lblSchedule24Header.Bottom;
             }
             else if (vis)
             {
@@ -7229,6 +7537,19 @@ order by HasVideo desc, ShotDistance desc";
                 btnMovement.Left = btnRefresh.Left;
                 lblMovementLoadStatus.Top = btnMovement.Bottom + (int)(btnMovement.Height * .2);
                 lblMovementLoadProgress.Top = lblMovementLoadStatus.Bottom;
+
+
+                
+                lblGetSchedule.Left = lblRepair.Left;
+                lblGetSchedule.Top = lblMovement.Top;
+                lblScheduleDet.Top = lblGetSchedule.Bottom;
+                lblScheduleDet.Left = lblGetSchedule.Left + ((lblGetSchedule.Width - lblScheduleDet.Width) / 2);
+                btnGetSchedule.Top = lblScheduleDet.Bottom;
+                btnGetSchedule.Left = btnRepair.Left;
+                lblScheduleHeader.Top = lblMovementLoadStatus.Top;
+                lblScheduleLoadDetail.Top = lblMovementLoadProgress.Top;
+                lblSchedule24Header.Top = lblScheduleLoadDetail.Bottom;
+                lblSchedule24Detail.Top = lblSchedule24Header.Bottom;
             }
         }
         private void BuildOverview()
