@@ -409,8 +409,8 @@ namespace NBAdbToolbox
         public int picLoadLoc = 0;
 
         //Header Panels
-        public Panel pnlNav = new Panel();
         public Panel pnlScoreboard = new Panel();
+        public Panel pnlNav = new Panel();
 
         public HashSet<(int SeasonID, (int Games, int Loaded, int Team, int Arena, int Player, int Official, int Game, int PlayerBox, int TeamBox, int PlayByPlay, int StartingLineups, int TeamBoxLineups,
             int HistoricLoaded, int CurrentLoaded, int PBoxRows, int TBoxRows, int PbpRows, int StartingLineupRows, int TBoxLineupRows, string Status, int GameExt))> seasonInfo
@@ -549,7 +549,204 @@ namespace NBAdbToolbox
         public bool isPopulating = false;
         public bool missingPbp = false;
         public string pbpInsertFailSafe = "";
+        public async Task GetScoreBoard()
+        {
+            Color tan = Color.FromArgb(255, 209, 203, 192);
+            Color light = Color.MintCream;
+            Color dark = Color.FromArgb(255, 50, 50, 50);
 
+            float fontSize = ((float)(screenFontSize * pnlWelcome.Height * .08) / (96 / 12)) * (72 / 12);
+            int panelWidth = (int)(this.Width * .1);
+            schedule = await leagueSchedule.GetSchedule(1);
+            int dateCount = 0;
+            int gameCount = 0;
+            int totalCount = 0;
+            try
+            {
+                foreach (NBAdbToolboxSchedule.GameDates date in schedule.LeagueSchedule.GameDates)
+                {
+                    int year = date.Games[0].GameDateEst.Year;
+                    int month = date.Games[0].GameDateEst.Month;
+                    string day1 = date.Games[0].GameDateEst.Day.ToString();
+                    string day = date.Games[0].GameDateEst.Day < 10 ? "0" + date.Games[0].GameDateEst.Day : date.Games[0].GameDateEst.Day.ToString();
+
+                    string urlDate = "https://www.nba.com/games?date=" + year + "-" + month + "-" + day;
+                    Panel Date1 = new Panel
+                    {
+                        Width = panelWidth,
+                        Height = pnlScoreboard.Height,
+                        Left = panelWidth * totalCount,
+                        Top = 0,
+                        BackColor = dark,
+                        Visible = true,
+                        BorderStyle = BorderStyle.Fixed3D,
+                        Cursor = Cursors.Hand
+                    };
+                    pnlScoreboard.Controls.Add(Date1);
+
+                    dateCount++;
+                    totalCount++;
+                    Label lblDate1 = new Label
+                    {
+                        Text = date.Games[0].GameDateTimeEst.ToShortDateString(),
+                        ForeColor = tan
+                    };
+
+                    lblDate1.Font = SetFontSize("Segoe UI", (float)(fontSize * .7), FontStyle.Bold, (int)(Date1.Width), lblDate1);
+                    lblDate1.AutoSize = true;
+                    Date1.Controls.Add(lblDate1);
+                    lblDate1.Left = (panelWidth - lblDate1.Width) / 2;
+                    lblDate1.Top = (int)((pnlScoreboard.Height - lblDate1.Height) / 2.5);
+
+                    //Link out to Date
+                    Date1.Click += (sender, e) =>
+                    {
+                        try
+                        {
+                            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                            {
+                                FileName = urlDate,
+                                UseShellExecute = true
+                            });
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show($"Could not open URL: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                    };
+                    Date1.MouseDown += (sender, e) => MouseDownOnLink(sender, e, urlDate);
+                    //Add the same event to child controls
+                    lblDate1.MouseDown += (sender, e) => MouseDownOnLink(sender, e, urlDate);
+
+                    foreach (NBAdbToolboxSchedule.Game game in date.Games)
+                    {
+                        Panel Game1 = new Panel
+                        {
+                            Width = panelWidth,
+                            Height = pnlScoreboard.Height,
+                            Left = panelWidth * totalCount,
+                            Top = 0,
+                            BackColor = tan,
+                            Visible = true,
+                            BorderStyle = BorderStyle.FixedSingle,
+                            Cursor = Cursors.Hand
+                        };
+
+                        pnlScoreboard.Controls.Add(Game1);
+                        string placeholdPath = @"C:\Users\derfj\Desktop\NBAdb\NBAdb\Logos\.png\64";
+                        string away = game.AwayTeam.TeamCity + " " + game.AwayTeam.TeamName;
+                        string aTri = game.AwayTeam.TeamTricode.ToLower();
+                        string home = game.HomeTeam.TeamCity + " " + game.HomeTeam.TeamName;
+                        string hTri = game.HomeTeam.TeamTricode.ToLower();
+                        PictureBox awayLogo = new PictureBox
+                        {
+                            SizeMode = PictureBoxSizeMode.Zoom,
+                            Image = Image.FromFile(Path.Combine(placeholdPath, away + ".png")),
+                            BackColor = Color.FromArgb(0, 0, 0, 0),
+                            Width = (int)(Game1.Height * .6),
+                            Height = (int)(Game1.Height * .6)
+                        };
+                        PictureBox homeLogo = new PictureBox
+                        {
+                            SizeMode = PictureBoxSizeMode.Zoom,
+                            Image = Image.FromFile(Path.Combine(placeholdPath, home + ".png")),
+                            BackColor = Color.FromArgb(0, 0, 0, 0),
+                            Width = (int)(Game1.Height * .6),
+                            Height = (int)(Game1.Height * .6)
+                        };
+                        Game1.Controls.Add(awayLogo);
+                        Game1.Controls.Add(homeLogo);
+
+                        awayLogo.Top = Game1.Height - awayLogo.Height;
+                        homeLogo.Top = Game1.Height - homeLogo.Height;
+                        homeLogo.Left = Game1.Width - homeLogo.Width - 10;
+
+
+                        //Away Team's score
+                        Label lblAwayScore = new Label
+                        {
+                            Text = game.AwayTeam.Score.ToString(),
+                            ForeColor = dark
+                        };
+                        lblAwayScore.Font = SetFontSize("Segoe UI", (float)(fontSize * .5), FontStyle.Bold, (int)(awayLogo.Width), lblAwayScore);
+                        lblAwayScore.AutoSize = true;
+                        Game1.Controls.Add(lblAwayScore);
+                        lblAwayScore.Left = awayLogo.Left + (int)((awayLogo.Width - lblAwayScore.Width) / 2);
+                        lblAwayScore.Top = awayLogo.Top - lblAwayScore.Height;
+
+                        //Home Team's score
+                        Label lblHomeScore = new Label
+                        {
+                            Text = game.HomeTeam.Score.ToString(),
+                            ForeColor = dark
+                        };
+                        lblHomeScore.Font = SetFontSize("Segoe UI", (float)(fontSize * .5), FontStyle.Bold, (int)(homeLogo.Width), lblHomeScore);
+                        lblHomeScore.AutoSize = true;
+                        Game1.Controls.Add(lblHomeScore);
+                        lblHomeScore.Left = homeLogo.Left + (int)((homeLogo.Width - lblHomeScore.Width) / 2);
+                        lblHomeScore.Top = homeLogo.Top - lblHomeScore.Height;
+
+
+                        //Set the Game Status. This will display start time, ? or final. Not sure what it will be when game in progress
+                        Label lblStartTimeOrScore = new Label
+                        {
+                            Text = game.GameStatusText.Replace("ET", "").Replace(" ", ""),
+                            ForeColor = dark
+                        };
+                        lblStartTimeOrScore.Font = SetFontSize("Segoe UI", (float)(fontSize * .4), FontStyle.Bold, lblHomeScore.Left - lblAwayScore.Right, lblStartTimeOrScore);
+                        lblStartTimeOrScore.AutoSize = true;
+                        Game1.Controls.Add(lblStartTimeOrScore);
+                        lblStartTimeOrScore.Top = 0;
+                        lblStartTimeOrScore.Left = lblAwayScore.Right + ((lblHomeScore.Left - lblAwayScore.Right - lblStartTimeOrScore.Width) / 2);
+                        ToolTip tip = new ToolTip();
+                        tip.BackColor = Color.Black;
+                        tip.ForeColor = Color.Wheat;
+                        tip.SetToolTip(lblStartTimeOrScore, "EST");
+
+                        string url = "https://www.nba.com/game/" + aTri + "-vs-" + hTri + "-" + game.GameId;
+
+
+                        Game1.MouseDown += (sender, e) => MouseDownOnLink(sender, e, url);
+                        //Add the same event to child controls
+                        awayLogo.MouseDown += (sender, e) => MouseDownOnLink(sender, e, url);
+                        homeLogo.MouseDown += (sender, e) => MouseDownOnLink(sender, e, url);
+                        lblAwayScore.MouseDown += (sender, e) => MouseDownOnLink(sender, e, url);
+                        lblHomeScore.MouseDown += (sender, e) => MouseDownOnLink(sender, e, url);
+                        lblStartTimeOrScore.MouseDown += (sender, e) => MouseDownOnLink(sender, e, url);
+
+                        gameCount++;
+                        totalCount++;
+                        if (totalCount == 10)
+                        {
+                            break;
+                        }
+                    }
+                    if (totalCount == 10)
+                    {
+                        break;
+                    }
+                }
+            }
+            catch
+            {
+
+            }
+        }
+        private void MouseDownOnLink(object sender, EventArgs e, string url)
+        {
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = url,
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Could not open URL: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
         public Main()
         {
             InitializeComponent();
@@ -565,6 +762,8 @@ namespace NBAdbToolbox
             //Check for dbconfig - Verify Server/Database Connectivity
             InitializeDbConfig("Main");
 
+
+            GetScoreBoard();
             //Add controls to panel
             //InitializeElements();
             //Set Colors
@@ -837,7 +1036,7 @@ namespace NBAdbToolbox
                                     HistoricTeamUpdate(team, team.teamId, "Current");
                                     UpdateTeamWins();
                                 }
-                                if (awayGames == 82 ||//If we've reached the last game of the SeasonID (or over 40 for covid shortened 2019) update Team records 
+                                if (awayGames == 82 ||//If we've reached the last game of the SeasonID (or over 40 for covid shortened 2019) update Team records  66
                                 (SeasonID == 2019 && awayGames >= 40) ||
                                 (SeasonID == 2020 && awayGames == 72))
                                 {
@@ -987,11 +1186,12 @@ namespace NBAdbToolbox
             AddControlsAfterConnection();
 
             //Scoreboard
-            pnlScoreboard.Height = this.Height / 18;
-            pnlScoreboard.Width = this.Width - pnlDbUtil.Width;
-            pnlScoreboard.Parent = bgCourt;
-            pnlScoreboard.Top = pnlNav.Bottom;
-            pnlScoreboard.Left = pnlDbUtil.Right;
+            pnlNav.Height = this.Height / 18;
+            pnlNav.Width = this.Width - pnlDbUtil.Width;
+            pnlNav.Parent = bgCourt;
+            pnlNav.Top = pnlScoreboard.Bottom;
+            pnlNav.Left = pnlDbUtil.Right;
+            pnlNav.BackColor = Color.Black;
 
             #endregion
             #region Edit Connection & Build DB
@@ -6408,12 +6608,12 @@ order by HasVideo desc, ShotDistance desc";
 
 
             //Navbar
-            pnlNav.Height = this.Height / 20;
-            pnlNav.Dock = DockStyle.Top;
-            pnlNav.Parent = bgCourt;
-            pnlNav.Width = this.Width;
-            pnlNav.BorderStyle = BorderStyle.None;
-            pnlNav.Paint += (s, e) =>
+            pnlScoreboard.Height = this.Height / 20;
+            pnlScoreboard.Dock = DockStyle.Top;
+            pnlScoreboard.Parent = bgCourt;
+            pnlScoreboard.Width = this.Width;
+            pnlScoreboard.BorderStyle = BorderStyle.None;
+            pnlScoreboard.Paint += (s, e) =>
             {
                 Control p = (Control)s;
                 using (Pen pen = new Pen(Color.Black, 3))
@@ -6421,11 +6621,11 @@ order by HasVideo desc, ShotDistance desc";
                     e.Graphics.DrawLine(pen, 0, p.Height - 1, p.Width, p.Height - 1);
                 }
             };
+            pnlScoreboard.BackColor = SubThemeColor;
 
             //Welcome
             pnlWelcome.Parent = bgCourt; //Set Panel parent as the image
             spacer = (int)(pnlWelcome.Height * .01);
-
 
 
 
@@ -6917,8 +7117,8 @@ order by HasVideo desc, ShotDistance desc";
             AddMainElement(this, pnlLoad);   //Adding Welcome panel
             AddMainElement(this, pnlDbLibrary);   //Adding Database Library panel
             AddMainElement(this, pnlWelcome);   //Adding Welcome panel
-            AddMainElement(this, pnlScoreboard);   //Adding Database Utilities panel
             AddMainElement(this, pnlNav);   //Adding Database Utilities panel
+            AddMainElement(this, pnlScoreboard);   //Adding Database Utilities panel
             AddMainElement(this, pnlDbUtil);   //Adding Database Utilities panel
             AddMainElement(this, bgCourt); //Ading background image
         }
@@ -8522,18 +8722,36 @@ order by HasVideo desc, ShotDistance desc";
             }
             if (game.box.homeTeam.teamWins + game.box.homeTeam.teamLosses == 82 ||  //If we've reached the last game of the SeasonID (or over 40 for covid shortened 2019) update Team records 
             (SeasonID == 2019 && (game.box.homeTeam.teamWins + game.box.homeTeam.teamLosses >= 40)) ||
-            (SeasonID == 2020 && (game.box.homeTeam.teamWins + game.box.homeTeam.teamLosses == 72)))
+            (SeasonID == 2020 && (game.box.homeTeam.teamWins + game.box.homeTeam.teamLosses == 72)) ||
+            (SeasonID == 2011 && (game.box.homeTeam.teamWins + game.box.homeTeam.teamLosses == 66)))
             {
                 //TeamUpdate(game.box.homeTeam, SeasonID);
                 HistoricTeamUpdate(game.box.homeTeam, game.box.homeTeamId, "Historic"); //5.7 Populate DB Update
             }
             if (game.box.awayTeam.teamWins + game.box.awayTeam.teamLosses == 82 ||  //Same for away team
             (SeasonID == 2019 && (game.box.awayTeam.teamWins + game.box.awayTeam.teamLosses >= 40)) ||
-            (SeasonID == 2020 && (game.box.awayTeam.teamWins + game.box.awayTeam.teamLosses == 72)))
+            (SeasonID == 2020 && (game.box.awayTeam.teamWins + game.box.awayTeam.teamLosses == 72)) ||
+            (SeasonID == 2011 && (game.box.awayTeam.teamWins + game.box.awayTeam.teamLosses == 66)))
             {
                 //TeamUpdate(game.box.awayTeam, SeasonID);
                 HistoricTeamUpdate(game.box.awayTeam, game.box.awayTeamId, "Historic"); //5.7 Populate DB Update
             }
+            if(SeasonID == 2012)
+            {
+                List<int> oneLess = new List<int>
+            {
+                1610612738, 1610612754
+            };
+                if (game.box.homeTeam.teamWins + game.box.homeTeam.teamLosses == 81 && oneLess.Contains(game.box.homeTeamId))
+                {
+                    HistoricTeamUpdate(game.box.homeTeam, game.box.homeTeamId, "Historic"); //9.2 Populate DB Update
+                }
+                if (game.box.awayTeam.teamWins + game.box.awayTeam.teamLosses == 81 && oneLess.Contains(game.box.awayTeamId))
+                {
+                    HistoricTeamUpdate(game.box.awayTeam, game.box.awayTeamId, "Historic"); //9.2 Populate DB Update
+                }
+            }
+
         }
         public void HistoricTeamInsert(NBAdbToolboxHistoric.Team team, int teamID)
         {
