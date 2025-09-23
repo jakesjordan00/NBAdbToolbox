@@ -557,6 +557,7 @@ namespace NBAdbToolbox
 
             float fontSize = ((float)(screenFontSize * pnlWelcome.Height * .08) / (96 / 12)) * (72 / 12);
             int panelWidth = (int)(this.Width * .1);
+            int datePanelWidth = (int)(panelWidth * .95);
             schedule = await leagueSchedule.GetSchedule(1);
             int dateCount = 0;
             int gameCount = 0;
@@ -573,9 +574,9 @@ namespace NBAdbToolbox
                     string urlDate = "https://www.nba.com/games?date=" + year + "-" + month + "-" + day;
                     Panel Date1 = new Panel
                     {
-                        Width = panelWidth,
+                        Width = datePanelWidth,
                         Height = pnlScoreboard.Height,
-                        Left = panelWidth * totalCount,
+                        Left = (panelWidth * gameCount) + (datePanelWidth * dateCount),
                         Top = 0,
                         BackColor = dark,
                         Visible = true,
@@ -595,7 +596,7 @@ namespace NBAdbToolbox
                     lblDate1.Font = SetFontSize("Segoe UI", (float)(fontSize * .7), FontStyle.Bold, (int)(Date1.Width), lblDate1);
                     lblDate1.AutoSize = true;
                     Date1.Controls.Add(lblDate1);
-                    lblDate1.Left = (panelWidth - lblDate1.Width) / 2;
+                    lblDate1.Left = (datePanelWidth - lblDate1.Width) / 2;
                     lblDate1.Top = (int)((pnlScoreboard.Height - lblDate1.Height) / 2.5);
 
                     //Link out to Date
@@ -618,13 +619,14 @@ namespace NBAdbToolbox
                     //Add the same event to child controls
                     lblDate1.MouseDown += (sender, e) => MouseDownOnLink(sender, e, urlDate);
 
-                    foreach (NBAdbToolboxSchedule.Game game in date.Games)
+                    var sortedGames = date.Games.OrderBy(g => g.GameDateTimeEst).ToList();
+                    foreach (NBAdbToolboxSchedule.Game game in sortedGames)
                     {
                         Panel Game1 = new Panel
                         {
                             Width = panelWidth,
                             Height = pnlScoreboard.Height,
-                            Left = panelWidth * totalCount,
+                            Left = (panelWidth * gameCount) + (datePanelWidth * dateCount),
                             Top = 0,
                             BackColor = tan,
                             Visible = true,
@@ -633,7 +635,7 @@ namespace NBAdbToolbox
                         };
 
                         pnlScoreboard.Controls.Add(Game1);
-                        string placeholdPath = @"C:\Users\derfj\Desktop\NBAdb\NBAdb\Logos\.png\64";
+                        string logoPath = Path.Combine(projectRoot, @"Content\Images\Logos");
                         string away = game.AwayTeam.TeamCity + " " + game.AwayTeam.TeamName;
                         string aTri = game.AwayTeam.TeamTricode.ToLower();
                         string home = game.HomeTeam.TeamCity + " " + game.HomeTeam.TeamName;
@@ -641,7 +643,7 @@ namespace NBAdbToolbox
                         PictureBox awayLogo = new PictureBox
                         {
                             SizeMode = PictureBoxSizeMode.Zoom,
-                            Image = Image.FromFile(Path.Combine(placeholdPath, away + ".png")),
+                            Image = Image.FromFile(Path.Combine(logoPath, away + ".png")),
                             BackColor = Color.FromArgb(0, 0, 0, 0),
                             Width = (int)(Game1.Height * .6),
                             Height = (int)(Game1.Height * .6)
@@ -649,7 +651,7 @@ namespace NBAdbToolbox
                         PictureBox homeLogo = new PictureBox
                         {
                             SizeMode = PictureBoxSizeMode.Zoom,
-                            Image = Image.FromFile(Path.Combine(placeholdPath, home + ".png")),
+                            Image = Image.FromFile(Path.Combine(logoPath, home + ".png")),
                             BackColor = Color.FromArgb(0, 0, 0, 0),
                             Width = (int)(Game1.Height * .6),
                             Height = (int)(Game1.Height * .6)
