@@ -410,6 +410,8 @@ namespace NBAdbToolbox
 
         //Header Panels
         public Panel pnlScoreboard = new Panel();
+        public Panel pnlScoreboardContainer = new Panel();
+        public Panel pnlScrollScoreboard = new Panel();
         public Panel pnlNav = new Panel();
 
         public HashSet<(int SeasonID, (int Games, int Loaded, int Team, int Arena, int Player, int Official, int Game, int PlayerBox, int TeamBox, int PlayByPlay, int StartingLineups, int TeamBoxLineups,
@@ -6609,10 +6611,39 @@ order by HasVideo desc, ShotDistance desc";
             gpmValue.ForeColor = ThemeColor;
 
 
+
+            pnlScoreboardContainer.Height = this.Height / 20;
+            pnlScoreboardContainer.Dock = DockStyle.Top;
+            pnlScoreboardContainer.Parent = bgCourt;
+            pnlScoreboardContainer.Width = this.Width;
+            pnlScoreboardContainer.BorderStyle = BorderStyle.None;
+            pnlScoreboardContainer.BackColor = ThemeColor;
+
+
+            pnlScrollScoreboard.Width = (int)(this.Width * .01); // Adjust width as needed
+            pnlScrollScoreboard.Dock = DockStyle.Right;
+            pnlScrollScoreboard.Parent = pnlScoreboardContainer;
+            pnlScrollScoreboard.BackColor = ThemeColor;
+            pnlScrollScoreboard.Cursor = Cursors.Hand;
+            pnlScrollScoreboard.Paint += (s, e) =>
+            {
+                // Draw a simple right-pointing arrow
+                Point[] arrow = new Point[]
+                {
+                    new Point(10, pnlScrollScoreboard.Height / 2 - 8),
+                    new Point(20, pnlScrollScoreboard.Height / 2),
+                    new Point(10, pnlScrollScoreboard.Height / 2 + 8)
+                };
+
+                using (Brush brush = new SolidBrush(Color.Black))
+                {
+                    e.Graphics.FillPolygon(brush, arrow);
+                }
+            };
             //Navbar
             pnlScoreboard.Height = this.Height / 20;
-            pnlScoreboard.Dock = DockStyle.Top;
-            pnlScoreboard.Parent = bgCourt;
+            pnlScoreboard.Parent = pnlScoreboardContainer;
+            pnlScoreboard.Dock = DockStyle.Fill;
             pnlScoreboard.Width = this.Width;
             pnlScoreboard.BorderStyle = BorderStyle.None;
             pnlScoreboard.Paint += (s, e) =>
@@ -6629,6 +6660,8 @@ order by HasVideo desc, ShotDistance desc";
             pnlWelcome.Parent = bgCourt; //Set Panel parent as the image
             spacer = (int)(pnlWelcome.Height * .01);
 
+
+            
 
 
             //Set Label Properties ***************************************************************************
@@ -6816,7 +6849,7 @@ order by HasVideo desc, ShotDistance desc";
             picSettings.Width = lblSettings.Height;
             picSettings.Height = lblSettings.Height;
             picSettings.SizeMode = PictureBoxSizeMode.Zoom;
-            picSettings.Image = Image.FromFile(Path.Combine(projectRoot, @"Content\Images", "Settings.png"));
+            picSettings.Image = Image.FromFile(Path.Combine(projectRoot, @"Content\Images", "Arrow.png"));
             picSettings.Left = lblSettings.Right;
             picSettings.Top = lblSettings.Top + lblSettings.Height / 6;
             picSettings.BackColor = Color.FromArgb(0, 0, 0, 0);
@@ -7120,7 +7153,10 @@ order by HasVideo desc, ShotDistance desc";
             AddMainElement(this, pnlDbLibrary);   //Adding Database Library panel
             AddMainElement(this, pnlWelcome);   //Adding Welcome panel
             AddMainElement(this, pnlNav);   //Adding Database Utilities panel
-            AddMainElement(this, pnlScoreboard);   //Adding Database Utilities panel
+            //AddMainElement(this, pnlScrollScoreboard);   //Adding Database Utilities panel
+            //AddMainElement(this, pnlScoreboard);   //Adding Database Utilities panel
+            
+            AddMainElement(this, pnlScoreboardContainer);   //Adding Database Utilities panel
             AddMainElement(this, pnlDbUtil);   //Adding Database Utilities panel
             AddMainElement(this, bgCourt); //Ading background image
         }
