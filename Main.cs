@@ -298,7 +298,7 @@ namespace NBAdbToolbox
         public int dimH2 = 0;
         #endregion
         #region Variables
-        public HashSet<int> Missing2019Games = new HashSet<int> {  21900194, 21900200, 21900203, 21900204, 21900208, 21900244, 21900306, 21900307, 21900308, 21900309, 21900310, 21900311, 21900312, 21900313, 21900314, 21900315, 21900316, 21900317, 21900318, 21900319, 21900320, 21900321, 21900322, 21900323, 21900324, 21900325, 21900326, 21900327, 21900328, 21900329, 21900619, 21900668, 21900669, 21900670, 21900671, 21900672, 21900673, 21900674, 21900675, 21900676, 21900677, 21900678, 21900679, 21900680, 21900681, 21900682, 21900683, 21900684, 21900685, 21900686, 21900687, 21900688, 21900689, 21900690, 21900691, 21900692, 21900693, 21900694, 21900695, 21900696, 21900697, 21900698, 21900699, 21900700, 21900701, 21900702, 21900703, 21900704, 21900705, 21900706, 21900708, 21900709, 21900710, 21900711, 21900712, 21900713, 21900714, 21900715, 21900716, 21900717, 21900718, 21900719, 21900721, 21900722, 21900723, 21900724, 21900725, 21900726, 21900727, 21900728, 21900729, 21900730, 21900731, 21900732, 21900733, 21900734, 21900735, 21900736, 21900737, 21900738, 21900739, 21900740, 21900741, 21900742, 21900743, 21900744, 21900745, 21900746, 21900747, 21900748, 21900749, 21900750, 21900751, 21900752, 21900753, 21900754, 21900755, 21900756, 21900757, 21900758, 21900759, 21900760, 21900761, 21900762, 21900763, 21900764, 21900765, 21900766, 21900767, 21900768, 21900769, 21900770, 21900771, 21900772, 21900773, 21900774, 21900775, 21900776, 21900778, 21900779, 21900780, 21900781, 21900782, 21900783, 21900784, 21900785, 21900786, 21900787, 21900788, 21900789, 21900790, 21900791, 21900792, 21900793, 21900794, 21900795, 21900796, 21900797, 21900798, 21900799, 21900800, 21900801, 21900802, 21900803, 
+        public HashSet<int> Missing2019Games = new HashSet<int> {  21900194, 21900200, 21900203, 21900204, 21900208, 21900244, 21900306, 21900307, 21900308, 21900309, 21900310, 21900311, 21900312, 21900313, 21900314, 21900315, 21900316, 21900317, 21900318, 21900319, 21900320, 21900321, 21900322, 21900323, 21900324, 21900325, 21900326, 21900327, 21900328, 21900329, 21900619, 21900668, 21900669, 21900670, 21900671, 21900672, 21900673, 21900674, 21900675, 21900676, 21900677, 21900678, 21900679, 21900680, 21900681, 21900682, 21900683, 21900684, 21900685, 21900686, 21900687, 21900688, 21900689, 21900690, 21900691, 21900692, 21900693, 21900694, 21900695, 21900696, 21900697, 21900698, 21900699, 21900700, 21900701, 21900702, 21900703, 21900704, 21900705, 21900706, 21900708, 21900709, 21900710, 21900711, 21900712, 21900713, 21900714, 21900715, 21900716, 21900717, 21900718, 21900719, 21900721, 21900722, 21900723, 21900724, 21900725, 21900726, 21900727, 21900728, 21900729, 21900730, 21900731, 21900732, 21900733, 21900734, 21900735, 21900736, 21900737, 21900738, 21900739, 21900740, 21900741, 21900742, 21900743, 21900744, 21900745, 21900746, 21900747, 21900748, 21900749, 21900750, 21900751, 21900752, 21900753, 21900754, 21900755, 21900756, 21900757, 21900758, 21900759, 21900760, 21900761, 21900762, 21900763, 21900764, 21900765, 21900766, 21900767, 21900768, 21900769, 21900770, 21900771, 21900772, 21900773, 21900774, 21900775, 21900776, 21900778, 21900779, 21900780, 21900781, 21900782, 21900783, 21900784, 21900785, 21900786, 21900787, 21900788, 21900789, 21900790, 21900791, 21900792, 21900793, 21900794, 21900795, 21900796, 21900797, 21900798, 21900799, 21900800, 21900801, 21900802, 21900803,
             21900804, 21900805, 21900806, 21900807, 21900808, 21900809, 21900810, 21900811, 21900812, 21900813, 21900814, 21900815, 21900816, 21900817, 21900818, 21900819, 21900822, 21900823, 21900824, 21900825, 21900826, 21900827, 21900828, 21900829, 21900830, 21900831, 21900832, 21900833, 21900834, 21900835, 21900836, 21900837, 21900838, 21900845, 21900847, 21900853, 21900854, 21900855, 21900856, 21900857, 21900858, 21900859, 21900860, 21900861, 21900862, 21900863, 21900865, 21900867, 21900873, 21900874, 21900875, 21900876, 21900884, 21900885, 21900886, 21900887, 21900895, 21900905, 21900907, 21900909, 21900910, 21900911, 21900912, 21900913, 21900914, 21900915, 21900916, 21900927, 21900928, 21900929, 21900930, 21900931, 21900932, 21900933, 21900934, 21900935, 21900936, 21900937, 21900938, 21900939, 21900940, 21900941, 21900942, 21900943, 21900944, 21900945, 21900947, 21900955, 21900965, 21900967, 21901308, 21901309, 21901310, 21901311, 21901312, 21901313, 21901314, 21901315, 21901316, 21901317, 21901318, 41900101, 41900131, 41900141, 41900166, 41900171,
                 41900211 };
         #endregion
@@ -412,6 +412,16 @@ namespace NBAdbToolbox
         public Panel pnlScoreboard = new Panel();
         public Panel pnlScoreboardContainer = new Panel();
         public Panel pnlScrollScoreboard = new Panel();
+        public PictureBox picArrowScoreboard = new PictureBox();
+
+        public Panel pnlScrollScoreboardBack = new Panel();
+        public PictureBox picArrowScoreboardBack = new PictureBox();
+
+        public int currentScoreboardPage = 0;
+        public const int ItemsPerPage = 10;
+        public List<Panel> allScoreboardPanels = new List<Panel>();
+
+
         public Panel pnlNav = new Panel();
 
         public HashSet<(int SeasonID, (int Games, int Loaded, int Team, int Arena, int Player, int Official, int Game, int PlayerBox, int TeamBox, int PlayByPlay, int StartingLineups, int TeamBoxLineups,
@@ -551,6 +561,24 @@ namespace NBAdbToolbox
         public bool isPopulating = false;
         public bool missingPbp = false;
         public string pbpInsertFailSafe = "";
+
+        public Panel CreatePanel(int width, int height, int left, int top, Color backColor, bool vis, BorderStyle border, Cursor cursor, string name)
+        {
+            Panel panel = new Panel
+            {
+                Width = width,
+                Height = height,
+                Left = left,
+                Top = top,
+                BackColor = backColor,
+                Visible = vis,
+                BorderStyle = border,
+                Cursor = cursor,
+                Name = name
+            };
+
+            return panel;
+        }
         public async Task GetScoreBoard()
         {
             Color tan = Color.FromArgb(255, 209, 203, 192);
@@ -560,6 +588,11 @@ namespace NBAdbToolbox
             float fontSize = ((float)(screenFontSize * pnlWelcome.Height * .08) / (96 / 12)) * (72 / 12);
             int panelWidth = (int)(this.Width * .1);
             int datePanelWidth = (int)(panelWidth * .95);
+
+            allScoreboardPanels.Clear();
+            pnlScoreboard.Controls.Clear();
+            string GameID = "";
+
             schedule = await leagueSchedule.GetSchedule(1);
             int dateCount = 0;
             int gameCount = 0;
@@ -568,24 +601,21 @@ namespace NBAdbToolbox
             {
                 foreach (NBAdbToolboxSchedule.GameDates date in schedule.LeagueSchedule.GameDates)
                 {
+                    DateTime yesterday = DateTime.Now.Date.AddDays(-1);
+                    if (date.Games[0].GameDateEst < yesterday)
+                    {
+                        continue;
+                    }
                     int year = date.Games[0].GameDateEst.Year;
                     int month = date.Games[0].GameDateEst.Month;
                     string day1 = date.Games[0].GameDateEst.Day.ToString();
                     string day = date.Games[0].GameDateEst.Day < 10 ? "0" + date.Games[0].GameDateEst.Day : date.Games[0].GameDateEst.Day.ToString();
 
                     string urlDate = "https://www.nba.com/games?date=" + year + "-" + month + "-" + day;
-                    Panel Date1 = new Panel
-                    {
-                        Width = datePanelWidth,
-                        Height = pnlScoreboard.Height,
-                        Left = (panelWidth * gameCount) + (datePanelWidth * dateCount),
-                        Top = 0,
-                        BackColor = dark,
-                        Visible = true,
-                        BorderStyle = BorderStyle.Fixed3D,
-                        Cursor = Cursors.Hand
-                    };
-                    pnlScoreboard.Controls.Add(Date1);
+                    Panel DatePanel = CreatePanel(datePanelWidth, pnlScoreboard.Height, 0, 0, dark, true, BorderStyle.Fixed3D, Cursors.Hand, "DatePanel" + dateCount);
+
+                    allScoreboardPanels.Add(DatePanel);
+                    //pnlScoreboard.Controls.Add(Date1);
 
                     dateCount++;
                     totalCount++;
@@ -595,14 +625,14 @@ namespace NBAdbToolbox
                         ForeColor = tan
                     };
 
-                    lblDate1.Font = SetFontSize("Segoe UI", (float)(fontSize * .7), FontStyle.Bold, (int)(Date1.Width), lblDate1);
+                    lblDate1.Font = SetFontSize("Segoe UI", (float)(fontSize * .7), FontStyle.Bold, (int)(DatePanel.Width), lblDate1);
                     lblDate1.AutoSize = true;
-                    Date1.Controls.Add(lblDate1);
+                    DatePanel.Controls.Add(lblDate1);
                     lblDate1.Left = (datePanelWidth - lblDate1.Width) / 2;
                     lblDate1.Top = (int)((pnlScoreboard.Height - lblDate1.Height) / 2.5);
 
                     //Link out to Date
-                    Date1.Click += (sender, e) =>
+                    DatePanel.Click += (sender, e) =>
                     {
                         try
                         {
@@ -617,26 +647,20 @@ namespace NBAdbToolbox
                             MessageBox.Show($"Could not open URL: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         }
                     };
-                    Date1.MouseDown += (sender, e) => MouseDownOnLink(sender, e, urlDate);
+                    DatePanel.MouseDown += (sender, e) => MouseDownOnLink(sender, e, urlDate);
                     //Add the same event to child controls
                     lblDate1.MouseDown += (sender, e) => MouseDownOnLink(sender, e, urlDate);
 
                     var sortedGames = date.Games.OrderBy(g => g.GameDateTimeEst).ToList();
                     foreach (NBAdbToolboxSchedule.Game game in sortedGames)
                     {
-                        Panel Game1 = new Panel
-                        {
-                            Width = panelWidth,
-                            Height = pnlScoreboard.Height,
-                            Left = (panelWidth * gameCount) + (datePanelWidth * dateCount),
-                            Top = 0,
-                            BackColor = tan,
-                            Visible = true,
-                            BorderStyle = BorderStyle.FixedSingle,
-                            Cursor = Cursors.Hand
-                        };
+                        GameID = game.GameId;
+                        Panel GamePanel = CreatePanel(panelWidth, pnlScrollScoreboard.Height, 0, 0, tan, true, BorderStyle.FixedSingle, Cursors.Hand, "GamePanel" + gameCount);
 
-                        pnlScoreboard.Controls.Add(Game1);
+                        allScoreboardPanels.Add(GamePanel);
+                        //pnlScoreboard.Controls.Add(Game1);
+
+
                         string logoPath = Path.Combine(projectRoot, @"Content\Images\Logos");
                         string away = game.AwayTeam.TeamCity + " " + game.AwayTeam.TeamName;
                         string aTri = game.AwayTeam.TeamTricode.ToLower();
@@ -647,23 +671,23 @@ namespace NBAdbToolbox
                             SizeMode = PictureBoxSizeMode.Zoom,
                             Image = Image.FromFile(Path.Combine(logoPath, away + ".png")),
                             BackColor = Color.FromArgb(0, 0, 0, 0),
-                            Width = (int)(Game1.Height * .6),
-                            Height = (int)(Game1.Height * .6)
+                            Width = (int)(GamePanel.Height * .6),
+                            Height = (int)(GamePanel.Height * .6)
                         };
                         PictureBox homeLogo = new PictureBox
                         {
                             SizeMode = PictureBoxSizeMode.Zoom,
                             Image = Image.FromFile(Path.Combine(logoPath, home + ".png")),
                             BackColor = Color.FromArgb(0, 0, 0, 0),
-                            Width = (int)(Game1.Height * .6),
-                            Height = (int)(Game1.Height * .6)
+                            Width = (int)(GamePanel.Height * .6),
+                            Height = (int)(GamePanel.Height * .6)
                         };
-                        Game1.Controls.Add(awayLogo);
-                        Game1.Controls.Add(homeLogo);
+                        GamePanel.Controls.Add(awayLogo);
+                        GamePanel.Controls.Add(homeLogo);
 
-                        awayLogo.Top = Game1.Height - awayLogo.Height;
-                        homeLogo.Top = Game1.Height - homeLogo.Height;
-                        homeLogo.Left = Game1.Width - homeLogo.Width - 10;
+                        awayLogo.Top = GamePanel.Height - awayLogo.Height;
+                        homeLogo.Top = GamePanel.Height - homeLogo.Height;
+                        homeLogo.Left = GamePanel.Width - homeLogo.Width - 10;
 
 
                         //Away Team's score
@@ -674,7 +698,7 @@ namespace NBAdbToolbox
                         };
                         lblAwayScore.Font = SetFontSize("Segoe UI", (float)(fontSize * .5), FontStyle.Bold, (int)(awayLogo.Width), lblAwayScore);
                         lblAwayScore.AutoSize = true;
-                        Game1.Controls.Add(lblAwayScore);
+                        GamePanel.Controls.Add(lblAwayScore);
                         lblAwayScore.Left = awayLogo.Left + (int)((awayLogo.Width - lblAwayScore.Width) / 2);
                         lblAwayScore.Top = awayLogo.Top - lblAwayScore.Height;
 
@@ -686,7 +710,7 @@ namespace NBAdbToolbox
                         };
                         lblHomeScore.Font = SetFontSize("Segoe UI", (float)(fontSize * .5), FontStyle.Bold, (int)(homeLogo.Width), lblHomeScore);
                         lblHomeScore.AutoSize = true;
-                        Game1.Controls.Add(lblHomeScore);
+                        GamePanel.Controls.Add(lblHomeScore);
                         lblHomeScore.Left = homeLogo.Left + (int)((homeLogo.Width - lblHomeScore.Width) / 2);
                         lblHomeScore.Top = homeLogo.Top - lblHomeScore.Height;
 
@@ -699,7 +723,7 @@ namespace NBAdbToolbox
                         };
                         lblStartTimeOrScore.Font = SetFontSize("Segoe UI", (float)(fontSize * .4), FontStyle.Bold, lblHomeScore.Left - lblAwayScore.Right, lblStartTimeOrScore);
                         lblStartTimeOrScore.AutoSize = true;
-                        Game1.Controls.Add(lblStartTimeOrScore);
+                        GamePanel.Controls.Add(lblStartTimeOrScore);
                         lblStartTimeOrScore.Top = 0;
                         lblStartTimeOrScore.Left = lblAwayScore.Right + ((lblHomeScore.Left - lblAwayScore.Right - lblStartTimeOrScore.Width) / 2);
                         ToolTip tip = new ToolTip();
@@ -710,7 +734,7 @@ namespace NBAdbToolbox
                         string url = "https://www.nba.com/game/" + aTri + "-vs-" + hTri + "-" + game.GameId;
 
 
-                        Game1.MouseDown += (sender, e) => MouseDownOnLink(sender, e, url);
+                        GamePanel.MouseDown += (sender, e) => MouseDownOnLink(sender, e, url);
                         //Add the same event to child controls
                         awayLogo.MouseDown += (sender, e) => MouseDownOnLink(sender, e, url);
                         homeLogo.MouseDown += (sender, e) => MouseDownOnLink(sender, e, url);
@@ -720,21 +744,111 @@ namespace NBAdbToolbox
 
                         gameCount++;
                         totalCount++;
-                        if (totalCount == 10)
+                        if (totalCount == 100)
                         {
                             break;
                         }
                     }
-                    if (totalCount == 10)
+                    if (totalCount == 100)
                     {
                         break;
                     }
+                    //if (totalCount == 10)
+                    //{
+                    //    break;
+                    //}
                 }
+
+                DisplayScoreboardPage(0);
+
+                //Wire up pagination controls
+                pnlScrollScoreboard.Click -= ScrollScoreboard; //Remove if exists
+                picArrowScoreboard.Click -= ScrollScoreboard;
+                pnlScrollScoreboard.Click += ScrollScoreboard;
+                picArrowScoreboard.Click += ScrollScoreboard;
+
+                //Wire up back arrow controls
+                pnlScrollScoreboardBack.Click -= ScrollScoreboardBack; //Remove if exists
+                picArrowScoreboardBack.Click -= ScrollScoreboardBack;
+                pnlScrollScoreboardBack.Click += ScrollScoreboardBack;
+                picArrowScoreboardBack.Click += ScrollScoreboardBack;
             }
-            catch
+            catch(Exception e)
             {
 
             }
+        }
+
+        public void DisplayScoreboardPage(int pageNumber)
+        {
+            //Clear current display
+            pnlScoreboard.Controls.Clear();
+
+            //Calculate start and end indices
+            int startIndex = pageNumber * ItemsPerPage;
+            int endIndex = Math.Min(startIndex + ItemsPerPage, allScoreboardPanels.Count);
+
+            //Add panels for current page
+            int xPosition = 0;
+            if(pageNumber != 0)
+            {
+                xPosition = pnlScrollScoreboard.Width;
+            }
+            for (int i = startIndex; i < endIndex; i++)
+            {
+                Panel panel = allScoreboardPanels[i];
+                if(pageNumber > 0)
+                {
+                    panel.Width = (int)(panel.Width * .99);
+                }
+                panel.Left = xPosition;
+                pnlScoreboard.Controls.Add(panel);
+                xPosition += panel.Width;
+            }
+
+            //Update forward arrow visibility based on whether there are more items
+            bool hasMoreItems = endIndex < allScoreboardPanels.Count;
+            pnlScrollScoreboard.Visible = hasMoreItems;
+            picArrowScoreboard.Visible = hasMoreItems;
+
+            //Update back arrow visibility - only visible if not on first page
+            bool isNotFirstPage = currentScoreboardPage > 0;
+            pnlScrollScoreboardBack.Visible = isNotFirstPage;
+            picArrowScoreboardBack.Visible = isNotFirstPage;
+        }
+
+        public void ScrollScoreboard(object sender, EventArgs e)
+        {
+            //Calculate next page
+            int totalPages = (int)Math.Ceiling((double)allScoreboardPanels.Count / ItemsPerPage);
+
+            currentScoreboardPage++;
+
+            //Cycle back to beginning if we've reached the end
+            if (currentScoreboardPage >= totalPages)
+            {
+                currentScoreboardPage = 0;
+            }
+
+            //Display the new page
+            DisplayScoreboardPage(currentScoreboardPage);
+        }
+
+        public void ScrollScoreboardBack(object sender, EventArgs e)
+        {
+            //Calculate total pages
+            int totalPages = (int)Math.Ceiling((double)allScoreboardPanels.Count / ItemsPerPage);
+
+            currentScoreboardPage--;
+
+            //Cycle to end if we go below 0
+            if (currentScoreboardPage < 0)
+            {
+                currentScoreboardPage = totalPages - 1;
+            }
+
+            //Display the new page
+            DisplayScoreboardPage(currentScoreboardPage);
         }
         private void MouseDownOnLink(object sender, EventArgs e, string url)
         {
@@ -750,6 +864,15 @@ namespace NBAdbToolbox
             {
                 MessageBox.Show($"Could not open URL: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+        public async void InitializeAsync()
+        {
+            //await GetScoreBoard();
+
+            await Task.Run(async () =>      //This sets the root variable to our big file
+            {
+                await GetScoreBoard();
+            });
         }
         public Main()
         {
@@ -767,7 +890,7 @@ namespace NBAdbToolbox
             InitializeDbConfig("Main");
 
 
-            GetScoreBoard();
+            InitializeAsync();
             //Add controls to panel
             //InitializeElements();
             //Set Colors
@@ -6625,26 +6748,41 @@ order by HasVideo desc, ShotDistance desc";
             pnlScrollScoreboard.Parent = pnlScoreboardContainer;
             pnlScrollScoreboard.BackColor = ThemeColor;
             pnlScrollScoreboard.Cursor = Cursors.Hand;
-            pnlScrollScoreboard.Paint += (s, e) =>
-            {
-                // Draw a simple right-pointing arrow
-                Point[] arrow = new Point[]
-                {
-                    new Point(10, pnlScrollScoreboard.Height / 2 - 8),
-                    new Point(20, pnlScrollScoreboard.Height / 2),
-                    new Point(10, pnlScrollScoreboard.Height / 2 + 8)
-                };
 
-                using (Brush brush = new SolidBrush(Color.Black))
-                {
-                    e.Graphics.FillPolygon(brush, arrow);
-                }
-            };
+            picArrowScoreboard.Width = (int)(pnlScrollScoreboard.Width * .65);
+            picArrowScoreboard.Height = pnlScrollScoreboard.Height;
+            picArrowScoreboard.SizeMode = PictureBoxSizeMode.Zoom;
+            picArrowScoreboard.Image = Image.FromFile(Path.Combine(projectRoot, @"Content\Images", "Arrow.png")); 
+            picArrowScoreboard.Image.RotateFlip(RotateFlipType.Rotate90FlipX);
+            picArrowScoreboard.Parent = pnlScrollScoreboard;
+            picArrowScoreboard.Left = (int)((pnlScrollScoreboard.Width - picArrowScoreboard.Width) / 2);
+            picArrowScoreboard.BackColor = Color.FromArgb(0, 0, 0, 0);
+
+
+            pnlScrollScoreboardBack.Width = (int)(this.Width * .01);
+            pnlScrollScoreboardBack.Dock = DockStyle.Left;
+            pnlScrollScoreboardBack.Parent = pnlScoreboardContainer;
+            pnlScrollScoreboardBack.BackColor = ThemeColor;
+            pnlScrollScoreboardBack.Cursor = Cursors.Hand;
+            pnlScrollScoreboardBack.Visible = false; // Initially hidden
+
+            // Initialize back arrow picture box
+            picArrowScoreboardBack.Width = (int)(pnlScrollScoreboardBack.Width * .65);
+            picArrowScoreboardBack.Height = pnlScrollScoreboardBack.Height;
+            picArrowScoreboardBack.SizeMode = PictureBoxSizeMode.Zoom;
+            picArrowScoreboardBack.Image = Image.FromFile(Path.Combine(projectRoot, @"Content\Images", "Arrow.png"));
+            picArrowScoreboardBack.Image.RotateFlip(RotateFlipType.Rotate270FlipX); // Point left
+            picArrowScoreboardBack.Parent = pnlScrollScoreboardBack;
+            picArrowScoreboardBack.Left = (int)((pnlScrollScoreboardBack.Width - picArrowScoreboardBack.Width) / 2);
+            picArrowScoreboardBack.BackColor = Color.FromArgb(0, 0, 0, 0);
+            picArrowScoreboardBack.Visible = false;
+
+
             //Navbar
             pnlScoreboard.Height = this.Height / 20;
             pnlScoreboard.Parent = pnlScoreboardContainer;
             pnlScoreboard.Dock = DockStyle.Fill;
-            pnlScoreboard.Width = this.Width;
+            pnlScoreboard.Width = (int)(this.Width * .98);
             pnlScoreboard.BorderStyle = BorderStyle.None;
             pnlScoreboard.Paint += (s, e) =>
             {
@@ -6853,6 +6991,7 @@ order by HasVideo desc, ShotDistance desc";
             picSettings.Left = lblSettings.Right;
             picSettings.Top = lblSettings.Top + lblSettings.Height / 6;
             picSettings.BackColor = Color.FromArgb(0, 0, 0, 0);
+
 
             pnlSettings.Top = lblSettings.Bottom + spacer;
             pnlSettings.Width = pnlWelcome.Width;

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -39,19 +40,40 @@ namespace NBAdbToolbox
                 }));
             });
 
-            string projectRoot = AppDomain.CurrentDomain.BaseDirectory.Replace(@"\bin\Debug\", "").Replace(@"\bin\Release\", ""); //File path for project on FINAL RELEASE and DEBUG
-            string soundPath = Path.Combine(projectRoot, @"Content/Sounds", "Swish.wav");
-            if (File.Exists(soundPath))
+            if (PlaySound())
             {
-                using (SoundPlayer player = new SoundPlayer(soundPath))
+                string projectRoot = AppDomain.CurrentDomain.BaseDirectory.Replace(@"\bin\Debug\", "").Replace(@"\bin\Release\", "");
+                string soundPath = Path.Combine(projectRoot, @"Content/Sounds", "Swish.wav");
+                if (File.Exists(soundPath))
                 {
-                    player.Play(); //asynchronous
+                    using (SoundPlayer player = new SoundPlayer(soundPath))
+                    {
+                        player.Play(); //asynch
+                    }
                 }
             }
             Application.Run(mainForm);
+        }
 
+        public static bool PlaySound()
+        {
+            try
+            {
+                string projectRoot = AppDomain.CurrentDomain.BaseDirectory.Replace(@"\bin\Debug\", "").Replace(@"\bin\Release\", "");
+                string settingsPath = Path.Combine(projectRoot, @"Content", "settings.json");
 
-            //Application.Run(new Main());
+                if (File.Exists(settingsPath))
+                {
+                    string json = File.ReadAllText(settingsPath);
+                    var settings = JsonConvert.DeserializeObject<Settings>(json);
+                    return settings.Sound != "Muted";
+                }
+                return true;
+            }
+            catch
+            {
+                return true;
+            }
         }
     }
 }
