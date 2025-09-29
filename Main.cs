@@ -576,8 +576,29 @@ namespace NBAdbToolbox
                 Cursor = cursor,
                 Name = name
             };
-
             return panel;
+        }
+        public Panel FinishDatePanel(Panel DatePanel, string urlDate)
+        {
+
+            DatePanel.Click += (sender, e) =>
+            {
+                try
+                {
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = urlDate,
+                        UseShellExecute = true
+                    });
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Could not open URL: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            };
+            DatePanel.MouseDown += (sender, e) => MouseDownOnLink(sender, e, urlDate);
+
+            return DatePanel;
         }
         public async Task GetScoreBoard()
         {
@@ -586,8 +607,10 @@ namespace NBAdbToolbox
             Color dark = Color.FromArgb(255, 50, 50, 50);
 
             float fontSize = ((float)(screenFontSize * pnlWelcome.Height * .08) / (96 / 12)) * (72 / 12);
-            int panelWidth = (int)(this.Width * .1);
-            int datePanelWidth = (int)(panelWidth * .95);
+            int panelWidth = (int)((this.Width * .98) / 10.07);
+            //int panelWidth = (int)(panelWidth * .99);
+            //panelWidth = (int)(panelWidth * .95);
+
 
             allScoreboardPanels.Clear();
             pnlScoreboard.Controls.Clear();
@@ -612,53 +635,59 @@ namespace NBAdbToolbox
                     string day = date.Games[0].GameDateEst.Day < 10 ? "0" + date.Games[0].GameDateEst.Day : date.Games[0].GameDateEst.Day.ToString();
 
                     string urlDate = "https://www.nba.com/games?date=" + year + "-" + month + "-" + day;
-                    Panel DatePanel = CreatePanel(datePanelWidth, pnlScoreboard.Height, 0, 0, dark, true, BorderStyle.Fixed3D, Cursors.Hand, "DatePanel" + dateCount);
+                    Panel DatePanel = CreatePanel(panelWidth, pnlScoreboard.Height, 0, 0, dark, true, BorderStyle.Fixed3D, Cursors.Hand, "DatePanel" + dateCount);
 
                     allScoreboardPanels.Add(DatePanel);
                     //pnlScoreboard.Controls.Add(Date1);
 
                     dateCount++;
                     totalCount++;
-                    Label lblDate1 = new Label
+                    Label DateLabel = new Label
                     {
                         Text = date.Games[0].GameDateTimeEst.ToShortDateString(),
                         ForeColor = tan
                     };
 
-                    lblDate1.Font = SetFontSize("Segoe UI", (float)(fontSize * .7), FontStyle.Bold, (int)(DatePanel.Width), lblDate1);
-                    lblDate1.AutoSize = true;
-                    DatePanel.Controls.Add(lblDate1);
-                    lblDate1.Left = (datePanelWidth - lblDate1.Width) / 2;
-                    lblDate1.Top = (int)((pnlScoreboard.Height - lblDate1.Height) / 2.5);
+                    DateLabel.Font = SetFontSize("Segoe UI", (float)(fontSize * .7), FontStyle.Bold, (int)(DatePanel.Width), DateLabel);
+                    DateLabel.AutoSize = true;
+                    DatePanel.Controls.Add(DateLabel);
+                    DateLabel.Left = (panelWidth - DateLabel.Width) / 2;
+                    DateLabel.Top = (int)((pnlScoreboard.Height - DateLabel.Height) / 2.5);
+                    DatePanel = FinishDatePanel(DatePanel, urlDate);
+                    DateLabel.MouseDown += (sender, e) => MouseDownOnLink(sender, e, urlDate);
 
-                    //Link out to Date
-                    DatePanel.Click += (sender, e) =>
+
+
+                    if (totalCount % 10 == 0)
                     {
-                        try
-                        {
-                            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                            {
-                                FileName = urlDate,
-                                UseShellExecute = true
-                            });
-                        }
-                        catch (Exception ex)
-                        {
-                            MessageBox.Show($"Could not open URL: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        }
-                    };
-                    DatePanel.MouseDown += (sender, e) => MouseDownOnLink(sender, e, urlDate);
-                    //Add the same event to child controls
-                    lblDate1.MouseDown += (sender, e) => MouseDownOnLink(sender, e, urlDate);
+                        Panel DatePanel2 = CreatePanel(panelWidth, pnlScoreboard.Height, 0, 0, dark, true, BorderStyle.Fixed3D, Cursors.Hand, "DatePanel" + dateCount);
+                        allScoreboardPanels.Add(DatePanel2);
 
+                        dateCount++;
+                        totalCount++;
+                        Label DateLabel2 = new Label
+                        {
+                            Text = date.Games[0].GameDateTimeEst.ToShortDateString(),
+                            ForeColor = tan
+                        };
+
+                        DateLabel2.Font = SetFontSize("Segoe UI", (float)(fontSize * .7), FontStyle.Bold, (int)(DatePanel2.Width), DateLabel2);
+                        DateLabel2.AutoSize = true;
+                        DatePanel2.Controls.Add(DateLabel2);
+                        DateLabel2.Left = (panelWidth - DateLabel2.Width) / 2;
+                        DateLabel2.Top = (int)((pnlScoreboard.Height - DateLabel2.Height) / 2.5);
+                        DatePanel2 = FinishDatePanel(DatePanel2, urlDate);
+                        DateLabel2.MouseDown += (sender, e) => MouseDownOnLink(sender, e, urlDate);
+
+                    }
                     var sortedGames = date.Games.OrderBy(g => g.GameDateTimeEst).ToList();
+                    int gameIterator = 0;
                     foreach (NBAdbToolboxSchedule.Game game in sortedGames)
                     {
                         GameID = game.GameId;
                         Panel GamePanel = CreatePanel(panelWidth, pnlScrollScoreboard.Height, 0, 0, tan, true, BorderStyle.FixedSingle, Cursors.Hand, "GamePanel" + gameCount);
 
                         allScoreboardPanels.Add(GamePanel);
-                        //pnlScoreboard.Controls.Add(Game1);
 
 
                         string logoPath = Path.Combine(projectRoot, @"Content\Images\Logos");
@@ -688,6 +717,31 @@ namespace NBAdbToolbox
                         awayLogo.Top = GamePanel.Height - awayLogo.Height;
                         homeLogo.Top = GamePanel.Height - homeLogo.Height;
                         homeLogo.Left = GamePanel.Width - homeLogo.Width - 10;
+
+
+
+                        Label lblAwayRecord = new Label
+                        {
+                            Text = game.AwayTeam.Wins + "-" + game.AwayTeam.Losses,
+                            ForeColor = dark
+                        };
+                        lblAwayRecord.Font = SetFontSize("Segoe UI", (float)(fontSize * .3), FontStyle.Bold, (int)(awayLogo.Width), lblAwayRecord);
+                        lblAwayRecord.AutoSize = true;
+                        GamePanel.Controls.Add(lblAwayRecord);
+                        lblAwayRecord.Left = awayLogo.Right - (int)(lblAwayRecord.Width * .15);
+                        lblAwayRecord.Top = (int)(pnlScoreboard.Height - (lblAwayRecord.Height * 1.1));
+
+
+                        Label lblHomeRecord = new Label
+                        {
+                            Text = game.HomeTeam.Wins + "-" + game.HomeTeam.Losses,
+                            ForeColor = dark
+                        };
+                        lblHomeRecord.Font = SetFontSize("Segoe UI", (float)(fontSize * .3), FontStyle.Bold, (int)(homeLogo.Width), lblHomeRecord);
+                        lblHomeRecord.AutoSize = true;
+                        GamePanel.Controls.Add(lblHomeRecord);
+                        lblHomeRecord.Left = homeLogo.Left - (int)(lblHomeRecord.Width * .9);
+                        lblHomeRecord.Top = (int)(pnlScoreboard.Height - (lblHomeRecord.Height * 1.1));
 
 
                         //Away Team's score
@@ -744,12 +798,35 @@ namespace NBAdbToolbox
 
                         gameCount++;
                         totalCount++;
-                        if (totalCount == 100)
+                        gameIterator++;
+                        if(totalCount % 10 == 0 && gameIterator != sortedGames.Count)
+                        {
+                            Panel DatePanel2 = CreatePanel(panelWidth, pnlScoreboard.Height, 0, 0, dark, true, BorderStyle.Fixed3D, Cursors.Hand, "DatePanel" + dateCount);
+                            allScoreboardPanels.Add(DatePanel2);
+
+                            dateCount++;
+                            totalCount++;
+                            Label DateLabel2 = new Label
+                            {
+                                Text = date.Games[0].GameDateTimeEst.ToShortDateString(),
+                                ForeColor = tan
+                            };
+
+                            DateLabel2.Font = SetFontSize("Segoe UI", (float)(fontSize * .7), FontStyle.Bold, (int)(DatePanel2.Width), DateLabel2);
+                            DateLabel2.AutoSize = true;
+                            DatePanel2.Controls.Add(DateLabel2);
+                            DateLabel2.Left = (panelWidth - DateLabel2.Width) / 2;
+                            DateLabel2.Top = (int)((pnlScoreboard.Height - DateLabel2.Height) / 2.5);
+                            DatePanel2 = FinishDatePanel(DatePanel2, urlDate);
+                            DateLabel2.MouseDown += (sender, e) => MouseDownOnLink(sender, e, urlDate);
+
+                        }
+                        if (totalCount >= 100)
                         {
                             break;
                         }
                     }
-                    if (totalCount == 100)
+                    if (totalCount >= 100)
                     {
                         break;
                     }
@@ -789,18 +866,18 @@ namespace NBAdbToolbox
             int endIndex = Math.Min(startIndex + ItemsPerPage, allScoreboardPanels.Count);
 
             //Add panels for current page
-            int xPosition = 0;
-            if(pageNumber != 0)
-            {
-                xPosition = pnlScrollScoreboard.Width;
-            }
+            int xPosition = pnlScrollScoreboard.Width; 
+            //if(pageNumber != 0)
+            //{
+            //    xPosition = pnlScrollScoreboard.Width;
+            //}
             for (int i = startIndex; i < endIndex; i++)
             {
                 Panel panel = allScoreboardPanels[i];
-                if(pageNumber > 0)
-                {
-                    panel.Width = (int)(panel.Width * .99);
-                }
+                //if(pageNumber > 0)
+                //{
+                //    panel.Width = (int)(panel.Width * .99);
+                //}
                 panel.Left = xPosition;
                 pnlScoreboard.Controls.Add(panel);
                 xPosition += panel.Width;
@@ -808,13 +885,13 @@ namespace NBAdbToolbox
 
             //Update forward arrow visibility based on whether there are more items
             bool hasMoreItems = endIndex < allScoreboardPanels.Count;
-            pnlScrollScoreboard.Visible = hasMoreItems;
-            picArrowScoreboard.Visible = hasMoreItems;
+            pnlScrollScoreboard.Visible = true;
+            picArrowScoreboard.Visible = true;
 
             //Update back arrow visibility - only visible if not on first page
             bool isNotFirstPage = currentScoreboardPage > 0;
-            pnlScrollScoreboardBack.Visible = isNotFirstPage;
-            picArrowScoreboardBack.Visible = isNotFirstPage;
+            pnlScrollScoreboardBack.Visible = true;
+            picArrowScoreboardBack.Visible = true;
         }
 
         public void ScrollScoreboard(object sender, EventArgs e)
@@ -867,12 +944,8 @@ namespace NBAdbToolbox
         }
         public async void InitializeAsync()
         {
-            //await GetScoreBoard();
+            await GetScoreBoard();
 
-            await Task.Run(async () =>      //This sets the root variable to our big file
-            {
-                await GetScoreBoard();
-            });
         }
         public Main()
         {
@@ -6764,7 +6837,6 @@ order by HasVideo desc, ShotDistance desc";
             pnlScrollScoreboardBack.Parent = pnlScoreboardContainer;
             pnlScrollScoreboardBack.BackColor = ThemeColor;
             pnlScrollScoreboardBack.Cursor = Cursors.Hand;
-            pnlScrollScoreboardBack.Visible = false; // Initially hidden
 
             // Initialize back arrow picture box
             picArrowScoreboardBack.Width = (int)(pnlScrollScoreboardBack.Width * .65);
@@ -6775,7 +6847,6 @@ order by HasVideo desc, ShotDistance desc";
             picArrowScoreboardBack.Parent = pnlScrollScoreboardBack;
             picArrowScoreboardBack.Left = (int)((pnlScrollScoreboardBack.Width - picArrowScoreboardBack.Width) / 2);
             picArrowScoreboardBack.BackColor = Color.FromArgb(0, 0, 0, 0);
-            picArrowScoreboardBack.Visible = false;
 
 
             //Navbar
