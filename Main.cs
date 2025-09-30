@@ -127,7 +127,8 @@ namespace NBAdbToolbox
         public PictureBox picSettings = new PictureBox();//Db Status icon
         public Panel pnlSettings = new Panel
         {
-            Visible = false
+            Visible = false,
+            Name = "pnlSettings"
         };
         public Label lblBrowseConfig = new Label
         {
@@ -409,12 +410,24 @@ namespace NBAdbToolbox
         public int picLoadLoc = 0;
 
         //Header Panels
-        public Panel pnlScoreboard = new Panel();
-        public Panel pnlScoreboardContainer = new Panel();
-        public Panel pnlScrollScoreboard = new Panel();
+        public Panel pnlScoreboard = new Panel
+        {
+            Name = "pnlScoreboard"
+        };
+        public Panel pnlScoreboardContainer = new Panel
+        {
+            Name = "pnlScoreboardContainer"
+        };
+        public Panel pnlScrollScoreboard = new Panel
+        {
+            Name = "pnlScrollScoreboard"
+        };
         public PictureBox picArrowScoreboard = new PictureBox();
 
-        public Panel pnlScrollScoreboardBack = new Panel();
+        public Panel pnlScrollScoreboardBack = new Panel
+        {
+            Name = "pnlScrollScoreboardBack"
+        };
         public PictureBox picArrowScoreboardBack = new PictureBox();
 
         public int currentScoreboardPage = 0;
@@ -422,7 +435,10 @@ namespace NBAdbToolbox
         public List<Panel> allScoreboardPanels = new List<Panel>();
 
 
-        public Panel pnlNav = new Panel();
+        public Panel pnlNav = new Panel
+        {
+            Name = "pnlNav"
+        };
 
         public HashSet<(int SeasonID, (int Games, int Loaded, int Team, int Arena, int Player, int Official, int Game, int PlayerBox, int TeamBox, int PlayByPlay, int StartingLineups, int TeamBoxLineups,
             int HistoricLoaded, int CurrentLoaded, int PBoxRows, int TBoxRows, int PbpRows, int StartingLineupRows, int TBoxLineupRows, string Status, int GameExt))> seasonInfo
@@ -852,7 +868,17 @@ namespace NBAdbToolbox
             }
             catch(Exception e)
             {
+                Label ErrorLabel = new Label
+                {
+                    Text = "No internet connection!",
+                    ForeColor = Color.Red
+                };
 
+                ErrorLabel.Font = SetFontSize("Segoe UI", (float)(fontSize * .7), FontStyle.Bold, (int)(pnlScoreboard.Width / 2), ErrorLabel);
+                ErrorLabel.AutoSize = true;
+                pnlScoreboard.Controls.Add(ErrorLabel);
+                ErrorLabel.Left = (pnlScoreboard.Width - ErrorLabel.Width) / 2;
+                ErrorLabel.Top = (int)((pnlScoreboard.Height - ErrorLabel.Height) / 2.5);
             }
         }
 
@@ -6243,7 +6269,10 @@ update Player set Name = 'Trey Jemison III' where PlayerID = 1641998;";
 
         }
 
-        public Panel pnlQueries = new Panel();
+        public Panel pnlQueries = new Panel
+        {
+            Name = "pnlQueries"
+        };
         public Label lblQueries = new Label
         {
             Text = "Queries",

@@ -72,7 +72,7 @@ namespace NBAdbToolboxSchedule
                 }
                 catch
                 {
-
+                    Schedule = null;
                 }
 
             }
