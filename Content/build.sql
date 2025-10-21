@@ -154,7 +154,7 @@ BiggestLead int,
 BiggestLeadScore varchar(30),
 BiggestScoringRun int,
 BiggestScoringRunScore varchar(30),
-TimeLeading varchar(30),				--replace(replace(replace(timeLeading, 'PT', ''), 'M', ':'), 'S', '')
+TimeLeading varchar(30),			
 TimesTied int,
 LeadChanges int,
 Steals int,
@@ -431,7 +431,12 @@ where type_desc = 'USER_TABLE'
 create procedure Seasons
 as
 with Seasons as(
-select s.SeasonID, s.Games + s.PlayoffGames Games, case when s.HistoricLoaded = 1 or s.CurrentLoaded = 1 then 1 else 0 end Loaded
+select s.SeasonID
+	 , case when s.SeasonID != 2025
+				then s.Games + s.PlayoffGames
+			else (select count(distinct GameID) from Schedule sc where s.SeasonID = sc.SeasonID and sc.GameTimeEST <= getdate())
+	   end Games
+	 , case when s.HistoricLoaded = 1 or s.CurrentLoaded = 1 then 1 else 0 end Loaded
 	 , (select COUNT(distinct TeamID) from Team t where s.SeasonID = t.SeasonID) Team
 	 , (select COUNT(distinct ArenaID) from Arena a where s.SeasonID = a.SeasonID) Arena
 	 , (select COUNT(distinct PlayerID) from Player p where s.SeasonID = p.SeasonID) Player

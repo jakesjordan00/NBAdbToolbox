@@ -3,6 +3,7 @@ using NBAdbToolboxCurrentPBP;
 using NBAdbToolboxHistoric;
 using NBAdbToolboxPlayerMovement;
 using NBAdbToolboxSchedule;
+using NBAdbToolboxTodaysScoreboard;
 using Newtonsoft.Json;
 using System;
 using System.CodeDom.Compiler;
@@ -43,10 +44,10 @@ namespace NBAdbToolbox
 {
     public partial class Main : Form
     {
-        public static string ToolboxVersion = "1.01";
+        public static string ToolboxVersion = "2.0";
         public Label lblVersion = new Label
         {
-            Text = "v1.02"
+            Text = "v2.0"
         };
         public Label lblVersionStatus = new Label();
         public string DatabaseToolboxVersion = "";
@@ -55,6 +56,8 @@ namespace NBAdbToolbox
         NBAdbToolboxCurrent.Root rootC = new NBAdbToolboxCurrent.Root();
         NBAdbToolboxCurrentPBP.Root rootCPBP = new NBAdbToolboxCurrentPBP.Root();
         NBAdbToolboxSchedule.ScheduleLeagueV2 schedule = new NBAdbToolboxSchedule.ScheduleLeagueV2();
+        NBAdbToolboxTodaysScoreboard.Root todaysScoreboard = new NBAdbToolboxTodaysScoreboard.Root();
+
         NBAdbToolboxPlayerMovement.PlayerMovementRoot tradeData = new NBAdbToolboxPlayerMovement.PlayerMovementRoot();
 
         public bool dbConnection = false; //Determine whether or not we have a connection to the Database in dbconfig file
@@ -400,6 +403,7 @@ namespace NBAdbToolbox
         public static DataCurrentPBP currentDataPBP = new DataCurrentPBP();
         public static Schedule leagueSchedule = new Schedule();
         public static PlayerMovement playerMovement = new PlayerMovement();
+        public static TodaysScoreboard scoreboardToday = new TodaysScoreboard();
         public static List<NBAdbToolboxSchedule.Game> scheduleGames = new List<NBAdbToolboxSchedule.Game>();
         public float loadFontSize = 0;
         public string completionMessage = "";
@@ -616,6 +620,7 @@ namespace NBAdbToolbox
 
             return DatePanel;
         }
+        public List<string> gamesInProgrress = new List<string>();
         public async Task GetScoreBoard()
         {
             Color tan = Color.FromArgb(255, 209, 203, 192);
@@ -626,7 +631,6 @@ namespace NBAdbToolbox
             int panelWidth = (int)((this.Width * .98) / 10.07);
             //int panelWidth = (int)(panelWidth * .99);
             //panelWidth = (int)(panelWidth * .95);
-
 
             allScoreboardPanels.Clear();
             pnlScoreboard.Controls.Clear();
@@ -701,7 +705,7 @@ namespace NBAdbToolbox
                     foreach (NBAdbToolboxSchedule.Game game in sortedGames)
                     {
                         GameID = game.GameId;
-                        Panel GamePanel = CreatePanel(panelWidth, pnlScrollScoreboard.Height, 0, 0, tan, true, BorderStyle.FixedSingle, Cursors.Hand, "GamePanel" + gameCount);
+                        Panel GamePanel = CreatePanel(panelWidth, pnlScrollScoreboard.Height, 0, 0, tan, true, BorderStyle.FixedSingle, Cursors.Hand, "GamePanel-" + game.GameId);
 
                         allScoreboardPanels.Add(GamePanel);
 
@@ -717,7 +721,8 @@ namespace NBAdbToolbox
                             Image = Image.FromFile(Path.Combine(logoPath, away + ".png")),
                             BackColor = Color.FromArgb(0, 0, 0, 0),
                             Width = (int)(GamePanel.Height * .6),
-                            Height = (int)(GamePanel.Height * .6)
+                            Height = (int)(GamePanel.Height * .6),
+                            Name = "DynamicAwayLogo-" + game.GameId
                         };
                         PictureBox homeLogo = new PictureBox
                         {
@@ -725,7 +730,8 @@ namespace NBAdbToolbox
                             Image = Image.FromFile(Path.Combine(logoPath, home + ".png")),
                             BackColor = Color.FromArgb(0, 0, 0, 0),
                             Width = (int)(GamePanel.Height * .6),
-                            Height = (int)(GamePanel.Height * .6)
+                            Height = (int)(GamePanel.Height * .6),
+                            Name = "DynamicHomeLogo-" + game.GameId
                         };
                         GamePanel.Controls.Add(awayLogo);
                         GamePanel.Controls.Add(homeLogo);
@@ -759,47 +765,71 @@ namespace NBAdbToolbox
                         lblHomeRecord.Left = homeLogo.Left - (int)(lblHomeRecord.Width * .9);
                         lblHomeRecord.Top = (int)(pnlScoreboard.Height - (lblHomeRecord.Height * 1.1));
 
+                        string winningTeam = game.AwayTeam.Score > game.HomeTeam.Score ? "away" : "home";
 
                         //Away Team's score
                         Label lblAwayScore = new Label
                         {
                             Text = game.AwayTeam.Score.ToString(),
-                            ForeColor = dark
+                            ForeColor = dark,
+                            Name = "DynamicAwayScore-" + game.GameId
                         };
-                        lblAwayScore.Font = SetFontSize("Segoe UI", (float)(fontSize * .5), FontStyle.Bold, (int)(awayLogo.Width), lblAwayScore);
-                        lblAwayScore.AutoSize = true;
-                        GamePanel.Controls.Add(lblAwayScore);
-                        lblAwayScore.Left = awayLogo.Left + (int)((awayLogo.Width - lblAwayScore.Width) / 2);
-                        lblAwayScore.Top = awayLogo.Top - lblAwayScore.Height;
-
-                        //Home Team's score
                         Label lblHomeScore = new Label
                         {
                             Text = game.HomeTeam.Score.ToString(),
-                            ForeColor = dark
+                            ForeColor = dark,
+                            Name = "DynamicHomeScore-" + game.GameId
                         };
-                        lblHomeScore.Font = SetFontSize("Segoe UI", (float)(fontSize * .5), FontStyle.Bold, (int)(homeLogo.Width), lblHomeScore);
+
+
+
+                        //Home Team's score
+                        if (winningTeam == "away")
+                        {
+                            lblAwayScore.Font = SetFontSize("Segoe UI", (float)(fontSize * .5), FontStyle.Bold, (int)(awayLogo.Width), lblAwayScore);
+                            lblHomeScore.Font = lblAwayScore.Font;
+                        }
+                        else
+                        {
+                            lblHomeScore.Font = SetFontSize("Segoe UI", (float)(fontSize * .5), FontStyle.Bold, (int)(homeLogo.Width), lblHomeScore);
+                            lblAwayScore.Font = lblHomeScore.Font;
+                            lblAwayScore.AutoSize = true;
+                        }
+                        lblAwayScore.AutoSize = true;
                         lblHomeScore.AutoSize = true;
+                        GamePanel.Controls.Add(lblAwayScore);
+                        lblAwayScore.Left = awayLogo.Left + (int)((awayLogo.Width - lblAwayScore.Width) / 2);
+                        lblAwayScore.Top = 0;
+
                         GamePanel.Controls.Add(lblHomeScore);
                         lblHomeScore.Left = homeLogo.Left + (int)((homeLogo.Width - lblHomeScore.Width) / 2);
-                        lblHomeScore.Top = homeLogo.Top - lblHomeScore.Height;
+                        lblHomeScore.Top = 0;
 
 
                         //Set the Game Status. This will display start time, ? or final. Not sure what it will be when game in progress
-                        Label lblStartTimeOrScore = new Label
+                        Label lblStartTime = new Label
                         {
                             Text = game.GameStatusText.Replace("ET", "").Replace(" ", ""),
-                            ForeColor = dark
+                            ForeColor = dark,
+                            Name = "DynamicStartTime-" + game.GameId
                         };
-                        lblStartTimeOrScore.Font = SetFontSize("Segoe UI", (float)(fontSize * .4), FontStyle.Bold, lblHomeScore.Left - lblAwayScore.Right, lblStartTimeOrScore);
-                        lblStartTimeOrScore.AutoSize = true;
-                        GamePanel.Controls.Add(lblStartTimeOrScore);
-                        lblStartTimeOrScore.Top = 0;
-                        lblStartTimeOrScore.Left = lblAwayScore.Right + ((lblHomeScore.Left - lblAwayScore.Right - lblStartTimeOrScore.Width) / 2);
+                        if(game.GameStatus == 2 || (game.GameDateTimeEst <= DateTime.Now && game.GameStatus != 3))
+                        {
+                            gamesInProgrress.Add(game.GameId);
+                        }
+                        else
+                        {
+                            gamesInProgrress.Remove(game.GameId);
+                        }
+                        lblStartTime.Font = SetFontSize("Segoe UI", (float)(fontSize * .4), FontStyle.Bold, lblHomeScore.Left - lblAwayScore.Right, lblStartTime);
+                        lblStartTime.AutoSize = true;
+                        GamePanel.Controls.Add(lblStartTime);
+                        lblStartTime.Top = 0;
+                        lblStartTime.Left = lblAwayScore.Right + ((lblHomeScore.Left - lblAwayScore.Right - lblStartTime.Width) / 2);
                         ToolTip tip = new ToolTip();
                         tip.BackColor = Color.Black;
                         tip.ForeColor = Color.Wheat;
-                        tip.SetToolTip(lblStartTimeOrScore, "EST");
+                        tip.SetToolTip(lblStartTime, "EST");
 
                         string url = "https://www.nba.com/game/" + aTri + "-vs-" + hTri + "-" + game.GameId;
 
@@ -810,7 +840,7 @@ namespace NBAdbToolbox
                         homeLogo.MouseDown += (sender, e) => MouseDownOnLink(sender, e, url);
                         lblAwayScore.MouseDown += (sender, e) => MouseDownOnLink(sender, e, url);
                         lblHomeScore.MouseDown += (sender, e) => MouseDownOnLink(sender, e, url);
-                        lblStartTimeOrScore.MouseDown += (sender, e) => MouseDownOnLink(sender, e, url);
+                        lblStartTime.MouseDown += (sender, e) => MouseDownOnLink(sender, e, url);
 
                         gameCount++;
                         totalCount++;
@@ -970,9 +1000,107 @@ namespace NBAdbToolbox
         }
         public async void InitializeAsync()
         {
+            gamesInProgrress.Clear();
             await GetScoreBoard();
+            if(gamesInProgrress.Count != 0)
+            {
+                await GetDailyScoreBoard();
+            }
 
         }
+
+        public async Task GetDailyScoreBoard()
+        {
+            float fontSize = ((float)(screenFontSize * pnlWelcome.Height * .08) / (96 / 12)) * (72 / 12);
+            List<NBAdbToolboxTodaysScoreboard.Game> Games = await scoreboardToday.GetScoreboard();
+
+            foreach (NBAdbToolboxTodaysScoreboard.Game game in Games)
+            {
+                if (!gamesInProgrress.Contains(game.GameId))
+                {
+                    continue;
+                }
+                Panel GamePanel = FindGamePanel(game.GameId);
+                List<Label> labels = GetGameLabels(GamePanel);
+                List<PictureBox> logos = GetGameLogos(GamePanel);
+                //labels[0] = awayScore
+                //labels[1] = homeScore
+                //labels[2] = Game Status
+
+                int awayRight = labels[0].Right;
+                int homeLeft = labels[1].Left;
+
+                Label lblAwayScore = labels[0];
+                Label lblHomeScore = labels[1];
+                Label lblGameClock = labels[2];
+                PictureBox awayLogo = logos[0];
+                PictureBox homeLogo = logos[1];
+
+                lblAwayScore.Text = game.AwayTeam.Score.ToString();
+                lblHomeScore.Text = game.HomeTeam.Score.ToString();
+
+                lblAwayScore.Font = SetFontSize("Segoe UI", (float)(fontSize * .5), FontStyle.Bold, (int)(awayLogo.Width), lblAwayScore);
+                lblAwayScore.AutoSize = true;
+                lblAwayScore.Left = awayLogo.Left + (int)((awayLogo.Width - lblAwayScore.Width) / 2);
+
+                //Home Team's score
+                lblHomeScore.Font = SetFontSize("Segoe UI", (float)(fontSize * .5), FontStyle.Bold, (int)(homeLogo.Width), lblHomeScore);
+                lblHomeScore.AutoSize = true;
+                lblHomeScore.Left = homeLogo.Left + (int)((homeLogo.Width - lblHomeScore.Width) / 2);
+
+
+
+                lblGameClock.Text = game.Period + "Q - " + game.GameClock.Replace("PT", "").Replace("M00", ":0").Replace("M", ":").Replace(".00S", "");
+                lblGameClock.Font = SetFontSize("Segoe UI", (float)(fontSize * .35), FontStyle.Bold, homeLeft - awayRight, lblGameClock);
+                lblGameClock.Controls.Clear();
+                lblGameClock.AutoSize = true;
+                lblGameClock.Top = 0;
+                lblGameClock.Left = awayRight + ((homeLeft - awayRight - lblGameClock.Width) / 2);
+            }
+
+        }
+        public Panel FindGamePanel(string gameId)
+        {
+            string panelName = "GamePanel-" + gameId;
+
+            //Search through GamePanels in pnlScoreboard
+            foreach (Control gamePanel in pnlScoreboard.Controls)
+            {
+                if (gamePanel is Panel && gamePanel.Name == panelName)
+                {
+                    return (Panel)gamePanel;
+                }
+            }
+            return null;
+        }
+        public List<Label> GetGameLabels(Panel GamePanel)
+        {
+            List<Label> GameLabels = new List<Label>();
+            //Search through GamePanels in pnlScoreboard
+            foreach (Control control in GamePanel.Controls)
+            {
+                if (control is Label && control.Name.Contains("Dynamic"))
+                {
+                    GameLabels.Add((Label)control);
+                }                
+            }
+            return GameLabels;
+        }
+
+        public List<PictureBox> GetGameLogos(Panel GamePanel)
+        {
+            List<PictureBox> GameLogos = new List<PictureBox>();
+            //Search through GamePanels in pnlScoreboard
+            foreach (Control control in GamePanel.Controls)
+            {
+                if (control is PictureBox && control.Name.Contains("Dynamic"))
+                {
+                    GameLogos.Add((PictureBox)control);
+                }
+            }
+            return GameLogos;
+        }
+
         public Main()
         {
             InitializeComponent();
@@ -1202,34 +1330,83 @@ namespace NBAdbToolbox
                             source = "Current";
                             current = 1;
                             PopulateDb_5_BeforeCurrentRead();
-                            try
+                            List<string> dates = new List<string>();
+                            if(season == 2025)
                             {
-                                await Task.Run(async () =>      //This sets the root variable to our big file
+
+                                schedule = await leagueSchedule.GetSchedule(1);
+                                foreach (NBAdbToolboxSchedule.GameDates date in schedule.LeagueSchedule.GameDates)
                                 {
-                                    await ReadSeasonFile();
-                                });
+                                    if (date.Games.Count > 0)
+                                    {
+                                        dates.Add(date.GameDate);
+                                        foreach (NBAdbToolboxSchedule.Game game in date.Games)
+                                        {
+                                            if(game.GameDateTimeEst <= DateTime.Now)
+                                            {
+                                                gamesRS.Add(Int32.Parse(game.GameId));
+                                                RegularSeasonGames++;
+                                            }
+                                        }
+                                    }
+                                    if(date.Games[0].GameDateTimeEst > DateTime.Now.AddDays(1))
+                                    {
+                                        break;
+                                    }
+                                }
+
+                                TotalGames = RegularSeasonGames + PostseasonGames;
+                                TotalGamesCD = TotalGames - 1;
+                                iterator = 0;
+                                imageIteration = 1;
+                                reverse = false;
                             }
-                            catch (NullReferenceException ne)
+                            else
                             {
-                                MessageBox.Show("Error! Please restart application and try again", "Memory Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                                return;
+                                try
+                                {
+                                    await Task.Run(async () =>      //This sets the root variable to our big file
+                                    {
+                                        await ReadSeasonFile();
+                                    });
+                                }
+                                catch (NullReferenceException ne)
+                                {
+                                    MessageBox.Show("Error! Please restart application and try again", "Memory Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                    return;
+                                }
+                                PopulateDb_6_AfterCurrentReadRoot();
                             }
-                            PopulateDb_6_AfterCurrentReadRoot();
                             await DeleteSeasonData;
                             stopwatchInsert.Restart();
                             PopulateDb_7_AfterCurrentDelete();
                             for (int i = 0; i < RegularSeasonGames; i++)
                             {
+                                int homeGames = 0;
+                                int awayGames = 0;
                                 GameID = gamesRS[i];
                                 lblCurrentGameCount.Text = GameID.ToString();
-                                gameLabelH = root.season.games.regularSeason[i].box.gameLabel;
-                                gameLabelDetailH = root.season.games.regularSeason[i].box.gameSubLabel;
-                                homeWins = root.season.games.regularSeason[i].box.homeTeam.teamLosses;
-                                homeLosses = root.season.games.regularSeason[i].box.homeTeam.teamWins;
-                                int homeGames = homeWins + homeLosses;
-                                awayWins = root.season.games.regularSeason[i].box.awayTeam.teamLosses;
-                                awayLosses = root.season.games.regularSeason[i].box.awayTeam.teamWins;
-                                int awayGames = awayWins + awayLosses;
+                                if(SeasonID == 2025)
+                                {
+                                    gameLabelH ="";
+                                    gameLabelDetailH ="";
+                                    homeWins = 0;
+                                    homeLosses = 0;
+                                    awayWins = 0;
+                                    awayLosses = 0;
+                                    awayGames = awayWins + awayLosses;
+                                }
+                                else
+                                {
+                                    gameLabelH = root.season.games.regularSeason[i].box.gameLabel;
+                                    gameLabelDetailH = root.season.games.regularSeason[i].box.gameSubLabel;
+                                    homeWins = root.season.games.regularSeason[i].box.homeTeam.teamLosses;
+                                    homeLosses = root.season.games.regularSeason[i].box.homeTeam.teamWins;
+                                    homeGames = homeWins + homeLosses;
+                                    awayWins = root.season.games.regularSeason[i].box.awayTeam.teamLosses;
+                                    awayLosses = root.season.games.regularSeason[i].box.awayTeam.teamWins;
+                                    awayGames = awayWins + awayLosses;
+                                }
                                 await CurrentGameGPS(gamesRS[i], "");
                                 if (!boxMissing)
                                 {
@@ -1270,8 +1447,11 @@ namespace NBAdbToolbox
                                     HistoricTeamUpdate(team, team.teamId, "Current");
                                     UpdateTeamWins();
                                 }
-                                root.season.games.regularSeason[i].box = null;
-                                root.season.games.regularSeason[i].playByPlay = null;
+                                if(SeasonID != 2025)
+                                {
+                                    root.season.games.regularSeason[i].box = null;
+                                    root.season.games.regularSeason[i].playByPlay = null;
+                                }
 
                                 UpdateLoadingImage(imageIteration);
                                 PopulateDb_4_AfterGame("RS");
@@ -1417,7 +1597,8 @@ namespace NBAdbToolbox
             pnlNav.Parent = bgCourt;
             pnlNav.Top = pnlScoreboard.Bottom;
             pnlNav.Left = pnlDbUtil.Right;
-            pnlNav.BackColor = Color.Black;
+            pnlNav.BackColor = Color.Transparent;
+            pnlNav.Visible = true;
 
             #endregion
             #region Edit Connection & Build DB
@@ -1480,6 +1661,7 @@ namespace NBAdbToolbox
                     {
 
                     }
+                    //configPath = Path.Combine(settings.ConfigPath, configName + ".json");
                     //configPath = Path.Combine(settings.ConfigPath, 
                     InitializeDbConfig("btnEdit");
                     sentViaBtnEdit = true;
@@ -1675,6 +1857,11 @@ namespace NBAdbToolbox
 
             btnRefresh.Click += async (s, e) =>
             {
+                var test = pnlDbUtil.Controls;
+                var transparentControls = pnlDbUtil.Controls
+    .Cast<Control>()
+    .Where(c => c.BackColor == Color.Transparent || c.BackColor.A == 0)
+    .ToList();
                 await RefreshClick();
                 if (dbOverviewOpened)
                 {
@@ -1682,7 +1869,7 @@ namespace NBAdbToolbox
                     CenterElement(pnlDbUtil, lblDbOptions);
                     Application.DoEvents();
                     await Task.Run(() => GetSeasonInfo());
-                    CheckDataFiles(); //GetSeasons();
+                    CheckDataFiles(); //BtnRefresh.Click();
                     lblDbOptions.Text = "Options";
                     CenterElement(pnlDbUtil, lblDbOptions);
                     Application.DoEvents();
@@ -1900,10 +2087,30 @@ namespace NBAdbToolbox
         public int scheduleDeletedRows = 0;
 
 
-        public Label lblScheduleHeader = new Label();
-        public Label lblScheduleLoadDetail = new Label();
-        public Label lblSchedule24Header = new Label();
-        public Label lblSchedule24Detail = new Label();
+        public Label lblScheduleHeader = new Label
+        {
+            Name = "lblScheduleHeader",
+            Text = "lblScheduleHeader",
+            Visible = false
+        };
+        public Label lblScheduleLoadDetail = new Label
+        {
+            Name = "lblScheduleLoadDetail",
+            Text = "lblScheduleLoadDetail",
+            Visible = false
+        };
+        public Label lblSchedule24Header = new Label
+        {
+            Name = "lblSchedule24Header",
+            Text = "lblSchedule24Header",
+            Visible = false
+        };
+        public Label lblSchedule24Detail = new Label
+        {
+            Name = "lblSchedule24Detail",
+            Text = "lblSchedule24Detail",
+            Visible = false
+        };
         public async Task ScheduleInit(int version, string seasonText, Label Details)
         {
             Details.Text = "Reading " + seasonText + " Schedule...";
@@ -2001,6 +2208,10 @@ namespace NBAdbToolbox
                     int isNeutral = game.isNeutral ? 1: 0;
                     int ifNecessary = game.IfNecessary ? 1 : 0;
 
+                    string dtString = game.GameDateTimeEst.ToString("yyyy-MM-dd HH:mm:ss");
+                    dtString = dtString.Substring(0, 13) + ":" + dtString.Substring(14);
+                    string dtStringUTC = game.GameDateTimeUTC.ToString("yyyy-MM-dd HH:mm:ss");
+                    dtStringUTC = dtStringUTC.Substring(0, 13) + ":" + dtStringUTC.Substring(14);
 
                     insertBuilder.Append("insert into Schedule(SeasonID, GameID, GameType, Status, Sequence, GameTimeEST, GameTimeUTC, Day, Week" +
                         ", IsNeutral, HomeID, HomeWins, HomeLosses, HomeScore, AwayID, AwayWins, AwayLosses, AwayScore, IfNecessary");
@@ -2009,8 +2220,8 @@ namespace NBAdbToolbox
                         .Append(gameType).Append("', '")
                         .Append(game.GameStatusText).Append("', ")
                         .Append(game.GameSequence).Append(", '")
-                        .Append(game.GameDateTimeEst).Append("', '")
-                        .Append(game.GameDateTimeUTC).Append("', '")
+                        .Append(dtString).Append("', '")
+                        .Append(dtStringUTC).Append("', '")
                         .Append(game.Day).Append("', ")
                         .Append(game.WeekNumber).Append(", ")
                         .Append(isNeutral).Append(", ")
@@ -2026,14 +2237,18 @@ namespace NBAdbToolbox
 
                     if(game.HomeTeamTime != DateTime.Parse("1/1/0001 12:00:00 AM"))
                     {
+                        string dtStringH = game.HomeTeamTime.ToString("yyyy-MM-dd HH:mm:ss");
+                        dtStringH = dtString.Substring(0, 13) + ":" + dtStringH.Substring(14);
                         insertBuilder.Append(", GameTimeHome");
-                        valuesBuilder.Append(", '").Append(game.HomeTeamTime).Append("'");
+                        valuesBuilder.Append(", '").Append(dtStringH).Append("'");
 
                     }
                     if (game.AwayTeamTime != DateTime.Parse("1/1/0001 12:00:00 AM"))
                     {
+                        string dtStringA = game.AwayTeamTime.ToString("yyyy-MM-dd HH:mm:ss");
+                        dtStringA = dtStringA.Substring(0, 13) + ":" + dtStringA.Substring(14);
                         insertBuilder.Append(", GameTimeAway");
-                        valuesBuilder.Append(", '").Append(game.AwayTeamTime).Append("'");
+                        valuesBuilder.Append(", '").Append(dtStringA).Append("'");
                     }
                     if (!string.IsNullOrWhiteSpace(game.GameLabel))
                     {
@@ -2171,8 +2386,12 @@ namespace NBAdbToolbox
                 string teamID = transaction.TEAM_ID == 0 ? "null" : transaction.TEAM_ID.ToString();
                 string playerID = transaction.PLAYER_ID == 0 ? "null" : transaction.PLAYER_ID.ToString();
                 string addTeamID = transaction.Additional_Sort == 0 ? "null" : transaction.Additional_Sort.ToString();
+                string gameDate = transaction.TRANSACTION_DATE.ToString(CultureInfo.InvariantCulture);
+                gameDate = gameDate.Substring(0, 10);
+                string t = "";
+
                 tradeBuilder.Append("insert into PlayerMovement values(").Append(SeasonID).Append(", '")
-                    .Append(transaction.TRANSACTION_DATE.ToShortDateString()).Append("', '")
+                    .Append(gameDate).Append("', '")
                     .Append(transaction.Transaction_Type).Append("', '")
                     .Append(transaction.TRANSACTION_DESCRIPTION.Replace("'", "''")).Append("', ")
                     .Append(teamID).Append(", ")
@@ -2368,14 +2587,14 @@ namespace NBAdbToolbox
                     {
                         string insert = sdr.GetString(0);
                         string min = sdr.GetString(1);
-                        double sec = double.Parse(min.Substring(min.IndexOf("."))) * 60;
+                        double sec = double.Parse(min.Substring(1+min.IndexOf("."))) / 60;
                         double FG2Pct = sdr.GetInt32(2) == 0 ? 0 : (double)sdr.GetInt32(2) / sdr.GetInt32(3);
                         double FG3Pct = sdr.GetInt32(4) == 0 ? 0 : (double)sdr.GetInt32(4) / sdr.GetInt32(5);
                         double FGPct = sdr.GetInt32(6) == 0 ? 0 : (double)sdr.GetInt32(6) / sdr.GetInt32(7);
                         double FTPct = sdr.GetInt32(8) == 0 ? 0 : (double)sdr.GetInt32(8) / sdr.GetInt32(9);
                         min = min.Substring(0, min.IndexOf("."));
-                        insert = insert.Replace("minutesplaceholder", min + ":" + sec).Replace("fg2%", FG2Pct.ToString()).Replace("fg3%", FG3Pct.ToString()).Replace("fg%", FGPct.ToString())
-                            .Replace("ft%", FTPct.ToString()) + "\n";
+                        insert = insert.Replace("minutesplaceholder", min + ":" + sec.ToString(CultureInfo.InvariantCulture)).Replace("fg2%", FG2Pct.ToString(CultureInfo.InvariantCulture)).Replace("fg3%", FG3Pct.ToString(CultureInfo.InvariantCulture)).Replace("fg%", FGPct.ToString(CultureInfo.InvariantCulture))
+                            .Replace("ft%", FTPct.ToString(CultureInfo.InvariantCulture)) + "\n";
                         LineupCalc.Append(insert);
                     }
                 }
@@ -2541,6 +2760,10 @@ namespace NBAdbToolbox
             Application.DoEvents();
             for (int i = 0; i < nonOps; i++)
             {
+                if (nonOperationalSeasons[i] == 2025)
+                {
+                    continue;
+                }
                 gamesMissing.Dispose();
                 rowsMissing.Dispose();
                 List<string> missingGames = new List<string>();
@@ -2810,7 +3033,7 @@ namespace NBAdbToolbox
                             lbl.Text = lbl.Text.Replace("Finding missing Games in StartingLineups...\n", "Finding missing Games in StartingLineups...Ready!\n");
                         }
                     }
-                    sqlBuilder.Append("\n").Append(sqlBuilderParallel.ToString());
+                    sqlBuilder.Append("\n").Append(sqlBuilderParallel.ToString()).Append(sqlBuilderParallelRepair.ToString());
                     sqlBuilderParallel.Clear();
                     execute = sqlBuilder.ToString();
                     sqlBuilder.Clear();
@@ -2962,20 +3185,23 @@ namespace NBAdbToolbox
 
         public void RepairHistoricGameOnly(NBAdbToolboxHistoric.Game game)
         {
-            SqlDateTime datetime = SqlDateTime.Parse(game.box.gameTimeUTC);
-            SqlDateTime gameDate = SqlDateTime.Parse(game.box.gameEt.Remove(game.box.gameEt.IndexOf('T')));
+            DateTime gameDate = DateTime.Parse(game.box.gameEt.Remove(game.box.gameEt.IndexOf('T')));
+
+            DateTime datetime = DateTime.Parse(game.box.gameEt, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind);
+            string dtString = datetime.ToString("yyyy-MM-dd HH:mm:ss");
+            dtString = dtString.Substring(0, 13) + ":" + dtString.Substring(14);
 
             //Build the Game table insert
             sqlBuilder.Append("Insert into Game(SeasonID, GameID, Date, HomeID, HScore, AwayID, AScore, Datetime, ")
                       .Append("WinnerID, WScore, LoserID, Lscore, GameType, SeriesID) values(")
                       .Append(SeasonID).Append(", ")
                       .Append(GameID).Append(", '")
-                      .Append(gameDate).Append("', ")
+                      .Append(gameDate.ToString("yyyy-MM-dd")).Append("', ")
                       .Append(game.box.homeTeamId).Append(", ")
                       .Append(game.box.homeTeam.score).Append(", ")
                       .Append(game.box.awayTeamId).Append(", ")
                       .Append(game.box.awayTeam.score).Append(", '")
-                      .Append(datetime).Append("', ");
+                      .Append(dtString).Append("', ");
 
             //Winner/loser logic
             if (game.box.homeTeam.score > game.box.awayTeam.score)
@@ -3075,15 +3301,15 @@ namespace NBAdbToolbox
                       .Append(MatchupID).Append(", ")
                       .Append(team.statistics.fieldGoalsMade).Append(", ")
                       .Append(team.statistics.fieldGoalsAttempted).Append(", ")
-                      .Append(team.statistics.fieldGoalsPercentage).Append(", ")
+                      .Append(team.statistics.fieldGoalsPercentage.ToString(CultureInfo.InvariantCulture)).Append(", ")
                       .Append(team.statistics.fieldGoalsMade - team.statistics.threePointersMade).Append(", ")
                       .Append(team.statistics.fieldGoalsAttempted - team.statistics.threePointersAttempted).Append(", ")
                       .Append(team.statistics.threePointersMade).Append(", ")
                       .Append(team.statistics.threePointersAttempted).Append(", ")
-                      .Append(team.statistics.threePointersPercentage).Append(", ")
+                      .Append(team.statistics.threePointersPercentage.ToString(CultureInfo.InvariantCulture)).Append(", ")
                       .Append(team.statistics.freeThrowsMade).Append(", ")
                       .Append(team.statistics.freeThrowsAttempted).Append(", ")
-                      .Append(team.statistics.freeThrowsPercentage).Append(", ")
+                      .Append(team.statistics.freeThrowsPercentage.ToString(CultureInfo.InvariantCulture)).Append(", ")
                       .Append(team.statistics.reboundsDefensive).Append(", ")
                       .Append(team.statistics.reboundsOffensive).Append(", ")
                       .Append(team.statistics.reboundsTotal).Append(", ")
@@ -3115,8 +3341,9 @@ namespace NBAdbToolbox
             //FG2 percentage calculation
             if ((double)(team.statistics.fieldGoalsAttempted - team.statistics.threePointersAttempted) != 0)
             {
-                sqlBuilder.Append(Math.Round((double)(team.statistics.fieldGoalsMade - team.statistics.threePointersMade) /
-                    (double)(team.statistics.fieldGoalsAttempted - team.statistics.threePointersAttempted), 4)).Append(", ");
+                    //minCalc.ToString(CultureInfo.InvariantCulture)
+                sqlBuilder.Append((Math.Round((double)(team.statistics.fieldGoalsMade - team.statistics.threePointersMade) /
+                    (double)(team.statistics.fieldGoalsAttempted - team.statistics.threePointersAttempted), 4)).ToString(CultureInfo.InvariantCulture)).Append(", ");
             }
             else
             {
@@ -3126,7 +3353,7 @@ namespace NBAdbToolbox
             //Assists/turnover ratio calculation
             if (team.statistics.turnovers > 0)
             {
-                sqlBuilder.Append(Math.Round((double)(team.statistics.assists) / (double)(team.statistics.turnovers), 3)).Append(")\n");
+                sqlBuilder.Append((Math.Round((double)(team.statistics.assists) / (double)(team.statistics.turnovers), 3)).ToString(CultureInfo.InvariantCulture)).Append(")\n");
             }
             else
             {
@@ -3152,15 +3379,15 @@ namespace NBAdbToolbox
                       .Append(lineup.unit.Substring(0, 1).ToUpper()).Append(lineup.unit.Substring(1)).Append("', ")
                       .Append(lineup.fieldGoalsMade).Append(", ")
                       .Append(lineup.fieldGoalsAttempted).Append(", ")
-                      .Append(lineup.fieldGoalsPercentage).Append(", ")
+                      .Append(lineup.fieldGoalsPercentage.ToString(CultureInfo.InvariantCulture)).Append(", ")
                       .Append(lineup.fieldGoalsMade - lineup.threePointersMade).Append(", ")
                       .Append(lineup.fieldGoalsAttempted - lineup.threePointersAttempted).Append(", ")
                       .Append(lineup.threePointersMade).Append(", ")
                       .Append(lineup.threePointersAttempted).Append(", ")
-                      .Append(lineup.threePointersPercentage).Append(", ")
+                      .Append(lineup.threePointersPercentage.ToString(CultureInfo.InvariantCulture)).Append(", ")
                       .Append(lineup.freeThrowsMade).Append(", ")
                       .Append(lineup.freeThrowsAttempted).Append(", ")
-                      .Append(lineup.freeThrowsPercentage).Append(", ")
+                      .Append(lineup.freeThrowsPercentage.ToString(CultureInfo.InvariantCulture)).Append(", ")
                       .Append(lineup.reboundsDefensive).Append(", ")
                       .Append(lineup.reboundsOffensive).Append(", ")
                       .Append(lineup.reboundsTotal).Append(", ")
@@ -3205,8 +3432,8 @@ namespace NBAdbToolbox
             //FG2 percentage calculation
             if ((double)(lineup.fieldGoalsAttempted - lineup.threePointersAttempted) != 0)
             {
-                sqlBuilder.Append(Math.Round((double)(lineup.fieldGoalsMade - lineup.threePointersMade) /
-                    (double)(lineup.fieldGoalsAttempted - lineup.threePointersAttempted), 4)).Append(", ");
+                sqlBuilder.Append((Math.Round((double)(lineup.fieldGoalsMade - lineup.threePointersMade) /
+                    (double)(lineup.fieldGoalsAttempted - lineup.threePointersAttempted), 4)).ToString(CultureInfo.InvariantCulture)).Append(", ");
             }
             else
             {
@@ -3216,7 +3443,7 @@ namespace NBAdbToolbox
             //Assists/turnover ratio calculation
             if (lineup.turnovers > 0)
             {
-                sqlBuilder.Append(Math.Round((double)(lineup.assists) / (double)(lineup.turnovers), 3)).Append(")\n");
+                sqlBuilder.Append((Math.Round((double)(lineup.assists) / (double)(lineup.turnovers), 3)).ToString(CultureInfo.InvariantCulture)).Append(")\n");
             }
             else
             {
@@ -3240,15 +3467,15 @@ namespace NBAdbToolbox
                     .Append(player.personId).Append(", ")
                     .Append(player.statistics.fieldGoalsMade).Append(", ")
                     .Append(player.statistics.fieldGoalsAttempted).Append(", ")
-                    .Append(player.statistics.fieldGoalsPercentage).Append(", ")
+                    .Append(player.statistics.fieldGoalsPercentage.ToString(CultureInfo.InvariantCulture)).Append(", ")
                     .Append(player.statistics.fieldGoalsMade - player.statistics.threePointersMade).Append(", ")
                     .Append(player.statistics.fieldGoalsAttempted - player.statistics.threePointersAttempted).Append(", ")
                     .Append(player.statistics.threePointersMade).Append(", ")
                     .Append(player.statistics.threePointersAttempted).Append(", ")
-                    .Append(player.statistics.threePointersPercentage).Append(", ")
+                    .Append(player.statistics.threePointersPercentage.ToString(CultureInfo.InvariantCulture)).Append(", ")
                     .Append(player.statistics.freeThrowsMade).Append(", ")
                     .Append(player.statistics.freeThrowsAttempted).Append(", ")
-                    .Append(player.statistics.freeThrowsPercentage).Append(", ")
+                    .Append(player.statistics.freeThrowsPercentage.ToString(CultureInfo.InvariantCulture)).Append(", ")
                     .Append(player.statistics.reboundsDefensive).Append(", ")
                     .Append(player.statistics.reboundsOffensive).Append(", ")
                     .Append(player.statistics.reboundsTotal).Append(", ")
@@ -3281,7 +3508,7 @@ namespace NBAdbToolbox
                 }
 
                 sqlBuilder.Append(", Minutes, MinutesCalculated");
-                valuesSB.Append(", '").Append(minLog).Append("', ").Append(minCalc);
+                valuesSB.Append(", '").Append(minLog).Append("', ").Append(minCalc.ToString(CultureInfo.InvariantCulture));
 
                 if (player.statistics.plusMinusPoints != 0)
                 {
@@ -3329,8 +3556,8 @@ namespace NBAdbToolbox
             if ((double)(player.statistics.fieldGoalsAttempted - player.statistics.threePointersAttempted) != 0)
             {
                 valuesSB.Append(", ")
-                        .Append(Math.Round((double)(player.statistics.fieldGoalsMade - player.statistics.threePointersMade) /
-                                 (double)(player.statistics.fieldGoalsAttempted - player.statistics.threePointersAttempted), 4));
+                        .Append((Math.Round((double)(player.statistics.fieldGoalsMade - player.statistics.threePointersMade) /
+                                 (double)(player.statistics.fieldGoalsAttempted - player.statistics.threePointersAttempted), 4).ToString(CultureInfo.InvariantCulture)));
             }
             else
             {
@@ -3341,7 +3568,7 @@ namespace NBAdbToolbox
             if (player.statistics.turnovers > 0)
             {
                 valuesSB.Append(", ")
-                        .Append(Math.Round((double)(player.statistics.assists) / (double)(player.statistics.turnovers), 3));
+                        .Append((Math.Round((double)(player.statistics.assists) / (double)(player.statistics.turnovers), 3)).ToString(CultureInfo.InvariantCulture));
             }
             else
             {
@@ -3710,10 +3937,11 @@ order by g.GameID
             Application.DoEvents();
         }
 
+        public StringBuilder sqlBuilderParallelRepair = new StringBuilder(220 * 1024); //Start with roughly .225 MB initial capacity
         public void RepairPlayerboxOnly(NBAdbToolboxCurrent.Player player, int GameID, int TeamID, int MatchupID)
         {
             //Main SQL builder
-            sqlBuilderParallel.Append("insert into PlayerBox(SeasonID, GameID, TeamID, MatchupID, PlayerID, FGM, FGA, [FG%], FG2M, FG2A, [FG2%], FG3M, FG3A, [FG3%], FTM, FTA, [FT%], ReboundsDefensive, ReboundsOffensive, ReboundsTotal, Assists, Turnovers, Steals, Blocks, Points, FoulsPersonal");
+            sqlBuilderParallelRepair.Append("insert into PlayerBox(SeasonID, GameID, TeamID, MatchupID, PlayerID, FGM, FGA, [FG%], FG2M, FG2A, [FG2%], FG3M, FG3A, [FG3%], FTM, FTA, [FT%], ReboundsDefensive, ReboundsOffensive, ReboundsTotal, Assists, Turnovers, Steals, Blocks, Points, FoulsPersonal");
 
             //Values builder
             StringBuilder valuesSB = new StringBuilder();
@@ -3724,16 +3952,16 @@ order by g.GameID
                     .Append(player.personId).Append(", ")
                     .Append(player.statistics.fieldGoalsMade).Append(", ")
                     .Append(player.statistics.fieldGoalsAttempted).Append(", ")
-                    .Append(player.statistics.fieldGoalsPercentage).Append(", ")
+                    .Append(player.statistics.fieldGoalsPercentage.ToString(CultureInfo.InvariantCulture)).Append(", ")
                     .Append(player.statistics.twoPointersMade).Append(", ")
                     .Append(player.statistics.twoPointersAttempted).Append(", ")
-                    .Append(player.statistics.twoPointersPercentage).Append(", ")
+                    .Append(player.statistics.twoPointersPercentage.ToString(CultureInfo.InvariantCulture)).Append(", ")
                     .Append(player.statistics.threePointersMade).Append(", ")
                     .Append(player.statistics.threePointersAttempted).Append(", ")
-                    .Append(player.statistics.threePointersPercentage).Append(", ")
+                    .Append(player.statistics.threePointersPercentage.ToString(CultureInfo.InvariantCulture)).Append(", ")
                     .Append(player.statistics.freeThrowsMade).Append(", ")
                     .Append(player.statistics.freeThrowsAttempted).Append(", ")
-                    .Append(player.statistics.freeThrowsPercentage).Append(", ")
+                    .Append(player.statistics.freeThrowsPercentage.ToString(CultureInfo.InvariantCulture)).Append(", ")
                     .Append(player.statistics.reboundsDefensive).Append(", ")
                     .Append(player.statistics.reboundsOffensive).Append(", ")
                     .Append(player.statistics.reboundsTotal).Append(", ")
@@ -3756,6 +3984,7 @@ order by g.GameID
                 if (mIndex > 0)
                 {
                     string minString = minutes.Replace("PT", "").Replace("M", ":").Replace("S", "");
+                    string yarg = minutes.Substring(mIndex + 1, 5);
                     //Check if we can safely parse
                     if (mIndex + 1 < minutes.Length && mIndex + 6 <= minutes.Length &&
                         double.TryParse(minutes.Substring(2, mIndex - 2), out double mins) &&
@@ -3771,20 +4000,28 @@ order by g.GameID
                             minCalc = Math.Round(mins2 + (secs2 / 60.0), 2);
                         }
                     }
+                    else if (minString.Length == 8) //This handles 
+                    {
+                        string[] timeParts = minString.Split(':');
+                        if (timeParts.Length == 2 && int.TryParse(timeParts[0], out int mins2) && float.TryParse(timeParts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out float secs2))
+                        {
+                            minCalc = Math.Round(mins2 + (secs2 / 60.0), 2);
+                        }
+                    }
                     if (!minString.Contains("."))
                     {
                         minString = minString + ".00";
                     }
 
                     //Minutes column
-                    sqlBuilderParallel.Append(", Minutes");
+                    sqlBuilderParallelRepair.Append(", Minutes");
                     valuesSB.Append(", '").Append(minString).Append("'");
 
                 }
                 //Plus/minus points if they exist
                 if (player.statistics.plus != 0)
                 {
-                    sqlBuilderParallel.Append(", PlusMinusPoints, Plus, Minus");
+                    sqlBuilderParallelRepair.Append(", PlusMinusPoints, Plus, Minus");
                     valuesSB.Append(", ").Append(player.statistics.plusMinusPoints)
                             .Append(", ").Append(player.statistics.plus)
                             .Append(", ").Append(player.statistics.minus);
@@ -3793,15 +4030,15 @@ order by g.GameID
             else
             {
                 //No minutes data available
-                sqlBuilderParallel.Append(", Minutes");
+                sqlBuilderParallelRepair.Append(", Minutes");
                 valuesSB.Append(", '0'");
             }
 
             //Handle assists/turnover ratio
-            sqlBuilderParallel.Append(", AssistsTurnoverRatio");
+            sqlBuilderParallelRepair.Append(", AssistsTurnoverRatio");
             if (player.statistics.turnovers > 0)
             {
-                valuesSB.Append(", ").Append(Math.Round((double)player.statistics.assists / player.statistics.turnovers, 3));
+                valuesSB.Append(", ").Append((Math.Round((double)player.statistics.assists / player.statistics.turnovers, 3)).ToString(CultureInfo.InvariantCulture));
             }
             else
             {
@@ -3811,34 +4048,34 @@ order by g.GameID
             //Handle position (if exists)
             if (!string.IsNullOrEmpty(player.position))
             {
-                sqlBuilderParallel.Append(", Starter");
+                sqlBuilderParallelRepair.Append(", Starter");
                 valuesSB.Append(", 1");
-                sqlBuilderParallel.Append(", Position");
+                sqlBuilderParallelRepair.Append(", Position");
                 valuesSB.Append(", '").Append(player.position).Append("'");
             }
 
             //Handle status
-            sqlBuilderParallel.Append(", Status");
+            sqlBuilderParallelRepair.Append(", Status");
             valuesSB.Append(", '").Append(player.status).Append("'");
 
             //Handle status reason/description (if they exist)
             if (!string.IsNullOrEmpty(player.notPlayingReason))
             {
-                sqlBuilderParallel.Append(", StatusReason");
+                sqlBuilderParallelRepair.Append(", StatusReason");
                 valuesSB.Append(", '").Append(player.notPlayingReason.Replace("'", "''")).Append("'");
 
                 if (!string.IsNullOrEmpty(player.notPlayingDescription))
                 {
-                    sqlBuilderParallel.Append(", StatusDescription");
+                    sqlBuilderParallelRepair.Append(", StatusDescription");
                     valuesSB.Append(", '").Append(player.notPlayingDescription.Replace("'", "''")).Append("'");
                 }
             }
 
             //Add remaining columns
-            sqlBuilderParallel.Append(", MinutesCalculated, BlocksReceived, PointsFastBreak, PointsInThePaint, PointsSecondChance, FoulsOffensive, FoulsDrawn, FoulsTechnical")
+            sqlBuilderParallelRepair.Append(", MinutesCalculated, BlocksReceived, PointsFastBreak, PointsInThePaint, PointsSecondChance, FoulsOffensive, FoulsDrawn, FoulsTechnical")
                              .Append(") values(")
                              .Append(valuesSB.ToString())
-                             .Append(", ").Append(minCalc)
+                             .Append(", ").Append(minCalc.ToString(CultureInfo.InvariantCulture))
                              .Append(", ").Append(player.statistics.blocksReceived)
                              .Append(", ").Append(player.statistics.pointsFastBreak)
                              .Append(", ").Append(player.statistics.pointsInThePaint)
@@ -3853,7 +4090,7 @@ order by g.GameID
         public void RepairStartingLineupsOnly(NBAdbToolboxCurrent.Player player, int GameID, int TeamID, int MatchupID)
         {
             //Add the starting lineups insert
-            sqlBuilderParallel.Append("\ninsert into StartingLineups values(")
+            sqlBuilderParallelRepair.Append("\ninsert into StartingLineups values(")
                 .Append(SeasonID).Append(", ")
                 .Append(GameID).Append(", ")
                 .Append(TeamID).Append(", ")
@@ -3914,7 +4151,7 @@ order by g.GameID
             DateTime lastDate = DateTime.MinValue;
             string query = "";
             List<int> gameList = new List<int>();
-            query = "select distinct GameID from " + GetLowestTable(2024) + " where SeasonID = 2024 order by GameID";
+            query = $"select distinct GameID from {GetLowestTable(SeasonID)} where SeasonID = {SeasonID} order by GameID";
             using (SqlCommand lastDateQuery = new SqlCommand(query))
             {
                 lastDateQuery.Connection = connection;
@@ -3927,18 +4164,19 @@ order by g.GameID
                         //lastDate = sdr.GetDateTime(0);
                         gameList.Add(sdr.GetInt32(0));
                     }
-                    gameList.RemoveAt(gameList.Count - 1);
                 }
                 connection.Close();
             }
             scheduleGames = await leagueSchedule.GetJSONList(gameList);
 
             string values = " where GameID in(";
-            List<int> games = new List<int>();
+            List<int> gamesToDelete = new List<int>(gameList);
+            List<int> gamesToInsert = new List<int>();
             foreach (NBAdbToolboxSchedule.Game game in scheduleGames)
             {
                 values += Int32.Parse(game.GameId) + ", ";
-                games.Add(Int32.Parse(game.GameId));
+                gamesToDelete.Add(Int32.Parse(game.GameId));
+                gamesToInsert.Add(Int32.Parse(game.GameId));
                 TotalGames++;
             }
             stopwatchRead.Stop();
@@ -3948,11 +4186,11 @@ order by g.GameID
             InitializeDbLoad();
             PopulateDb_7_AfterCurrentDelete();
             stopwatchInsert.Restart();
-            for (int i = 0; i < games.Count; i++)
+            for (int i = 0; i < gamesToInsert.Count; i++)
             {
-                GameID = games[i];
+                GameID = gamesToInsert[i];
                 lblCurrentGameCount.Text = GameID.ToString();
-                await CurrentGameGPS(games[i], "Refresh");
+                await CurrentGameGPS(gamesToInsert[i], "Refresh");
                 await TeamBoxLineupCalculation(GameID);
                 string execute = LineupCalc.ToString();
                 LineupCalc.Clear();
@@ -4174,7 +4412,7 @@ order by g.GameID
             List<ComboBox> comboBoxes = GetAllControlsOfType<ComboBox>(this);
             List<Button> buttons = GetAllControlsOfType<Button>(this);
             List<ListBox> listBoxes = GetAllControlsOfType<ListBox>(this);
-
+            List<Panel> panels = GetAllControlsOfType<Panel>(this);
             //update labels
             foreach (Label lbl in labels)
             {
@@ -4411,23 +4649,25 @@ order by g.GameID
         {
             if (!File.Exists(configPath) || defaultConfig) //If our file doesnt exist
             {
+                configExists = false;
                 if (sender == "btnEdit")
                 {
-                    configName = "";
-                    string db = "";
-                    if (!string.IsNullOrWhiteSpace(config.Database))
-                    {
-                        db = " - " + config.Database;
-                    }
-                    if (!string.IsNullOrWhiteSpace(config.Alias))
-                    {
-                        configName = (config.Alias + db).TrimStart();
-                    }
-                    else
-                    {
-                        configName = (config.Server + db).TrimStart();
-                    }
-                    WriteConfig(sender);
+                    //configName = "";
+                    //string db = "";
+                    //if (!string.IsNullOrWhiteSpace(config.Database))
+                    //{
+                    //    db = " - " + config.Database;
+                    //}
+                    //if (!string.IsNullOrWhiteSpace(config.Alias))
+                    //{
+                    //    configName = (config.Alias + db).TrimStart();
+                    //}
+                    //else
+                    //{
+                    //    configName = (config.Server + db).TrimStart();
+                    //}
+                    //WriteConfig(sender);
+                    GetConfig(sender);
                 }
                 else
                 {
@@ -4436,6 +4676,7 @@ order by g.GameID
             }
             else if (File.Exists(configPath)) //If our file does exist
             {
+                configExists = true;
                 lblStatus.Text = "Welcome Back!";
                 lblStatus.Left = (pnlWelcome.ClientSize.Width - lblStatus.Width) / 2;
                 lblStatus.ForeColor = ThemeColor;
@@ -4443,6 +4684,17 @@ order by g.GameID
                 btnEdit.Width = (int)(lblStatus.Width / 1.5);
                 GetConfig(sender);
 
+            }
+
+
+            ClearImage(picStatus);
+            if (isConnected)
+            {
+                lblCStatus.Text = "Connected";
+                lblCStatus.ForeColor = SuccessColor;
+                //Load image
+                imagePath = Path.Combine(projectRoot, @"Content\Images", "Success.png");
+                picStatus.Image = Image.FromFile(imagePath);
                 //Set label text
                 if (!string.IsNullOrWhiteSpace(config.Alias))
                 {
@@ -4458,24 +4710,14 @@ order by g.GameID
                     lblServerName.Text = config.Server;
                 }
                 lblDbName.Text = config.Database;
-
-                ClearImage(picStatus);
-                if (isConnected)
-                {
-                    lblCStatus.Text = "Connected";
-                    lblCStatus.ForeColor = SuccessColor;
-                    //Load image
-                    imagePath = Path.Combine(projectRoot, @"Content\Images", "Success.png");
-                    picStatus.Image = Image.FromFile(imagePath);
-                }
-                else
-                {
-                    lblCStatus.Text = "Disconnected";
-                    lblCStatus.ForeColor = ErrorColor;
-                    //Load image
-                    imagePath = Path.Combine(projectRoot, @"Content\Images", "Error.png");
-                    picStatus.Image = Image.FromFile(imagePath);
-                }
+            }
+            else
+            {
+                lblCStatus.Text = "Disconnected";
+                lblCStatus.ForeColor = ErrorColor;
+                //Load image
+                imagePath = Path.Combine(projectRoot, @"Content\Images", "Error.png");
+                picStatus.Image = Image.FromFile(imagePath);
             }
 
         }
@@ -4496,6 +4738,98 @@ order by g.GameID
             UIController("NoConnection");
 
         }
+
+        public async void GetConfigV2(string sender)
+        {
+            if (sender == "Main")
+            {
+                json = "";
+                json = File.ReadAllText(configPath);
+                config = JsonConvert.DeserializeObject<DbConfig>(json);
+                configControl = JsonConvert.DeserializeObject<DbConfig>(json);
+
+                bob.DataSource = config.Server;
+
+                if (config.UseWindowsAuth == true)
+                {
+                    bob.IntegratedSecurity = true;
+                }
+                else
+                {
+                    bob.UserID = config.Username;
+                    bob.Password = config.Password;
+                    bob.IntegratedSecurity = false;
+                }
+                cString = bob.ToString();
+                if (config.Server != "" && ((config.Username != "" && config.Password != "") || config.UseWindowsAuth == true))
+                {
+                    isConnected = await TestConnectionString(cString, "isConnected");
+                }
+
+
+                if (isConnected && config.Create == false && !cString.Contains("Initial Catalog"))//If the connection string works for master and the config file says we dont need to create database, 
+                {
+                    bob.InitialCatalog = config.Database; //have the connection string use the database
+                    dbConnection = await TestConnectionString(bob.ToString(), "dbConnection");
+                }
+                else if (!isConnected && config.Create == false)//If the connection string didn't work on master and our config file says we have a db, double check the db only connection string to make sure.
+                {
+                    bob.InitialCatalog = config.Database; //same as above
+                    dbConnection = await TestConnectionString(bob.ToString(), "dbConnection");
+                }
+                else if (!isConnected && config.Create == true)//If we aren't connected and still need to create the database, throw error
+                {
+                    dbConnection = false;
+                }
+            }
+            else if(sender == "btnEdit")
+            {
+
+                isConnected = await TestConnectionString(cString, "isConnected");
+            }
+
+
+
+
+            configName = "";
+            string db = "";
+            if (!string.IsNullOrWhiteSpace(config.Database))
+            {
+                db = " - " + config.Database;
+            }
+            if (!string.IsNullOrWhiteSpace(config.Alias))
+            {
+                configName = (config.Alias + db).TrimStart();
+            }
+            else
+            {
+                configName = (config.Server + db).TrimStart();
+            }
+
+
+        }
+        public bool configExists = false;
+
+        public SqlConnectionStringBuilder BuildConnectionString()
+        {
+            SqlConnectionStringBuilder connection = new SqlConnectionStringBuilder();
+            connection.DataSource = config.Server;
+            if (config.UseWindowsAuth == true)
+            {
+                connection.IntegratedSecurity = true;
+            }
+            else
+            {
+                connection.UserID = config.Username;
+                connection.Password = config.Password;
+                connection.IntegratedSecurity = false;
+            }
+
+            return connection;
+        }
+
+
+
         public async void GetConfig(string sender) //Gets config file
         {
             if (sender == "Main")
@@ -4632,6 +4966,7 @@ order by g.GameID
                 }
                 else
                 {
+                    lblVersionStatus.Visible = false;
                     return false;
                 }
             }
@@ -4691,8 +5026,10 @@ order by g.GameID
                             {
                                 if (!PbpRowsReader.HasRows) //If there aren't any null records, we're on version 1.02!
                                 {
-                                    DatabaseToolboxVersion = "1.02";
-                                    lblVersionStatus.Text = "NBAdbToolbox Database v1.02";
+                                    //DatabaseToolboxVersion = "1.02";
+                                    //lblVersionStatus.Text = "NBAdbToolbox Database v1.02";
+                                    DatabaseToolboxVersion = "2.0";
+                                    lblVersionStatus.Text = "NBAdbToolbox Database v2.0";
                                     lblVersionStatus.ForeColor = SuccessColor;
                                 }
                                 else
@@ -4711,8 +5048,10 @@ order by g.GameID
                                             {
                                                 if (ProcReader.HasRows) //If there aren't any null records, we're on version 1.02!
                                                 {
-                                                    DatabaseToolboxVersion = "1.02";
-                                                    lblVersionStatus.Text = "NBAdbToolbox Database v1.02";
+                                                    //DatabaseToolboxVersion = "1.02";
+                                                    //lblVersionStatus.Text = "NBAdbToolbox Database v1.02";
+                                                    DatabaseToolboxVersion = "2.0";
+                                                    lblVersionStatus.Text = "NBAdbToolbox Database v2.0";
                                                 }
                                                 else
                                                 {
@@ -4841,7 +5180,8 @@ update Player set Name = 'Trey Jemison III' where PlayerID = 1641998;";
                 {
                     issueCaught += "\nPlayerNames procedure was already created.";
                 }
-                lblVersionStatus.Text = "NBAdbToolbox Database v1.02";
+                //lblVersionStatus.Text = "NBAdbToolbox Database v1.02";
+                lblVersionStatus.Text = "NBAdbToolbox Database v2.0";
             }
 
             lblVersionStatus.Text += "\n" + versionStatus;
@@ -4882,11 +5222,12 @@ update Player set Name = 'Trey Jemison III' where PlayerID = 1641998;";
             listSeasons.Items.Clear();
             seasonInfo.Clear();
             config.Create = true;
-            lblDbName.Text = "NBAdbDemo";
+            lblDbName.Text = config.Database;
             lblDbStat.Text = "Need to create Database";
             imagePathDb = Path.Combine(projectRoot, @"Content\Images", "Warning.png");
             ClearImage(picDbStatus);
             picDbStatus.Image = Image.FromFile(imagePathDb);
+            lblVersionStatus.Visible = false;
             UIController("DbMissing");
             DbOverviewVisibility(false, "DbMissing");
         }
@@ -4896,8 +5237,13 @@ update Player set Name = 'Trey Jemison III' where PlayerID = 1641998;";
             seasonInfo.Clear();
             lblStatus.Text = "Invalid Connection!";
             ButtonChangeState(btnBuild, false);
+            imagePathDb = Path.Combine(projectRoot, @"Content\Images", "Error.png");
+            ClearImage(picDbStatus);
+            picDbStatus.Image = Image.FromFile(imagePathDb);
             lblDbOvName.ForeColor = ErrorColor;
             lblDbName.Left = lblDB.Right - 10;
+            lblDbName.Text = string.IsNullOrEmpty(config.Database) ? "" : config.Database;
+            //lblDbStat.Text = "Need to create Database";
             UIController("BadConnection");
         }
         public void WriteConfig(string sender) //Writes Config File and Settings file
@@ -4987,6 +5333,7 @@ update Player set Name = 'Trey Jemison III' where PlayerID = 1641998;";
                 lblDbName.BackColor = Color.Transparent;
                 lblDbStat.ForeColor = ErrorColor;
                 lblDbStat.BackColor = Color.Transparent;
+                lblVersionStatus.Visible = false;
             }
             else if (sender == "GetConfig")
             {
@@ -4996,6 +5343,7 @@ update Player set Name = 'Trey Jemison III' where PlayerID = 1641998;";
                 imagePath = Path.Combine(projectRoot, @"Content\Images", iconFile);
                 ClearImage(picStatus);
                 picStatus.Image = Image.FromFile(imagePath);
+                picDbStatus.Left = lblDbName.Right;
             }
 
             else if (sender == "DbExists")
@@ -5004,7 +5352,7 @@ update Player set Name = 'Trey Jemison III' where PlayerID = 1641998;";
                 ButtonChangeState(btnBuild, false);
                 isBuildEnabled = false;
                 ButtonChangeState(btnPopulate, true);
-                ButtonChangeState(btnRefresh, false); //was true, changing to false for release. Change this for 2025 season!
+                ButtonChangeState(btnRefresh, true); //Now on!
                 ButtonChangeState(btnRepair, true);
                 lblDbOvName.Visible = true;
 
@@ -5015,6 +5363,7 @@ update Player set Name = 'Trey Jemison III' where PlayerID = 1641998;";
                 lblDbStat.BackColor = Color.Transparent;
                 picDbStatus.BackColor = Color.Transparent;
                 lblDbOvName.BackColor = Color.Transparent;
+                picDbStatus.Left = lblDbName.Right;
             }
             else if (sender == "DbMissing")
             {
@@ -5048,6 +5397,10 @@ update Player set Name = 'Trey Jemison III' where PlayerID = 1641998;";
                 ButtonChangeState(btnMovement, false);
                 lblDbOvName.Visible = false;
                 listSeasons.Items.Clear();
+                iconFile = isConnected ? "Success.png" : "Error.png";
+                imagePath = Path.Combine(projectRoot, @"Content\Images", iconFile);
+                ClearImage(picStatus);
+                picStatus.Image = Image.FromFile(imagePath);
 
                 lblDbName.ForeColor = ErrorColor;
                 lblDbName.BackColor = Color.Transparent;
@@ -5056,6 +5409,7 @@ update Player set Name = 'Trey Jemison III' where PlayerID = 1641998;";
                 lblDbStat.BackColor = Color.Transparent;
                 lblDbName.AutoSize = true;
                 picDbStatus.Left = lblDbName.Right;
+                lblVersionStatus.Visible = false;
             }
 
             //Do big Status label first
@@ -5287,7 +5641,7 @@ update Player set Name = 'Trey Jemison III' where PlayerID = 1641998;";
             imageIteration = 1;
             reverse = false;
             scheduleGames.Clear();
-            SeasonID = 2024;
+            SeasonID = 2025;
             completionMessage += SeasonID + ": ";
             ButtonChangeState(btnPopulate, true);
             ButtonChangeState(btnEdit, false);
@@ -5555,6 +5909,35 @@ update Player set Name = 'Trey Jemison III' where PlayerID = 1641998;";
         }
         public void PopulateDb_7_AfterCurrentDelete()
         {
+            List<(string, HashSet<(int, int)>)> lists = new List<(string, HashSet<(int, int)>)> 
+            {
+                ("Player", playerList), 
+                ("Team", teamList), 
+                ("Arena", arenaList), 
+                ("Official", officialList)
+            };
+            using (SqlConnection connection = new SqlConnection(bob.ToString()))
+            {
+                foreach((string, HashSet<(int, int)>) tableList in lists)
+                {
+                    string q = $"select distinct {tableList.Item1}ID from {tableList.Item1} where SeasonID = {SeasonID}";
+                    using (SqlCommand cmd = new SqlCommand(q))
+                    {
+                        cmd.Connection = connection;
+                        cmd.CommandType = CommandType.Text;
+                        connection.Open();
+                        using (SqlDataReader sdr = cmd.ExecuteReader())
+                        {
+                            while (sdr.Read())
+                            {
+                                tableList.Item2.Add((2025, sdr.GetInt32(0)));
+                            }
+                        }
+                        connection.Close();
+                    }
+                }
+
+            }
             lblStatus.Text = "Loading " + SeasonID + "...";
             CenterElement(pnlWelcome, lblStatus);
             ChangeLabel(ThemeColor, lblSeasonStatusLoad, pnlLoad, new List<string> {
@@ -5695,7 +6078,7 @@ update Player set Name = 'Trey Jemison III' where PlayerID = 1641998;";
             completionMessage += elapsedStringSeason + ". ";
             if (source == "Current Refresh")
             {
-                completionMessage += iterator + " games.";
+                completionMessage += iterator + " games." + "\n";
             }
             else
             {
@@ -7232,6 +7615,7 @@ order by HasVideo desc, ShotDistance desc";
             btnGetSchedule.AutoSize = true;
 
             ArrangeOverviewControls();
+
         }
 
         public void ArrangeOverviewControls()
@@ -7278,7 +7662,7 @@ order by HasVideo desc, ShotDistance desc";
             btnMovement.Left = btnRefresh.Left;
 
 
-            lblMovementLoadStatus.Top = btnMovement.Bottom + spacer;
+            lblMovementLoadStatus.Top = btnMovement.Bottom + (int)(btnMovement.Height * .2) + spacer;
             lblMovementLoadProgress.Top = lblMovementLoadStatus.Bottom;
 
             lblGetSchedule.Left = lblRepair.Left;
@@ -7289,6 +7673,12 @@ order by HasVideo desc, ShotDistance desc";
             lblScheduleDet.Left = lblGetSchedule.Left + ((lblGetSchedule.Width - lblScheduleDet.Width) / 2);
             btnGetSchedule.Top = lblScheduleDet.Bottom;
             btnGetSchedule.Left = btnRepair.Left;
+
+
+            lblScheduleHeader.Top = lblMovementLoadStatus.Top;
+            lblScheduleLoadDetail.Top = lblMovementLoadProgress.Top;
+            lblSchedule24Header.Top = lblScheduleLoadDetail.Bottom;
+            lblSchedule24Detail.Top = lblSchedule24Header.Bottom;
 
         }
         public void InitializeElements()
@@ -8097,7 +8487,7 @@ order by HasVideo desc, ShotDistance desc";
             int heightMod = 0;
 
             //check which years have data
-            for (int year = 2024; year >= 1996; year--)
+            for (int year = 2025; year >= 1996; year--)
             {
                 if (seasonInfo.Any(s => s.SeasonID == year && (s.Item2.PbpRows > 0 || s.Item2.TBoxRows > 0 || s.Item2.PBoxRows > 0)))
                 {
@@ -8702,6 +9092,8 @@ order by HasVideo desc, ShotDistance desc";
                 missingSeasons.Clear();
                 string historicDataPath = Path.Combine(projectRoot, @"Content\Historic Data\");
                 int k = 0;
+                listSeasons.Items.Add(2025);
+                downloadedSeasons.Add("2025");
                 for (int i = 2024; i >= 1996; i--)
                 {
                     string seasonID = i.ToString();
@@ -9174,20 +9566,24 @@ order by HasVideo desc, ShotDistance desc";
         //5.7 Populate DB Update
         public void HistoricGameInsert(NBAdbToolboxHistoric.Game game, string sender, List<int> officials)
         {
-            SqlDateTime datetime = SqlDateTime.Parse(game.box.gameTimeUTC);
-            SqlDateTime gameDate = SqlDateTime.Parse(game.box.gameEt.Remove(game.box.gameEt.IndexOf('T')));
+            //SqlDateTime datetime = new SqlDateTime(DateTime.Parse(game.box.gameEt, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind));
+            DateTime datetime = DateTime.Parse(game.box.gameEt, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind);
+            string dtString = datetime.ToString("yyyy-MM-dd HH:mm:ss");
+            dtString = dtString.Substring(0, 13) + ":" + dtString.Substring(14);
+            string test = game.box.gameEt;
+            DateTime gameDate = DateTime.Parse(game.box.gameEt.Remove(game.box.gameEt.IndexOf('T')));
 
             //Build the Game table insert
             sqlBuilder.Append("Insert into Game(SeasonID, GameID, Date, HomeID, HScore, AwayID, AScore, Datetime, ")
                       .Append("WinnerID, WScore, LoserID, Lscore, GameType, SeriesID) values(")
                       .Append(SeasonID).Append(", ")
                       .Append(GameID).Append(", '")
-                      .Append(gameDate).Append("', ")
+                      .Append(gameDate.ToString("yyyy-MM-dd")).Append("', ")
                       .Append(game.box.homeTeamId).Append(", ")
                       .Append(game.box.homeTeam.score).Append(", ")
                       .Append(game.box.awayTeamId).Append(", ")
                       .Append(game.box.awayTeam.score).Append(", '")
-                      .Append(datetime).Append("', ");
+                      .Append(dtString).Append("', ");
 
             //Winner/loser logic
             if (game.box.homeTeam.score > game.box.awayTeam.score)
@@ -9473,15 +9869,15 @@ order by HasVideo desc, ShotDistance desc";
                     .Append(player.personId).Append(", ")
                     .Append(player.statistics.fieldGoalsMade).Append(", ")
                     .Append(player.statistics.fieldGoalsAttempted).Append(", ")
-                    .Append(player.statistics.fieldGoalsPercentage).Append(", ")
+                    .Append(player.statistics.fieldGoalsPercentage.ToString(CultureInfo.InvariantCulture)).Append(", ")
                     .Append(player.statistics.fieldGoalsMade - player.statistics.threePointersMade).Append(", ")
                     .Append(player.statistics.fieldGoalsAttempted - player.statistics.threePointersAttempted).Append(", ")
                     .Append(player.statistics.threePointersMade).Append(", ")
                     .Append(player.statistics.threePointersAttempted).Append(", ")
-                    .Append(player.statistics.threePointersPercentage).Append(", ")
+                    .Append(player.statistics.threePointersPercentage.ToString(CultureInfo.InvariantCulture)).Append(", ")
                     .Append(player.statistics.freeThrowsMade).Append(", ")
                     .Append(player.statistics.freeThrowsAttempted).Append(", ")
-                    .Append(player.statistics.freeThrowsPercentage).Append(", ")
+                    .Append(player.statistics.freeThrowsPercentage.ToString(CultureInfo.InvariantCulture)).Append(", ")
                     .Append(player.statistics.reboundsDefensive).Append(", ")
                     .Append(player.statistics.reboundsOffensive).Append(", ")
                     .Append(player.statistics.reboundsTotal).Append(", ")
@@ -9514,7 +9910,7 @@ order by HasVideo desc, ShotDistance desc";
                 }
 
                 sqlBuilder.Append(", Minutes, MinutesCalculated");
-                valuesSB.Append(", '").Append(minLog).Append("', ").Append(minCalc);
+                valuesSB.Append(", '").Append(minLog).Append("', ").Append(minCalc.ToString(CultureInfo.InvariantCulture));
 
                 if (player.statistics.plusMinusPoints != 0)
                 {
@@ -9562,8 +9958,8 @@ order by HasVideo desc, ShotDistance desc";
             if ((double)(player.statistics.fieldGoalsAttempted - player.statistics.threePointersAttempted) != 0)
             {
                 valuesSB.Append(", ")
-                        .Append(Math.Round((double)(player.statistics.fieldGoalsMade - player.statistics.threePointersMade) /
-                                 (double)(player.statistics.fieldGoalsAttempted - player.statistics.threePointersAttempted), 4));
+                        .Append((Math.Round((double)(player.statistics.fieldGoalsMade - player.statistics.threePointersMade) /
+                                 (double)(player.statistics.fieldGoalsAttempted - player.statistics.threePointersAttempted), 4)).ToString(CultureInfo.InvariantCulture));
             }
             else
             {
@@ -9574,7 +9970,7 @@ order by HasVideo desc, ShotDistance desc";
             if (player.statistics.turnovers > 0)
             {
                 valuesSB.Append(", ")
-                        .Append(Math.Round((double)(player.statistics.assists) / (double)(player.statistics.turnovers), 3));
+                        .Append((Math.Round((double)(player.statistics.assists) / (double)(player.statistics.turnovers), 3)).ToString(CultureInfo.InvariantCulture));
             }
             else
             {
@@ -9648,15 +10044,15 @@ order by HasVideo desc, ShotDistance desc";
                       .Append(MatchupID).Append(", ")
                       .Append(team.statistics.fieldGoalsMade).Append(", ")
                       .Append(team.statistics.fieldGoalsAttempted).Append(", ")
-                      .Append(team.statistics.fieldGoalsPercentage).Append(", ")
+                      .Append(team.statistics.fieldGoalsPercentage.ToString(CultureInfo.InvariantCulture)).Append(", ")
                       .Append(team.statistics.fieldGoalsMade - team.statistics.threePointersMade).Append(", ")
                       .Append(team.statistics.fieldGoalsAttempted - team.statistics.threePointersAttempted).Append(", ")
                       .Append(team.statistics.threePointersMade).Append(", ")
                       .Append(team.statistics.threePointersAttempted).Append(", ")
-                      .Append(team.statistics.threePointersPercentage).Append(", ")
+                      .Append(team.statistics.threePointersPercentage.ToString(CultureInfo.InvariantCulture)).Append(", ")
                       .Append(team.statistics.freeThrowsMade).Append(", ")
                       .Append(team.statistics.freeThrowsAttempted).Append(", ")
-                      .Append(team.statistics.freeThrowsPercentage).Append(", ")
+                      .Append(team.statistics.freeThrowsPercentage.ToString(CultureInfo.InvariantCulture)).Append(", ")
                       .Append(team.statistics.reboundsDefensive).Append(", ")
                       .Append(team.statistics.reboundsOffensive).Append(", ")
                       .Append(team.statistics.reboundsTotal).Append(", ")
@@ -9688,8 +10084,8 @@ order by HasVideo desc, ShotDistance desc";
             //FG2 percentage calculation
             if ((double)(team.statistics.fieldGoalsAttempted - team.statistics.threePointersAttempted) != 0)
             {
-                sqlBuilder.Append(Math.Round((double)(team.statistics.fieldGoalsMade - team.statistics.threePointersMade) /
-                    (double)(team.statistics.fieldGoalsAttempted - team.statistics.threePointersAttempted), 4)).Append(", ");
+                sqlBuilder.Append((Math.Round((double)(team.statistics.fieldGoalsMade - team.statistics.threePointersMade) /
+                    (double)(team.statistics.fieldGoalsAttempted - team.statistics.threePointersAttempted), 4)).ToString(CultureInfo.InvariantCulture)).Append(", ");
             }
             else
             {
@@ -9699,7 +10095,7 @@ order by HasVideo desc, ShotDistance desc";
             //Assists/turnover ratio calculation
             if (team.statistics.turnovers > 0)
             {
-                sqlBuilder.Append(Math.Round((double)(team.statistics.assists) / (double)(team.statistics.turnovers), 3)).Append(")\n");
+                sqlBuilder.Append((Math.Round((double)(team.statistics.assists) / (double)(team.statistics.turnovers), 3)).ToString(CultureInfo.InvariantCulture)).Append(")\n");
             }
             else
             {
@@ -9725,15 +10121,15 @@ order by HasVideo desc, ShotDistance desc";
                       .Append(lineup.unit.Substring(0, 1).ToUpper()).Append(lineup.unit.Substring(1)).Append("', ")
                       .Append(lineup.fieldGoalsMade).Append(", ")
                       .Append(lineup.fieldGoalsAttempted).Append(", ")
-                      .Append(lineup.fieldGoalsPercentage).Append(", ")
+                      .Append(lineup.fieldGoalsPercentage.ToString(CultureInfo.InvariantCulture)).Append(", ")
                       .Append(lineup.fieldGoalsMade - lineup.threePointersMade).Append(", ")
                       .Append(lineup.fieldGoalsAttempted - lineup.threePointersAttempted).Append(", ")
                       .Append(lineup.threePointersMade).Append(", ")
                       .Append(lineup.threePointersAttempted).Append(", ")
-                      .Append(lineup.threePointersPercentage).Append(", ")
+                      .Append(lineup.threePointersPercentage.ToString(CultureInfo.InvariantCulture)).Append(", ")
                       .Append(lineup.freeThrowsMade).Append(", ")
                       .Append(lineup.freeThrowsAttempted).Append(", ")
-                      .Append(lineup.freeThrowsPercentage).Append(", ")
+                      .Append(lineup.freeThrowsPercentage.ToString(CultureInfo.InvariantCulture)).Append(", ")
                       .Append(lineup.reboundsDefensive).Append(", ")
                       .Append(lineup.reboundsOffensive).Append(", ")
                       .Append(lineup.reboundsTotal).Append(", ")
@@ -9778,8 +10174,8 @@ order by HasVideo desc, ShotDistance desc";
             //FG2 percentage calculation
             if ((double)(lineup.fieldGoalsAttempted - lineup.threePointersAttempted) != 0)
             {
-                sqlBuilder.Append(Math.Round((double)(lineup.fieldGoalsMade - lineup.threePointersMade) /
-                    (double)(lineup.fieldGoalsAttempted - lineup.threePointersAttempted), 4)).Append(", ");
+                sqlBuilder.Append((Math.Round((double)(lineup.fieldGoalsMade - lineup.threePointersMade) /
+                    (double)(lineup.fieldGoalsAttempted - lineup.threePointersAttempted), 4)).ToString(CultureInfo.InvariantCulture)).Append(", ");
             }
             else
             {
@@ -9789,7 +10185,7 @@ order by HasVideo desc, ShotDistance desc";
             //Assists/turnover ratio calculation
             if (lineup.turnovers > 0)
             {
-                sqlBuilder.Append(Math.Round((double)(lineup.assists) / (double)(lineup.turnovers), 3)).Append(")\n");
+                sqlBuilder.Append((Math.Round((double)(lineup.assists) / (double)(lineup.turnovers), 3)).ToString(CultureInfo.InvariantCulture)).Append(")\n");
             }
             else
             {
@@ -10182,7 +10578,7 @@ order by HasVideo desc, ShotDistance desc";
                 teamList.Add((SeasonID, game.homeTeam.teamId));
                 CurrentTeam(game.homeTeam);
 
-                if (teamList.Count == 30)
+                if (teamList.Count == 40)
                 {
                     teamsDone = true;
                 }
@@ -10193,7 +10589,7 @@ order by HasVideo desc, ShotDistance desc";
                 teamList.Add((SeasonID, game.awayTeam.teamId));
                 CurrentTeam(game.awayTeam);
 
-                if (teamList.Count == 30)
+                if (teamList.Count == 40)
                 {
                     teamsDone = true;
                 }
@@ -10227,7 +10623,7 @@ order by HasVideo desc, ShotDistance desc";
             .Append(team.teamId).Append(", ")
             .Append(MatchupID).Append(", ")
             .Append(team.statistics.assists).Append(", ")
-            .Append(team.statistics.assistsTurnoverRatio).Append(", ")
+            .Append(team.statistics.assistsTurnoverRatio.ToString(CultureInfo.InvariantCulture)).Append(", ")
             .Append(team.statistics.benchPoints).Append(", ")
             .Append(team.statistics.biggestLead).Append(", '")
             .Append(team.statistics.biggestLeadScore).Append("', ")
@@ -10237,11 +10633,11 @@ order by HasVideo desc, ShotDistance desc";
             .Append(team.statistics.blocksReceived).Append(", ")
             .Append(team.statistics.fastBreakPointsAttempted).Append(", ")
             .Append(team.statistics.fastBreakPointsMade).Append(", ")
-            .Append(team.statistics.fastBreakPointsPercentage).Append(", ")
+            .Append(team.statistics.fastBreakPointsPercentage.ToString(CultureInfo.InvariantCulture)).Append(", ")
             .Append(team.statistics.fieldGoalsAttempted).Append(", ")
-            .Append(team.statistics.fieldGoalsEffectiveAdjusted).Append(", ")
+            .Append(team.statistics.fieldGoalsEffectiveAdjusted.ToString(CultureInfo.InvariantCulture)).Append(", ")
             .Append(team.statistics.fieldGoalsMade).Append(", ")
-            .Append(team.statistics.fieldGoalsPercentage).Append(", ")
+            .Append(team.statistics.fieldGoalsPercentage.ToString(CultureInfo.InvariantCulture)).Append(", ")
             .Append(team.statistics.foulsOffensive).Append(", ")
             .Append(team.statistics.foulsDrawn).Append(", ")
             .Append(team.statistics.foulsPersonal).Append(", ")
@@ -10250,7 +10646,7 @@ order by HasVideo desc, ShotDistance desc";
             .Append(team.statistics.foulsTeamTechnical).Append(", ")
             .Append(team.statistics.freeThrowsAttempted).Append(", ")
             .Append(team.statistics.freeThrowsMade).Append(", ")
-            .Append(team.statistics.freeThrowsPercentage).Append(", ")
+            .Append(team.statistics.freeThrowsPercentage.ToString(CultureInfo.InvariantCulture)).Append(", ")
             .Append(team.statistics.leadChanges).Append(", ")
             .Append(team.statistics.points).Append(", ")
             .Append(team.statistics.pointsAgainst).Append(", ")
@@ -10259,7 +10655,7 @@ order by HasVideo desc, ShotDistance desc";
             .Append(team.statistics.pointsInThePaint).Append(", ")
             .Append(team.statistics.pointsInThePaintAttempted).Append(", ")
             .Append(team.statistics.pointsInThePaintMade).Append(", ")
-            .Append(team.statistics.pointsInThePaintPercentage).Append(", ")
+            .Append(team.statistics.pointsInThePaintPercentage.ToString(CultureInfo.InvariantCulture)).Append(", ")
             .Append(team.statistics.pointsSecondChance).Append(", ")
             .Append(team.statistics.reboundsDefensive).Append(", ")
             .Append(team.statistics.reboundsOffensive).Append(", ")
@@ -10270,21 +10666,21 @@ order by HasVideo desc, ShotDistance desc";
             .Append(team.statistics.reboundsTotal).Append(", ")
             .Append(team.statistics.secondChancePointsAttempted).Append(", ")
             .Append(team.statistics.secondChancePointsMade).Append(", ")
-            .Append(team.statistics.secondChancePointsPercentage).Append(", ")
+            .Append(team.statistics.secondChancePointsPercentage.ToString(CultureInfo.InvariantCulture)).Append(", ")
             .Append(team.statistics.steals).Append(", ")
             .Append(team.statistics.threePointersAttempted).Append(", ")
             .Append(team.statistics.threePointersMade).Append(", ")
-            .Append(team.statistics.threePointersPercentage).Append(", '")
+            .Append(team.statistics.threePointersPercentage.ToString(CultureInfo.InvariantCulture)).Append(", '")
             .Append(team.statistics.timeLeading).Append("', ")
             .Append(team.statistics.timesTied).Append(", ")
-            .Append(team.statistics.trueShootingAttempts).Append(", ")
-            .Append(team.statistics.trueShootingPercentage).Append(", ")
+            .Append(team.statistics.trueShootingAttempts.ToString(CultureInfo.InvariantCulture)).Append(", ")
+            .Append(team.statistics.trueShootingPercentage.ToString(CultureInfo.InvariantCulture)).Append(", ")
             .Append(team.statistics.turnovers).Append(", ")
             .Append(team.statistics.turnoversTeam).Append(", ")
             .Append(team.statistics.turnoversTotal).Append(", ")
             .Append(team.statistics.twoPointersAttempted).Append(", ")
             .Append(team.statistics.twoPointersMade).Append(", ")
-            .Append(team.statistics.twoPointersPercentage).Append(", ")
+            .Append(team.statistics.twoPointersPercentage.ToString(CultureInfo.InvariantCulture)).Append(", ")
             .Append(wins).Append(", ")
             .Append(losses).Append(", ");
 
@@ -10334,16 +10730,16 @@ order by HasVideo desc, ShotDistance desc";
                     .Append(player.personId).Append(", ")
                     .Append(player.statistics.fieldGoalsMade).Append(", ")
                     .Append(player.statistics.fieldGoalsAttempted).Append(", ")
-                    .Append(player.statistics.fieldGoalsPercentage).Append(", ")
+                    .Append(player.statistics.fieldGoalsPercentage.ToString(CultureInfo.InvariantCulture)).Append(", ")
                     .Append(player.statistics.twoPointersMade).Append(", ")
                     .Append(player.statistics.twoPointersAttempted).Append(", ")
-                    .Append(player.statistics.twoPointersPercentage).Append(", ")
+                    .Append(player.statistics.twoPointersPercentage.ToString(CultureInfo.InvariantCulture)).Append(", ")
                     .Append(player.statistics.threePointersMade).Append(", ")
                     .Append(player.statistics.threePointersAttempted).Append(", ")
-                    .Append(player.statistics.threePointersPercentage).Append(", ")
+                    .Append(player.statistics.threePointersPercentage.ToString(CultureInfo.InvariantCulture)).Append(", ")
                     .Append(player.statistics.freeThrowsMade).Append(", ")
                     .Append(player.statistics.freeThrowsAttempted).Append(", ")
-                    .Append(player.statistics.freeThrowsPercentage).Append(", ")
+                    .Append(player.statistics.freeThrowsPercentage.ToString(CultureInfo.InvariantCulture)).Append(", ")
                     .Append(player.statistics.reboundsDefensive).Append(", ")
                     .Append(player.statistics.reboundsOffensive).Append(", ")
                     .Append(player.statistics.reboundsTotal).Append(", ")
@@ -10381,6 +10777,11 @@ order by HasVideo desc, ShotDistance desc";
                             minCalc = Math.Round(mins2 + (secs2 / 60.0), 2);
                         }
                     }
+                    string[] timePart2s = minString.Split(':');
+                    if (timePart2s.Length == 2 && int.TryParse(timePart2s[0], out int mins3) && int.TryParse(timePart2s[1].Substring(0, 2), out int secs3))
+                    {
+                        minCalc = Math.Round(mins3 + (secs3 / 60.0), 2);
+                    }
                     if (!minString.Contains("."))
                     {
                         minString = minString + ".00";
@@ -10411,7 +10812,7 @@ order by HasVideo desc, ShotDistance desc";
             sqlBuilderParallel.Append(", AssistsTurnoverRatio");
             if (player.statistics.turnovers > 0)
             {
-                valuesSB.Append(", ").Append(Math.Round((double)player.statistics.assists / player.statistics.turnovers, 3));
+                valuesSB.Append(", ").Append((Math.Round((double)player.statistics.assists / player.statistics.turnovers, 3)).ToString(CultureInfo.InvariantCulture));
             }
             else
             {
@@ -10448,7 +10849,7 @@ order by HasVideo desc, ShotDistance desc";
             sqlBuilderParallel.Append(", MinutesCalculated, BlocksReceived, PointsFastBreak, PointsInThePaint, PointsSecondChance, FoulsOffensive, FoulsDrawn, FoulsTechnical")
                              .Append(") values(")
                              .Append(valuesSB.ToString())
-                             .Append(", ").Append(minCalc)
+                             .Append(", ").Append(minCalc.ToString(CultureInfo.InvariantCulture))
                              .Append(", ").Append(player.statistics.blocksReceived)
                              .Append(", ").Append(player.statistics.pointsFastBreak)
                              .Append(", ").Append(player.statistics.pointsInThePaint)
@@ -10560,19 +10961,22 @@ order by HasVideo desc, ShotDistance desc";
             StringBuilder gameInsertSB = new StringBuilder();
 
             //Parse the datetime values
-            SqlDateTime datetime = SqlDateTime.Parse(game.gameTimeUTC);
-            SqlDateTime gameDate = SqlDateTime.Parse(game.gameEt.Remove(game.gameEt.IndexOf('T')));
+            DateTime datetime = DateTime.Parse(game.gameEt, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind);
+            DateTime gameDate = DateTime.Parse(game.gameEt.Remove(game.gameEt.IndexOf('T')));
+
+            string dtString = datetime.ToString("yyyy-MM-dd HH:mm:ss");
+            dtString = dtString.Substring(0, 13) + ":" + dtString.Substring(14);
 
             //Build the Game insert statement
             gameInsertSB.Append("Insert into Game(SeasonID, GameID, Date, HomeID, HScore, AwayID, AScore, Datetime, WinnerID, WScore, LoserID, Lscore, GameType, SeriesID) values(")
                         .Append(SeasonID).Append(", ")
                         .Append(GameID).Append(", '")
-                        .Append(gameDate).Append("', ")
+                        .Append(gameDate.ToString("yyyy-MM-dd")).Append("', ")
                         .Append(game.homeTeam.teamId).Append(", ")
                         .Append(game.homeTeam.score).Append(", ")
                         .Append(game.awayTeam.teamId).Append(", ")
                         .Append(game.awayTeam.score).Append(", '")
-                        .Append(datetime).Append("', ");
+                        .Append(dtString).Append("', ");
 
             //Determine winner/loser
             if (game.homeTeam.score > game.awayTeam.score)
@@ -10628,19 +11032,22 @@ order by HasVideo desc, ShotDistance desc";
             StringBuilder gameExtSB = new StringBuilder();
 
             //Parse the datetime values
-            SqlDateTime datetime = SqlDateTime.Parse(game.gameTimeUTC);
-            SqlDateTime gameDate = SqlDateTime.Parse(game.gameEt.Remove(game.gameEt.IndexOf('T')));
+            DateTime datetime = DateTime.Parse(game.gameEt, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind);
+            DateTime gameDate = DateTime.Parse(game.gameEt.Remove(game.gameEt.IndexOf('T')));
+
+            string dtString = datetime.ToString("yyyy-MM-dd HH:mm:ss");
+            dtString = dtString.Substring(0, 13) + ":" + dtString.Substring(14);
 
             //Build the Game insert statement
             gameInsertSB.Append("Insert into Game(SeasonID, GameID, Date, HomeID, HScore, AwayID, AScore, Datetime, WinnerID, WScore, LoserID, Lscore, GameType, SeriesID) values(")
                         .Append(SeasonID).Append(", ")
                         .Append(GameID).Append(", '")
-                        .Append(gameDate).Append("', ")
+                        .Append(gameDate.ToString("yyyy-MM-dd")).Append("', ")
                         .Append(game.homeTeam.teamId).Append(", ")
                         .Append(game.homeTeam.score).Append(", ")
                         .Append(game.awayTeam.teamId).Append(", ")
                         .Append(game.awayTeam.score).Append(", '")
-                        .Append(datetime).Append("', ");
+                        .Append(dtString).Append("', ");
 
             //Determine winner/loser
             if (game.homeTeam.score > game.awayTeam.score)
@@ -10664,6 +11071,10 @@ order by HasVideo desc, ShotDistance desc";
             if (gType == "2")
             {
                 gameInsertSB.Append("'RS', null)");
+            }
+            else if (gType == "1") //Preseason
+            {
+                gameInsertSB.Append("'PRE', null)");
             }
             else if (gType == "4")
             {
@@ -10883,6 +11294,10 @@ order by HasVideo desc, ShotDistance desc";
             //Start building column names
             playByPlayBuilder.Append("insert into PlayByPlay(SeasonID, GameID, ActionID, ActionNumber, Qtr, QtrType, Clock, TimeActual, ScoreHome, ScoreAway, ActionType");
 
+
+            DateTime datetime = DateTime.Parse(action.timeActual, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind);
+            string dtString = datetime.ToString("yyyy-MM-dd HH:mm:ss");
+            dtString = dtString.Substring(0, 13) + ":" + dtString.Substring(14);
             //Start building values part
             StringBuilder valuesSB = new StringBuilder();
             valuesSB.Append(") values(")
@@ -10893,7 +11308,7 @@ order by HasVideo desc, ShotDistance desc";
                     .Append(action.period).Append(", '")
                     .Append(action.periodType).Append("', replace(replace(replace('")
                     .Append(action.clock).Append("', 'PT', ''), 'M', ':'), 'S', ''), '")
-                    .Append(SqlDateTime.Parse(action.timeActual)).Append("', ")
+                    .Append(dtString).Append("', ")
                     .Append(action.scoreHome).Append(", ")
                     .Append(action.scoreAway).Append(", '")
                     .Append(action.actionType).Append("'");
@@ -10938,13 +11353,13 @@ order by HasVideo desc, ShotDistance desc";
             if (action.x != null)
             {
                 playByPlayBuilder.Append(", X");
-                valuesSB.Append(", ").Append(action.x);
+                valuesSB.Append(", ").Append(action.x?.ToString(CultureInfo.InvariantCulture));
             }
 
             if (action.y != null)
             {
                 playByPlayBuilder.Append(", Y");
-                valuesSB.Append(", ").Append(action.y);
+                valuesSB.Append(", ").Append(action.y?.ToString(CultureInfo.InvariantCulture));
             }
 
             if (action.xLegacy != null)
@@ -10980,7 +11395,7 @@ order by HasVideo desc, ShotDistance desc";
                 playByPlayBuilder.Append(", ShotResult, ShotValue, ShotDistance");
                 valuesSB.Append(", '").Append(action.shotResult).Append("', ")
                         .Append(action.actionType.Substring(0, 1)).Append(", ")
-                        .Append(action.shotDistance);
+                        .Append(action.shotDistance.ToString(CultureInfo.InvariantCulture));
             }
             else if (SeasonID == 2019 && !string.IsNullOrWhiteSpace(action.shotResult) && action.actionType != "freethrow")
             {
@@ -11003,7 +11418,7 @@ order by HasVideo desc, ShotDistance desc";
                 playByPlayBuilder.Append(", ShotResult, ShotValue, ShotDistance");
                 valuesSB.Append(", '").Append(result).Append("', ")
                         .Append(action.actionType.Substring(0, 1)).Append(", ")
-                        .Append(action.shotDistance);
+                        .Append(action.shotDistance.ToString(CultureInfo.InvariantCulture));
 
             }
             else if (action.actionType == "freethrow")

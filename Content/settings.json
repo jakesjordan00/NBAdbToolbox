@@ -1,7 +1,7 @@
 {
   "ConfigPath": "C:\\Users\\derfj\\Desktop\\NBAdbToolbox\\Content\\Configuration",
-  "DefaultConfig": "Home - JJsNBA.json",
+  "DefaultConfig": "localhost - JJsnba.json",
   "BackgroundImage": "Court Dark",
   "WindowSize": "Default",
-  "Sound": "Muted"
+  "Sound": "Default"
 }

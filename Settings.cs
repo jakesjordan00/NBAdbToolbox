@@ -8,10 +8,10 @@ namespace NBAdbToolbox
 {
     class Settings
     {
-        public string ConfigPath { get; set; }
-        public string DefaultConfig { get; set; }
-        public string BackgroundImage { get; set; }
-        public string WindowSize { get; set; }
-        public string Sound { get; set; }
+        public string? ConfigPath { get; set; }
+        public string? DefaultConfig { get; set; }
+        public string? BackgroundImage { get; set; }
+        public string? WindowSize { get; set; }
+        public string? Sound { get; set; }
     }
 }

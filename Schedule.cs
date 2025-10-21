@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace NBAdbToolboxSchedule
 {
@@ -37,16 +38,43 @@ namespace NBAdbToolboxSchedule
             {
                 foreach(Game game in date.Games)
                 {
+                    bool gameType = game.GameId.Substring(2, 1) != "3" ? true : false;
+                    bool gameInList = gameList.Contains(Int32.Parse(game.GameId)) ? true : false;
+                    bool gameIsTodayOrYesterday = game.GameDateTimeEst >= DateTime.Today.AddDays(-1) ? true : false;
+                    bool gameStarted = game.GameDateTimeEst <= DateTime.Now ? true : false;
                     //if(game.GameDateTimeEst.Date >= lastDate.Date && game.GameDateTimeEst <= DateTime.Now)
                     //{
                     //    GameList.Add(game);
                     //}
                     int gameId = int.Parse(game.GameId);
-                    if (!gameList.Contains(Int32.Parse(game.GameId)) && game.GameId.Substring(2, 1) != "1" && game.GameId.Substring(2, 1) != "3" && game.GameDateTimeEst <= DateTime.Now)
+                    //if (game.GameId.Substring(2, 1) != "3" &&
+                    //    (!gameList.Contains(Int32.Parse(game.GameId)) ||
+                    //    //&& game.GameId.Substring(2, 1) != "1" 
+                    //    (game.GameDateTimeEst >= DateTime.Today.AddDays(-1) && game.GameDateTimeEst <= DateTime.Now)))
+                    //{
+                    //    GameList.Add(game);
+                    //}
+
+                    if (gameType && (!gameInList & gameIsTodayOrYesterday && gameStarted) || (gameInList && gameIsTodayOrYesterday && gameStarted))
                     {
+                        if (!gameInList & gameIsTodayOrYesterday && gameStarted)
+                        {
+                            DateTime t = DateTime.Now;
+                            DateTime game2 = game.GameDateTimeEst;
+
+                        }
+                        else if(gameInList && gameIsTodayOrYesterday && gameStarted)
+                        {
+                            DateTime t = DateTime.Now;
+                            DateTime game2 = game.GameDateTimeEst;
+                        }
                         GameList.Add(game);
                     }
                     GameList = GameList.OrderBy(g => Int32.Parse(g.GameId)).ToList();
+                }
+                if (DateTime.Parse(date.GameDate) > DateTime.Today)
+                {
+                    break;
                 }
             }
             return GameList;
@@ -76,7 +104,6 @@ namespace NBAdbToolboxSchedule
                 }
 
             }
-
             return Schedule;
         }
         public async Task<string> GetJSON(int SeasonID)
