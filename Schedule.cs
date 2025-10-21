@@ -34,6 +34,21 @@ namespace NBAdbToolboxSchedule
                 }
 
             }
+            int targetIndex = -1;
+            DateTime targetGameDate = DateTime.Today.AddDays(-1);
+            for (int i = 0; i < Schedule.LeagueSchedule.GameDates.Count; i++)
+            {
+                DateTime gameDate = Schedule.LeagueSchedule.GameDates[i].Games[0].GameDateTimeEst;
+                if (gameDate < DateTime.Now)
+                {
+                    targetIndex = i;
+                }
+                else
+                {
+                    targetGameDate = Schedule.LeagueSchedule.GameDates[i - 1].Games[0].GameDateEst;
+                    break;
+                }
+            }
             foreach (GameDates date in Schedule.LeagueSchedule.GameDates)
             {
                 foreach(Game game in date.Games)
@@ -41,42 +56,33 @@ namespace NBAdbToolboxSchedule
                     bool gameType = game.GameId.Substring(2, 1) != "3" ? true : false;
                     bool gameInList = gameList.Contains(Int32.Parse(game.GameId)) ? true : false;
                     bool gameIsTodayOrYesterday = game.GameDateTimeEst >= DateTime.Today.AddDays(-1) ? true : false;
+                    bool gameGreaterThanEqLastGameDate = game.GameDateTimeEst >= targetGameDate ? true : false;
                     bool gameStarted = game.GameDateTimeEst <= DateTime.Now ? true : false;
-                    //if(game.GameDateTimeEst.Date >= lastDate.Date && game.GameDateTimeEst <= DateTime.Now)
-                    //{
-                    //    GameList.Add(game);
-                    //}
-                    int gameId = int.Parse(game.GameId);
-                    //if (game.GameId.Substring(2, 1) != "3" &&
-                    //    (!gameList.Contains(Int32.Parse(game.GameId)) ||
-                    //    //&& game.GameId.Substring(2, 1) != "1" 
-                    //    (game.GameDateTimeEst >= DateTime.Today.AddDays(-1) && game.GameDateTimeEst <= DateTime.Now)))
-                    //{
-                    //    GameList.Add(game);
-                    //}
 
-                    if (gameType && (!gameInList & gameIsTodayOrYesterday && gameStarted) || (gameInList && gameIsTodayOrYesterday && gameStarted))
+                    int gameId = int.Parse(game.GameId);
+
+                    if (gameType && (!gameInList & gameGreaterThanEqLastGameDate && gameStarted) || (gameInList && gameGreaterThanEqLastGameDate && gameStarted))
                     {
-                        if (!gameInList & gameIsTodayOrYesterday && gameStarted)
+                        if (!gameInList & gameGreaterThanEqLastGameDate && gameStarted)
                         {
                             DateTime t = DateTime.Now;
                             DateTime game2 = game.GameDateTimeEst;
 
                         }
-                        else if(gameInList && gameIsTodayOrYesterday && gameStarted)
+                        else if(gameInList && gameGreaterThanEqLastGameDate && gameStarted)
                         {
                             DateTime t = DateTime.Now;
                             DateTime game2 = game.GameDateTimeEst;
                         }
                         GameList.Add(game);
                     }
-                    GameList = GameList.OrderBy(g => Int32.Parse(g.GameId)).ToList();
                 }
                 if (DateTime.Parse(date.GameDate) > DateTime.Today)
                 {
                     break;
                 }
             }
+            GameList = GameList.OrderBy(g => Int32.Parse(g.GameId)).ToList();
             return GameList;
         }
 

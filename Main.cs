@@ -332,41 +332,49 @@ namespace NBAdbToolbox
         public Label lblSeasonStatusLoad = new Label
         {
             Text = "Currently loading: ",
+            Name = "lblSeasonStatusLoad",
             Visible = false
         };
         public Label lblSeasonStatusLoadInfo = new Label
         {
             Text = "",
+            Name = "lblSeasonStatusLoadInfo",
             Visible = false
         };
         public Label lblCurrentGame = new Label
         {
             Text = "Current game: ",
+            Name = "lblCurrentGame",
             Visible = false
         };
         public Label lblCurrentGameCount = new Label
         {
             Text = "0",
+            Name = "lblCurrentGameCount",
             Visible = false
         };
         public Label lblWorkingOn = new Label
         {
             Text = "",
+            Name = "lblWorkingOn",
             Visible = false
         };
         public Label lblWorkingOnInfo = new Label
         {
             Text = "",
+            Name = "lblWorkingOnInfo",
             Visible = false
         };
         public Label gpm = new Label
         {
             Text = "Games per minute/Est.Time remaining:",
+            Name = "gpm",
             Visible = false
         };
         public Label gpmValue = new Label
         {
             Text = "",
+            Name = "gpmValue",
             Visible = false
         };
         PictureBox picLoad = new PictureBox
@@ -374,7 +382,8 @@ namespace NBAdbToolbox
             Image = Image.FromFile(Path.Combine(projectRoot, @"Content\Images\Loading", "kawhi1.png")),
             Visible = false,
             SizeMode = PictureBoxSizeMode.Zoom,
-            BackColor = Color.Transparent
+            BackColor = Color.Transparent,
+            Name = "picLoad"
         };
         #endregion
 
@@ -1857,11 +1866,6 @@ namespace NBAdbToolbox
 
             btnRefresh.Click += async (s, e) =>
             {
-                var test = pnlDbUtil.Controls;
-                var transparentControls = pnlDbUtil.Controls
-    .Cast<Control>()
-    .Where(c => c.BackColor == Color.Transparent || c.BackColor.A == 0)
-    .ToList();
                 await RefreshClick();
                 if (dbOverviewOpened)
                 {
@@ -2616,7 +2620,7 @@ namespace NBAdbToolbox
 
         public void RefreshCompletion()
         {
-            ButtonChangeState(btnRefresh, false); //was true, changing to false for release. Change this for 2025 season!
+            ButtonChangeState(btnRefresh, true); //was true, changing to false for release. Change this for 2025 season!
             ButtonChangeState(btnPopulate, true);
             ButtonChangeState(btnEdit, true);
             ButtonChangeState(btnDownloadSeasonData, btnDownloadSeasonData.Enabled);
@@ -2626,7 +2630,6 @@ namespace NBAdbToolbox
         }
         public void InitializeDbLoad()
         {
-            #region Set UI status lables and images
             imagePath = Path.Combine(projectRoot, @"Content\Images\Loading", "kawhi1.png");
             using (var img = Image.FromFile(imagePath))
             {
@@ -2646,58 +2649,63 @@ namespace NBAdbToolbox
                 picLoad.Left = (pnlLoad.ClientSize.Width - picLoad.Width) / 2;
                 picLoad.Top = 0;
             }
-            gpm.Visible = true;
-            gpmValue.Visible = true;
             lblCurrentGameCount.Text = "";
-            lblCurrentGameCount.Visible = true;
-            lblSeasonStatusLoad.Visible = true;
-            lblSeasonStatusLoadInfo.Visible = false;
-            picLoad.Visible = true;
             #region ChangeLabel
 
             ChangeLabel(ThemeColor, lblCurrentGame, pnlLoad, new List<string> {
-                        "Current game: ", //Text
-                        "Regular", //FontStyle
-                        ((float)(screenFontSize * pnlLoad.Height * .05) / (96 / 12) * (72 / 12)).ToString(), //FontSize
-                        ".", //Width
-                        "true", //AutoSize
-                        "4", //Left
-                        ".", //Top
-                        ThemeColor.ToString(), //Color
-                        "true", //Visible
-                        "." //Height
-                    }); //Current game: 
+                    "Current game: ", //Text
+                    "Regular", //FontStyle
+                    ((float)(screenFontSize * pnlLoad.Height * .05) / (96 / 12) * (72 / 12)).ToString(), //FontSize
+                    ".", //Width
+                    "true", //AutoSize
+                    "4", //Left
+                    ".", //Top
+                    ThemeColor.ToString(), //Color
+                    "true", //Visible
+                    "." //Height
+                }); //Current game: 
             gpm.Top = lblCurrentGame.Bottom;
             gpmValue.Top = gpm.Bottom;
             lblCurrentGameCount.Left = lblCurrentGame.Right - (int)(pnlLoad.Width * .02);
-            ChangeLabel(ThemeColor, lblSeasonStatusLoad, pnlLoad, new List<string> {
-                        "Checking util.BuildLog", //Text
-                        "Bold", //FontStyle
-                        ((float)(screenFontSize * pnlLoad.Height * .08) / (96 / 12) * (72 / 12)).ToString(), //FontSize
-                        ".", //Width
-                        "true", //AutoSize
-                        "0", //Left
-                        ".", //Top
-                        ThemeColor.ToString(), //Color
-                        "true", //Visible
-                        "." //Height
-                    }); //Currently Loading: 
             ChangeLabel(ThemeColor, lblWorkingOn, pnlLoad, new List<string> {
-                        "", //Text
-                        "Regular", //FontStyle
-                        ((float)(screenFontSize * pnlLoad.Height * .03) / (96 / 12) * (72 / 12)).ToString(), //FontSize
-                        ".", //Width
-                        "true", //AutoSize
-                        (pnlLoad.Width - lblWorkingOn.Width).ToString(), //Left
-                        lblSeasonStatusLoadInfo.Top.ToString(), //Top
-                        ThemeColor.ToString(), //Color
-                        "true", //Visible
-                        "." //Height
-                    }); //No text yet
+                    "", //Text
+                    "Regular", //FontStyle
+                    ((float)(screenFontSize * pnlLoad.Height * .03) / (96 / 12) * (72 / 12)).ToString(), //FontSize
+                    ".", //Width
+                    "true", //AutoSize
+                    (pnlLoad.Width - lblWorkingOn.Width).ToString(), //Left
+                    lblSeasonStatusLoadInfo.Top.ToString(), //Top
+                    ThemeColor.ToString(), //Color
+                    "true", //Visible
+                    "." //Height
+                }); //No text yet
             #endregion
 
-            Application.DoEvents();
-            #endregion
+            
+            ChangeLabel(ThemeColor, lblSeasonStatusLoad, pnlLoad, new List<string> {
+                    "Checking util.BuildLog", //Text
+                    "Bold", //FontStyle
+                    ((float)(screenFontSize * pnlLoad.Height * .08) / (96 / 12) * (72 / 12)).ToString(), //FontSize
+                    ".", //Width
+                    "true", //AutoSize
+                    "0", //Left
+                    ".", //Top
+                    ThemeColor.ToString(), //Color
+                    "true", //Visible
+                    "." //Height
+                }); //Currently Loading: 
+
+        gpm.Visible = true;
+        gpmValue.Visible = true;
+        lblCurrentGameCount.Visible = true;
+        lblSeasonStatusLoad.Visible = true;
+        lblSeasonStatusLoadInfo.Visible = false;
+        picLoad.Visible = true;
+
+        #region Set UI status lables and images
+
+        Application.DoEvents();
+        #endregion
         }
         public Label gamesMissing = new Label();
         public Label rowsMissing = new Label();
@@ -4166,18 +4174,16 @@ order by g.GameID
             scheduleGames = await leagueSchedule.GetJSONList(gameList);
 
             string values = " where GameID in(";
-            List<int> gamesToDelete = new List<int>(gameList);
             List<int> gamesToInsert = new List<int>();
             foreach (NBAdbToolboxSchedule.Game game in scheduleGames)
             {
                 values += Int32.Parse(game.GameId) + ", ";
-                gamesToDelete.Add(Int32.Parse(game.GameId));
                 gamesToInsert.Add(Int32.Parse(game.GameId));
                 TotalGames++;
             }
             stopwatchRead.Stop();
             TotalGamesCD = TotalGames - 1;
-
+            RefreshDbUpdateUI_DeleteMissing(scheduleGames.Count);
             RefreshDb_DeleteMissing(values, connection);
             InitializeDbLoad();
             PopulateDb_7_AfterCurrentDelete();
@@ -5277,14 +5283,6 @@ update Player set Name = 'Trey Jemison III' where PlayerID = 1641998;";
             lblSeasonStatusLoadInfo.Visible = false;
             lblSeasonStatusLoad.Visible = false;
 
-            AddPanelElement(pnlLoad, gpmValue);
-            AddPanelElement(pnlLoad, gpm);
-            AddPanelElement(pnlLoad, lblWorkingOn);
-            AddPanelElement(pnlLoad, lblCurrentGameCount);
-            AddPanelElement(pnlLoad, lblCurrentGame);
-            AddPanelElement(pnlLoad, lblSeasonStatusLoadInfo);
-            AddPanelElement(pnlLoad, lblSeasonStatusLoad);
-            AddPanelElement(pnlLoad, picLoad);
         }
 
         public void ButtonChangeState(Button btn, bool enabled)
@@ -5663,24 +5661,12 @@ update Player set Name = 'Trey Jemison III' where PlayerID = 1641998;";
         }
         public void RefreshDb_DeleteMissing(string values, SqlConnection connection)
         {
-            ChangeLabel(ThemeColor, lblSeasonStatusLoad, pnlLoad, new List<string> {
-            "Deleting any incomplete games...", //Text
-            "Bold", //FontStyle
-            ((float)(screenFontSize * pnlLoad.Height * .075) / (96 / 12) * (72 / 12)).ToString(), //FontSize
-            ".", //Width
-            "true", //AutoSize
-            "0", //Left
-            ".", //Top
-            ThemeColor.ToString(), //Color
-            "true", //Visible
-            "." //Height
-            }); //Hitting endpoints and inserting
             stopwatchDelete.Restart();
             string delete = "delete from ";
             string cmd = "";
             if (scheduleGames.Count > 0)
             {
-                values = values.Remove(values.Length - 3) + ")";
+                values = values.Remove(values.Length - 2) + ")";
                 cmd = delete + "StartingLineups" + values + "\n"
                     + delete + "TeamBoxLineups" + values + "\n"
                     + delete + "PlayByPlay" + values + "\n"
@@ -5949,6 +5935,35 @@ update Player set Name = 'Trey Jemison III' where PlayerID = 1641998;";
             "." //Height
             }); //Hitting endpoints and inserting
         }
+        public void RefreshDbUpdateUI_DeleteMissing(int games)
+        {
+            gpm.Visible = false;
+            gpmValue.Visible = false;
+            lblCurrentGame.Visible = false;
+            lblCurrentGameCount.Visible = false;
+            lblSeasonStatusLoadInfo.Visible = false;
+            lblWorkingOn.Visible = false;
+            picLoad.Visible = false;
+            lblCurrentGameCount.Text = "";
+
+
+            string newText = $"Disabling Db constraints and deleting last {games} games";
+            ChangeLabel(ThemeColor, lblSeasonStatusLoad, pnlLoad, new List<string> {
+                        newText, //Text
+                        "Bold", //FontStyle
+                        ((float)(screenFontSize * pnlLoad.Height * .08) / (96 / 12) * (72 / 12)).ToString(), //FontSize
+                        ".", //Width
+                        "true", //AutoSize
+                        "0", //Left
+                        ".", //Top
+                        ThemeColor.ToString(), //Color
+                        "true", //Visible
+                        "." //Height
+                    }); //Currently Loading: 
+
+            Application.DoEvents();
+
+        }
         public void PopulateDb_9_AfterSeasonInserts(int BuildID, int current, int historic, string source, int seasonIterator, int selectedSeasons)
         {
             //Measures time taken to Read and Insert data, by season and in total
@@ -6034,6 +6049,8 @@ update Player set Name = 'Trey Jemison III' where PlayerID = 1641998;";
                         Main.Close();
                     }
                 }
+                lblSeasonStatusLoad.Text = "Enabling constraints, inserting BuildLog record";
+                Application.DoEvents();
                 using (SqlCommand BuildLogInsert = new SqlCommand("BuildLogInsert", Main))
                 {
                     BuildLogInsert.CommandType = CommandType.StoredProcedure;
@@ -6068,6 +6085,8 @@ update Player set Name = 'Trey Jemison III' where PlayerID = 1641998;";
             {
 
             }
+            lblSeasonStatusLoad.Text = "Done! Tidying up...";
+            Application.DoEvents();
 
             #endregion
             #region Completion Message
@@ -6153,7 +6172,7 @@ update Player set Name = 'Trey Jemison III' where PlayerID = 1641998;";
             #region Enable buttons and clear label text
             ButtonChangeState(btnPopulate, true);
             ButtonChangeState(btnEdit, true);
-            ButtonChangeState(btnRefresh, false); //was true, changing to false for release. Change this for 2025 season!
+            ButtonChangeState(btnRefresh, true); //was true, changing to false for release. Change this for 2025 season!
             ButtonChangeState(btnMovement, true);
             listSeasons.Enabled = true;
 
@@ -8540,6 +8559,12 @@ order by HasVideo desc, ShotDistance desc";
                     yearLabel.ForeColor = SuccessColor;
                     yearStatusLabel.ForeColor = SuccessColor;
                 }
+                if(year == 2025)
+                {
+                    yearLabel.ForeColor = Color.FromArgb(255, 86, 145, 196);
+                    yearStatusLabel.Text = "In progress";
+                    yearStatusLabel.ForeColor = Color.FromArgb(255, 86, 145, 196);
+                }
                 heightMod = (int)(yearLabel.Height * 2);
                 int originalHeight = yearLabel.Height;
                 int originalWidth = yearLabel.Width;
@@ -8904,6 +8929,13 @@ order by HasVideo desc, ShotDistance desc";
                             dataLabelRows.ForeColor = ThemeColor;
                         }
                     }
+                }
+                if(year == 2025)
+                {
+                    seasonDataWarning = false;
+                    seasonDataError = false;
+                    dataLabel.ForeColor = ThemeColor;
+                    dataLabelRows.ForeColor = ThemeColor;
                 }
             }
             if (!seasonDataWarning && !seasonDataError)
