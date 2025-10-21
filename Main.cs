@@ -1189,7 +1189,7 @@ namespace NBAdbToolbox
                         PopulateDb_1_PreSelection();
                         //Historic Data
                         #region Historic Data
-                        if (popup.historic || (!popup.historic && !popup.current && season < 2019) || season < 2019)
+                        if ((popup.historic || (!popup.historic && !popup.current && season < 2019) || season < 2019) && season != 2025)
                         {
                             source = "Historic";
                             historic = 1;
@@ -1325,7 +1325,7 @@ namespace NBAdbToolbox
                         #endregion
                         //Current Data
                         #region Current Data
-                        else if (popup.current || (!popup.historic && !popup.current && season > 2018))
+                        else if (popup.current || (!popup.historic && !popup.current && season > 2018) || season == 2025)
                         {
                             source = "Current";
                             current = 1;

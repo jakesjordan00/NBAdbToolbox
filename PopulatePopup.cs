@@ -78,7 +78,10 @@ namespace NBAdbToolbox
                 "\nData has more detail per row for PlayByPlay and Boxscore");
             tip.IsBalloon = true; // Rounded bubble style
             
-
+            if(seasonList.Count == 1 && seasonList[0] == 2025)
+            {
+                chkHistoric.Enabled = false;
+            }
 
             lbl2.Paint += (s, e) => {
                 ToolTipUnderline(s, e);
