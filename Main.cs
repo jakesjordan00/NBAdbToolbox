@@ -2090,25 +2090,21 @@ namespace NBAdbToolbox
         public Label lblScheduleHeader = new Label
         {
             Name = "lblScheduleHeader",
-            Text = "lblScheduleHeader",
             Visible = false
         };
         public Label lblScheduleLoadDetail = new Label
         {
             Name = "lblScheduleLoadDetail",
-            Text = "lblScheduleLoadDetail",
             Visible = false
         };
         public Label lblSchedule24Header = new Label
         {
             Name = "lblSchedule24Header",
-            Text = "lblSchedule24Header",
             Visible = false
         };
         public Label lblSchedule24Detail = new Label
         {
             Name = "lblSchedule24Detail",
-            Text = "lblSchedule24Detail",
             Visible = false
         };
         public async Task ScheduleInit(int version, string seasonText, Label Details)
@@ -2749,7 +2745,7 @@ namespace NBAdbToolbox
             };
             foreach (var season in seasonInfo)
             {
-                if (seasonWarningString.Contains(season.SeasonID.ToString()))
+                if (seasonWarningString.Contains(season.SeasonID.ToString()) && season.SeasonID != 2025)
                 {
                     source = season.Item2.CurrentLoaded == 1 ? "Current" : (season.Item2.HistoricLoaded == 1 ? "Historic" : "Unknown");
                     nonOperationalSeasons.Add(season.SeasonID);
