@@ -88,7 +88,7 @@ namespace NBAdbToolboxSchedule
             string pbpLink = "https://cdn.nba.com/static/json/staticData/scheduleLeagueV2_" + version + ".json";
             if(version == 2)
             {
-                //pbpLink = 
+                pbpLink = "https://raw.githubusercontent.com/jakesjordan00/NBAdbToolbox/refs/heads/master/Content/Documentation/2024%20Schedule.json";
             }
             string json = "";
             ScheduleLeagueV2 Schedule = new ScheduleLeagueV2();
