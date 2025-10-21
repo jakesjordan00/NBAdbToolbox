@@ -86,6 +86,10 @@ namespace NBAdbToolboxSchedule
             //If Version = 1, 2024
             //If Version = 2, 2025
             string pbpLink = "https://cdn.nba.com/static/json/staticData/scheduleLeagueV2_" + version + ".json";
+            if(version == 2)
+            {
+                //pbpLink = 
+            }
             string json = "";
             ScheduleLeagueV2 Schedule = new ScheduleLeagueV2();
             List<Game> GameList = new List<Game>();
