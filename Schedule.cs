@@ -13,7 +13,7 @@ namespace NBAdbToolboxSchedule
     public class Schedule
     {
         //public async Task<List<Game>> GetJSON(DateTime lastDate)
-        public async Task<List<Game>> GetJSONList(List<int> gameList)
+        public async Task<List<Game>> GetJSONList(List<int> gameList, List<int> incompleteGameList)
         {
             string pbpLink = "https://cdn.nba.com/static/json/staticData/scheduleLeagueV2_1.json";
             string json = "";
@@ -58,10 +58,11 @@ namespace NBAdbToolboxSchedule
                     bool gameIsTodayOrYesterday = game.GameDateTimeEst >= DateTime.Today.AddDays(-1) ? true : false;
                     bool gameGreaterThanEqLastGameDate = game.GameDateTimeEst >= targetGameDate ? true : false;
                     bool gameStarted = game.GameDateTimeEst <= DateTime.Now ? true : false;
+                    bool incomplete = incompleteGameList.Contains(Int32.Parse(game.GameId)) ? true : false;
 
                     int gameId = int.Parse(game.GameId);
 
-                    if (gameType && (!gameInList & gameGreaterThanEqLastGameDate && gameStarted) || (gameInList && gameGreaterThanEqLastGameDate && gameStarted))
+                    if (gameType && ((!gameInList & gameGreaterThanEqLastGameDate && gameStarted) || (gameInList && gameGreaterThanEqLastGameDate && gameStarted) || incomplete))
                     {
                         if (!gameInList & gameGreaterThanEqLastGameDate && gameStarted)
                         {

@@ -4171,7 +4171,25 @@ order by g.GameID
                 }
                 connection.Close();
             }
-            scheduleGames = await leagueSchedule.GetJSONList(gameList);
+            List<int> incompleteGameList = new List<int>();
+            string queryIncompleteGames = $"select SeasonID, GameID, Status from GameExt e where e.SeasonID = {SeasonID} and status != 'Final'";
+            using (SqlCommand incompleteGamesQuery = new SqlCommand(queryIncompleteGames))
+            {
+                incompleteGamesQuery.Connection = connection;
+                incompleteGamesQuery.CommandType = CommandType.Text;
+                connection.Open();
+                using (SqlDataReader sdr = incompleteGamesQuery.ExecuteReader())
+                {
+                    while (sdr.Read())
+                    {
+                        //lastDate = sdr.GetDateTime(0);
+                        incompleteGameList.Add(sdr.GetInt32(1));
+                    }
+                }
+                connection.Close();
+            }
+
+            scheduleGames = await leagueSchedule.GetJSONList(gameList, incompleteGameList);
 
             string values = " where GameID in(";
             List<int> gamesToInsert = new List<int>();
