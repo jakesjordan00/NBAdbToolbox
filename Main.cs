@@ -1168,12 +1168,12 @@ namespace NBAdbToolbox
                     var filteredActions = rootCPBP.game.actions.Where(a => a.actionNumber > lastActionNumber).ToList();
                     if(filteredActions.Count != 0)
                     {
-                        int j = 0;
+                        int j = lastActionID + 1;
                         try
                         {
-                            for (int i = lastActionID; i <= filteredActions.Count; i++)
+                            for (int i = 0; i < filteredActions.Count; i++)
                             {
-                                CurrentPlayByPlay(filteredActions[i], Int32.Parse(rootCPBP.game.gameId), i);
+                                CurrentPlayByPlay(filteredActions[i], Int32.Parse(rootCPBP.game.gameId), j);
                                 j++;
                             }
                         }
