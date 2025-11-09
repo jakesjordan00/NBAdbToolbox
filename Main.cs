@@ -1052,6 +1052,7 @@ namespace NBAdbToolbox
             }
         }
 
+        public List<string> gamesAboutToStart = new List<string>();
         public async Task GetGamesInProgress()
         {
             foreach (NBAdbToolboxSchedule.GameDates date in schedule.LeagueSchedule.GameDates)
@@ -1059,9 +1060,37 @@ namespace NBAdbToolbox
                 var sortedGames = date.Games.OrderBy(g => g.GameDateTimeEst).ToList();
                 foreach (NBAdbToolboxSchedule.Game game in sortedGames)
                 {
-                    if (game.GameStatus == 2 || (game.GameDateTimeEst <= DateTime.Now && game.GameStatus != 3 && game.GameStatus != 1))
+                    if (game.GameStatus == 2 || (game.GameDateTimeEst <= DateTime.Now && game.GameStatus != 3))
                     {
-                        gamesInProgress.Add(game.GameId);
+                        if(game.GameStatus == 1)
+                        {
+                            string pbpLink = "https://cdn.nba.com/static/json/liveData/playbyplay/playbyplay_" + game.GameId + ".json";
+                            using (HttpClient client = new HttpClient())
+                            {
+                                client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0");
+                                client.Timeout = TimeSpan.FromSeconds(1.5);
+                                try
+                                {
+                                    HttpResponseMessage response = await client.SendAsync(
+                                        new HttpRequestMessage(HttpMethod.Head, pbpLink));
+
+                                    if (response.IsSuccessStatusCode)
+                                    {
+                                        gamesInProgress.Add(game.GameId);
+                                        //Play-by-play data exists, do something
+                                    }
+                                    else
+                                    {
+                                        gamesAboutToStart.Add(game.GameId);
+                                    }
+                                }
+                                catch
+                                {
+                                    gamesInProgress.Remove(game.GameId);
+                                    //Not available or error
+                                }
+                            }
+                        }
                     }
                     else
                     {
@@ -1078,15 +1107,19 @@ namespace NBAdbToolbox
             await GetScoreboardSchedule;
             Task GamesInProgress = GetGamesInProgress();
             await GamesInProgress;
+            DateTime now = DateTime.Now;
+            int dur = (int)(earliestGame.Subtract(now).TotalSeconds) + 300;
             if (gamesInProgress.Count != 0)
             {
                 await GetDailyScoreBoard();
                 timeRemaining = (int)(settings.RefreshInterval);
             }
+            else if(gamesAboutToStart.Count != 0)
+            {
+                timeRemaining = (int)(settings.RefreshInterval);
+            }
             else
             {
-                DateTime now = DateTime.Now;
-                int dur = (int)(earliestGame.Subtract(now).TotalSeconds) + 300;
                 timeRemaining = dur;
             }
             if (sender == "RefreshGamesInProgress" && !isPopulating)
@@ -1167,7 +1200,18 @@ namespace NBAdbToolbox
                 }
                 int lastActionNumber = 0;
                 int lastActionID = 0;
-                using (SqlCommand ActionNumberCheck = new SqlCommand($"select top 1 ActionNumber, ActionID from PlayByPlay where SeasonID = 2025 and GameID = {GameID} Order by ActionNumber desc", MainConnection))
+                bool haveGame = false;
+                using (SqlCommand ActionNumberCheck = new SqlCommand($@"
+                with OrderedPlayByPlay as(
+                select top 1 ActionNumber, ActionID
+                from PlayByPlay where SeasonID = 2025 and GameID = {GameID} 
+                Order by ActionNumber desc)
+                select * 
+                from OrderedPlayByPlay
+                union
+                select 999999, 999999
+                from Game
+                where GameID = {GameID}", MainConnection))
                 {
                     ActionNumberCheck.CommandType = CommandType.Text;
                     MainConnection.Open();
@@ -1175,13 +1219,20 @@ namespace NBAdbToolbox
                     {
                         while (reader.Read())
                         {
-                            lastActionNumber = reader.GetInt32(0);
-                            lastActionID = reader.GetInt32(1) + 1;
+                            if(reader.GetInt32(0) != 999999)
+                            {
+                                lastActionNumber = reader.GetInt32(0);
+                                lastActionID = reader.GetInt32(1);
+                            }
+                            else if(reader.GetInt32(0) == 999999)
+                            {
+                                haveGame = true;
+                            }
                         }
                     }
                     MainConnection.Close();
                 }
-                if(lastActionNumber == 0)
+                if(lastActionNumber == 0 && !haveGame)
                 {
                     try
                     {
@@ -1198,7 +1249,7 @@ namespace NBAdbToolbox
                     await CalculateTeamBoxLineupsInsert;
 
                 }
-                else
+                else if(haveGame)
                 {
                     string execute = "";
                     StringBuilder GameWithBoxes = UpdateGameInProgress(rootC.game);

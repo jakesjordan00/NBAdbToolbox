@@ -3,7 +3,7 @@
   "DefaultConfig": "localhost - JJsnba.json",
   "BackgroundImage": "Court Dark",
   "WindowSize": "Default",
-  "Sound": "Muted",
+  "Sound": "Default",
   "Scoreboard": "Today",
   "RefreshInterval": 10
 }
