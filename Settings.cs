@@ -13,5 +13,8 @@ namespace NBAdbToolbox
         public string? BackgroundImage { get; set; }
         public string? WindowSize { get; set; }
         public string? Sound { get; set; }
+
+        public string? Scoreboard { get; set; }
+        public int? RefreshInterval { get; set; }
     }
 }

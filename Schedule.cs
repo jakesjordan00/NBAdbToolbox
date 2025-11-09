@@ -62,15 +62,21 @@ namespace NBAdbToolboxSchedule
 
                     int gameId = int.Parse(game.GameId);
 
-                    if (gameType && ((!gameInList & gameGreaterThanEqLastGameDate && gameStarted) || (gameInList && gameGreaterThanEqLastGameDate && gameStarted) || incomplete))
+                    if (gameType && ((!gameInList && gameStarted) || (gameInList && gameGreaterThanEqLastGameDate && gameStarted) || incomplete))
                     {
-                        if (!gameInList & gameGreaterThanEqLastGameDate && gameStarted)
+                        if (!gameInList && gameGreaterThanEqLastGameDate && gameStarted)
                         {
                             DateTime t = DateTime.Now;
                             DateTime game2 = game.GameDateTimeEst;
 
                         }
-                        else if(gameInList && gameGreaterThanEqLastGameDate && gameStarted)
+                        else if (!gameInList && gameStarted)
+                        {
+                            DateTime t = DateTime.Now;
+                            DateTime game2 = game.GameDateTimeEst;
+
+                        }
+                        else if (gameInList && gameGreaterThanEqLastGameDate && gameStarted)
                         {
                             DateTime t = DateTime.Now;
                             DateTime game2 = game.GameDateTimeEst;
