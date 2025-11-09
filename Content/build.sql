@@ -1465,7 +1465,7 @@ update Player set Name = 'Jimmy Butler' where PlayerID = 202710;
 update Player set Name = 'Dennis Schroder' where PlayerID = 203471;
 update Player set Name = 'Reggie Bullock Jr.' where PlayerID = 203493;
 update Player set Name = 'Dante Exum' where PlayerID = 203957;
-update Player set Name = 'Dario saric' where PlayerID = 203967;
+update Player set Name = 'Dario Saric' where PlayerID = 203967;
 update Player set Name = 'Michael Frazier' where PlayerID = 1626187;
 update Player set Name = 'Jakob Poeltl' where PlayerID = 1627751;
 update Player set Name = 'OG Anunoby' where PlayerID = 1628384;

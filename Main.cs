@@ -1031,13 +1031,33 @@ namespace NBAdbToolbox
             }
         }
 
+        public async Task GetGamesInProgress()
+        {
+            foreach (NBAdbToolboxSchedule.GameDates date in schedule.LeagueSchedule.GameDates)
+            {
+                var sortedGames = date.Games.OrderBy(g => g.GameDateTimeEst).ToList();
+                foreach (NBAdbToolboxSchedule.Game game in sortedGames)
+                {
+                    if (game.GameStatus == 2 || (game.GameDateTimeEst <= DateTime.Now && game.GameStatus != 3 && game.GameStatus != 1))
+                    {
+                        gamesInProgress.Add(game.GameId);
+                    }
+                    else
+                    {
+                        gamesInProgress.Remove(game.GameId);
+                    }
+                }
+            }
+        }
 
         public async void InitializeAsync(string sender)
         {
             gamesInProgress.Clear();
             Task GetScoreboardSchedule = GetScoreBoard();
-            await GetScoreboardSchedule; 
-            if(gamesInProgress.Count != 0)
+            await GetScoreboardSchedule;
+            Task GamesInProgress = GetGamesInProgress();
+            await GamesInProgress;
+            if (gamesInProgress.Count != 0)
             {
                 await GetDailyScoreBoard();
                 timeRemaining = (int)(settings.RefreshInterval);
@@ -3061,6 +3081,7 @@ namespace NBAdbToolbox
             ButtonChangeState(btnDownloadSeasonData, btnDownloadSeasonData.Enabled);
             ButtonChangeState(btnMovement, true);
             listSeasons.Enabled = true;
+            isRefreshing = false;
             isPopulating = false;
 
         }
@@ -4651,6 +4672,7 @@ order by g.GameID
                 string execute = LineupCalc.ToString();
                 LineupCalc.Clear();
                 Task CalculateTeamBoxLineupsInsert = CalculatedTeamBoxLineupInsert(execute);
+                UpdateLoadingImage(imageIteration);
                 PopulateDb_4_AfterGame("Refresh");
             }
             PopulateDb_9_AfterSeasonInserts(buildID, 1, 0, "Current Refresh", 1, 1);
@@ -5494,8 +5516,8 @@ order by g.GameID
                                 {
                                     //DatabaseToolboxVersion = "1.02";
                                     //lblVersionStatus.Text = "NBAdbToolbox Database v1.02";
-                                    DatabaseToolboxVersion = "2.0";
-                                    lblVersionStatus.Text = "NBAdbToolbox Database v2.0";
+                                    DatabaseToolboxVersion = "2.03";
+                                    lblVersionStatus.Text = "NBAdbToolbox Database v2.03";
                                     lblVersionStatus.ForeColor = SuccessColor;
                                 }
                                 else
@@ -5516,8 +5538,8 @@ order by g.GameID
                                                 {
                                                     //DatabaseToolboxVersion = "1.02";
                                                     //lblVersionStatus.Text = "NBAdbToolbox Database v1.02";
-                                                    DatabaseToolboxVersion = "2.0";
-                                                    lblVersionStatus.Text = "NBAdbToolbox Database v2.0";
+                                                    DatabaseToolboxVersion = "2.03";
+                                                    lblVersionStatus.Text = "NBAdbToolbox Database v2.03";
                                                 }
                                                 else
                                                 {
@@ -6101,10 +6123,12 @@ update Player set Name = 'Trey Jemison III' where PlayerID = 1641998;";
             scheduleGames.Clear();
             SeasonID = 2025;
             completionMessage += SeasonID + ": ";
-            ButtonChangeState(btnPopulate, true);
+            ButtonChangeState(btnPopulate, false);
             ButtonChangeState(btnEdit, false);
             listSeasons.Enabled = false;
             ButtonChangeState(btnRefresh, false);
+            ButtonChangeState(btnMovement, false);
+            ButtonChangeState(btnGetSchedule, false);
             stopwatch = Stopwatch.StartNew();
             start = DateTime.Now;
             timeElapsedRead = TimeSpan.Zero;
@@ -6636,9 +6660,12 @@ update Player set Name = 'Trey Jemison III' where PlayerID = 1641998;";
             #region Enable buttons and clear label text
             ButtonChangeState(btnPopulate, true);
             ButtonChangeState(btnEdit, true);
-            ButtonChangeState(btnRefresh, true); //was true, changing to false for release. Change this for 2025 season!
+            ButtonChangeState(btnRefresh, true);
             ButtonChangeState(btnMovement, true);
+            ButtonChangeState(btnGetSchedule, true);
             listSeasons.Enabled = true;
+
+
 
             lblStatus.Text = "Welcome Back!";
             CenterElement(pnlWelcome, lblStatus);
