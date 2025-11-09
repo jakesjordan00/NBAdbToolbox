@@ -164,6 +164,16 @@ namespace NBAdbToolbox
             Text = "Sound Options:",
             Visible = true
         };
+        public Label lblScoreboardDisplay = new Label
+        {
+            Text = "Scoreboard Display: ",
+            Visible = true
+        };
+        public Label lblRefreshSettings = new Label
+        {
+            Text = "Auto Refresh Interval: ",
+            Visible = true
+        };
         public FolderBrowserDialog dlgDefaultPath = new FolderBrowserDialog();
         public Button btnBrowseConfig = new Button
         {
@@ -188,6 +198,17 @@ namespace NBAdbToolbox
             Visible = true,
             Items = { "Default", "Muted" }
         };
+        public ComboBox boxScoreboardDisplay = new ComboBox
+        {
+            Visible = true,
+            Items = { "Today", "Yesterday", "Hidden" }
+        };
+        public ComboBox boxRefreshSettings = new ComboBox
+        {
+            Visible = true,
+            Items = { "10 Seconds", "15 Seconds", "30 Seconds", "45 Seconds", "60 Seconds", "90 Seconds", "2 Minutes",  "5 Minutes", "10 Minutes"}            
+        };
+
         public Label lblRefreshTimer = new Label
         {
             Text = "Sound Options:",
@@ -1071,6 +1092,8 @@ namespace NBAdbToolbox
             if (sender == "RefreshGamesInProgress" && !isPopulating)
             {
                 lblRefreshTimer.Text = "Refreshing...";
+                lblCurrentGame.Visible = true;
+                lblCurrentGameCount.Visible = true;
                 lblRefreshTimer.Left = (pnlWelcome.ClientSize.Width - lblRefreshTimer.Width) / 2;
                 Application.DoEvents();
                 await RefreshGamesInProgress();
@@ -1135,6 +1158,7 @@ namespace NBAdbToolbox
             foreach (string GameStr in gamesInProgress)
             {
                 GameID = Int32.Parse(GameStr);
+                lblCurrentGameCount.Text = GameID.ToString();
                 rootCPBP = await currentDataPBP.GetJSON(GameID, SeasonID);
                 rootC = await currentData.GetJSON(GameID, SeasonID);
                 if (rootCPBP.game == null || rootC.game == null)
@@ -8056,6 +8080,37 @@ order by HasVideo desc, ShotDistance desc";
             boxSoundOptions.Left = lblSound.Right;
             boxSoundOptions.SelectedItem = settings.Sound;
 
+
+            boxScoreboardDisplay.DropDownStyle = ComboBoxStyle.DropDownList; //Makes it non-editable
+            boxScoreboardDisplay.Font = SetFontSize("Segoe UI", (float)(fontSize * .7), FontStyle.Regular, (int)(pnlWelcome.Width * .7), boxScoreboardDisplay);
+            boxScoreboardDisplay.Top = boxSoundOptions.Bottom + spacer;
+            boxScoreboardDisplay.Width = (int)(btnEdit.Width * .4);
+
+            lblScoreboardDisplay.Left = 0;
+            lblScoreboardDisplay.Top = boxSoundOptions.Bottom + spacer;
+            lblScoreboardDisplay.AutoSize = true;
+            lblScoreboardDisplay.Font = SetFontSize("Segoe UI", (float)(fontSize * .9), FontStyle.Bold, (int)(pnlWelcome.Width * .7), lblScoreboardDisplay);
+            lblScoreboardDisplay.ForeColor = ThemeColor;
+            boxScoreboardDisplay.Left = lblScoreboardDisplay.Right;
+            boxScoreboardDisplay.SelectedItem = settings.Scoreboard;
+
+
+
+
+            boxRefreshSettings.DropDownStyle = ComboBoxStyle.DropDownList; //Makes it non-editable
+            boxRefreshSettings.Font = SetFontSize("Segoe UI", (float)(fontSize * .7), FontStyle.Regular, (int)(pnlWelcome.Width * .7), boxRefreshSettings);
+            boxRefreshSettings.Top = boxScoreboardDisplay.Bottom + spacer;
+            boxRefreshSettings.Width = (int)(btnEdit.Width * .4);
+
+            lblRefreshSettings.Left = 0;
+            lblRefreshSettings.Top = boxScoreboardDisplay.Bottom + spacer;
+            lblRefreshSettings.AutoSize = true;
+            lblRefreshSettings.Font = SetFontSize("Segoe UI", (float)(fontSize * .9), FontStyle.Bold, (int)(pnlWelcome.Width * .7), lblRefreshSettings);
+            lblRefreshSettings.ForeColor = ThemeColor;
+            boxRefreshSettings.Left = lblRefreshSettings.Right;
+            boxRefreshSettings.SelectedItem = settings.RefreshInterval <= 90 ? settings.RefreshInterval + " Seconds" : settings.RefreshInterval + " Minutes";
+
+
             lblDbOvName.FlatStyle = FlatStyle.Flat;
 
 
@@ -8265,6 +8320,10 @@ order by HasVideo desc, ShotDistance desc";
             AddPanelElement(pnlDbUtil, lblDbOverview);
             AddPanelElement(pnlDbUtil, pnlDbOverview);
             AddPanelElement(pnlDbUtil, lblDbUtil);
+            AddPanelElement(pnlSettings, boxRefreshSettings);
+            AddPanelElement(pnlSettings, lblRefreshSettings);
+            AddPanelElement(pnlSettings, boxScoreboardDisplay);
+            AddPanelElement(pnlSettings, lblScoreboardDisplay);
             AddPanelElement(pnlSettings, boxSoundOptions);
             AddPanelElement(pnlSettings, lblSound);
             AddPanelElement(pnlSettings, boxBackground);
