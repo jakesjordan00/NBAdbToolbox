@@ -417,6 +417,12 @@ namespace NBAdbToolbox
             BackColor = Color.Transparent,
             Name = "picLoad"
         };
+        public Label lblCurrentRefreshStatus = new Label
+        {
+            Text = "",
+            Name = "lblCurrentRefreshStatus",
+            Visible = false
+        };
         #endregion
 
         #endregion
@@ -1178,6 +1184,7 @@ namespace NBAdbToolbox
             Task InsertCurrent = CurrentDataInsert(execute);
             sqlBuilder.Clear();
         }
+
         public async Task RefreshGamesInProgress()
         {
             SeasonID = 2025;
@@ -1187,15 +1194,22 @@ namespace NBAdbToolbox
             {
                 playByPlayBuilder.Clear();
             }
+            lblCurrentRefreshStatus.Visible = true;
             SqlConnection MainConnection = new SqlConnection(cString);
+            lblCurrentRefreshStatus.Text = "";
+            lblCurrentGameCount.ForeColor = ThemeColor;
             foreach (string GameStr in gamesInProgress)
             {
                 GameID = Int32.Parse(GameStr);
                 lblCurrentGameCount.Text = GameID.ToString();
+                lblCurrentRefreshStatus.Text += $"{GameID}: Getting PlayByPlay...";
                 rootCPBP = await currentDataPBP.GetJSON(GameID, SeasonID);
+                lblCurrentRefreshStatus.Text += "Done! Getting Box...";
                 rootC = await currentData.GetJSON(GameID, SeasonID);
+                lblCurrentRefreshStatus.Text += "Done!";
                 if (rootCPBP.game == null || rootC.game == null)
                 {
+                    lblCurrentRefreshStatus.Text += " Game not in progress.\n";
                     continue;
                 }
                 int lastActionNumber = 0;
@@ -1213,6 +1227,7 @@ namespace NBAdbToolbox
                 from Game
                 where GameID = {GameID}", MainConnection))
                 {
+                    lblCurrentGameCount.Text = $"{GameID}";
                     ActionNumberCheck.CommandType = CommandType.Text;
                     MainConnection.Open();
                     using (SqlDataReader reader = ActionNumberCheck.ExecuteReader())
@@ -1270,6 +1285,7 @@ namespace NBAdbToolbox
                             {
                                 CurrentPlayByPlay(filteredActions[i], Int32.Parse(rootCPBP.game.gameId), j);
                                 j++;
+                                pbpsUpdated++;
                             }
                         }
                         catch(ArgumentOutOfRangeException e)
@@ -1282,11 +1298,17 @@ namespace NBAdbToolbox
                             Task InsertPlayByPlay = CurrentDataInsert(execute);
                             await InsertPlayByPlay;
                             playByPlayBuilder.Clear();
-                            pbpsUpdated++;
+                        }
+                        else
+                        {
                         }
                     }
                 }
+                lblCurrentRefreshStatus.Text += $". {pbpsUpdated} new rows in PlayByPlay!\n";
+                Application.DoEvents();
             }
+            lblCurrentGameCount.Text = "Done!";
+            lblCurrentGameCount.ForeColor = SuccessColor;
             refreshTimer.Start();
         }
         public StringBuilder UpdateGameInProgress(NBAdbToolboxCurrent.Game game)
@@ -2347,6 +2369,42 @@ namespace NBAdbToolbox
             {
                 lblSettings.Focus();
             };
+            boxRefreshSettings.SelectedIndexChanged += (s, e) =>
+            {
+                int seconds = 0;
+                if (boxRefreshSettings.SelectedItem.ToString().Contains("Minutes"))
+                {
+                    seconds = Int32.Parse(boxRefreshSettings.SelectedItem.ToString().Replace(" Minutes", "")) * 60;
+                }
+                else
+                {
+                    seconds = Int32.Parse(boxRefreshSettings.SelectedItem.ToString().Replace(" Seconds", ""));
+                }
+                if (seconds != settings.RefreshInterval)
+                {
+                    settings.RefreshInterval = seconds;
+                    timeRemaining = seconds;
+                    WriteSettings();
+                }
+                lblSettings.Focus();
+            };
+            boxRefreshSettings.DropDownClosed += (s, e) =>
+            {
+                lblSettings.Focus();
+            };
+            boxScoreboardDisplay.SelectedIndexChanged += (s, e) =>
+            {
+                if (boxScoreboardDisplay.SelectedItem.ToString() != settings.Scoreboard)
+                {
+                    settings.Scoreboard = boxScoreboardDisplay.SelectedItem.ToString();
+                    WriteSettings();
+                }
+                lblSettings.Focus();
+            };
+            boxScoreboardDisplay.DropDownClosed += (s, e) =>
+            {
+                lblSettings.Focus();
+            };
 
 
 
@@ -3227,12 +3285,13 @@ namespace NBAdbToolbox
                     "." //Height
                 }); //Currently Loading: 
 
-        gpm.Visible = true;
+        gpm.Visible = true;            
         gpmValue.Visible = true;
         lblCurrentGameCount.Visible = true;
         lblSeasonStatusLoad.Visible = true;
         lblSeasonStatusLoadInfo.Visible = false;
         picLoad.Visible = true;
+        lblCurrentRefreshStatus.Visible = false;
 
         #region Set UI status lables and images
 
@@ -5843,6 +5902,7 @@ update Player set Name = 'Trey Jemison III' where PlayerID = 1641998;";
             lblCurrentGame.Visible = false;
             lblSeasonStatusLoadInfo.Visible = false;
             lblSeasonStatusLoad.Visible = false;
+            lblCurrentRefreshStatus.Visible = false;
 
         }
 
@@ -6508,6 +6568,7 @@ update Player set Name = 'Trey Jemison III' where PlayerID = 1641998;";
             lblWorkingOn.Visible = false;
             picLoad.Visible = false;
             lblCurrentGameCount.Text = "";
+            lblCurrentRefreshStatus.Visible = false;
 
 
             string newText = $"Disabling Db constraints and deleting last {games} games";
@@ -7799,7 +7860,14 @@ order by HasVideo desc, ShotDistance desc";
             gpmValue.Left = 4;
             gpmValue.ForeColor = ThemeColor;
 
+            
 
+
+            lblCurrentRefreshStatus.Left = 4;
+            fontSize = ((float)(screenFontSize * pnlLoad.Height * .04) / (96 / 12)) * (72 / 12);
+            lblCurrentRefreshStatus.Font = SetFontSize("Segoe UI", fontSize, FontStyle.Bold, (int)(pnlLoad.Width * .7), lblCurrentRefreshStatus);
+            lblCurrentRefreshStatus.AutoSize = true;
+            lblCurrentRefreshStatus.Top = lblCurrentGame.Bottom;
 
             pnlScoreboardContainer.Height = this.Height / 20;
             pnlScoreboardContainer.Dock = DockStyle.Top;
@@ -8339,6 +8407,7 @@ order by HasVideo desc, ShotDistance desc";
             AddPanelElement(pnlDbUtil, lblScheduleHeader);
             AddPanelElement(pnlDbUtil, lblMovementLoadProgress);
             AddPanelElement(pnlDbUtil, lblMovementLoadStatus);
+            AddPanelElement(pnlLoad, lblCurrentRefreshStatus);
             AddPanelElement(pnlLoad, gpmValue);
             AddPanelElement(pnlLoad, gpm);
             AddPanelElement(pnlLoad, lblWorkingOn);
