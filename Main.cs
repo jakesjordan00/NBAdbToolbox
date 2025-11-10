@@ -1059,6 +1059,7 @@ namespace NBAdbToolbox
         }
 
         public List<string> gamesAboutToStart = new List<string>();
+        public Dictionary<string, (int, int, int, int)> gamesInProgressDict = new Dictionary<string, (int, int, int, int)>();
         public async Task GetGamesInProgress()
         {
             foreach (NBAdbToolboxSchedule.GameDates date in schedule.LeagueSchedule.GameDates)
@@ -1083,6 +1084,7 @@ namespace NBAdbToolbox
                                     if (response.IsSuccessStatusCode)
                                     {
                                         gamesInProgress.Add(game.GameId);
+                                        gamesInProgressDict.Add(game.GameId, (game.HomeTeam.Wins, game.HomeTeam.Losses, game.AwayTeam.Wins, game.AwayTeam.Losses));
                                         //Play-by-play data exists, do something
                                     }
                                     else
@@ -1092,6 +1094,7 @@ namespace NBAdbToolbox
                                 }
                                 catch
                                 {
+                                    gamesInProgressDict.Remove(game.GameId);
                                     gamesInProgress.Remove(game.GameId);
                                     //Not available or error
                                 }
@@ -1101,6 +1104,7 @@ namespace NBAdbToolbox
                     else
                     {
                         gamesInProgress.Remove(game.GameId);
+                        gamesInProgressDict.Remove(game.GameId);
                     }
                 }
             }
@@ -1109,6 +1113,7 @@ namespace NBAdbToolbox
         public async void InitializeAsync(string sender)
         {
             gamesInProgress.Clear();
+            gamesInProgressDict.Clear();
             Task GetScoreboardSchedule = GetScoreBoard();
             await GetScoreboardSchedule;
             Task GamesInProgress = GetGamesInProgress();
@@ -1198,9 +1203,9 @@ namespace NBAdbToolbox
             SqlConnection MainConnection = new SqlConnection(cString);
             lblCurrentRefreshStatus.Text = "";
             lblCurrentGameCount.ForeColor = ThemeColor;
-            foreach (string GameStr in gamesInProgress)
+            foreach (KeyValuePair<string, (int, int, int, int)> gameDict in gamesInProgressDict)
             {
-                GameID = Int32.Parse(GameStr);
+                GameID = Int32.Parse(gameDict.Key);
                 lblCurrentGameCount.Text = GameID.ToString();
                 lblCurrentRefreshStatus.Text += $"{GameID}: Getting PlayByPlay...";
                 rootCPBP = await currentDataPBP.GetJSON(GameID, SeasonID);
@@ -1267,7 +1272,7 @@ namespace NBAdbToolbox
                 else if(haveGame)
                 {
                     string execute = "";
-                    StringBuilder GameWithBoxes = UpdateGameInProgress(rootC.game);
+                    StringBuilder GameWithBoxes = UpdateGameInProgress(rootC.game, gameDict);
                     if (GameWithBoxes.Length > 0)
                     {
                         execute = GameWithBoxes.ToString();
@@ -1311,7 +1316,7 @@ namespace NBAdbToolbox
             lblCurrentGameCount.ForeColor = SuccessColor;
             refreshTimer.Start();
         }
-        public StringBuilder UpdateGameInProgress(NBAdbToolboxCurrent.Game game)
+        public StringBuilder UpdateGameInProgress(NBAdbToolboxCurrent.Game game, KeyValuePair<string, (int, int, int, int)> gameDict)
         {
             StringBuilder gameUpdateSB = new StringBuilder("update Game set HScore = ").Append(game.homeTeam.score).Append(", AScore = ").Append(game.awayTeam.score);
             if (game.homeTeam.score > game.awayTeam.score)
@@ -1328,7 +1333,7 @@ namespace NBAdbToolbox
             {
                 int MatchupID = (team == game.homeTeam) ? game.awayTeam.teamId : game.homeTeam.teamId;
                 string homeAway = (team == game.homeTeam) ? "Home" : "Away";
-                gameUpdateSB.Append(UpdateTeamBoxInProgress(team, MatchupID, homeAway));
+                gameUpdateSB.Append(UpdateTeamBoxInProgress(team, MatchupID, homeAway, gameDict));
                 gameUpdateSB.Append(UpdatePlayerBoxInProgress(game, team, MatchupID));
             }
             return gameUpdateSB;
@@ -1444,11 +1449,11 @@ namespace NBAdbToolbox
 
         }
 
-        public StringBuilder UpdateTeamBoxInProgress(NBAdbToolboxCurrent.Team team, int MatchupID, string homeAway)
+        public StringBuilder UpdateTeamBoxInProgress(NBAdbToolboxCurrent.Team team, int MatchupID, string homeAway, KeyValuePair<string, (int, int, int, int)> gameDict)
         {
             StringBuilder gameUpdateSB = new StringBuilder();
-            int wins = (homeAway == "Home") ? homeWins : awayWins;
-            int losses = (homeAway == "Home") ? homeLosses : awayLosses;
+            int wins = (homeAway == "Home") ? gameDict.Value.Item1 : gameDict.Value.Item3;
+            int losses = (homeAway == "Home") ? gameDict.Value.Item2 : gameDict.Value.Item4;
 
             gameUpdateSB.Append("\n Update TeamBox set Assists = ")
             .Append(team.statistics.assists).Append(", AssistsTurnoverRatio = ")
@@ -1509,7 +1514,8 @@ namespace NBAdbToolbox
             .Append(team.statistics.turnoversTotal).Append(", FG2A = ")
             .Append(team.statistics.twoPointersAttempted).Append(", FG2M = ")
             .Append(team.statistics.twoPointersMade).Append(", [FG2%] = ")
-            .Append(team.statistics.twoPointersPercentage.ToString(CultureInfo.InvariantCulture))
+            .Append(team.statistics.twoPointersPercentage.ToString(CultureInfo.InvariantCulture)).Append(", Wins = ")
+            .Append(wins).Append(", Losses = ").Append(losses)
             .Append("\nwhere GameID = ").Append(GameID).Append(" and TeamID = ").Append(team.teamId).Append(" and MatchupID = ").Append(MatchupID);
 
             return gameUpdateSB;
@@ -1664,6 +1670,8 @@ namespace NBAdbToolbox
             #region Populate Database
             btnPopulate.Click += async (s, e) =>
             {
+                refreshTimer.Stop();
+                pauseDur.Restart();
                 SqlConnection MainConnection = new SqlConnection(cString);
                 int selectedSeasons = listSeasons.SelectedItems.Count;
                 string dialog = "Seasons selected: ";
@@ -2116,6 +2124,9 @@ namespace NBAdbToolbox
                     }
 
                 }
+                pauseDur.Stop();
+                int pauseDurSec = (int)(pauseDur.Elapsed.TotalSeconds);
+                timeRemaining = pauseDurSec < timeRemaining ? timeRemaining - pauseDurSec : timeRemaining;
                 refreshTimer.Start();
             };
             #endregion
@@ -2147,6 +2158,7 @@ namespace NBAdbToolbox
             btnEdit.Click += (s, e) =>
             {
                 refreshTimer.Stop();
+                pauseDur.Restart();
                 IntroManager.HideSpecificBubble("WelcomeMessage");
                 string server = config?.Server ?? "";
                 string alias = config?.Alias ?? "";
@@ -2208,6 +2220,9 @@ namespace NBAdbToolbox
                     //Also hide if cancelled
                     IntroManager.HideSpecificBubble("EditCreatePopupExplanation");
                 }
+                pauseDur.Stop();
+                int pauseDurSec =(int)(pauseDur.Elapsed.TotalSeconds);
+                timeRemaining = pauseDurSec < timeRemaining ? timeRemaining - pauseDurSec : timeRemaining;
                 refreshTimer.Start();
             };
 
@@ -2432,6 +2447,7 @@ namespace NBAdbToolbox
             {
                 isPopulating = true;
                 refreshTimer.Stop();
+                pauseDur.Restart();
                 await RefreshClick();
                 if (dbOverviewOpened)
                 {
@@ -2451,6 +2467,9 @@ namespace NBAdbToolbox
                     dbOverviewFirstOpen = true;
                 }
                 RefreshCompletion();
+                pauseDur.Stop();
+                int pauseDurSec = (int)(pauseDur.Elapsed.TotalSeconds);
+                timeRemaining = pauseDurSec < timeRemaining ? timeRemaining - pauseDurSec : timeRemaining;
                 refreshTimer.Start();
             };
 
@@ -2459,6 +2478,7 @@ namespace NBAdbToolbox
             {
                 isPopulating = true;
                 refreshTimer.Stop();
+                pauseDur.Restart();
                 await RepairClick();//blah
                 PlayCompletionSound("Repair");
                 if (dbOverviewOpened)
@@ -2479,6 +2499,9 @@ namespace NBAdbToolbox
                     dbOverviewFirstOpen = true;
                 }
                 RefreshCompletion();
+                pauseDur.Stop();
+                int pauseDurSec = (int)(pauseDur.Elapsed.TotalSeconds);
+                timeRemaining = pauseDurSec < timeRemaining ? timeRemaining - pauseDurSec : timeRemaining;
                 refreshTimer.Start();
             };
 
@@ -2657,7 +2680,7 @@ namespace NBAdbToolbox
                     int seconds = timeRemaining % 60;
                     lblRefreshTimer.Text = $"Next refresh: {minutes}:{seconds:D2}";
                     lblRefreshTimer.Left = (pnlWelcome.ClientSize.Width - lblRefreshTimer.Width) / 2;
-                    if(UIControllerStatus != "DbExists")
+                    if(RefTimerUIController != "DbExists" && RefTimerUIController != "")
                     {
                         refreshTimer.Stop();
                     }
@@ -2676,6 +2699,7 @@ namespace NBAdbToolbox
 
             this.Shown += AfterLoad;
         }
+        public Stopwatch pauseDur = new Stopwatch();
 
         public void PlayByPlayCompleteGame(NBAdbToolboxHistoric.PlayByPlay pbp, int start)
         {
@@ -3075,6 +3099,7 @@ namespace NBAdbToolbox
                 MessageBox.Show($"Unable to open link: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
+        public string RefTimerUIController = "";
         private void AfterLoad(object sender, EventArgs e)
         {
             int maxWidth = 0;
@@ -3103,7 +3128,11 @@ namespace NBAdbToolbox
                 //maxWidth = (int)(windowWidth * .3);
                 IntroManager.ShowTutorialSequence("DatabaseUtilitiesIntro", pnlDbUtil, maxWidth, maxHeight, windowWidth, windowHeight);
             }
-            UIControllerStatus = "";
+            if(UIControllerStatus != "")
+            {
+                RefTimerUIController = UIControllerStatus;
+                UIControllerStatus = "";
+            }
         }
         private async Task InsertPlayByPlayWithRetry(NBAdbToolboxHistoric.Game game, string sender)
         {
