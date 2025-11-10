@@ -2114,7 +2114,9 @@ namespace NBAdbToolbox
                     {
                         dbOverviewFirstOpen = true;
                     }
+
                 }
+                refreshTimer.Start();
             };
             #endregion
             //Panel Formatting
@@ -2144,6 +2146,7 @@ namespace NBAdbToolbox
             //Edit Button Actions
             btnEdit.Click += (s, e) =>
             {
+                refreshTimer.Stop();
                 IntroManager.HideSpecificBubble("WelcomeMessage");
                 string server = config?.Server ?? "";
                 string alias = config?.Alias ?? "";
@@ -2205,6 +2208,7 @@ namespace NBAdbToolbox
                     //Also hide if cancelled
                     IntroManager.HideSpecificBubble("EditCreatePopupExplanation");
                 }
+                refreshTimer.Start();
             };
 
             btnBuild.Click += (s, e) =>
@@ -2398,6 +2402,7 @@ namespace NBAdbToolbox
                 {
                     settings.Scoreboard = boxScoreboardDisplay.SelectedItem.ToString();
                     WriteSettings();
+                    InitializeAsync("Main");
                 }
                 lblSettings.Focus();
             };
@@ -2426,6 +2431,7 @@ namespace NBAdbToolbox
             btnRefresh.Click += async (s, e) =>
             {
                 isPopulating = true;
+                refreshTimer.Stop();
                 await RefreshClick();
                 if (dbOverviewOpened)
                 {
@@ -2445,12 +2451,14 @@ namespace NBAdbToolbox
                     dbOverviewFirstOpen = true;
                 }
                 RefreshCompletion();
+                refreshTimer.Start();
             };
 
 
             btnRepair.Click += async (s, e) =>
             {
                 isPopulating = true;
+                refreshTimer.Stop();
                 await RepairClick();//blah
                 PlayCompletionSound("Repair");
                 if (dbOverviewOpened)
@@ -2471,10 +2479,12 @@ namespace NBAdbToolbox
                     dbOverviewFirstOpen = true;
                 }
                 RefreshCompletion();
+                refreshTimer.Start();
             };
 
             btnMovement.Click += async (s, e) =>
             {
+                refreshTimer.Stop();
                 lblScheduleHeader.Visible = false;
                 lblScheduleLoadDetail.Visible = false;
                 lblSchedule24Header.Visible = false;
@@ -2503,6 +2513,7 @@ namespace NBAdbToolbox
                 lblMovementLoadStatus.ForeColor = SuccessColor;
                 lblMovementLoadStatus.Text = "Complete! " + playerMovementRows + " rows inserted";
                 ButtonChangeState(btnMovement, true);
+                refreshTimer.Start();
             };
 
             lblDataDictionary.Click += lblDataDictionaryClick;
@@ -2567,6 +2578,7 @@ namespace NBAdbToolbox
 
             btnGetSchedule.Click += async (s, e) =>
             {
+                refreshTimer.Stop();
                 //Uses:
                 //      lblMovementLoadStatus, lblMovementLoadProgress
                 //          lblMovementLoadStatus = lblScheduleHeader
@@ -2630,6 +2642,7 @@ namespace NBAdbToolbox
                     Application.DoEvents();
                 }
                 ButtonChangeState(btnGetSchedule, true);
+                refreshTimer.Start();
             };
 
             if(!(settings.RefreshInterval is null) && settings.RefreshInterval != 0)
@@ -2644,11 +2657,14 @@ namespace NBAdbToolbox
                     int seconds = timeRemaining % 60;
                     lblRefreshTimer.Text = $"Next refresh: {minutes}:{seconds:D2}";
                     lblRefreshTimer.Left = (pnlWelcome.ClientSize.Width - lblRefreshTimer.Width) / 2;
+                    if(UIControllerStatus != "DbExists")
+                    {
+                        refreshTimer.Stop();
+                    }
                     if (timeRemaining <= 0)
                     {
                         refreshTimer.Stop();
                         InitializeAsync("RefreshGamesInProgress");
-                        Task.Delay(5000);
                         timeRemaining = (int)(settings.RefreshInterval);
                         //refreshTimer.Start();
                     }

@@ -4,6 +4,6 @@
   "BackgroundImage": "Court Dark",
   "WindowSize": "Default",
   "Sound": "Default",
-  "Scoreboard": "Yesterday",
+  "Scoreboard": "Today",
   "RefreshInterval": 15
 }
