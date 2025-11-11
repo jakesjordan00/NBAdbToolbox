@@ -700,7 +700,7 @@ namespace NBAdbToolbox
                 {
 
                     DateTime stopper = settings.Scoreboard == "Today" ? DateTime.Today : DateTime.Now.Date.AddDays(-1);
-                    if (date.Games[0].GameDateEst < stopper)
+                    if (date.Games[0].GameDateEst < stopper && date.Games[date.Games.Count-1].GameStatus != 2)
                     {
                         continue;
                     }
@@ -1062,52 +1062,71 @@ namespace NBAdbToolbox
         public Dictionary<string, (int, int, int, int)> gamesInProgressDict = new Dictionary<string, (int, int, int, int)>();
         public async Task GetGamesInProgress()
         {
-            foreach (NBAdbToolboxSchedule.GameDates date in schedule.LeagueSchedule.GameDates)
+            DateTime yesterday = DateTime.Today.AddDays(-1).AddMilliseconds(-1);
+            try
             {
-                var sortedGames = date.Games.OrderBy(g => g.GameDateTimeEst).ToList();
-                foreach (NBAdbToolboxSchedule.Game game in sortedGames)
+                foreach (NBAdbToolboxSchedule.GameDates date in schedule.LeagueSchedule.GameDates)
                 {
-                    if (game.GameStatus == 2 || (game.GameDateTimeEst <= DateTime.Now && game.GameStatus != 3))
+                    if (DateTime.Parse(date.GameDate) <= yesterday)
                     {
-                        if(game.GameStatus == 1)
+                        continue;
+                    }
+                    var sortedGames = date.Games.OrderBy(g => g.GameDateTimeEst).ToList();
+                    foreach (NBAdbToolboxSchedule.Game game in sortedGames)
+                    {
+                        if (game.GameStatus == 2 || (game.GameDateTimeEst <= DateTime.Now && game.GameStatus != 3))
                         {
-                            string pbpLink = "https://cdn.nba.com/static/json/liveData/playbyplay/playbyplay_" + game.GameId + ".json";
-                            using (HttpClient client = new HttpClient())
+                            if (game.GameStatus == 1)
                             {
-                                client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0");
-                                client.Timeout = TimeSpan.FromSeconds(1.5);
-                                try
+                                string pbpLink = "https://cdn.nba.com/static/json/liveData/playbyplay/playbyplay_" + game.GameId + ".json";
+                                using (HttpClient client = new HttpClient())
                                 {
-                                    HttpResponseMessage response = await client.SendAsync(
-                                        new HttpRequestMessage(HttpMethod.Head, pbpLink));
+                                    client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0");
+                                    client.Timeout = TimeSpan.FromSeconds(1.5);
+                                    try
+                                    {
+                                        HttpResponseMessage response = await client.SendAsync(
+                                            new HttpRequestMessage(HttpMethod.Head, pbpLink));
 
-                                    if (response.IsSuccessStatusCode)
-                                    {
-                                        gamesInProgress.Add(game.GameId);
-                                        gamesInProgressDict.Add(game.GameId, (game.HomeTeam.Wins, game.HomeTeam.Losses, game.AwayTeam.Wins, game.AwayTeam.Losses));
-                                        //Play-by-play data exists, do something
+                                        if (response.IsSuccessStatusCode)
+                                        {
+                                            gamesInProgress.Add(game.GameId);
+                                            gamesInProgressDict.Add(game.GameId, (game.HomeTeam.Wins, game.HomeTeam.Losses, game.AwayTeam.Wins, game.AwayTeam.Losses));
+                                            //Play-by-play data exists, do something
+                                        }
+                                        else
+                                        {
+                                            gamesAboutToStart.Add(game.GameId);
+                                        }
                                     }
-                                    else
+                                    catch
                                     {
-                                        gamesAboutToStart.Add(game.GameId);
+                                        gamesInProgressDict.Remove(game.GameId);
+                                        gamesInProgress.Remove(game.GameId);
+                                        //Not available or error
                                     }
-                                }
-                                catch
-                                {
-                                    gamesInProgressDict.Remove(game.GameId);
-                                    gamesInProgress.Remove(game.GameId);
-                                    //Not available or error
                                 }
                             }
+                            else
+                            {
+                                gamesInProgress.Add(game.GameId);
+                                gamesInProgressDict.Add(game.GameId, (game.HomeTeam.Wins, game.HomeTeam.Losses, game.AwayTeam.Wins, game.AwayTeam.Losses));
+                            }
                         }
-                    }
-                    else
-                    {
-                        gamesInProgress.Remove(game.GameId);
-                        gamesInProgressDict.Remove(game.GameId);
+                        else
+                        {
+                            gamesInProgress.Remove(game.GameId);
+                            gamesInProgressDict.Remove(game.GameId);
+                        }
                     }
                 }
             }
+            catch(NullReferenceException nullRef)
+            {
+                schedule = await leagueSchedule.GetSchedule(1);
+                await GetGamesInProgress();
+            }
+            
         }
 
         public async void InitializeAsync(string sender)
@@ -1135,6 +1154,7 @@ namespace NBAdbToolbox
             }
             if (sender == "RefreshGamesInProgress" && !isPopulating)
             {
+                stopwatchInsert.Restart();
                 lblRefreshTimer.Text = "Refreshing...";
                 lblCurrentGame.Visible = true;
                 lblCurrentGameCount.Visible = true;
@@ -1194,7 +1214,7 @@ namespace NBAdbToolbox
         {
             SeasonID = 2025;
             int gameBoxesUpdated = 0;
-            int pbpsUpdated = 0;
+            int pbpsUpdatedFull = 0;
             if (playByPlayBuilder.Length > 0)
             {
                 playByPlayBuilder.Clear();
@@ -1211,7 +1231,6 @@ namespace NBAdbToolbox
                 rootCPBP = await currentDataPBP.GetJSON(GameID, SeasonID);
                 lblCurrentRefreshStatus.Text += "Done! Getting Box...";
                 rootC = await currentData.GetJSON(GameID, SeasonID);
-                lblCurrentRefreshStatus.Text += "Done!";
                 if (rootCPBP.game == null || rootC.game == null)
                 {
                     lblCurrentRefreshStatus.Text += " Game not in progress.\n";
@@ -1286,12 +1305,14 @@ namespace NBAdbToolbox
                         int j = lastActionID + 1;
                         try
                         {
+                            int pbpsUpdated = 0;
                             for (int i = 0; i < filteredActions.Count; i++)
                             {
                                 CurrentPlayByPlay(filteredActions[i], Int32.Parse(rootCPBP.game.gameId), j);
                                 j++;
                                 pbpsUpdated++;
                             }
+                            pbpsUpdatedFull = pbpsUpdated;
                         }
                         catch(ArgumentOutOfRangeException e)
                         {
@@ -1301,7 +1322,7 @@ namespace NBAdbToolbox
                         {
                             execute = playByPlayBuilder.ToString();
                             Task InsertPlayByPlay = CurrentDataInsert(execute);
-                            await InsertPlayByPlay;
+                            //await InsertPlayByPlay;
                             playByPlayBuilder.Clear();
                         }
                         else
@@ -1309,10 +1330,20 @@ namespace NBAdbToolbox
                         }
                     }
                 }
-                lblCurrentRefreshStatus.Text += $". {pbpsUpdated} new rows in PlayByPlay!\n";
+                lblCurrentRefreshStatus.Text += $". {pbpsUpdatedFull} new rows in PlayByPlay!\n";
                 Application.DoEvents();
+                pbpsUpdatedFull = 0;
             }
-            lblCurrentGameCount.Text = "Done!";
+
+            TimeSpan timeElapsedInsert = stopwatchInsert.Elapsed;
+            Dictionary<string, (int, string)> timeUnitsInsert = new Dictionary<string, (int value, string sep)>
+                        {
+                        { "s", (timeElapsedInsert.Seconds, ".") },
+                        { "ms", (timeElapsedInsert.Milliseconds, "") }
+                        };
+            string elapsedStringInsert = CheckTime(timeUnitsInsert);
+            lblCurrentRefreshStatus.Text += $"{elapsedStringInsert}";
+            lblCurrentGameCount.Text = "Done!\n";
             lblCurrentGameCount.ForeColor = SuccessColor;
             refreshTimer.Start();
         }
