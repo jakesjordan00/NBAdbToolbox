@@ -496,6 +496,27 @@ namespace NBAdbToolbox
             Text = "Test Function"
         };
 
+        public Label lblScheduleHeader = new Label
+        {
+            Name = "lblScheduleHeader",
+            Visible = false
+        };
+        public Label lblScheduleLoadDetail = new Label
+        {
+            Name = "lblScheduleLoadDetail",
+            Visible = false
+        };
+        public Label lblSchedule24Header = new Label
+        {
+            Name = "lblSchedule24Header",
+            Visible = false
+        };
+        public Label lblSchedule24Detail = new Label
+        {
+            Name = "lblSchedule24Detail",
+            Visible = false
+        };
+
         public HashSet<(int SeasonID, (int Games, int Loaded, int Team, int Arena, int Player, int Official, int Game, int PlayerBox, int TeamBox, int PlayByPlay, int StartingLineups, int TeamBoxLineups,
             int HistoricLoaded, int CurrentLoaded, int PBoxRows, int TBoxRows, int PbpRows, int StartingLineupRows, int TBoxLineupRows, string Status, int GameExt))> seasonInfo
             = new HashSet<(int, (int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, string, int))>();
@@ -672,8 +693,6 @@ namespace NBAdbToolbox
 
             return DatePanel;
         }
-        public List<string> gamesInProgress = new List<string>();
-        public DateTime earliestGame = new DateTime();
         public async Task GetScoreBoard()
         {
             Color tan = Color.FromArgb(255, 209, 203, 192);
@@ -970,7 +989,6 @@ namespace NBAdbToolbox
                 ErrorLabel.Top = (int)((pnlScoreboard.Height - ErrorLabel.Height) / 2.5);
             }
         }
-
         public void DisplayScoreboardPage(int pageNumber)
         {
             //Clear current display
@@ -1058,8 +1076,28 @@ namespace NBAdbToolbox
             }
         }
 
+
+
+
+
+
         public List<string> gamesAboutToStart = new List<string>();
         public Dictionary<string, (int, int, int, int)> gamesInProgressDict = new Dictionary<string, (int, int, int, int)>();
+        public bool caughtUp = false;
+        public Stopwatch pauseDur = new Stopwatch();
+        public List<string> gamesInProgress = new List<string>();
+        public DateTime earliestGame = new DateTime();
+        public bool do2024Schedule = false;
+        public int scheduleRows = 0;
+        public int scheduleDeletedRows = 0;
+        public StringBuilder scheduleBuilder = new StringBuilder(1024);
+        public Label lblMovementLoadStatus = new Label();
+        public Label lblMovementLoadProgress = new Label();
+        public int playerMovementRows = 0;
+        public int playerMovementRowsDeleted = 0;
+
+        public string RefTimerUIController = "";
+
         public async Task GetGamesInProgress()
         {
             DateTime yesterday = DateTime.Today.AddDays(-1).AddMilliseconds(-1);
@@ -1129,7 +1167,7 @@ namespace NBAdbToolbox
             
         }
 
-        public async void InitializeAsync(string sender)
+        public async Task InitializeAsync(string sender)
         {
             gamesInProgress.Clear();
             gamesInProgressDict.Clear();
@@ -1137,6 +1175,10 @@ namespace NBAdbToolbox
             await GetScoreboardSchedule;
             Task GamesInProgress = GetGamesInProgress();
             await GamesInProgress;
+            if (!caughtUp)
+            {
+
+            }
             DateTime now = DateTime.Now;
             int dur = (int)(earliestGame.Subtract(now).TotalSeconds) + 300;
             if (gamesInProgress.Count != 0)
@@ -1645,7 +1687,6 @@ namespace NBAdbToolbox
             }
             return GameLabels;
         }
-
         public List<PictureBox> GetGameLogos(Panel GamePanel)
         {
             List<PictureBox> GameLogos = new List<PictureBox>();
@@ -2704,7 +2745,7 @@ namespace NBAdbToolbox
                 refreshTimer = new System.Windows.Forms.Timer();
                 refreshTimer.Interval = 1000; //5 minutes in milliseconds
                 timeRemaining = (int)(settings.RefreshInterval);
-                refreshTimer.Tick += (s, e) =>
+                refreshTimer.Tick += async (s, e) =>
                 {
                     timeRemaining--;
                     int minutes = timeRemaining / 60;
@@ -2718,7 +2759,7 @@ namespace NBAdbToolbox
                     if (timeRemaining <= 0)
                     {
                         refreshTimer.Stop();
-                        InitializeAsync("RefreshGamesInProgress");
+                        await InitializeAsync("RefreshGamesInProgress");
                         timeRemaining = (int)(settings.RefreshInterval);
                         //refreshTimer.Start();
                     }
@@ -2730,7 +2771,9 @@ namespace NBAdbToolbox
 
             this.Shown += AfterLoad;
         }
-        public Stopwatch pauseDur = new Stopwatch();
+
+
+
 
         public void PlayByPlayCompleteGame(NBAdbToolboxHistoric.PlayByPlay pbp, int start)
         {
@@ -2745,31 +2788,8 @@ namespace NBAdbToolbox
 
         }
 
-        public bool do2024Schedule = false;
-        public int scheduleRows = 0;
-        public int scheduleDeletedRows = 0;
 
 
-        public Label lblScheduleHeader = new Label
-        {
-            Name = "lblScheduleHeader",
-            Visible = false
-        };
-        public Label lblScheduleLoadDetail = new Label
-        {
-            Name = "lblScheduleLoadDetail",
-            Visible = false
-        };
-        public Label lblSchedule24Header = new Label
-        {
-            Name = "lblSchedule24Header",
-            Visible = false
-        };
-        public Label lblSchedule24Detail = new Label
-        {
-            Name = "lblSchedule24Detail",
-            Visible = false
-        };
         public async Task ScheduleInit(int version, string seasonText, Label Details)
         {
             Details.Text = "Reading " + seasonText + " Schedule...";
@@ -2793,7 +2813,7 @@ namespace NBAdbToolbox
                     Application.DoEvents();
                 }
             }
-            BuildSchedule(SeasonID, Details);
+            await BuildSchedule(SeasonID, Details);
         }
 
         public async Task CheckDeleteSchedule()
@@ -2827,7 +2847,6 @@ namespace NBAdbToolbox
                 lblScheduleLoadDetail.Text += "\n" + ex.Message;
             }
         }
-        public StringBuilder scheduleBuilder = new StringBuilder(1024);
         public async Task BuildSchedule(int SeasonID, Label Details)
         {
             foreach (GameDates date in schedule.LeagueSchedule.GameDates)
@@ -2959,10 +2978,6 @@ namespace NBAdbToolbox
         }
 
 
-        public Label lblMovementLoadStatus = new Label();
-        public Label lblMovementLoadProgress = new Label();
-        public int playerMovementRows = 0;
-        public int playerMovementRowsDeleted = 0;
         public async Task MovementClick()
         {
             await DeleteMovementRows();
@@ -3067,6 +3082,8 @@ namespace NBAdbToolbox
             }
         }
 
+
+
         public string gameLabelH = "";
         public string gameLabelDetailH = "";
         public int homeSeed = 0;
@@ -3076,7 +3093,42 @@ namespace NBAdbToolbox
         public int awayWins = 0;
         public int awayLosses = 0;
 
+        private void AfterLoad(object sender, EventArgs e)
+        {
+            int maxWidth = 0;
+            int maxHeight = 0;
+            if (UIControllerStatus == "NoConnection")
+            {
+                maxWidth = (int)(windowWidth * .235);
+                maxHeight = (int)(windowHeight * .1);
+                if (windowWidth < 1700)
+                {
+                    maxHeight = (int)(windowHeight * .12);
+                }
+                IntroManager.ShowInfoBubble("WelcomeMessage", btnEdit, maxWidth, maxHeight, windowWidth, windowHeight);
+            }
+            if (UIControllerStatus == "DbMissing")
+            {
+                maxWidth = (int)(windowWidth * .18);
+                maxHeight = (int)(windowHeight * .11);
+                IntroManager.HideSpecificBubble("DatabaseUtilitiesIntro");
+                IntroManager.ShowInfoBubble("BuildDatabaseWalkthrough", btnBuild, maxWidth, maxHeight, windowWidth, windowHeight);
+            }
+            if (UIControllerStatus == "DbExists")
+            {
+                maxWidth = (int)(windowWidth * .3);
+                maxHeight = (int)(windowHeight * .105);
+                //maxWidth = (int)(windowWidth * .3);
+                IntroManager.ShowTutorialSequence("DatabaseUtilitiesIntro", pnlDbUtil, maxWidth, maxHeight, windowWidth, windowHeight);
+            }
+            if (UIControllerStatus != "")
+            {
+                RefTimerUIController = UIControllerStatus;
+                UIControllerStatus = "";
+            }
+        }
 
+        #region Dictionary
         private void lblDataDictionaryClick(object sender, EventArgs e)
         {
             try
@@ -3130,41 +3182,8 @@ namespace NBAdbToolbox
                 MessageBox.Show($"Unable to open link: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
-        public string RefTimerUIController = "";
-        private void AfterLoad(object sender, EventArgs e)
-        {
-            int maxWidth = 0;
-            int maxHeight = 0;
-            if (UIControllerStatus == "NoConnection")
-            {
-                maxWidth = (int)(windowWidth * .235);
-                maxHeight = (int)(windowHeight * .1);
-                if (windowWidth < 1700)
-                {
-                    maxHeight = (int)(windowHeight * .12);
-                }
-                IntroManager.ShowInfoBubble("WelcomeMessage", btnEdit, maxWidth, maxHeight, windowWidth, windowHeight);
-            }
-            if (UIControllerStatus == "DbMissing")
-            {
-                maxWidth = (int)(windowWidth * .18);
-                maxHeight = (int)(windowHeight * .11);
-                IntroManager.HideSpecificBubble("DatabaseUtilitiesIntro");
-                IntroManager.ShowInfoBubble("BuildDatabaseWalkthrough", btnBuild, maxWidth, maxHeight, windowWidth, windowHeight);
-            }
-            if (UIControllerStatus == "DbExists")
-            {
-                maxWidth = (int)(windowWidth * .3);
-                maxHeight = (int)(windowHeight * .105);
-                //maxWidth = (int)(windowWidth * .3);
-                IntroManager.ShowTutorialSequence("DatabaseUtilitiesIntro", pnlDbUtil, maxWidth, maxHeight, windowWidth, windowHeight);
-            }
-            if(UIControllerStatus != "")
-            {
-                RefTimerUIController = UIControllerStatus;
-                UIControllerStatus = "";
-            }
-        }
+        #endregion Dictionary
+
         private async Task InsertPlayByPlayWithRetry(NBAdbToolboxHistoric.Game game, string sender)
         {
             int retryAttempts = 3;
@@ -3235,6 +3254,7 @@ namespace NBAdbToolbox
                 missingPbp = true;
             }
         }
+
         public StringBuilder LineupCalc = new StringBuilder();
         private async Task TeamBoxLineupCalculation(int game)
         {
@@ -3374,6 +3394,7 @@ namespace NBAdbToolbox
         Application.DoEvents();
         #endregion
         }
+
         public Label gamesMissing = new Label();
         public Label rowsMissing = new Label();
         public async Task RepairClick()
