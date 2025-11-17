@@ -1105,7 +1105,7 @@ namespace NBAdbToolbox
             {
                 foreach (NBAdbToolboxSchedule.GameDates date in schedule.LeagueSchedule.GameDates)
                 {
-                    if (DateTime.Parse(date.GameDate) <= yesterday)
+                    if (DateTime.Parse(date.GameDate) <= yesterday && !dbGameDatesInProgress.Contains(DateTime.Parse(date.GameDate)))
                     {
                         continue;
                     }
@@ -1151,6 +1151,20 @@ namespace NBAdbToolbox
                                 gamesInProgressDict.Add(game.GameId, (game.HomeTeam.Wins, game.HomeTeam.Losses, game.AwayTeam.Wins, game.AwayTeam.Losses));
                             }
                         }
+                        else if (dbGameDatesInProgress.Contains(DateTime.Parse(date.GameDate)))
+                        {
+                            if (!dbGamesInProgress.Contains(game.GameId))
+                            {
+                                gamesInProgress.Remove(game.GameId);
+                                gamesInProgressDict.Remove(game.GameId);
+                                continue;
+                            }
+                            else
+                            {
+                                gamesInProgress.Add(game.GameId);
+                                gamesInProgressDict.Add(game.GameId, (game.HomeTeam.Wins, game.HomeTeam.Losses, game.AwayTeam.Wins, game.AwayTeam.Losses));
+                            }
+                        }
                         else
                         {
                             gamesInProgress.Remove(game.GameId);
@@ -1166,22 +1180,66 @@ namespace NBAdbToolbox
             }
             
         }
+        public List<string> dbGamesInProgress = new List<string>();
+        public List<DateTime> dbGameDatesInProgress = new List<DateTime>();
+        public async Task CheckDbGamesInProgress()
+        {
+            SeasonID = 2025;
+            SqlConnection CheckDbGamesConn = new SqlConnection(cString);
+            using (SqlCommand ActionNumberCheck = new SqlCommand($@"
+            select g.SeasonID
+                    , g.GameID
+                    , g.Date
+            from Game g
+            left join GameExt e on g.SeasonID = e.SeasonID and g.GameID = e.GameID
+            where g.SeasonID = {SeasonID} and case when e.Status != 'Final' then null else e.Status end is null
+            order by g.SeasonID desc, g.Date desc, g.GameID desc
+            ", CheckDbGamesConn))
+            {
+                lblCurrentGameCount.Text = $"{GameID}";
+                ActionNumberCheck.CommandType = CommandType.Text;
+                CheckDbGamesConn.Open();
+                using (SqlDataReader reader = ActionNumberCheck.ExecuteReader())
+                {
+                    if (!reader.HasRows)
+                    {
+                        caughtUp = true;
+                    }
+                    else
+                    {
+                        while (reader.Read())
+                        {
+                            gamesInProgress.Add("00" + reader.GetInt32(1));
+                            dbGamesInProgress.Add("00" + reader.GetInt32(1));
+                            dbGameDatesInProgress.Add(reader.GetDateTime(2));
+                        }
+                    }
+                }
+                CheckDbGamesConn.Close();
+            }
+        }
 
         public async Task InitializeAsync(string sender)
         {
             gamesInProgress.Clear();
             gamesInProgressDict.Clear();
+            dbGamesInProgress.Clear();
+            dbGameDatesInProgress.Clear();
+            lblRefreshTimer.Visible = true;
+            if (sender == "RefreshGamesInProgress" && !isPopulating && !caughtUp)
+            {
+                lblRefreshTimer.Text = "Finding any incomplete games in Db...";
+                Task DbGamesInProgress = CheckDbGamesInProgress();
+                await DbGamesInProgress;
+            }
             Task GetScoreboardSchedule = GetScoreBoard();
             await GetScoreboardSchedule;
             Task GamesInProgress = GetGamesInProgress();
             await GamesInProgress;
-            if (!caughtUp)
-            {
-
-            }
             DateTime now = DateTime.Now;
             int dur = (int)(earliestGame.Subtract(now).TotalSeconds) + 300;
-            if (gamesInProgress.Count != 0)
+            int trueGamesInProg = gamesInProgress.Count - dbGamesInProgress.Count;
+            if (gamesInProgress.Count != 0 && trueGamesInProg != 0)
             {
                 await GetDailyScoreBoard();
                 timeRemaining = (int)(settings.RefreshInterval);
@@ -1939,6 +1997,7 @@ namespace NBAdbToolbox
                         #region Current Data
                         else if (popup.current || (!popup.historic && !popup.current && season > 2018) || season == 2025)
                         {
+                            gamesInProgressDict.Clear();
                             source = "Current";
                             current = 1;
                             PopulateDb_5_BeforeCurrentRead();
@@ -1954,10 +2013,11 @@ namespace NBAdbToolbox
                                         dates.Add(date.GameDate);
                                         foreach (NBAdbToolboxSchedule.Game game in date.Games)
                                         {
-                                            if(game.GameDateTimeEst <= DateTime.Now)
+                                            gamesInProgressDict.Add(game.GameId, (game.HomeTeam.Wins, game.HomeTeam.Losses, game.AwayTeam.Wins, game.AwayTeam.Losses));
+                                            if (game.GameDateTimeEst <= DateTime.Now)
                                             {
                                                 gamesRS.Add(Int32.Parse(game.GameId));
-                                                RegularSeasonGames++;
+                                                RegularSeasonGames++; 
                                             }
                                         }
                                     }
@@ -2002,10 +2062,10 @@ namespace NBAdbToolbox
                                 {
                                     gameLabelH ="";
                                     gameLabelDetailH ="";
-                                    homeWins = 0;
-                                    homeLosses = 0;
-                                    awayWins = 0;
-                                    awayLosses = 0;
+                                    homeWins = gamesInProgressDict["00" + lblCurrentGameCount].Item1;
+                                    homeLosses = gamesInProgressDict["00" + lblCurrentGameCount].Item2;
+                                    awayWins = gamesInProgressDict["00" + lblCurrentGameCount].Item3;
+                                    awayLosses = gamesInProgressDict["00" + lblCurrentGameCount].Item4;
                                     awayGames = awayWins + awayLosses;
                                 }
                                 else
@@ -5466,10 +5526,12 @@ namespace NBAdbToolbox
             if (isConnected && dbConnection) //If both server and db connectionstrings work
             {
                 DbExists();
+                RefTimerUIController = "DbExists";
             }
             else if (isConnected && !dbConnection) //If ONLY server connection string works
             {
                 DbMissing();
+                RefTimerUIController = "DbExists";
             }
             else if (!isConnected && !dbConnection) //If neither work
             {
