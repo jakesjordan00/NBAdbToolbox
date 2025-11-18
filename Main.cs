@@ -206,7 +206,7 @@ namespace NBAdbToolbox
         public ComboBox boxRefreshSettings = new ComboBox
         {
             Visible = true,
-            Items = { "10 Seconds", "15 Seconds", "30 Seconds", "45 Seconds", "60 Seconds", "90 Seconds", "2 Minutes",  "5 Minutes", "10 Minutes"}            
+            Items = { "10 Seconds", "15 Seconds", "30 Seconds", "45 Seconds", "60 Seconds", "90 Seconds", "2 Minutes", "5 Minutes", "10 Minutes" }
         };
 
         public Label lblRefreshTimer = new Label
@@ -719,7 +719,7 @@ namespace NBAdbToolbox
                 {
 
                     DateTime stopper = settings.Scoreboard == "Today" ? DateTime.Today : DateTime.Now.Date.AddDays(-1);
-                    if (date.Games[0].GameDateEst < stopper && date.Games[date.Games.Count-1].GameStatus != 2)
+                    if (date.Games[0].GameDateEst < stopper && date.Games[date.Games.Count - 1].GameStatus != 2)
                     {
                         continue;
                     }
@@ -784,7 +784,7 @@ namespace NBAdbToolbox
                     {
                         GameID = game.GameId;
                         Panel GamePanel = CreatePanel(panelWidth, pnlScrollScoreboard.Height, 0, 0, tan, true, BorderStyle.FixedSingle, Cursors.Hand, "GamePanel-" + game.GameId);
-                        
+
                         allScoreboardPanels.Add(GamePanel);
 
 
@@ -891,7 +891,7 @@ namespace NBAdbToolbox
                             ForeColor = dark,
                             Name = "DynamicStartTime-" + game.GameId
                         };
-                        if(game.GameStatus == 2 || (game.GameDateTimeEst <= DateTime.Now && game.GameStatus != 3 && game.GameStatus != 1))
+                        if (game.GameStatus == 2 || (game.GameDateTimeEst <= DateTime.Now && game.GameStatus != 3 && game.GameStatus != 1))
                         {
                             gamesInProgress.Add(game.GameId);
                         }
@@ -923,7 +923,7 @@ namespace NBAdbToolbox
                         gameCount++;
                         totalCount++;
                         gameIterator++;
-                        if(totalCount % 10 == 0 && gameIterator != sortedGames.Count)
+                        if (totalCount % 10 == 0 && gameIterator != sortedGames.Count)
                         {
                             Panel DatePanel2 = CreatePanel(panelWidth, pnlScoreboard.Height, 0, 0, dark, true, BorderStyle.Fixed3D, Cursors.Hand, "DatePanel" + dateCount);
                             allScoreboardPanels.Add(DatePanel2);
@@ -974,7 +974,7 @@ namespace NBAdbToolbox
                 pnlScrollScoreboardBack.Click += ScrollScoreboardBack;
                 picArrowScoreboardBack.Click += ScrollScoreboardBack;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Label ErrorLabel = new Label
                 {
@@ -999,7 +999,7 @@ namespace NBAdbToolbox
             int endIndex = Math.Min(startIndex + ItemsPerPage, allScoreboardPanels.Count);
 
             //Add panels for current page
-            int xPosition = pnlScrollScoreboard.Width; 
+            int xPosition = pnlScrollScoreboard.Width;
             //if(pageNumber != 0)
             //{
             //    xPosition = pnlScrollScoreboard.Width;
@@ -1097,22 +1097,29 @@ namespace NBAdbToolbox
         public int playerMovementRowsDeleted = 0;
 
         public string RefTimerUIController = "";
-
+        public int gamesToCatchUp = 0;
         public async Task GetGamesInProgress()
         {
-            DateTime yesterday = DateTime.Today.AddDays(-1).AddMilliseconds(-1);
+            gamesToCatchUp = 0;
+            dbGameDatesInProgress = dbGameDatesInProgress.Distinct().ToList();
+            DateTime lastDate = dbLastDate == DateTime.MaxValue ? DateTime.Today.AddDays(-1).AddMilliseconds(-1) : dbLastDate.AddMilliseconds(-1);
             try
             {
                 foreach (NBAdbToolboxSchedule.GameDates date in schedule.LeagueSchedule.GameDates)
                 {
-                    if (DateTime.Parse(date.GameDate) <= yesterday && !dbGameDatesInProgress.Contains(DateTime.Parse(date.GameDate)))
+                    DateTime gameDate = DateTime.Parse(date.GameDate);
+                    if (gameDate <= lastDate)
                     {
                         continue;
+                    }
+                    else if (gameDate >= DateTime.Today.AddDays(1))
+                    {
+                        break;
                     }
                     var sortedGames = date.Games.OrderBy(g => g.GameDateTimeEst).ToList();
                     foreach (NBAdbToolboxSchedule.Game game in sortedGames)
                     {
-                        if (game.GameStatus == 2 || (game.GameDateTimeEst <= DateTime.Now && game.GameStatus != 3))
+                        if (game.GameStatus == 2 || (game.GameDateTimeEst <= DateTime.Now && game.GameStatus != 3) || (!caughtUp))
                         {
                             if (game.GameStatus == 1)
                             {
@@ -1145,13 +1152,19 @@ namespace NBAdbToolbox
                                     }
                                 }
                             }
-                            else
+                            else if (game.GameDateTimeEst >= dbLastDateTime)
                             {
+                                gamesToCatchUp++;
                                 gamesInProgress.Add(game.GameId);
                                 gamesInProgressDict.Add(game.GameId, (game.HomeTeam.Wins, game.HomeTeam.Losses, game.AwayTeam.Wins, game.AwayTeam.Losses));
                             }
+                            //else
+                            //{
+                            //    gamesInProgress.Add(game.GameId);
+                            //    gamesInProgressDict.Add(game.GameId, (game.HomeTeam.Wins, game.HomeTeam.Losses, game.AwayTeam.Wins, game.AwayTeam.Losses));
+                            //}
                         }
-                        else if (dbGameDatesInProgress.Contains(DateTime.Parse(date.GameDate)))
+                        else if (dbGameDatesInProgress.Contains(gameDate))
                         {
                             if (!dbGamesInProgress.Contains(game.GameId))
                             {
@@ -1173,26 +1186,40 @@ namespace NBAdbToolbox
                     }
                 }
             }
-            catch(NullReferenceException nullRef)
+            catch (NullReferenceException nullRef)
             {
                 schedule = await leagueSchedule.GetSchedule(1);
                 await GetGamesInProgress();
             }
-            
+
         }
         public List<string> dbGamesInProgress = new List<string>();
         public List<DateTime> dbGameDatesInProgress = new List<DateTime>();
+        public DateTime dbLastDate = new DateTime();
+        public DateTime dbLastDateTime = new DateTime();
         public async Task CheckDbGamesInProgress()
         {
             SeasonID = 2025;
             SqlConnection CheckDbGamesConn = new SqlConnection(cString);
             using (SqlCommand ActionNumberCheck = new SqlCommand($@"
+        
+            with LastCompleteGame as(
+            select top 1 g.SeasonID, g.GameID, g.Date, e.Status, g.Datetime
+            from Game g
+            left join GameExt e on g.SeasonID = e.SeasonID and g.GameID = e.GameID
+            where g.SeasonID = {SeasonID} and e.Status = 'Final'
+            order by Datetime desc)
             select g.SeasonID
-                    , g.GameID
-                    , g.Date
+                 , g.GameID
+                 , g.Date
+                 , case when e.Status != 'Final' then '' else e.Status end Status
+                 , g.Datetime
             from Game g
             left join GameExt e on g.SeasonID = e.SeasonID and g.GameID = e.GameID
             where g.SeasonID = {SeasonID} and case when e.Status != 'Final' then null else e.Status end is null
+            union
+            select *
+            from LastCompleteGame
             order by g.SeasonID desc, g.Date desc, g.GameID desc
             ", CheckDbGamesConn))
             {
@@ -1201,19 +1228,33 @@ namespace NBAdbToolbox
                 CheckDbGamesConn.Open();
                 using (SqlDataReader reader = ActionNumberCheck.ExecuteReader())
                 {
-                    if (!reader.HasRows)
+                    int i = 0;
+                    while (reader.Read())
                     {
-                        caughtUp = true;
-                    }
-                    else
-                    {
-                        while (reader.Read())
+                        //gamesInProgress.Add("00" + reader.GetInt32(1));
+                        if (string.IsNullOrWhiteSpace(reader.GetString(3)))
                         {
-                            gamesInProgress.Add("00" + reader.GetInt32(1));
                             dbGamesInProgress.Add("00" + reader.GetInt32(1));
                             dbGameDatesInProgress.Add(reader.GetDateTime(2));
+                            dbLastDate = reader.GetDateTime(2);
                         }
+                        dbLastDateTime = reader.GetDateTime(4);
+                        i++;
                     }
+                    if(i == 1)
+                    {
+                        dbLastDate = DateTime.MaxValue;
+                        dbLastDateTime = DateTime.MaxValue;
+                        caughtUp = true;
+                    }
+                    else if(i == 0)
+                    {
+                        dbLastDate = DateTime.MaxValue;
+                        dbLastDateTime = DateTime.MaxValue;
+                        caughtUp = true;
+
+                    }
+                    
                 }
                 CheckDbGamesConn.Close();
             }
@@ -1226,7 +1267,7 @@ namespace NBAdbToolbox
             dbGamesInProgress.Clear();
             dbGameDatesInProgress.Clear();
             lblRefreshTimer.Visible = true;
-            if (sender == "RefreshGamesInProgress" && !isPopulating && !caughtUp)
+            if (!caughtUp && RefTimerUIController == "DbExists")
             {
                 lblRefreshTimer.Text = "Finding any incomplete games in Db...";
                 Task DbGamesInProgress = CheckDbGamesInProgress();
@@ -1238,13 +1279,13 @@ namespace NBAdbToolbox
             await GamesInProgress;
             DateTime now = DateTime.Now;
             int dur = (int)(earliestGame.Subtract(now).TotalSeconds) + 300;
-            int trueGamesInProg = gamesInProgress.Count - dbGamesInProgress.Count;
+            int trueGamesInProg = gamesInProgress.Count - gamesToCatchUp;
             if (gamesInProgress.Count != 0 && trueGamesInProg != 0)
             {
                 await GetDailyScoreBoard();
                 timeRemaining = (int)(settings.RefreshInterval);
             }
-            else if(gamesAboutToStart.Count != 0)
+            else if (gamesAboutToStart.Count != 0)
             {
                 timeRemaining = (int)(settings.RefreshInterval);
             }
@@ -1252,7 +1293,7 @@ namespace NBAdbToolbox
             {
                 timeRemaining = dur;
             }
-            if (sender == "RefreshGamesInProgress" && !isPopulating)
+            if ((sender == "RefreshGamesInProgress" || !caughtUp) && !isPopulating)
             {
                 stopwatchInsert.Restart();
                 lblRefreshTimer.Text = "Refreshing...";
@@ -1458,7 +1499,9 @@ namespace NBAdbToolbox
             {
                 gameUpdateSB.Append(", WinnerID = ").Append(game.awayTeam.teamId).Append(", WScore = ").Append(game.awayTeam.score).Append(", LoserID = ").Append(game.homeTeam.teamId).Append(", LScore = ").Append(game.homeTeam.score).Append(" where GameID = ").Append(GameID);
             }
-            gameUpdateSB.Append("\n update GameExt set Periods = ").Append(game.period).Append(" where GameID = ").Append(GameID);
+            gameUpdateSB.Append("\n update GameExt set Periods = ").Append(game.period)
+                .Append(", Status = '").Append(game.gameStatusText)
+                .Append("' where GameID = ").Append(GameID);
             
             foreach (NBAdbToolboxCurrent.Team team in new[] { game.homeTeam, game.awayTeam })
             {
@@ -2058,14 +2101,15 @@ namespace NBAdbToolbox
                                 int awayGames = 0;
                                 GameID = gamesRS[i];
                                 lblCurrentGameCount.Text = GameID.ToString();
-                                if(SeasonID == 2025)
+                                string gameStr = GameID.ToString();
+                                if (SeasonID == 2025)
                                 {
                                     gameLabelH ="";
                                     gameLabelDetailH ="";
-                                    homeWins = gamesInProgressDict["00" + lblCurrentGameCount].Item1;
-                                    homeLosses = gamesInProgressDict["00" + lblCurrentGameCount].Item2;
-                                    awayWins = gamesInProgressDict["00" + lblCurrentGameCount].Item3;
-                                    awayLosses = gamesInProgressDict["00" + lblCurrentGameCount].Item4;
+                                    homeWins = gamesInProgressDict["00" + gameStr].Item1;
+                                    homeLosses = gamesInProgressDict["00" + gameStr].Item2;
+                                    awayWins = gamesInProgressDict["00" + gameStr].Item3;
+                                    awayLosses = gamesInProgressDict["00" + gameStr].Item4;
                                     awayGames = awayWins + awayLosses;
                                 }
                                 else
