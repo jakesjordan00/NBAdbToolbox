@@ -1285,7 +1285,7 @@ namespace NBAdbToolbox
                 await GetDailyScoreBoard();
                 timeRemaining = (int)(settings.RefreshInterval);
             }
-            else if (gamesAboutToStart.Count != 0)
+            else if (gamesAboutToStart.Count != 0 && caughtUp)
             {
                 timeRemaining = (int)(settings.RefreshInterval);
             }
@@ -2593,7 +2593,7 @@ namespace NBAdbToolbox
                 {
                     settings.Scoreboard = boxScoreboardDisplay.SelectedItem.ToString();
                     WriteSettings();
-                    InitializeAsync("Main");
+                    InitializeAsync("MainChangeDisplay");
                 }
                 lblSettings.Focus();
             };
