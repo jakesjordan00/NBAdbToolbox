@@ -1137,6 +1137,7 @@ namespace NBAdbToolbox
                                         {
                                             gamesInProgress.Add(game.GameId);
                                             gamesInProgressDict.Add(game.GameId, (game.HomeTeam.Wins, game.HomeTeam.Losses, game.AwayTeam.Wins, game.AwayTeam.Losses));
+                                            gamesToCatchUp++;
                                             //Play-by-play data exists, do something
                                         }
                                         else
@@ -1279,7 +1280,9 @@ namespace NBAdbToolbox
             await GamesInProgress;
             DateTime now = DateTime.Now;
             int dur = (int)(earliestGame.Subtract(now).TotalSeconds) + 300;
+            gamesInProgress = gamesInProgress.Distinct().ToList();
             int trueGamesInProg = gamesInProgress.Count - gamesToCatchUp;
+            caughtUp = trueGamesInProg == 0;
             if (gamesInProgress.Count != 0 && trueGamesInProg != 0)
             {
                 await GetDailyScoreBoard();
