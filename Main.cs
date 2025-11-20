@@ -1202,8 +1202,7 @@ namespace NBAdbToolbox
         {
             SeasonID = 2025;
             SqlConnection CheckDbGamesConn = new SqlConnection(cString);
-            using (SqlCommand ActionNumberCheck = new SqlCommand($@"
-        
+            string lastGameQuery = $@"        
             with LastCompleteGame as(
             select top 1 g.SeasonID, g.GameID, g.Date, e.Status, g.Datetime
             from Game g
@@ -1222,7 +1221,8 @@ namespace NBAdbToolbox
             select *
             from LastCompleteGame
             order by g.SeasonID desc, g.Date desc, g.GameID desc
-            ", CheckDbGamesConn))
+            ";
+            using (SqlCommand ActionNumberCheck = new SqlCommand(lastGameQuery, CheckDbGamesConn))
             {
                 lblCurrentGameCount.Text = $"{GameID}";
                 ActionNumberCheck.CommandType = CommandType.Text;
@@ -1288,6 +1288,11 @@ namespace NBAdbToolbox
                 await GetDailyScoreBoard();
                 timeRemaining = (int)(settings.RefreshInterval);
             }
+            else if (gamesInProgress.Count != 0 && caughtUp)
+            {
+                await GetDailyScoreBoard();
+                timeRemaining = (int)(settings.RefreshInterval);
+            }
             else if (gamesAboutToStart.Count != 0 && caughtUp)
             {
                 timeRemaining = (int)(settings.RefreshInterval);
@@ -1297,6 +1302,16 @@ namespace NBAdbToolbox
                 timeRemaining = dur;
             }
             if ((sender == "RefreshGamesInProgress" || !caughtUp) && !isPopulating)
+            {
+                stopwatchInsert.Restart();
+                lblRefreshTimer.Text = "Refreshing...";
+                lblCurrentGame.Visible = true;
+                lblCurrentGameCount.Visible = true;
+                lblRefreshTimer.Left = (pnlWelcome.ClientSize.Width - lblRefreshTimer.Width) / 2;
+                Application.DoEvents();
+                await RefreshGamesInProgress();
+            }
+            else if (sender != "RefreshGamesInProgress" && caughtUp && !isPopulating)
             {
                 stopwatchInsert.Restart();
                 lblRefreshTimer.Text = "Refreshing...";
