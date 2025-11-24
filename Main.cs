@@ -1123,6 +1123,8 @@ namespace NBAdbToolbox
                         {
                             if (game.GameStatus == 1)
                             {
+                                DateTime gameStartMinus3 = game.GameDateTimeEst.AddMinutes(-3);
+                                DateTime gameStartPlus12 = game.GameDateTimeEst.AddMinutes(12);
                                 string pbpLink = "https://cdn.nba.com/static/json/liveData/playbyplay/playbyplay_" + game.GameId + ".json";
                                 using (HttpClient client = new HttpClient())
                                 {
@@ -1140,9 +1142,14 @@ namespace NBAdbToolbox
                                             gamesToCatchUp++;
                                             //Play-by-play data exists, do something
                                         }
-                                        else
+                                        
+                                        else if (gameStartMinus3 <= DateTime.Now && gameStartPlus12 >= DateTime.Now)
                                         {
                                             gamesAboutToStart.Add(game.GameId);
+                                        }
+                                        else
+                                        {
+                                            //gamesAboutToStart.Add(game.GameId);
                                         }
                                     }
                                     catch
@@ -1153,7 +1160,7 @@ namespace NBAdbToolbox
                                     }
                                 }
                             }
-                            else if (game.GameDateTimeEst >= dbLastDateTime)
+                            else if (game.GameDateTimeEst >= dbLastDateTime && dbInProg)
                             {
                                 gamesToCatchUp++;
                                 gamesInProgress.Add(game.GameId);
@@ -1237,19 +1244,20 @@ namespace NBAdbToolbox
                         {
                             dbGamesInProgress.Add("00" + reader.GetInt32(1));
                             dbGameDatesInProgress.Add(reader.GetDateTime(2));
-                            dbLastDate = reader.GetDateTime(2);
+                            dbInProg = true;
                         }
+                        dbLastDate = reader.GetDateTime(2);
                         dbLastDateTime = reader.GetDateTime(4);
                         i++;
                     }
                     if(i == 1)
                     {
-                        dbLastDate = DateTime.MaxValue;
-                        dbLastDateTime = DateTime.MaxValue;
-                        caughtUp = true;
+                        dbInProg = false;
+                        caughtUp = false;
                     }
                     else if(i == 0)
                     {
+                        dbInProg = false;
                         dbLastDate = DateTime.MaxValue;
                         dbLastDateTime = DateTime.MaxValue;
                         caughtUp = true;
@@ -1259,8 +1267,13 @@ namespace NBAdbToolbox
                 }
                 CheckDbGamesConn.Close();
             }
+            if(dbLastDate == DateTime.Today.Date)
+            {
+                dbInProg = true;
+            }
         }
-
+        public bool dbInProg = false;
+        public bool dbCaughtUp = false;
         public async Task InitializeAsync(string sender)
         {
             gamesInProgress.Clear();
@@ -1283,6 +1296,7 @@ namespace NBAdbToolbox
             gamesInProgress = gamesInProgress.Distinct().ToList();
             int trueGamesInProg = gamesInProgress.Count - gamesToCatchUp;
             caughtUp = trueGamesInProg == 0;
+            //caughtUp == dbGamesInProgress.Count == 0;
             if (gamesInProgress.Count != 0 && trueGamesInProg != 0)
             {
                 await GetDailyScoreBoard();
@@ -1311,7 +1325,7 @@ namespace NBAdbToolbox
                 Application.DoEvents();
                 await RefreshGamesInProgress();
             }
-            else if (sender != "RefreshGamesInProgress" && caughtUp && !isPopulating)
+            else if (sender != "RefreshGamesInProgress" && caughtUp && !isPopulating && dbInProg)
             {
                 stopwatchInsert.Restart();
                 lblRefreshTimer.Text = "Refreshing...";
