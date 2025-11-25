@@ -123,11 +123,12 @@ namespace NBAdbToolboxSchedule
             }
             return Schedule;
         }
-        public async Task<string> GetJSON(int SeasonID)
+
+
+        public async Task<List<Game>> AutoRefresh_CheckSchedule(DateTime startDatetime, DateTime cutoffDatetime)
         {
-            string pbpLink = "https://cdn.nba.com/static/json/staticData/scheduleLeagueV2_2.json";
+            string pbpLink = "https://cdn.nba.com/static/json/staticData/scheduleLeagueV2_1.json";
             string json = "";
-            string build = "";
             ScheduleLeagueV2 Schedule = new ScheduleLeagueV2();
             List<Game> GameList = new List<Game>();
             using (HttpClient client = new HttpClient())
@@ -145,17 +146,44 @@ namespace NBAdbToolboxSchedule
                 }
 
             }
+            DateTime startDate = startDatetime.Date;
+            DateTime cutoffDate = cutoffDatetime.Date;
             foreach (GameDates date in Schedule.LeagueSchedule.GameDates)
             {
+                if(DateTime.Parse(date.GameDate) < startDate)
+                {
+                    continue;
+                }
+                else if (DateTime.Parse(date.GameDate) > cutoffDate)
+                {
+                    break;
+                }
                 foreach (Game game in date.Games)
                 {
-                    build += "update TeamBox set Wins = " + game.HomeTeam.Wins + ", Losses = " + game.HomeTeam.Losses + " where SeasonID = " + SeasonID + " and GameID = " + game.GameId + " and TeamID = " + game.HomeTeam.TeamId + "\n" +
-                        "update TeamBox set Wins = " + game.AwayTeam.Wins + ", Losses = " + game.AwayTeam.Losses + " where SeasonID = " + SeasonID + " and GameID = " + game.GameId + " and TeamID = " + game.AwayTeam.TeamId + "\n";
+                    if (game.GameDateTimeEst <= startDatetime)
+                    {
+                        continue;
+                    }
+                    if (game.GameDateTimeEst < cutoffDatetime)
+                    {
+                        GameList.Add(game);
+                    }
+                    else
+                    {
+                        break;
+                    }
 
                 }
+                if (DateTime.Parse(date.GameDate) > DateTime.Today)
+                {
+                    break;
+                }
             }
-            return build;
+            GameList = GameList.OrderBy(g => Int32.Parse(g.GameId)).ToList();
+            return GameList;
         }
+
+
     }
 
     public class Meta

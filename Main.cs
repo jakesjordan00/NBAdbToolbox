@@ -1278,6 +1278,15 @@ namespace NBAdbToolbox
         {
             gamesInProgress.Clear();
             gamesInProgressDict.Clear();
+            Task GetScoreboardSchedule = GetScoreBoard();
+            await GetScoreboardSchedule;
+
+        }
+
+        public async Task InitializeAsyncV2(string sender)
+        {
+            gamesInProgress.Clear();
+            gamesInProgressDict.Clear();
             dbGamesInProgress.Clear();
             dbGameDatesInProgress.Clear();
             lblRefreshTimer.Visible = true;
@@ -2906,7 +2915,130 @@ namespace NBAdbToolbox
 
 
             this.Shown += AfterLoad;
+
+            System.Windows.Forms.Timer delayedStartTimer = new System.Windows.Forms.Timer();
+            delayedStartTimer.Interval = 500;
+            delayedStartTimer.Tick += (s, e) =>
+            {
+                delayedStartTimer.Stop();
+                delayedStartTimer.Dispose();
+                //Kick off background refresh check
+                Task.Run(async () =>
+                {
+                    await AutoRefresh(); 
+                });
+            };
+            delayedStartTimer.Start();
         }
+        public void AutoRefresh_StatusLabel(Label label, string text)
+        {
+            this.Invoke(new System.Action(() =>
+            {
+                label.Text = text;
+                label.Left = (pnlWelcome.ClientSize.Width - lblRefreshTimer.Width) / 2;
+            }));
+        }
+        public async Task AutoRefresh()
+        {
+            AutoRefresh_StatusLabel(lblRefreshTimer, "Checking Db Status...");
+            DateTime rn = DateTime.Now;
+            bool checkScoreboard = rn.Hour >= 12 || rn.Hour <= 3;
+            DateTime cutoffDatetime = DateTime.Today;
+            DateTime startDateTime = DateTime.Today.AddDays(-1);
+            List<NBAdbToolboxSchedule.Game> games = new List<NBAdbToolboxSchedule.Game>();
+            if (checkScoreboard)
+            {
+                AutoRefresh_StatusLabel(lblRefreshTimer, "Checking Db Status: Today's Scoreboard");
+                cutoffDatetime = await scoreboardToday.AutoRefreshGetScoreBoard();
+            }
+            AutoRefresh_StatusLabel(lblRefreshTimer, "Checking Db Status: Last completed Game in db");
+            startDateTime = await AutoRefresh_CheckDb(cutoffDatetime);
+            AutoRefresh_StatusLabel(lblRefreshTimer, "Checking Db Status: League Schedule");
+            games = await leagueSchedule.AutoRefresh_CheckSchedule(startDateTime, cutoffDatetime);
+            if(games.Count > 0)
+            {
+                AutoRefresh_StatusLabel(lblRefreshTimer, $"Checking Db Status: Found {games.Count} Games to update.");
+                //Show popup on UI thread
+                DialogResult result = DialogResult.Cancel;
+                this.Invoke(new System.Action(() =>
+                {
+                    result = MessageBox.Show(
+                        $"{games.Count} Games need to be updated. Proceed?",
+                        "Auto Refresh",
+                        MessageBoxButtons.OKCancel,
+                        MessageBoxIcon.Question
+                    );
+                }));
+
+                if (result == DialogResult.OK)
+                {
+                    //Proceed with update
+                    //Disable buttons, run upsert, re-enable buttons
+                    await AutoRefresh_UpsertGames(games);
+                }
+            }
+            else
+            {
+                AutoRefresh_StatusLabel(lblRefreshTimer, $"Up to Date!");
+            }
+
+
+
+            //AutoRefreshStatusLabel("Checking Db Status: Done");
+
+        }
+        public async Task<DateTime> AutoRefresh_CheckDb(DateTime cutoffDatetime)
+        {
+            DateTime startDateTime = DateTime.Today.AddDays(-1);
+            string query = $@"
+select top 1 g.SeasonID, g.GameID, g.Date, e.Status, g.Datetime, p.Description
+from Game g
+left join GameExt e on g.SeasonID = e.SeasonID and g.GameID = e.GameID
+left join PlayByPlay p on g.SeasonID = p.SeasonID and g.GameID = p.GameID and Description = 'Game End'
+where g.SeasonID = 2025 and e.Status = 'Final'
+order by Datetime desc";
+            SqlConnection CheckDbGamesConn = new SqlConnection(cString);
+            using (SqlCommand ActionNumberCheck = new SqlCommand(query, CheckDbGamesConn))
+            {
+                lblCurrentGameCount.Text = $"{GameID}";
+                ActionNumberCheck.CommandType = CommandType.Text;
+                CheckDbGamesConn.Open();
+                using (SqlDataReader reader = ActionNumberCheck.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        startDateTime = reader.GetDateTime(4);
+                    }
+                }
+                CheckDbGamesConn.Close();
+            }
+            return startDateTime;
+        }
+
+        public async Task AutoRefresh_UpsertGames(List<NBAdbToolboxSchedule.Game> games)
+        {
+            lblCurrentGameCount.Visible = true;
+            lblCurrentGame.Visible = true;
+            lblCurrentRefreshStatus.Visible = true;
+            foreach (NBAdbToolboxSchedule.Game game in games)
+            {
+                GameID = Int32.Parse(game.GameId);
+                lblCurrentGameCount.Text = GameID.ToString();
+                AutoRefresh_StatusLabel(lblCurrentRefreshStatus, $"{GameID}: Getting PlayByPlay...");
+                rootCPBP = await currentDataPBP.GetJSON(GameID, SeasonID);
+                AutoRefresh_StatusLabel(lblCurrentRefreshStatus, $"{GameID}: Getting PlayByPlay...Done! Getting Box...");
+                lblCurrentRefreshStatus.Text += "Done! Getting Box...";
+                rootC = await currentData.GetJSON(GameID, SeasonID);
+                AutoRefresh_StatusLabel(lblCurrentRefreshStatus, $"{GameID}: Getting PlayByPlay...Done! Getting Box...");
+                if (rootCPBP.game == null || rootC.game == null)
+                {
+                    lblCurrentRefreshStatus.Text += " Game not in progress.\n";
+                    continue;
+                }
+
+            }
+        }
+
 
 
 

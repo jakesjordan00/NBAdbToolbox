@@ -45,6 +45,36 @@ namespace NBAdbToolboxTodaysScoreboard
             }
             return Games;
         }
+
+
+        public async Task<DateTime> AutoRefreshGetScoreBoard()
+        {
+            //If Version = 1, 2024
+            //If Version = 2, 2025
+            string link = "https://cdn.nba.com/static/json/liveData/scoreboard/todaysScoreboard_00.json";
+            string json = "";
+            Root Scoreboard = new Root();
+            List<Game> GameList = new List<Game>();
+            using (HttpClient client = new HttpClient())
+            {
+                client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0");
+                client.Timeout = TimeSpan.FromSeconds(3.5);
+                try
+                {
+                    json = await client.GetStringAsync(link);
+                    Scoreboard = JsonConvert.DeserializeObject<Root>(json);
+                }
+                catch
+                {
+                    Scoreboard = null;
+                }
+
+            }
+            Dictionary<int, DateTime> scoreboardGames = new Dictionary<int, DateTime>();
+            var sortedGames = Scoreboard.scoreboard.Games.OrderBy(g => g.GameEt).ToList();
+            DateTime cutoffDate = sortedGames.First().GameEt;
+            return cutoffDate;
+        }
     }
 
     public class Root
@@ -65,6 +95,7 @@ namespace NBAdbToolboxTodaysScoreboard
         public string GameClock { get; set; }
         public Team HomeTeam { get; set; }
         public Team AwayTeam { get; set; }
+        public DateTime GameEt { get; set; }
     }
     public class Team
     {
