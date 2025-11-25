@@ -3017,27 +3017,359 @@ order by Datetime desc";
 
         public async Task AutoRefresh_UpsertGames(List<NBAdbToolboxSchedule.Game> games)
         {
-            lblCurrentGameCount.Visible = true;
-            lblCurrentGame.Visible = true;
-            lblCurrentRefreshStatus.Visible = true;
+            SeasonID = 2025;
+            int gameBoxesUpdated = 0;
+            int pbpsUpdatedFull = 0;
+
+            string gamesStr = string.Join(", ", games.Select(g => Int32.Parse(g.GameId)));
+            
+            string query = $@"
+with MaxActions as (
+    select SeasonID
+         , GameID
+         , ActionNumber
+         , ActionID
+         , ROW_NUMBER() over (partition by GameID order by ActionNumber desc) as rn
+    from PlayByPlay
+    where SeasonID = 2025 and GameID in({gamesStr})
+)
+select g.SeasonID                --0
+     , g.GameID                  --1
+     , g.Date                    --2
+     , g.GameType                --3
+     , g.HomeID                  --4
+     , g.HScore                  --5
+     , g.AwayID                  --6
+     , g.AScore                  --7
+     , g.WinnerID                --8
+     , g.WScore                  --9
+     , g.LoserID                 --10
+     , g.LScore                  --11
+     , g.Datetime                --12
+     , e.Attendance              --13
+     , e.Sellout                 --14
+     , e.Status                  --15
+     , e.Periods                 --16
+     , coalesce(m.ActionNumber, 0) as MaxActionNumber --17
+     , coalesce(m.ActionID, 0) as MaxActionID         --18
+from Game g
+left join GameExt e on g.SeasonID = e.SeasonID and g.GameID = e.GameID
+left join MaxActions m on g.SeasonID = m.SeasonID and g.GameID = m.GameID and m.rn = 1
+where g.GameID in({gamesStr})
+
+";
+            Dictionary<string, (int, int)> gamesWithPbpActions = new Dictionary<string, (int, int)>();
+            SqlConnection CheckDbGamesConn = new SqlConnection(cString);
+            using (SqlCommand ActionNumberCheck = new SqlCommand(query, CheckDbGamesConn))
+            {
+                lblCurrentGameCount.Text = $"{GameID}";
+                ActionNumberCheck.CommandType = CommandType.Text;
+                CheckDbGamesConn.Open();
+                using (SqlDataReader reader = ActionNumberCheck.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        gamesWithPbpActions.Add("00" + reader.GetInt32(1), (reader.GetInt32(17), reader.GetInt32(18)));
+                    }
+                }
+                CheckDbGamesConn.Close();
+            }
+
+            //lblCurrentGameCount.Visible = true;
+            //lblCurrentGame.Visible = true;
+            //lblCurrentRefreshStatus.Visible = true;
             foreach (NBAdbToolboxSchedule.Game game in games)
             {
                 GameID = Int32.Parse(game.GameId);
-                lblCurrentGameCount.Text = GameID.ToString();
-                AutoRefresh_StatusLabel(lblCurrentRefreshStatus, $"{GameID}: Getting PlayByPlay...");
+                //lblCurrentGameCount.Text = GameID.ToString();
+                AutoRefresh_StatusLabel(lblCurrentRefreshStatus, $"{GameID}: Getting PlayByPlay Data...");
                 rootCPBP = await currentDataPBP.GetJSON(GameID, SeasonID);
-                AutoRefresh_StatusLabel(lblCurrentRefreshStatus, $"{GameID}: Getting PlayByPlay...Done! Getting Box...");
-                lblCurrentRefreshStatus.Text += "Done! Getting Box...";
-                rootC = await currentData.GetJSON(GameID, SeasonID);
-                AutoRefresh_StatusLabel(lblCurrentRefreshStatus, $"{GameID}: Getting PlayByPlay...Done! Getting Box...");
-                if (rootCPBP.game == null || rootC.game == null)
+                var actions = rootCPBP.game.actions;
+                int lastActionNumber = 0;
+                int lastActionID = 0;
+                bool haveGame = false;
+                if (gamesWithPbpActions.TryGetValue(game.GameId, out var pbpInfo))
                 {
-                    lblCurrentRefreshStatus.Text += " Game not in progress.\n";
+                    //Update
+                    lastActionNumber = pbpInfo.Item1;
+                    lastActionID = pbpInfo.Item2;
+                    actions = rootCPBP.game.actions.Where(a => a.actionNumber > lastActionNumber).ToList();
+                    haveGame = true;
+                }
+                else
+                {
+                    haveGame = false;
+                    //Insert
+                }
+                Task FormatPLayByPlay = AutoRefresh_PlayByPlay(actions, lastActionID);
+
+
+                AutoRefresh_StatusLabel(lblCurrentRefreshStatus, $"{GameID}: Getting Box Data...");
+                rootC = await currentData.GetJSON(GameID, SeasonID);
+                AutoRefresh_StatusLabel(lblCurrentRefreshStatus, $"{GameID}: Upserting Box Data...");
+                if (!haveGame)
+                {
+                    CurrentDataDriver(rootC.game);
+                    await FormatPLayByPlay;
+                }
+                else
+                {
+                    StringBuilder update = AutoRefresh_UpdateGame(rootC.game, game.HomeTeam.Wins, game.HomeTeam.Losses, game.AwayTeam.Wins, game.AwayTeam.Losses);
+                    string execute = update.ToString();
+                    Task UpdateTask = CurrentDataInsert(execute);
+
+                }
+
+                AutoRefresh_StatusLabel(lblCurrentRefreshStatus, $"{GameID}: Inserting PlayByPlay Data...");
+                if (playByPlayBuilder.Length > 0)
+                {
+                    string execute = playByPlayBuilder.ToString();
+                    Task InsertPlayByPlay = CurrentDataInsert(execute);
+                    //await InsertPlayByPlay;
+                    playByPlayBuilder.Clear();
+                }
+                else
+                {
                     continue;
                 }
+            }
+        }
+
+
+
+
+
+        public async Task AutoRefresh_PlayByPlay(List<NBAdbToolboxCurrentPBP.Action> actions, int lastActionID)
+        {
+
+            int j = lastActionID + 1;
+            try
+            {
+                for (int i = 0; i < actions.Count; i++)
+                {
+                    CurrentPlayByPlay(actions[i], Int32.Parse(rootCPBP.game.gameId), j);
+                    j++;
+                }
+            }
+            catch (ArgumentOutOfRangeException e)
+            {
 
             }
         }
+        public StringBuilder AutoRefresh_UpdateGame(NBAdbToolboxCurrent.Game game, int hW, int hL, int aW, int aL)
+        {
+            StringBuilder gameUpdateSB = new StringBuilder("update Game set HScore = ").Append(game.homeTeam.score).Append(", AScore = ").Append(game.awayTeam.score);
+            if (game.homeTeam.score > game.awayTeam.score)
+            {
+                gameUpdateSB.Append(", WinnerID = ").Append(game.homeTeam.teamId).Append(", WScore = ").Append(game.homeTeam.score).Append(", LoserID = ").Append(game.awayTeam.teamId).Append(", LScore = ").Append(game.awayTeam.score).Append(" where GameID = ").Append(GameID);
+            }
+            else
+            {
+                gameUpdateSB.Append(", WinnerID = ").Append(game.awayTeam.teamId).Append(", WScore = ").Append(game.awayTeam.score).Append(", LoserID = ").Append(game.homeTeam.teamId).Append(", LScore = ").Append(game.homeTeam.score).Append(" where GameID = ").Append(GameID);
+            }
+            gameUpdateSB.Append("\n update GameExt set Periods = ").Append(game.period)
+                .Append(", Status = '").Append(game.gameStatusText)
+                .Append("' where GameID = ").Append(GameID);
+
+            foreach (NBAdbToolboxCurrent.Team team in new[] { game.homeTeam, game.awayTeam })
+            {
+                int MatchupID = (team == game.homeTeam) ? game.awayTeam.teamId : game.homeTeam.teamId;
+                string homeAway = (team == game.homeTeam) ? "Home" : "Away";
+                gameUpdateSB.Append(AutoRefresh_UpdateTeamBox(team, MatchupID, homeAway, hW, hL, aW, aL));
+                gameUpdateSB.Append(AutoRefresh_UpdatePlayerBox(game, team, MatchupID));
+            }
+            return gameUpdateSB;
+
+        }
+
+        public async Task<StringBuilder> AutoRefresh_UpdateTeamBox(NBAdbToolboxCurrent.Team team, int MatchupID, string homeAway, int hW, int hL, int aW, int aL)
+        {
+            StringBuilder gameUpdateSB = new StringBuilder();
+            int wins = (homeAway == "Home") ? hW : aW;
+            int losses = (homeAway == "Home") ? hL : aL;
+
+            gameUpdateSB.Append("\n Update TeamBox set Assists = ")
+            .Append(team.statistics.assists).Append(", AssistsTurnoverRatio = ")
+            .Append(team.statistics.assistsTurnoverRatio.ToString(CultureInfo.InvariantCulture)).Append(", BenchPoints = ")
+            .Append(team.statistics.benchPoints).Append(", BiggestLead = ")
+            .Append(team.statistics.biggestLead).Append(", BiggestLeadScore = '")
+            .Append(team.statistics.biggestLeadScore).Append("', BiggestScoringRun = ")
+            .Append(team.statistics.biggestScoringRun).Append(", BiggestScoringRunScore = '")
+            .Append(team.statistics.biggestScoringRunScore).Append("', Blocks = ")
+            .Append(team.statistics.blocks).Append(", BlocksReceived = ")
+            .Append(team.statistics.blocksReceived).Append(", FastBreakPointsAttempted = ")
+            .Append(team.statistics.fastBreakPointsAttempted).Append(", FastBreakPointsMade = ")
+            .Append(team.statistics.fastBreakPointsMade).Append(", FastBreakPointsPercentage = ")
+            .Append(team.statistics.fastBreakPointsPercentage.ToString(CultureInfo.InvariantCulture)).Append(", FGA = ")
+            .Append(team.statistics.fieldGoalsAttempted).Append(", FieldGoalsEffectiveAdjusted = ")
+            .Append(team.statistics.fieldGoalsEffectiveAdjusted.ToString(CultureInfo.InvariantCulture)).Append(", FGM = ")
+            .Append(team.statistics.fieldGoalsMade).Append(", [FG%] = ")
+            .Append(team.statistics.fieldGoalsPercentage.ToString(CultureInfo.InvariantCulture)).Append(", FoulsOffensive = ")
+            .Append(team.statistics.foulsOffensive).Append(", FoulsDrawn = ")
+            .Append(team.statistics.foulsDrawn).Append(", FoulsPersonal = ")
+            .Append(team.statistics.foulsPersonal).Append(", FoulsTeam = ")
+            .Append(team.statistics.foulsTeam).Append(", FoulsTechnical = ")
+            .Append(team.statistics.foulsTechnical).Append(", FoulsTeamTechnical = ")
+            .Append(team.statistics.foulsTeamTechnical).Append(", FTA = ")
+            .Append(team.statistics.freeThrowsAttempted).Append(", FTM = ")
+            .Append(team.statistics.freeThrowsMade).Append(", [FT%] = ")
+            .Append(team.statistics.freeThrowsPercentage.ToString(CultureInfo.InvariantCulture)).Append(", LeadChanges = ")
+            .Append(team.statistics.leadChanges).Append(", Points = ")
+            .Append(team.statistics.points).Append(", PointsAgainst = ")
+            .Append(team.statistics.pointsAgainst).Append(", PointsFastBreak = ")
+            .Append(team.statistics.pointsFastBreak).Append(", PointsFromTurnovers = ")
+            .Append(team.statistics.pointsFromTurnovers).Append(", PointsInThePaint = ")
+            .Append(team.statistics.pointsInThePaint).Append(", PointsInThePaintAttempted = ")
+            .Append(team.statistics.pointsInThePaintAttempted).Append(", PointsInThePaintMade = ")
+            .Append(team.statistics.pointsInThePaintMade).Append(", PointsInThePaintPercentage = ")
+            .Append(team.statistics.pointsInThePaintPercentage.ToString(CultureInfo.InvariantCulture)).Append(", PointsSecondChance = ")
+            .Append(team.statistics.pointsSecondChance).Append(", ReboundsDefensive = ")
+            .Append(team.statistics.reboundsDefensive).Append(", ReboundsOffensive = ")
+            .Append(team.statistics.reboundsOffensive).Append(", ReboundsPersonal = ")
+            .Append(team.statistics.reboundsPersonal).Append(", ReboundsTeam = ")
+            .Append(team.statistics.reboundsTeam).Append(", ReboundsTeamDefensive = ")
+            .Append(team.statistics.reboundsTeamDefensive).Append(", ReboundsTeamOffensive = ")
+            .Append(team.statistics.reboundsTeamOffensive).Append(", ReboundsTotal = ")
+            .Append(team.statistics.reboundsTotal).Append(", SecondChancePointsAttempted = ")
+            .Append(team.statistics.secondChancePointsAttempted).Append(", SecondChancePointsMade = ")
+            .Append(team.statistics.secondChancePointsMade).Append(", SecondChancePointsPercentage = ")
+            .Append(team.statistics.secondChancePointsPercentage.ToString(CultureInfo.InvariantCulture)).Append(", Steals = ")
+            .Append(team.statistics.steals).Append(", FG3A = ")
+            .Append(team.statistics.threePointersAttempted).Append(", FG3M = ")
+            .Append(team.statistics.threePointersMade).Append(", [FG3%] = ")
+            .Append(team.statistics.threePointersPercentage.ToString(CultureInfo.InvariantCulture)).Append(", TimeLeading = '")
+            .Append(team.statistics.timeLeading).Append("', TimesTied = ")
+            .Append(team.statistics.timesTied).Append(", TrueShootingAttempts = ")
+            .Append(team.statistics.trueShootingAttempts.ToString(CultureInfo.InvariantCulture)).Append(", TrueShootingPercentage = ")
+            .Append(team.statistics.trueShootingPercentage.ToString(CultureInfo.InvariantCulture)).Append(", Turnovers = ")
+            .Append(team.statistics.turnovers).Append(", TurnoversTeam = ")
+            .Append(team.statistics.turnoversTeam).Append(", TurnoversTotal = ")
+            .Append(team.statistics.turnoversTotal).Append(", FG2A = ")
+            .Append(team.statistics.twoPointersAttempted).Append(", FG2M = ")
+            .Append(team.statistics.twoPointersMade).Append(", [FG2%] = ")
+            .Append(team.statistics.twoPointersPercentage.ToString(CultureInfo.InvariantCulture)).Append(", Wins = ")
+            .Append(wins).Append(", Losses = ").Append(losses)
+            .Append("\nwhere GameID = ").Append(GameID).Append(" and TeamID = ").Append(team.teamId).Append(" and MatchupID = ").Append(MatchupID);
+
+            return gameUpdateSB;
+
+
+        }
+        public async Task<StringBuilder> AutoRefresh_UpdatePlayerBox(NBAdbToolboxCurrent.Game game, NBAdbToolboxCurrent.Team team, int MatchupID)
+        {
+            StringBuilder gameUpdateSB = new StringBuilder();
+            foreach (NBAdbToolboxCurrent.Player player in team.players)
+            {
+                int GameID = Int32.Parse(game.gameId);
+                int TeamID = team.teamId;
+
+                gameUpdateSB.Append("\nupdate PlayerBox set FGM = ")
+                    .Append(player.statistics.fieldGoalsMade).Append(", FGA = ")
+                    .Append(player.statistics.fieldGoalsAttempted).Append(", [FG%] = ")
+                    .Append(player.statistics.fieldGoalsPercentage.ToString(CultureInfo.InvariantCulture)).Append(", FG2M = ")
+                    .Append(player.statistics.twoPointersMade).Append(", FG2A = ")
+                    .Append(player.statistics.twoPointersAttempted).Append(", [FG2%] = ")
+                    .Append(player.statistics.twoPointersPercentage.ToString(CultureInfo.InvariantCulture)).Append(", FG3M = ")
+                    .Append(player.statistics.threePointersMade).Append(", FG3A = ")
+                    .Append(player.statistics.threePointersAttempted).Append(", [FG3%] = ")
+                    .Append(player.statistics.threePointersPercentage.ToString(CultureInfo.InvariantCulture)).Append(", FTM = ")
+                    .Append(player.statistics.freeThrowsMade).Append(", FTA = ")
+                    .Append(player.statistics.freeThrowsAttempted).Append(", [FT%] = ")
+                    .Append(player.statistics.freeThrowsPercentage.ToString(CultureInfo.InvariantCulture)).Append(", ReboundsDefensive = ")
+                    .Append(player.statistics.reboundsDefensive).Append(", ReboundsOffensive = ")
+                    .Append(player.statistics.reboundsOffensive).Append(", ReboundsTotal = ")
+                    .Append(player.statistics.reboundsTotal).Append(", Assists = ")
+                    .Append(player.statistics.assists).Append(", Turnovers = ")
+                    .Append(player.statistics.turnovers).Append(", Steals = ")
+                    .Append(player.statistics.steals).Append(", Blocks = ")
+                    .Append(player.statistics.blocks).Append(", Points = ")
+                    .Append(player.statistics.points).Append(", FoulsPersonal = ")
+                    .Append(player.statistics.foulsPersonal);
+
+
+                double minCalc = 0;
+                string minutes = player.statistics.minutes;
+                bool hasMinutes = !string.IsNullOrEmpty(minutes);
+
+                if (hasMinutes)
+                {
+                    //Only try to parse if we have minutes
+                    int mIndex = minutes.IndexOf("M");
+                    if (mIndex > 0)
+                    {
+                        string minString = minutes.Replace("PT", "").Replace("M", ":").Replace("S", "");
+                        //Check if we can safely parse
+                        if (mIndex + 1 < minutes.Length && mIndex + 6 <= minutes.Length &&
+                            double.TryParse(minutes.Substring(2, mIndex - 2), out double mins) &&
+                            double.TryParse(minutes.Substring(mIndex + 1, 5), out double secs))
+                        {
+                            minCalc = Math.Round(mins + (secs / 60), 2);
+                        }
+                        else if (minString.Length == 5) //This handles 
+                        {
+                            string[] timeParts = minString.Split(':');
+                            if (timeParts.Length == 2 && int.TryParse(timeParts[0], out int mins2) && int.TryParse(timeParts[1], out int secs2))
+                            {
+                                minCalc = Math.Round(mins2 + (secs2 / 60.0), 2);
+                            }
+                        }
+                        string[] timePart2s = minString.Split(':');
+                        if (timePart2s.Length == 2 && int.TryParse(timePart2s[0], out int mins3) && int.TryParse(timePart2s[1].Substring(0, 2), out int secs3))
+                        {
+                            minCalc = Math.Round(mins3 + (secs3 / 60.0), 2);
+                        }
+                        if (!minString.Contains("."))
+                        {
+                            minString = minString + ".00";
+                        }
+
+                        //Minutes column
+                        gameUpdateSB.Append(", Minutes = '").Append(minString).Append("'");
+
+                    }
+                    //Plus/minus points if they exist
+                    if (player.statistics.plus != 0)
+                    {
+                        gameUpdateSB.Append(", PlusMinusPoints = ").Append(player.statistics.plusMinusPoints).Append(", Plus = ").Append(player.statistics.plus).Append(", Minus = ").Append(player.statistics.minus);
+                    }
+                }
+
+                gameUpdateSB.Append(", AssistsTurnoverRatio = ");
+                if (player.statistics.turnovers > 0)
+                {
+                    gameUpdateSB.Append((Math.Round((double)player.statistics.assists / player.statistics.turnovers, 3)).ToString(CultureInfo.InvariantCulture));
+                }
+                else
+                {
+                    gameUpdateSB.Append("0");
+                }
+
+                gameUpdateSB.Append(", MinutesCalculated = ").Append(minCalc.ToString(CultureInfo.InvariantCulture)).Append(", BlocksReceived = ").Append(player.statistics.blocksReceived)
+                    .Append(", PointsFastBreak = ").Append(player.statistics.pointsFastBreak).Append(", PointsInThePaint = ").Append(player.statistics.pointsInThePaint).Append(", PointsSecondChance = ")
+                    .Append(player.statistics.pointsSecondChance).Append(", FoulsOffensive = ").Append(player.statistics.foulsOffensive)
+                    .Append(", FoulsDrawn = ").Append(player.statistics.foulsDrawn).Append(", FoulsTechnical = ").Append(player.statistics.foulsTechnical);
+
+
+
+                //.Append().Append("").Append().Append("");
+
+
+
+                gameUpdateSB.Append("\nwhere GameID = ").Append(GameID).Append(" and TeamID = ").Append(TeamID).Append(" and MatchupID = ").Append(MatchupID).Append(" and PlayerID = ").Append(player.personId).Append("\n");
+            }
+
+            return gameUpdateSB;
+
+
+            //Add remaining columns
+
+        }
+
+
+
+
+
+
 
 
 
