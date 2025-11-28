@@ -1100,9 +1100,7 @@ namespace NBAdbToolbox
         public int gamesToCatchUp = 0;
         public async Task GetGamesInProgress()
         {
-            gamesToCatchUp = 0;
-            dbGameDatesInProgress = dbGameDatesInProgress.Distinct().ToList();
-            DateTime lastDate = dbLastDate == DateTime.MaxValue ? DateTime.Today.AddDays(-1).AddMilliseconds(-1) : dbLastDate.AddMilliseconds(-1);
+            DateTime lastDate = DateTime.Today.AddDays(-1).AddMilliseconds(-1);
             try
             {
                 foreach (NBAdbToolboxSchedule.GameDates date in schedule.LeagueSchedule.GameDates)
@@ -1139,7 +1137,6 @@ namespace NBAdbToolbox
                                         {
                                             gamesInProgress.Add(game.GameId);
                                             gamesInProgressDict.Add(game.GameId, (game.HomeTeam.Wins, game.HomeTeam.Losses, game.AwayTeam.Wins, game.AwayTeam.Losses));
-                                            gamesToCatchUp++;
                                             //Play-by-play data exists, do something
                                         }
                                         
@@ -1160,31 +1157,6 @@ namespace NBAdbToolbox
                                     }
                                 }
                             }
-                            else if (game.GameDateTimeEst >= dbLastDateTime && dbInProg)
-                            {
-                                gamesToCatchUp++;
-                                gamesInProgress.Add(game.GameId);
-                                gamesInProgressDict.Add(game.GameId, (game.HomeTeam.Wins, game.HomeTeam.Losses, game.AwayTeam.Wins, game.AwayTeam.Losses));
-                            }
-                            //else
-                            //{
-                            //    gamesInProgress.Add(game.GameId);
-                            //    gamesInProgressDict.Add(game.GameId, (game.HomeTeam.Wins, game.HomeTeam.Losses, game.AwayTeam.Wins, game.AwayTeam.Losses));
-                            //}
-                        }
-                        else if (dbGameDatesInProgress.Contains(gameDate))
-                        {
-                            if (!dbGamesInProgress.Contains(game.GameId))
-                            {
-                                gamesInProgress.Remove(game.GameId);
-                                gamesInProgressDict.Remove(game.GameId);
-                                continue;
-                            }
-                            else
-                            {
-                                gamesInProgress.Add(game.GameId);
-                                gamesInProgressDict.Add(game.GameId, (game.HomeTeam.Wins, game.HomeTeam.Losses, game.AwayTeam.Wins, game.AwayTeam.Losses));
-                            }
                         }
                         else
                         {
@@ -1201,80 +1173,7 @@ namespace NBAdbToolbox
             }
 
         }
-        public List<string> dbGamesInProgress = new List<string>();
-        public List<DateTime> dbGameDatesInProgress = new List<DateTime>();
-        public DateTime dbLastDate = new DateTime();
-        public DateTime dbLastDateTime = new DateTime();
-        public async Task CheckDbGamesInProgress()
-        {
-            SeasonID = 2025;
-            SqlConnection CheckDbGamesConn = new SqlConnection(cString);
-            string lastGameQuery = $@"        
-            with LastCompleteGame as(
-            select top 1 g.SeasonID, g.GameID, g.Date, e.Status, g.Datetime
-            from Game g
-            left join GameExt e on g.SeasonID = e.SeasonID and g.GameID = e.GameID
-            where g.SeasonID = {SeasonID} and e.Status = 'Final'
-            order by Datetime desc)
-            select g.SeasonID
-                 , g.GameID
-                 , g.Date
-                 , case when e.Status != 'Final' then '' else e.Status end Status
-                 , g.Datetime
-            from Game g
-            left join GameExt e on g.SeasonID = e.SeasonID and g.GameID = e.GameID
-            where g.SeasonID = {SeasonID} and case when e.Status != 'Final' then null else e.Status end is null
-            union
-            select *
-            from LastCompleteGame
-            order by g.SeasonID desc, g.Date desc, g.GameID desc
-            ";
-            using (SqlCommand ActionNumberCheck = new SqlCommand(lastGameQuery, CheckDbGamesConn))
-            {
-                lblCurrentGameCount.Text = $"{GameID}";
-                ActionNumberCheck.CommandType = CommandType.Text;
-                CheckDbGamesConn.Open();
-                using (SqlDataReader reader = ActionNumberCheck.ExecuteReader())
-                {
-                    int i = 0;
-                    while (reader.Read())
-                    {
-                        //gamesInProgress.Add("00" + reader.GetInt32(1));
-                        if (string.IsNullOrWhiteSpace(reader.GetString(3)))
-                        {
-                            dbGamesInProgress.Add("00" + reader.GetInt32(1));
-                            dbGameDatesInProgress.Add(reader.GetDateTime(2));
-                            dbInProg = true;
-                        }
-                        dbLastDate = reader.GetDateTime(2);
-                        dbLastDateTime = reader.GetDateTime(4);
-                        i++;
-                    }
-                    if(i == 1)
-                    {
-                        dbInProg = false;
-                        caughtUp = false;
-                    }
-                    else if(i == 0)
-                    {
-                        dbInProg = false;
-                        dbLastDate = DateTime.MaxValue;
-                        dbLastDateTime = DateTime.MaxValue;
-                        caughtUp = true;
-
-                    }
-                    
-                }
-                CheckDbGamesConn.Close();
-            }
-            if(dbLastDate == DateTime.Today.Date)
-            {
-                dbInProg = true;
-            }
-        }
-        public bool dbInProg = false;
-        public bool dbCaughtUp = false;
-        public async Task InitializeAsync(string sender)
+        public async Task InitializeAsyncV2(string sender)
         {
             gamesInProgress.Clear();
             gamesInProgressDict.Clear();
@@ -1283,19 +1182,11 @@ namespace NBAdbToolbox
 
         }
 
-        public async Task InitializeAsyncV2(string sender)
+        public async Task InitializeAsync(string sender)
         {
             gamesInProgress.Clear();
             gamesInProgressDict.Clear();
-            dbGamesInProgress.Clear();
-            dbGameDatesInProgress.Clear();
             lblRefreshTimer.Visible = true;
-            if (!caughtUp && RefTimerUIController == "DbExists")
-            {
-                lblRefreshTimer.Text = "Finding any incomplete games in Db...";
-                Task DbGamesInProgress = CheckDbGamesInProgress();
-                await DbGamesInProgress;
-            }
             Task GetScoreboardSchedule = GetScoreBoard();
             await GetScoreboardSchedule;
             Task GamesInProgress = GetGamesInProgress();
@@ -1303,10 +1194,8 @@ namespace NBAdbToolbox
             DateTime now = DateTime.Now;
             int dur = (int)(earliestGame.Subtract(now).TotalSeconds) + 300;
             gamesInProgress = gamesInProgress.Distinct().ToList();
-            int trueGamesInProg = gamesInProgress.Count - gamesToCatchUp;
-            caughtUp = trueGamesInProg == 0;
             //caughtUp == dbGamesInProgress.Count == 0;
-            if (gamesInProgress.Count != 0 && trueGamesInProg != 0)
+            if (gamesInProgress.Count != 0)
             {
                 await GetDailyScoreBoard();
                 timeRemaining = (int)(settings.RefreshInterval);
@@ -1324,17 +1213,7 @@ namespace NBAdbToolbox
             {
                 timeRemaining = dur;
             }
-            if ((sender == "RefreshGamesInProgress" || !caughtUp) && !isPopulating)
-            {
-                stopwatchInsert.Restart();
-                lblRefreshTimer.Text = "Refreshing...";
-                lblCurrentGame.Visible = true;
-                lblCurrentGameCount.Visible = true;
-                lblRefreshTimer.Left = (pnlWelcome.ClientSize.Width - lblRefreshTimer.Width) / 2;
-                Application.DoEvents();
-                await RefreshGamesInProgress();
-            }
-            else if (sender != "RefreshGamesInProgress" && caughtUp && !isPopulating && dbInProg)
+            if (sender == "RefreshGamesInProgress" && !isPopulating)
             {
                 stopwatchInsert.Restart();
                 lblRefreshTimer.Text = "Refreshing...";
@@ -1346,6 +1225,10 @@ namespace NBAdbToolbox
             }
             else
             {
+                int minutes = timeRemaining / 60;
+                int seconds = timeRemaining % 60;
+                lblRefreshTimer.Text = $"Next refresh: {minutes}:{seconds:D2}";
+                lblRefreshTimer.Left = (pnlWelcome.ClientSize.Width - lblRefreshTimer.Width) / 2;
                 refreshTimer.Start();
             }
 
@@ -2953,8 +2836,10 @@ namespace NBAdbToolbox
             }
             AutoRefresh_StatusLabel(lblRefreshTimer, "Checking Db Status: Last completed Game in db");
             startDateTime = await AutoRefresh_CheckDb(cutoffDatetime);
+            AutoRefresh_StatusLabel(lblRefreshTimer, "Checking Db Status: Any games missing updates?");
+            Dictionary<DateTime, (int, DateTime)> gameStatusNotUpdated = await AutoRefresh_CheckDbGameStatus(cutoffDatetime);
             AutoRefresh_StatusLabel(lblRefreshTimer, "Checking Db Status: League Schedule");
-            games = await leagueSchedule.AutoRefresh_CheckSchedule(startDateTime, cutoffDatetime);
+            games = await leagueSchedule.AutoRefresh_CheckSchedule(startDateTime, cutoffDatetime, gameStatusNotUpdated);
             if(games.Count > 0)
             {
                 AutoRefresh_StatusLabel(lblRefreshTimer, $"Checking Db Status: Found {games.Count} Games to update.");
@@ -3000,7 +2885,6 @@ order by Datetime desc";
             SqlConnection CheckDbGamesConn = new SqlConnection(cString);
             using (SqlCommand ActionNumberCheck = new SqlCommand(query, CheckDbGamesConn))
             {
-                lblCurrentGameCount.Text = $"{GameID}";
                 ActionNumberCheck.CommandType = CommandType.Text;
                 CheckDbGamesConn.Open();
                 using (SqlDataReader reader = ActionNumberCheck.ExecuteReader())
@@ -3013,6 +2897,32 @@ order by Datetime desc";
                 CheckDbGamesConn.Close();
             }
             return startDateTime;
+        }
+        public async Task<Dictionary<DateTime, (int, DateTime)>> AutoRefresh_CheckDbGameStatus(DateTime startDateTime)
+        {
+            Dictionary<DateTime, (int, DateTime)> gameStatusNotUpdated = new Dictionary<DateTime, (int, DateTime)>();
+            string query = $@"
+select top 1 g.SeasonID, g.GameID, g.Date, e.Status, g.Datetime, p.Description
+from Game g
+left join GameExt e on g.SeasonID = e.SeasonID and g.GameID = e.GameID
+left join PlayByPlay p on g.SeasonID = p.SeasonID and g.GameID = p.GameID and Description = 'Game End'
+where g.SeasonID = 2025 and e.Status != 'Final' and Datetime <= '{startDateTime}'
+order by Datetime desc";
+            SqlConnection CheckDbGamesConn = new SqlConnection(cString);
+            using (SqlCommand ActionNumberCheck = new SqlCommand(query, CheckDbGamesConn))
+            {
+                ActionNumberCheck.CommandType = CommandType.Text;
+                CheckDbGamesConn.Open();
+                using (SqlDataReader reader = ActionNumberCheck.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        gameStatusNotUpdated.Add(reader.GetDateTime(2), (reader.GetInt32(1), reader.GetDateTime(4)));
+                    }
+                }
+                CheckDbGamesConn.Close();
+            }
+            return gameStatusNotUpdated;
         }
 
         public async Task AutoRefresh_UpsertGames(List<NBAdbToolboxSchedule.Game> games)
@@ -3101,8 +3011,8 @@ where g.GameID in({gamesStr})
                     haveGame = false;
                     //Insert
                 }
-                Task FormatPLayByPlay = AutoRefresh_PlayByPlay(actions, lastActionID);
 
+                Task FormatPlayByPlay = actions.Count > 0 ? AutoRefresh_PlayByPlay(actions, lastActionID) : Task.CompletedTask;
 
                 AutoRefresh_StatusLabel(lblCurrentRefreshStatus, $"{GameID}: Getting Box Data...");
                 rootC = await currentData.GetJSON(GameID, SeasonID);
@@ -3110,16 +3020,14 @@ where g.GameID in({gamesStr})
                 if (!haveGame)
                 {
                     CurrentDataDriver(rootC.game);
-                    await FormatPLayByPlay;
+                    await FormatPlayByPlay;
                 }
                 else
                 {
-                    StringBuilder update = AutoRefresh_UpdateGame(rootC.game, game.HomeTeam.Wins, game.HomeTeam.Losses, game.AwayTeam.Wins, game.AwayTeam.Losses);
-                    string execute = update.ToString();
-                    Task UpdateTask = CurrentDataInsert(execute);
+                    string update = AutoRefresh_UpdateGame(rootC.game, game.HomeTeam.Wins, game.HomeTeam.Losses, game.AwayTeam.Wins, game.AwayTeam.Losses);
+                    Task UpdateTask = CurrentDataInsert(update);
 
                 }
-
                 AutoRefresh_StatusLabel(lblCurrentRefreshStatus, $"{GameID}: Inserting PlayByPlay Data...");
                 if (playByPlayBuilder.Length > 0)
                 {
@@ -3133,6 +3041,8 @@ where g.GameID in({gamesStr})
                     continue;
                 }
             }
+            AutoRefresh_StatusLabel(lblRefreshTimer, "Done!");
+            refreshTimer.Start();
         }
 
 
@@ -3156,7 +3066,7 @@ where g.GameID in({gamesStr})
 
             }
         }
-        public StringBuilder AutoRefresh_UpdateGame(NBAdbToolboxCurrent.Game game, int hW, int hL, int aW, int aL)
+        public string AutoRefresh_UpdateGame(NBAdbToolboxCurrent.Game game, int hW, int hL, int aW, int aL)
         {
             StringBuilder gameUpdateSB = new StringBuilder("update Game set HScore = ").Append(game.homeTeam.score).Append(", AScore = ").Append(game.awayTeam.score);
             if (game.homeTeam.score > game.awayTeam.score)
@@ -3171,18 +3081,26 @@ where g.GameID in({gamesStr})
                 .Append(", Status = '").Append(game.gameStatusText)
                 .Append("' where GameID = ").Append(GameID);
 
+
+            StringBuilder boxUpdateSB = new StringBuilder();
             foreach (NBAdbToolboxCurrent.Team team in new[] { game.homeTeam, game.awayTeam })
             {
                 int MatchupID = (team == game.homeTeam) ? game.awayTeam.teamId : game.homeTeam.teamId;
                 string homeAway = (team == game.homeTeam) ? "Home" : "Away";
-                gameUpdateSB.Append(AutoRefresh_UpdateTeamBox(team, MatchupID, homeAway, hW, hL, aW, aL));
-                gameUpdateSB.Append(AutoRefresh_UpdatePlayerBox(game, team, MatchupID));
+                boxUpdateSB.Append(AutoRefresh_UpdateTeamBox(team, MatchupID, homeAway, hW, hL, aW, aL));
+                boxUpdateSB.Append(AutoRefresh_UpdatePlayerBox(game, team, MatchupID));
             }
-            return gameUpdateSB;
+            gameUpdateSB.Append(boxUpdateSB.ToString());
+            string gameUpdate = gameUpdateSB.ToString();
+            if (gameUpdate.Contains("System"))
+            {
+
+            }
+            return gameUpdate;
 
         }
 
-        public async Task<StringBuilder> AutoRefresh_UpdateTeamBox(NBAdbToolboxCurrent.Team team, int MatchupID, string homeAway, int hW, int hL, int aW, int aL)
+        public StringBuilder AutoRefresh_UpdateTeamBox(NBAdbToolboxCurrent.Team team, int MatchupID, string homeAway, int hW, int hL, int aW, int aL)
         {
             StringBuilder gameUpdateSB = new StringBuilder();
             int wins = (homeAway == "Home") ? hW : aW;
@@ -3251,11 +3169,16 @@ where g.GameID in({gamesStr})
             .Append(wins).Append(", Losses = ").Append(losses)
             .Append("\nwhere GameID = ").Append(GameID).Append(" and TeamID = ").Append(team.teamId).Append(" and MatchupID = ").Append(MatchupID);
 
+            string gameUpdate = gameUpdateSB.ToString();
+            if (gameUpdate.Contains("System"))
+            {
+
+            }
             return gameUpdateSB;
 
 
         }
-        public async Task<StringBuilder> AutoRefresh_UpdatePlayerBox(NBAdbToolboxCurrent.Game game, NBAdbToolboxCurrent.Team team, int MatchupID)
+        public StringBuilder AutoRefresh_UpdatePlayerBox(NBAdbToolboxCurrent.Game game, NBAdbToolboxCurrent.Team team, int MatchupID)
         {
             StringBuilder gameUpdateSB = new StringBuilder();
             foreach (NBAdbToolboxCurrent.Player player in team.players)
@@ -3357,7 +3280,12 @@ where g.GameID in({gamesStr})
 
                 gameUpdateSB.Append("\nwhere GameID = ").Append(GameID).Append(" and TeamID = ").Append(TeamID).Append(" and MatchupID = ").Append(MatchupID).Append(" and PlayerID = ").Append(player.personId).Append("\n");
             }
+            
+            string gameUpdate = gameUpdateSB.ToString();
+            if (gameUpdate.Contains("System"))
+            {
 
+            }
             return gameUpdateSB;
 
 

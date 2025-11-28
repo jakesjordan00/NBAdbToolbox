@@ -125,7 +125,7 @@ namespace NBAdbToolboxSchedule
         }
 
 
-        public async Task<List<Game>> AutoRefresh_CheckSchedule(DateTime startDatetime, DateTime cutoffDatetime)
+        public async Task<List<Game>> AutoRefresh_CheckSchedule(DateTime startDatetime, DateTime cutoffDatetime, Dictionary<DateTime, (int, DateTime)> gameStatusNotUpdated)
         {
             string pbpLink = "https://cdn.nba.com/static/json/staticData/scheduleLeagueV2_1.json";
             string json = "";
@@ -150,21 +150,21 @@ namespace NBAdbToolboxSchedule
             DateTime cutoffDate = cutoffDatetime.Date;
             foreach (GameDates date in Schedule.LeagueSchedule.GameDates)
             {
-                if(DateTime.Parse(date.GameDate) < startDate)
+                if(DateTime.Parse(date.GameDate) < startDate && !gameStatusNotUpdated.ContainsKey(DateTime.Parse(date.GameDate)))
                 {
                     continue;
                 }
-                else if (DateTime.Parse(date.GameDate) > cutoffDate)
+                else if (DateTime.Parse(date.GameDate) > cutoffDate && !gameStatusNotUpdated.ContainsKey(DateTime.Parse(date.GameDate)))
                 {
                     break;
                 }
                 foreach (Game game in date.Games)
                 {
-                    if (game.GameDateTimeEst <= startDatetime)
+                    if (game.GameDateTimeEst <= startDatetime && !gameStatusNotUpdated.ContainsValue((Int32.Parse(game.GameId), game.GameDateTimeEst)))
                     {
                         continue;
                     }
-                    if (game.GameDateTimeEst < cutoffDatetime)
+                    if (game.GameDateTimeEst < cutoffDatetime || gameStatusNotUpdated.ContainsValue((Int32.Parse(game.GameId), game.GameDateTimeEst)))
                     {
                         GameList.Add(game);
                     }
