@@ -125,7 +125,7 @@ namespace NBAdbToolboxSchedule
         }
 
 
-        public async Task<List<Game>> AutoRefresh_CheckSchedule(DateTime startDatetime, DateTime cutoffDatetime, Dictionary<DateTime, (int, DateTime)> gameStatusNotUpdated)
+        public async Task<List<Game>> AutoRefresh_CheckSchedule(DateTime startDatetime, DateTime cutoffDatetime, Dictionary<int, (DateTime, DateTime)> gameStatusNotUpdated, Dictionary<int, (DateTime, DateTime)> teamBoxRecordsMissing)
         {
             string pbpLink = "https://cdn.nba.com/static/json/staticData/scheduleLeagueV2_1.json";
             string json = "";
@@ -150,21 +150,35 @@ namespace NBAdbToolboxSchedule
             DateTime cutoffDate = cutoffDatetime.Date;
             foreach (GameDates date in Schedule.LeagueSchedule.GameDates)
             {
-                if(DateTime.Parse(date.GameDate) < startDate && !gameStatusNotUpdated.ContainsKey(DateTime.Parse(date.GameDate)))
+                bool dateBeforeStart = DateTime.Parse(date.GameDate) < startDate;
+                bool dateFound_Status = gameStatusNotUpdated
+                    .Any(kvp => kvp.Value.Item1.Date == DateTime.Parse(date.GameDate).Date);
+
+
+                bool dateFound_TeamBox = teamBoxRecordsMissing
+                    .Any(kvp => kvp.Value.Item1.Date == DateTime.Parse(date.GameDate).Date);
+                bool dateAfterEnd = DateTime.Parse(date.GameDate) > cutoffDate;
+                bool dateAfterToday = DateTime.Parse(date.GameDate) > DateTime.Today;
+
+                if (dateBeforeStart && !dateFound_Status && !dateFound_TeamBox)
                 {
                     continue;
                 }
-                else if (DateTime.Parse(date.GameDate) > cutoffDate && !gameStatusNotUpdated.ContainsKey(DateTime.Parse(date.GameDate)))
+                else if (DateTime.Parse(date.GameDate) > cutoffDate && !dateFound_Status && !dateFound_TeamBox)
                 {
                     break;
                 }
                 foreach (Game game in date.Games)
                 {
-                    if (game.GameDateTimeEst <= startDatetime && !gameStatusNotUpdated.ContainsValue((Int32.Parse(game.GameId), game.GameDateTimeEst)))
+                    bool gameBeforeStart = game.GameDateTimeEst <= startDatetime;
+                    bool gameFound_Status = gameStatusNotUpdated.ContainsKey(Int32.Parse(game.GameId));
+                    bool gameFound_TeamBox = teamBoxRecordsMissing.ContainsKey(Int32.Parse(game.GameId));
+                    bool gameInRange = game.GameDateTimeEst < cutoffDatetime;
+                    if (gameBeforeStart && !gameFound_Status && !gameFound_TeamBox)
                     {
                         continue;
                     }
-                    if (game.GameDateTimeEst < cutoffDatetime || gameStatusNotUpdated.ContainsValue((Int32.Parse(game.GameId), game.GameDateTimeEst)))
+                    if ((game.GameStatus != 2 && gameInRange) || gameFound_Status || gameFound_TeamBox)
                     {
                         GameList.Add(game);
                     }
@@ -174,7 +188,7 @@ namespace NBAdbToolboxSchedule
                     }
 
                 }
-                if (DateTime.Parse(date.GameDate) > DateTime.Today)
+                if (dateAfterToday)
                 {
                     break;
                 }
