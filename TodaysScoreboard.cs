@@ -47,7 +47,7 @@ namespace NBAdbToolboxTodaysScoreboard
         }
 
 
-        public async Task<DateTime> AutoRefreshGetScoreBoard()
+        public async Task<List<NBAdbToolboxTodaysScoreboard.Game>> AutoRefreshGetScoreBoard()
         {
             //If Version = 1, 2024
             //If Version = 2, 2025
@@ -70,10 +70,14 @@ namespace NBAdbToolboxTodaysScoreboard
                 }
 
             }
-            Dictionary<int, DateTime> scoreboardGames = new Dictionary<int, DateTime>();
-            var sortedGames = Scoreboard.scoreboard.Games.OrderBy(g => g.GameEt).ToList();
-            DateTime cutoffDate = sortedGames.First().GameEt;
-            return cutoffDate;
+            ////Changed 11/30/25
+            //Dictionary<int, DateTime> scoreboardGames = new Dictionary<int, DateTime>();
+            //var sortedGames = Scoreboard.scoreboard.Games.OrderBy(g => g.GameEt).ToList();
+            //DateTime cutoffDate = sortedGames.First().GameEt;
+            //return cutoffDate;
+
+            List<NBAdbToolboxTodaysScoreboard.Game> games = Scoreboard.scoreboard.Games.OrderBy(g => g.GameEt).ToList();
+            return games;
         }
     }
 
@@ -96,6 +100,9 @@ namespace NBAdbToolboxTodaysScoreboard
         public Team HomeTeam { get; set; }
         public Team AwayTeam { get; set; }
         public DateTime GameEt { get; set; }
+        public int GameStatus { get; set; }
+        public string GameStatusText { get; set; }
+
     }
     public class Team
     {

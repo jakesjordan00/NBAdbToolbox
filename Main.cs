@@ -1293,6 +1293,7 @@ namespace NBAdbToolbox
             lblCurrentGameCount.ForeColor = ThemeColor;
             lblCurrentGame.Visible = true;
             lblCurrentGameCount.Left = lblCurrentGame.Right - (int)(pnlLoad.Width * .02);
+            lblCurrentRefreshStatus.Left = lblCurrentGame.Left;
 
 
             foreach (KeyValuePair<string, (int, int, int, int)> gameDict in gamesInProgressDict)
@@ -2842,10 +2843,24 @@ namespace NBAdbToolbox
             DateTime startDateTime = DateTime.Today.AddDays(-1);
             List<NBAdbToolboxSchedule.Game> games = new List<NBAdbToolboxSchedule.Game>();
             List<NBAdbToolboxSchedule.Game> teamBoxRecords = new List<NBAdbToolboxSchedule.Game>();
+            List<NBAdbToolboxTodaysScoreboard.Game> todaysScoreboardGames = new List<NBAdbToolboxTodaysScoreboard.Game>();
+            List<NBAdbToolboxTodaysScoreboard.Game> todaysScoreboardCompletedGames = new List<NBAdbToolboxTodaysScoreboard.Game>();
             if (checkScoreboard)
             {
                 AutoRefresh_StatusLabel(lblAutoRefreshStatus, "Checking Db Status: Today's Scoreboard");
-                cutoffDatetime = await scoreboardToday.AutoRefreshGetScoreBoard();
+                todaysScoreboardGames = await scoreboardToday.AutoRefreshGetScoreBoard();
+                foreach(NBAdbToolboxTodaysScoreboard.Game game in todaysScoreboardGames)
+                {
+                    if(game.GameStatus == 3)
+                    {
+                        todaysScoreboardCompletedGames.Add(game);
+                    }
+                }
+                cutoffDatetime = todaysScoreboardGames.First().GameEt;
+                foreach (NBAdbToolboxTodaysScoreboard.Game game in todaysScoreboardCompletedGames)
+                {
+                    todaysScoreboardGames.Remove(game);
+                }
             }
             AutoRefresh_StatusLabel(lblAutoRefreshStatus, "Checking Db Status: Last completed Game in db");
             startDateTime = await AutoRefresh_CheckDb(cutoffDatetime);
@@ -2853,6 +2868,17 @@ namespace NBAdbToolbox
             Dictionary<int, (DateTime, DateTime)> gameStatusNotUpdated = await AutoRefresh_CheckDbGameStatus(cutoffDatetime);
             AutoRefresh_StatusLabel(lblAutoRefreshStatus, "Checking Db Status: Missing W/L values in TeamBox");
             Dictionary<int, (DateTime, DateTime)> teamBoxRecordsMissing = await AutoRefresh_CheckDbTeamBoxRecords();
+            foreach (NBAdbToolboxTodaysScoreboard.Game game in todaysScoreboardGames)
+            {
+                if (gameStatusNotUpdated.ContainsKey(Int32.Parse(game.GameId)))
+                {
+                    gameStatusNotUpdated.Remove(Int32.Parse(game.GameId));
+                }
+                if (teamBoxRecordsMissing.ContainsKey(Int32.Parse(game.GameId)))
+                {
+                    teamBoxRecordsMissing.Remove(Int32.Parse(game.GameId));
+                }
+            }
             AutoRefresh_StatusLabel(lblAutoRefreshStatus, "Checking Db Status: League Schedule");
             games = await leagueSchedule.AutoRefresh_CheckSchedule(startDateTime, cutoffDatetime, gameStatusNotUpdated, teamBoxRecordsMissing);
             if (games.Count > 0)
@@ -2932,7 +2958,8 @@ select g.SeasonID, g.GameID, g.Date, e.Status, g.Datetime, p.Description
 from Game g
 left join GameExt e on g.SeasonID = e.SeasonID and g.GameID = e.GameID
 left join PlayByPlay p on g.SeasonID = p.SeasonID and g.GameID = p.GameID and Description = 'Game End'
-where g.SeasonID = 2025 and Datetime <= '{startDateTime}' and (e.Status != 'Final' or p.Description is null) and g.Date < cast(getdate() as date)
+where g.SeasonID = 2025 and (e.Status != 'Final' or p.Description is null) 
+--and Datetime <= '{startDateTime}' and g.Date < cast(getdate() as date)
 order by Datetime desc";
             SqlConnection CheckDbGamesConn = new SqlConnection(cString);
             using (SqlCommand ActionNumberCheck = new SqlCommand(query, CheckDbGamesConn))

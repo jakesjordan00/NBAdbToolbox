@@ -5,5 +5,5 @@
   "WindowSize": "Default",
   "Sound": "Default",
   "Scoreboard": "Today",
-  "RefreshInterval": 600
+  "RefreshInterval": 60
 }
