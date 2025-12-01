@@ -2812,7 +2812,7 @@ namespace NBAdbToolbox
             this.Shown += AfterLoad;
 
             System.Windows.Forms.Timer delayedStartTimer = new System.Windows.Forms.Timer();
-            delayedStartTimer.Interval = 2000;
+            delayedStartTimer.Interval = 5000;
             delayedStartTimer.Tick += (s, e) =>
             {
                 delayedStartTimer.Stop();
