@@ -211,6 +211,7 @@ namespace NBAdbToolbox
 
         public Label lblRefreshTimer = new Label();
         public Label lblAutoRefreshStatus = new Label();
+        public Label lblAutoRefreshDetail = new Label();
 
 
         #endregion
@@ -790,24 +791,38 @@ namespace NBAdbToolbox
                         string aTri = game.AwayTeam.TeamTricode.ToLower();
                         string home = game.HomeTeam.TeamCity + " " + game.HomeTeam.TeamName;
                         string hTri = game.HomeTeam.TeamTricode.ToLower();
-                        PictureBox awayLogo = new PictureBox
+                        PictureBox awayLogo = new PictureBox();
+                        PictureBox homeLogo = new PictureBox();
+                        if(game.HomeTeam.TeamId == 0)
                         {
-                            SizeMode = PictureBoxSizeMode.Zoom,
-                            Image = Image.FromFile(Path.Combine(logoPath, away + ".png")),
-                            BackColor = Color.FromArgb(0, 0, 0, 0),
-                            Width = (int)(GamePanel.Height * .6),
-                            Height = (int)(GamePanel.Height * .6),
-                            Name = "DynamicAwayLogo-" + game.GameId
-                        };
-                        PictureBox homeLogo = new PictureBox
+                            continue;
+                        }
+
+                        try
                         {
-                            SizeMode = PictureBoxSizeMode.Zoom,
-                            Image = Image.FromFile(Path.Combine(logoPath, home + ".png")),
-                            BackColor = Color.FromArgb(0, 0, 0, 0),
-                            Width = (int)(GamePanel.Height * .6),
-                            Height = (int)(GamePanel.Height * .6),
-                            Name = "DynamicHomeLogo-" + game.GameId
-                        };
+                            awayLogo = new PictureBox
+                            {
+                                SizeMode = PictureBoxSizeMode.Zoom,
+                                Image = Image.FromFile(Path.Combine(logoPath, away + ".png")),
+                                BackColor = Color.FromArgb(0, 0, 0, 0),
+                                Width = (int)(GamePanel.Height * .6),
+                                Height = (int)(GamePanel.Height * .6),
+                                Name = "DynamicAwayLogo-" + game.GameId
+                            };
+                            homeLogo = new PictureBox
+                            {
+                                SizeMode = PictureBoxSizeMode.Zoom,
+                                Image = Image.FromFile(Path.Combine(logoPath, home + ".png")),
+                                BackColor = Color.FromArgb(0, 0, 0, 0),
+                                Width = (int)(GamePanel.Height * .6),
+                                Height = (int)(GamePanel.Height * .6),
+                                Name = "DynamicHomeLogo-" + game.GameId
+                            };
+                        }
+                        catch
+                        {
+
+                        }
                         GamePanel.Controls.Add(awayLogo);
                         GamePanel.Controls.Add(homeLogo);
 
@@ -2818,6 +2833,7 @@ namespace NBAdbToolbox
                 delayedStartTimer.Stop();
                 delayedStartTimer.Dispose();
                 lblAutoRefreshStatus.Visible = true;
+                lblAutoRefreshDetail.Visible = true;
                 //Kick off background refresh check
                 Task.Run(async () =>
                 {
@@ -2831,7 +2847,16 @@ namespace NBAdbToolbox
             this.Invoke(new System.Action(() =>
             {
                 label.Text = text;
-                label.Left = (pnlWelcome.ClientSize.Width - lblAutoRefreshStatus.Width) / 2;
+                label.Left = (pnlWelcome.ClientSize.Width - lblAutoRefreshStatus.Width) / 2;                
+            }));
+        }
+        public void AutoRefresh_DetailLabel(Label label, string text)
+        {
+            this.Invoke(new System.Action(() =>
+            {
+                
+                label.Text = text;
+                
             }));
         }
         public async Task AutoRefresh()
@@ -2902,7 +2927,13 @@ namespace NBAdbToolbox
                 {
                     //Proceed with update
                     //Disable buttons, run upsert, re-enable buttons
-                    if(fullUpdates != games.Count)
+
+                    AutoRefresh_ButtonChangeState(btnPopulate, false);
+                    AutoRefresh_ButtonChangeState(btnEdit, false);
+                    AutoRefresh_ButtonChangeState(btnRefresh, false);
+                    AutoRefresh_ButtonChangeState(btnMovement, false);
+                    AutoRefresh_ButtonChangeState(btnGetSchedule, false);
+                    if (fullUpdates != games.Count)
                     {
                         AutoRefresh_StatusLabel(lblAutoRefreshStatus, $"Upserting...");
                         await AutoRefresh_UpsertGames(games);
@@ -2911,6 +2942,12 @@ namespace NBAdbToolbox
                     {
                         AutoRefresh_StatusLabel(lblAutoRefreshStatus, $"Update TeamBox W/L values");
                         await AutoRefresh_UpdateRecords(games);
+                    }
+                    else if(fullUpdates == games.Count)
+                    {
+                        AutoRefresh_StatusLabel(lblAutoRefreshStatus, $"Upserting...");
+                        await AutoRefresh_UpsertGames(games);
+
                     }
                 }
             }
@@ -3081,12 +3118,17 @@ where g.GameID in({gamesStr})
                 }
                 CheckDbGamesConn.Close();
             }
-
+            lblCurrentRefreshStatus.Visible = true;
+            int iter = 0;
+            string labelText = "";
+            string gameText = "";
             foreach (NBAdbToolboxSchedule.Game game in games)
             {
                 GameID = Int32.Parse(game.GameId);
-                //lblCurrentGameCount.Text = GameID.ToString();
-                AutoRefresh_StatusLabel(lblCurrentRefreshStatus, $"{GameID}: Getting PlayByPlay Data...");
+
+                gameText = labelText + $"{GameID}: Getting PlayByPlay Data...";
+                AutoRefresh_DetailLabel(lblAutoRefreshDetail, gameText);
+
                 rootCPBP = await currentDataPBP.GetJSON(GameID, SeasonID);
                 var actions = rootCPBP.game.actions;
                 int lastActionNumber = 0;
@@ -3108,9 +3150,13 @@ where g.GameID in({gamesStr})
 
                 Task FormatPlayByPlay = actions.Count > 0 ? AutoRefresh_PlayByPlay(actions, lastActionID) : Task.CompletedTask;
 
-                AutoRefresh_StatusLabel(lblCurrentRefreshStatus, $"{GameID}: Getting Box Data...");
+                gameText = labelText + $"{GameID}: Getting Box Data...";
+                AutoRefresh_DetailLabel(lblAutoRefreshDetail, gameText);
+
                 rootC = await currentData.GetJSON(GameID, SeasonID);
-                AutoRefresh_StatusLabel(lblCurrentRefreshStatus, $"{GameID}: Upserting Box Data...");
+
+                gameText = labelText + $"{GameID}: Upserting Box Data...";
+                AutoRefresh_DetailLabel(lblAutoRefreshDetail, gameText);
                 if (!haveGame)
                 {
                     CurrentDataDriver(rootC.game);
@@ -3120,9 +3166,10 @@ where g.GameID in({gamesStr})
                 {
                     string update = AutoRefresh_UpdateGame(rootC.game, game.HomeTeam.Wins, game.HomeTeam.Losses, game.AwayTeam.Wins, game.AwayTeam.Losses);
                     Task UpdateTask = CurrentDataInsert(update);
-
                 }
-                AutoRefresh_StatusLabel(lblCurrentRefreshStatus, $"{GameID}: Inserting PlayByPlay Data...");
+
+                gameText = labelText + $"{GameID}: Inserting PlayByPlay Data...";
+                AutoRefresh_DetailLabel(lblAutoRefreshDetail, gameText);
                 if (playByPlayBuilder.Length > 0)
                 {
                     string execute = playByPlayBuilder.ToString();
@@ -3134,6 +3181,9 @@ where g.GameID in({gamesStr})
                 {
                     continue;
                 }
+                AutoRefresh_DetailLabel(lblAutoRefreshDetail, gameText);
+                labelText = gameText + "\n";
+
             }
             AutoRefresh_StatusLabel(lblAutoRefreshStatus, "Done!");
             refreshTimer.Start();
@@ -6490,6 +6540,29 @@ update Player set Name = 'Trey Jemison III' where PlayerID = 1641998;";
 
         }
 
+        public void AutoRefresh_ButtonChangeState(Button btn, bool enabled)
+        {
+
+            this.Invoke(new System.Action(() =>
+            {
+                btn.Enabled = enabled;
+                btn.ForeColor = SubThemeColor;
+                btn.BackColor = ThemeColor;
+                btn.FlatStyle = FlatStyle.Flat;
+                btn.FlatAppearance.BorderSize = 2;
+                btn.FlatAppearance.BorderColor = Color.DodgerBlue;
+                if (btn.Text == "Populate Db")
+                {
+
+                }
+                if (!enabled)
+                {
+                    btn.FlatAppearance.BorderColor = Color.Black;
+                    btn.BackColor = Color.Gainsboro;
+                }
+                btn.AutoSize = true;
+            }));
+        }
         public void ButtonChangeState(Button btn, bool enabled)
         {
             btn.Enabled = enabled;
@@ -8890,6 +8963,12 @@ order by HasVideo desc, ShotDistance desc";
             lblAutoRefreshStatus.AutoSize = true;
             lblAutoRefreshStatus.Left = (pnlLoad.ClientSize.Width - lblAutoRefreshStatus.Width) / 2;
             lblAutoRefreshStatus.Top = 0;
+
+            lblAutoRefreshDetail.Font = lblRefreshTimer.Font;
+            lblAutoRefreshDetail.AutoSize = true;
+            lblAutoRefreshDetail.Left = 4;
+            lblAutoRefreshDetail.Top = lblAutoRefreshStatus.Bottom;
+            
         }
 
         public void ArrangeOverviewControls()
@@ -8994,7 +9073,8 @@ order by HasVideo desc, ShotDistance desc";
             AddPanelElement(pnlDbUtil, lblScheduleLoadDetail);
             AddPanelElement(pnlDbUtil, lblScheduleHeader);
             AddPanelElement(pnlDbUtil, lblMovementLoadProgress);
-            AddPanelElement(pnlDbUtil, lblMovementLoadStatus);            
+            AddPanelElement(pnlDbUtil, lblMovementLoadStatus);
+            AddPanelElement(pnlLoad, lblAutoRefreshDetail);
             AddPanelElement(pnlLoad, lblAutoRefreshStatus);
             AddPanelElement(pnlLoad, lblCurrentRefreshStatus);
             AddPanelElement(pnlLoad, gpmValue);
