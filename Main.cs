@@ -3181,6 +3181,7 @@ where g.GameID in({gamesStr})
                 {
                     continue;
                 }
+                gameText = labelText + $"{GameID}: Done!";
                 AutoRefresh_DetailLabel(lblAutoRefreshDetail, gameText);
                 labelText = gameText + "\n";
 
