@@ -775,7 +775,26 @@ namespace NBAdbToolbox
                     var sortedGames = date.Games.OrderBy(g => g.GameDateTimeEst).ToList();
                     if (sortedGames[0].GameDateEst == DateTime.Today)
                     {
-                        earliestGame = sortedGames[0].GameDateTimeEst;
+                        if(sortedGames[0].GameStatus != 1)
+                        {
+                            foreach (NBAdbToolboxSchedule.Game g in sortedGames)
+                            {
+                                if(g.GameStatus == 1)
+                                {
+                                    earliestGame = g.GameDateTimeEst;
+                                    break;
+                                }
+                            }
+
+                        }
+                        else if(sortedGames[0].GameStatus == 1)
+                        {
+                            earliestGame = sortedGames[0].GameDateTimeEst;
+                        }
+                        else
+                        {
+                            earliestGame = sortedGames[sortedGames.Count - 1].GameDateTimeEst;
+                        }
                     }
                     int gameIterator = 0;
                     foreach (NBAdbToolboxSchedule.Game game in sortedGames)
