@@ -1253,6 +1253,11 @@ namespace NBAdbToolbox
             {
                 stopwatchInsert.Restart();
                 lblRefreshTimer.Text = "Refreshing...";
+                //if (lblAutoRefreshStatus.Visible)
+                //{
+                //    lblAutoRefreshStatus.Visible = false;
+                //    lblAutoRefreshDetail.Visible = false;
+                //}
                 lblCurrentGame.Visible = true;
                 lblCurrentGameCount.Visible = true;
                 lblRefreshTimer.Left = (pnlWelcome.ClientSize.Width - lblRefreshTimer.Width) / 2;
@@ -2964,7 +2969,7 @@ namespace NBAdbToolbox
                     }
                     else if(fullUpdates == games.Count)
                     {
-                        AutoRefresh_StatusLabel(lblAutoRefreshStatus, $"Upserting...");
+                        AutoRefresh_StatusLabel(lblAutoRefreshStatus, $"Upserting {games.Count} games...");
                         await AutoRefresh_UpsertGames(games);
 
                     }
@@ -3137,7 +3142,6 @@ where g.GameID in({gamesStr})
                 }
                 CheckDbGamesConn.Close();
             }
-            lblCurrentRefreshStatus.Visible = true;
             int iter = 0;
             string labelText = "";
             string gameText = "";
@@ -3184,7 +3188,8 @@ where g.GameID in({gamesStr})
                 else
                 {
                     string update = AutoRefresh_UpdateGame(rootC.game, game.HomeTeam.Wins, game.HomeTeam.Losses, game.AwayTeam.Wins, game.AwayTeam.Losses);
-                    Task UpdateTask = CurrentDataInsert(update);
+                    //Task UpdateTask = CurrentDataInsert(update);
+                    await CurrentDataInsert(update);
                 }
 
                 gameText = labelText + $"{GameID}: Inserting PlayByPlay Data...";
@@ -3192,8 +3197,8 @@ where g.GameID in({gamesStr})
                 if (playByPlayBuilder.Length > 0)
                 {
                     string execute = playByPlayBuilder.ToString();
-                    Task InsertPlayByPlay = CurrentDataInsert(execute);
-                    //await InsertPlayByPlay;
+                    //Task InsertPlayByPlay = CurrentDataInsert(execute);
+                    await CurrentDataInsert(execute);
                     playByPlayBuilder.Clear();
                 }
                 else
