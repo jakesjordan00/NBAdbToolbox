@@ -2971,8 +2971,9 @@ namespace NBAdbToolbox
                     {
                         AutoRefresh_StatusLabel(lblAutoRefreshStatus, $"Upserting {games.Count} games...");
                         await AutoRefresh_UpsertGames(games);
-                        AutoRefresh_StatusLabel(lblAutoRefreshStatus, $"Update TeamBox W/L values");
+                        AutoRefresh_StatusLabel(lblAutoRefreshStatus, $"Updating TeamBox W/L values");
                         await AutoRefresh_UpdateRecords(games);
+                        AutoRefresh_StatusLabel(lblAutoRefreshStatus, $"Updating TeamBox W/L values...Done!");
 
                     }
                 }
@@ -3173,8 +3174,18 @@ where g.GameID in({gamesStr})
                     haveGame = false;
                     //Insert
                 }
-
-                Task FormatPlayByPlay = actions.Count > 0 ? AutoRefresh_PlayByPlay(actions, lastActionID) : AutoRefresh_PlayByPlay(rootCPBP.game.actions, 0);
+                if (actions.Count == 0 && haveGame)
+                {
+                    //Skipping PlayByPlay
+                }
+                else if (actions.Count == 0 && !haveGame)
+                {
+                    await AutoRefresh_PlayByPlay(rootCPBP.game.actions, 0);
+                }
+                else if(actions.Count != 0)
+                {
+                    await AutoRefresh_PlayByPlay(actions, lastActionID);
+                }
 
                 gameText = labelText + $"{GameID}: Getting Box Data...";
                 AutoRefresh_DetailLabel(lblAutoRefreshDetail, gameText);
@@ -3186,7 +3197,6 @@ where g.GameID in({gamesStr})
                 if (!haveGame)
                 {
                     CurrentDataDriver(rootC.game);
-                    await FormatPlayByPlay;
                 }
                 else
                 {
@@ -3206,7 +3216,7 @@ where g.GameID in({gamesStr})
                 }
                 else
                 {
-                    continue;
+
                 }
                 gameText = labelText + $"{GameID}: Done!";
                 AutoRefresh_DetailLabel(lblAutoRefreshDetail, gameText);
@@ -3220,10 +3230,10 @@ where g.GameID in({gamesStr})
                 }
                 else
                 {
-                    labelText = gameText + "\t";
+                    labelText = gameText + " ";
                 }
 
-                    int pnlH = pnlLoad.Height;
+                 int pnlH = pnlLoad.Height;
                 int lblH = lblAutoRefreshDetail.Height + (lblAutoRefreshDetail.Top * 2);
                 if(lblH >= pnlH)
                 {
@@ -3231,9 +3241,6 @@ where g.GameID in({gamesStr})
                     string tester = lblAutoRefreshDetail.Text;
                     var labelTextSplit = tester.Split('\n');
                     string newText = "";
-                    int testa = 1 % 2;
-                    int testb = 3 % 2;
-                    int testc = 4 % 2;
                     for(int i = 0; i < labelTextSplit.Length; i++)
                     {
                         newText += labelTextSplit[i] + " ";
