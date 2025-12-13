@@ -2971,6 +2971,8 @@ namespace NBAdbToolbox
                     {
                         AutoRefresh_StatusLabel(lblAutoRefreshStatus, $"Upserting {games.Count} games...");
                         await AutoRefresh_UpsertGames(games);
+                        AutoRefresh_StatusLabel(lblAutoRefreshStatus, $"Update TeamBox W/L values");
+                        await AutoRefresh_UpdateRecords(games);
 
                     }
                 }
@@ -3143,6 +3145,7 @@ where g.GameID in({gamesStr})
                 CheckDbGamesConn.Close();
             }
             int iter = 0;
+            bool exceedsHeight = false;
             string labelText = "";
             string gameText = "";
             foreach (NBAdbToolboxSchedule.Game game in games)
@@ -3171,7 +3174,7 @@ where g.GameID in({gamesStr})
                     //Insert
                 }
 
-                Task FormatPlayByPlay = actions.Count > 0 ? AutoRefresh_PlayByPlay(actions, lastActionID) : Task.CompletedTask;
+                Task FormatPlayByPlay = actions.Count > 0 ? AutoRefresh_PlayByPlay(actions, lastActionID) : AutoRefresh_PlayByPlay(rootCPBP.game.actions, 0);
 
                 gameText = labelText + $"{GameID}: Getting Box Data...";
                 AutoRefresh_DetailLabel(lblAutoRefreshDetail, gameText);
@@ -3207,14 +3210,54 @@ where g.GameID in({gamesStr})
                 }
                 gameText = labelText + $"{GameID}: Done!";
                 AutoRefresh_DetailLabel(lblAutoRefreshDetail, gameText);
-                labelText = gameText + "\n";
+                if(exceedsHeight && iter % 2 == 1)
+                {
+                    labelText = gameText + "\n";
+                }
+                else if(!exceedsHeight)
+                {
+                    labelText = gameText + "\n";
+                }
+                else
+                {
+                    labelText = gameText + "\t";
+                }
+
+                    int pnlH = pnlLoad.Height;
+                int lblH = lblAutoRefreshDetail.Height + (lblAutoRefreshDetail.Top * 2);
+                if(lblH >= pnlH)
+                {
+                    exceedsHeight = true;
+                    string tester = lblAutoRefreshDetail.Text;
+                    var labelTextSplit = tester.Split('\n');
+                    string newText = "";
+                    int testa = 1 % 2;
+                    int testb = 3 % 2;
+                    int testc = 4 % 2;
+                    for(int i = 0; i < labelTextSplit.Length; i++)
+                    {
+                        newText += labelTextSplit[i] + " ";
+                        if(i % 2 == 1)
+                        {
+                            newText += "\n";
+                        }
+                    }
+                    labelText = newText;
+                    int test = pnlLoad.Width;
+                }
+                iter++;
+                AutoRefresh_StatusLabel(lblAutoRefreshStatus, $"Upserting {games.Count} games...{games.Count - iter}");
 
             }
             AutoRefresh_StatusLabel(lblAutoRefreshStatus, "Done!");
+            lblAutoRefreshStatus.Left = pnlLoad.Width - lblAutoRefreshStatus.Width;
+            lblAutoRefreshStatus.ForeColor = SuccessColor;
+            lblAutoRefreshDetail.Left = pnlLoad.Width - lblAutoRefreshDetail.Width;
             refreshTimer.Start();
         }
         public async Task AutoRefresh_UpdateRecords(List<NBAdbToolboxSchedule.Game> games)
         {
+            lblAutoRefreshStatus.ForeColor = ThemeColor;
             SeasonID = 2025;
             StringBuilder boxUpdateSB = new StringBuilder();
             foreach (NBAdbToolboxSchedule.Game game in games)
@@ -3232,6 +3275,8 @@ where g.GameID in({gamesStr})
             Task UpdateTeamBox = CurrentDataInsert(records);
             await UpdateTeamBox;
             AutoRefresh_StatusLabel(lblAutoRefreshStatus, "Done!");
+            lblAutoRefreshStatus.Left = pnlLoad.Width - lblAutoRefreshStatus.Width;
+            lblAutoRefreshStatus.ForeColor = SuccessColor;
             refreshTimer.Start();
         }
 
