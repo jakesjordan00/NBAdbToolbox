@@ -1253,11 +1253,11 @@ namespace NBAdbToolbox
             {
                 stopwatchInsert.Restart();
                 lblRefreshTimer.Text = "Refreshing...";
-                //if (lblAutoRefreshStatus.Visible)
-                //{
-                //    lblAutoRefreshStatus.Visible = false;
-                //    lblAutoRefreshDetail.Visible = false;
-                //}
+                if (lblAutoRefreshStatus.Visible)
+                {
+                    lblAutoRefreshStatus.Visible = false;
+                    lblAutoRefreshDetail.Visible = false;
+                }
                 lblCurrentGame.Visible = true;
                 lblCurrentGameCount.Visible = true;
                 lblRefreshTimer.Left = (pnlWelcome.ClientSize.Width - lblRefreshTimer.Width) / 2;
@@ -2974,6 +2974,7 @@ namespace NBAdbToolbox
                         AutoRefresh_StatusLabel(lblAutoRefreshStatus, $"Updating TeamBox W/L values");
                         await AutoRefresh_UpdateRecords(games);
                         AutoRefresh_StatusLabel(lblAutoRefreshStatus, $"Updating TeamBox W/L values...Done!");
+                        lblAutoRefreshStatus.ForeColor = SuccessColor;
 
                     }
                 }
@@ -2981,6 +2982,7 @@ namespace NBAdbToolbox
             else
             {
                 AutoRefresh_StatusLabel(lblAutoRefreshStatus, $"Up to Date!");
+                lblAutoRefreshStatus.ForeColor = SuccessColor;
             }
 
 
@@ -3257,9 +3259,6 @@ where g.GameID in({gamesStr})
 
             }
             AutoRefresh_StatusLabel(lblAutoRefreshStatus, "Done!");
-            lblAutoRefreshStatus.Left = pnlLoad.Width - lblAutoRefreshStatus.Width;
-            lblAutoRefreshStatus.ForeColor = SuccessColor;
-            lblAutoRefreshDetail.Left = pnlLoad.Width - lblAutoRefreshDetail.Width;
             refreshTimer.Start();
         }
         public async Task AutoRefresh_UpdateRecords(List<NBAdbToolboxSchedule.Game> games)
@@ -3279,8 +3278,7 @@ where g.GameID in({gamesStr})
                 }
             }
             string records = boxUpdateSB.ToString();
-            Task UpdateTeamBox = CurrentDataInsert(records);
-            await UpdateTeamBox;
+            await CurrentDataInsert(records);
             AutoRefresh_StatusLabel(lblAutoRefreshStatus, "Done!");
             lblAutoRefreshStatus.Left = pnlLoad.Width - lblAutoRefreshStatus.Width;
             lblAutoRefreshStatus.ForeColor = SuccessColor;
