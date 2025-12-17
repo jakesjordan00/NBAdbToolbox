@@ -849,71 +849,76 @@ namespace NBAdbToolbox
                         homeLogo.Top = GamePanel.Height - homeLogo.Height;
                         homeLogo.Left = GamePanel.Width - homeLogo.Width - 10;
 
-
-
-                        Label lblAwayRecord = new Label
+                        Label lblHomeScore = new Label();
+                        Label lblAwayScore = new Label();
+                        try
                         {
-                            Text = game.AwayTeam.Wins + "-" + game.AwayTeam.Losses,
-                            ForeColor = dark
-                        };
-                        lblAwayRecord.Font = SetFontSize("Segoe UI", (float)(fontSize * .3), FontStyle.Bold, (int)(awayLogo.Width), lblAwayRecord);
-                        lblAwayRecord.AutoSize = true;
-                        GamePanel.Controls.Add(lblAwayRecord);
-                        lblAwayRecord.Left = awayLogo.Right - (int)(lblAwayRecord.Width * .15);
-                        lblAwayRecord.Top = (int)(pnlScoreboard.Height - (lblAwayRecord.Height * 1.1));
+                            Label lblAwayRecord = new Label
+                            {
+                                Text = game.AwayTeam.Wins + "-" + game.AwayTeam.Losses,
+                                ForeColor = dark
+                            };
+                            lblAwayRecord.Font = SetFontSize("Segoe UI", (float)(fontSize * .3), FontStyle.Bold, (int)(awayLogo.Width), lblAwayRecord);
+                            lblAwayRecord.AutoSize = true;
+                            GamePanel.Controls.Add(lblAwayRecord);
+                            lblAwayRecord.Left = awayLogo.Right - (int)(lblAwayRecord.Width * .15);
+                            lblAwayRecord.Top = (int)(pnlScoreboard.Height - (lblAwayRecord.Height * 1.1));
 
 
-                        Label lblHomeRecord = new Label
-                        {
-                            Text = game.HomeTeam.Wins + "-" + game.HomeTeam.Losses,
-                            ForeColor = dark
-                        };
-                        lblHomeRecord.Font = SetFontSize("Segoe UI", (float)(fontSize * .3), FontStyle.Bold, (int)(homeLogo.Width), lblHomeRecord);
-                        lblHomeRecord.AutoSize = true;
-                        GamePanel.Controls.Add(lblHomeRecord);
-                        lblHomeRecord.Left = homeLogo.Left - (int)(lblHomeRecord.Width * .9);
-                        lblHomeRecord.Top = (int)(pnlScoreboard.Height - (lblHomeRecord.Height * 1.1));
+                            Label lblHomeRecord = new Label
+                            {
+                                Text = game.HomeTeam.Wins + "-" + game.HomeTeam.Losses,
+                                ForeColor = dark
+                            };
+                            lblHomeRecord.Font = SetFontSize("Segoe UI", (float)(fontSize * .3), FontStyle.Bold, (int)(homeLogo.Width), lblHomeRecord);
+                            lblHomeRecord.AutoSize = true;
+                            GamePanel.Controls.Add(lblHomeRecord);
+                            lblHomeRecord.Left = homeLogo.Left - (int)(lblHomeRecord.Width * .9);
+                            lblHomeRecord.Top = (int)(pnlScoreboard.Height - (lblHomeRecord.Height * 1.1));
 
-                        string winningTeam = game.AwayTeam.Score > game.HomeTeam.Score ? "away" : "home";
+                            string winningTeam = game.AwayTeam.Score > game.HomeTeam.Score ? "away" : "home";
 
-                        //Away Team's score
-                        Label lblAwayScore = new Label
-                        {
-                            Text = game.AwayTeam.Score.ToString(),
-                            ForeColor = dark,
-                            Name = "DynamicAwayScore-" + game.GameId
-                        };
-                        Label lblHomeScore = new Label
-                        {
-                            Text = game.HomeTeam.Score.ToString(),
-                            ForeColor = dark,
-                            Name = "DynamicHomeScore-" + game.GameId
-                        };
+                            //Away Team's score
+                            lblAwayScore = new Label
+                            {
+                                Text = game.AwayTeam.Score.ToString(),
+                                ForeColor = dark,
+                                Name = "DynamicAwayScore-" + game.GameId
+                            };
+                            lblHomeScore = new Label
+                            {
+                                Text = game.HomeTeam.Score.ToString(),
+                                ForeColor = dark,
+                                Name = "DynamicHomeScore-" + game.GameId
+                            };
 
 
-
-                        //Home Team's score
-                        if (winningTeam == "away")
-                        {
-                            lblAwayScore.Font = SetFontSize("Segoe UI", (float)(fontSize * .5), FontStyle.Bold, (int)(awayLogo.Width), lblAwayScore);
-                            lblHomeScore.Font = lblAwayScore.Font;
-                        }
-                        else
-                        {
-                            lblHomeScore.Font = SetFontSize("Segoe UI", (float)(fontSize * .5), FontStyle.Bold, (int)(homeLogo.Width), lblHomeScore);
-                            lblAwayScore.Font = lblHomeScore.Font;
+                            //Home Team's score
+                            if (winningTeam == "away")
+                            {
+                                lblAwayScore.Font = SetFontSize("Segoe UI", (float)(fontSize * .5), FontStyle.Bold, (int)(awayLogo.Width), lblAwayScore);
+                                lblHomeScore.Font = lblAwayScore.Font;
+                            }
+                            else
+                            {
+                                lblHomeScore.Font = SetFontSize("Segoe UI", (float)(fontSize * .5), FontStyle.Bold, (int)(homeLogo.Width), lblHomeScore);
+                                lblAwayScore.Font = lblHomeScore.Font;
+                                lblAwayScore.AutoSize = true;
+                            }
                             lblAwayScore.AutoSize = true;
+                            lblHomeScore.AutoSize = true;
+                            GamePanel.Controls.Add(lblAwayScore);
+                            lblAwayScore.Left = awayLogo.Left + (int)((awayLogo.Width - lblAwayScore.Width) / 2);
+                            lblAwayScore.Top = 0;
+
+                            GamePanel.Controls.Add(lblHomeScore);
+                            lblHomeScore.Left = homeLogo.Left + (int)((homeLogo.Width - lblHomeScore.Width) / 2);
+                            lblHomeScore.Top = 0;
                         }
-                        lblAwayScore.AutoSize = true;
-                        lblHomeScore.AutoSize = true;
-                        GamePanel.Controls.Add(lblAwayScore);
-                        lblAwayScore.Left = awayLogo.Left + (int)((awayLogo.Width - lblAwayScore.Width) / 2);
-                        lblAwayScore.Top = 0;
+                        catch
+                        {
 
-                        GamePanel.Controls.Add(lblHomeScore);
-                        lblHomeScore.Left = homeLogo.Left + (int)((homeLogo.Width - lblHomeScore.Width) / 2);
-                        lblHomeScore.Top = 0;
-
+                        }
 
                         //Set the Game Status. This will display start time, ? or final. Not sure what it will be when game in progress
                         Label lblStartTime = new Label
@@ -2977,6 +2982,12 @@ namespace NBAdbToolbox
                         lblAutoRefreshStatus.ForeColor = SuccessColor;
 
                     }
+
+                    AutoRefresh_ButtonChangeState(btnPopulate, true);
+                    AutoRefresh_ButtonChangeState(btnEdit, true);
+                    AutoRefresh_ButtonChangeState(btnRefresh, true);
+                    AutoRefresh_ButtonChangeState(btnMovement, true);
+                    AutoRefresh_ButtonChangeState(btnGetSchedule, true);
                 }
             }
             else
