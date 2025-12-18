@@ -3160,6 +3160,7 @@ where g.GameID in({gamesStr})
             }
             int iter = 0;
             bool exceedsHeight = false;
+            bool exceedsDblHeight = false;
             string labelText = "";
             string gameText = "";
             foreach (NBAdbToolboxSchedule.Game game in games)
@@ -3233,7 +3234,11 @@ where g.GameID in({gamesStr})
                 }
                 gameText = labelText + $"{GameID}: Done!";
                 AutoRefresh_DetailLabel(lblAutoRefreshDetail, gameText);
-                if(exceedsHeight && iter % 2 == 1)
+                if(exceedsDblHeight && iter % 4 == 1)
+                {
+                    labelText = gameText + "\n";
+                }
+                else if(exceedsHeight && !exceedsDblHeight && iter % 2 == 1)
                 {
                     labelText = gameText + "\n";
                 }
@@ -3246,23 +3251,29 @@ where g.GameID in({gamesStr})
                     labelText = gameText + " ";
                 }
 
-                 int pnlH = pnlLoad.Height;
+                int pnlH = pnlLoad.Height;
                 int lblH = lblAutoRefreshDetail.Height + (lblAutoRefreshDetail.Top * 2);
                 if(lblH >= pnlH)
                 {
+                    if (exceedsHeight)
+                    {
+                        exceedsDblHeight = true;
+                    }
                     exceedsHeight = true;
                     string tester = lblAutoRefreshDetail.Text;
                     var labelTextSplit = tester.Split('\n');
                     string newText = "";
-                    for(int i = 0; i < labelTextSplit.Length; i++)
+                    int divisor = exceedsDblHeight ? 4 : 2;
+                    divisor = 5;
+                    for (int i = 0; i < labelTextSplit.Length; i++)
                     {
                         newText += labelTextSplit[i] + " ";
-                        if(i % 2 == 1)
+                        if(i % divisor == 1 && i != 1)
                         {
                             newText += "\n";
                         }
                     }
-                    labelText = newText;
+                    labelText = newText.Replace(": Done!", ",").Replace("  ", " ");
                     int test = pnlLoad.Width;
                 }
                 iter++;
