@@ -2859,6 +2859,7 @@ namespace NBAdbToolbox
             delayedStartTimer.Interval = 5000;
             delayedStartTimer.Tick += (s, e) =>
             {
+                refreshTimer.Stop();
                 delayedStartTimer.Stop();
                 delayedStartTimer.Dispose();
                 lblAutoRefreshStatus.Visible = true;
@@ -2866,8 +2867,9 @@ namespace NBAdbToolbox
                 //Kick off background refresh check
                 Task.Run(async () =>
                 {
-                    await AutoRefresh(); 
+                    await AutoRefresh();
                 });
+                //refreshTimer.Stop();
             };
             delayedStartTimer.Start();
         }
@@ -2997,7 +2999,11 @@ namespace NBAdbToolbox
             }
 
 
-
+            
+            this.Invoke(new System.Action(() =>
+            {
+                refreshTimer.Start();                
+            }));
             //AutoRefreshStatusLabel("Checking Db Status: Done");
 
         }

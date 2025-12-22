@@ -1,9 +1,9 @@
 {
   "ConfigPath": "C:\\Users\\derfj\\Desktop\\NBAdbToolbox\\Content\\Configuration",
-  "DefaultConfig": "localhost - PacersDb.json",
+  "DefaultConfig": "localhost - JJsnba1120RefreshTest.json",
   "BackgroundImage": "Court Dark",
   "WindowSize": "Default",
   "Sound": "Default",
   "Scoreboard": "Today",
-  "RefreshInterval": 60
+  "RefreshInterval": 15
 }
