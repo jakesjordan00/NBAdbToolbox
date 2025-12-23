@@ -653,6 +653,10 @@ namespace NBAdbToolbox
         public bool missingPbp = false;
         public string pbpInsertFailSafe = "";
 
+
+        public System.Windows.Forms.Timer delayedStartTimer = new System.Windows.Forms.Timer();
+        public System.Windows.Forms.Timer extraDelayedStartTimer = new System.Windows.Forms.Timer();
+
         public Panel CreatePanel(int width, int height, int left, int top, Color backColor, bool vis, BorderStyle border, Cursor cursor, string name)
         {
             Panel panel = new Panel
@@ -2855,7 +2859,7 @@ namespace NBAdbToolbox
 
             this.Shown += AfterLoad;
 
-            System.Windows.Forms.Timer delayedStartTimer = new System.Windows.Forms.Timer();
+            delayedStartTimer = new System.Windows.Forms.Timer();
             delayedStartTimer.Interval = 5000;
             delayedStartTimer.Tick += (s, e) =>
             {
@@ -2872,6 +2876,17 @@ namespace NBAdbToolbox
                 //refreshTimer.Stop();
             };
             delayedStartTimer.Start();
+
+            extraDelayedStartTimer = new System.Windows.Forms.Timer();
+            extraDelayedStartTimer.Interval = 30000;
+            extraDelayedStartTimer.Tick += (s, e) =>
+            {
+                extraDelayedStartTimer.Stop();
+                extraDelayedStartTimer.Dispose();
+                refreshTimer.Start();
+            };
+
+
         }
         public void AutoRefresh_StatusLabel(Label label, string text)
         {
@@ -2972,14 +2987,14 @@ namespace NBAdbToolbox
                     else if(boxRecordUpdate == 0)
                     {
                         AutoRefresh_StatusLabel(lblAutoRefreshStatus, $"Update TeamBox W/L values");
-                        await AutoRefresh_UpdateRecords(games);
+                        await AutoRefresh_UpdateRecords(games, "AutoRefresh");
                     }
                     else if(fullUpdates == games.Count)
                     {
                         AutoRefresh_StatusLabel(lblAutoRefreshStatus, $"Upserting {games.Count} games...");
                         await AutoRefresh_UpsertGames(games);
                         AutoRefresh_StatusLabel(lblAutoRefreshStatus, $"Updating TeamBox W/L values");
-                        await AutoRefresh_UpdateRecords(games);
+                        await AutoRefresh_UpdateRecords(games, "AutoRefresh");
                         AutoRefresh_StatusLabel(lblAutoRefreshStatus, $"Updating TeamBox W/L values...Done!");
                         lblAutoRefreshStatus.ForeColor = SuccessColor;
 
@@ -2991,19 +3006,23 @@ namespace NBAdbToolbox
                     AutoRefresh_ButtonChangeState(btnMovement, true);
                     AutoRefresh_ButtonChangeState(btnGetSchedule, true);
                 }
+                this.Invoke(new System.Action(() =>
+                {
+                    refreshTimer.Start();
+                }));
             }
             else
             {
                 AutoRefresh_StatusLabel(lblAutoRefreshStatus, $"Up to Date!");
                 lblAutoRefreshStatus.ForeColor = SuccessColor;
+                this.Invoke(new System.Action(() =>
+                {
+                    refreshTimer.Start();
+                }));
             }
 
 
             
-            this.Invoke(new System.Action(() =>
-            {
-                refreshTimer.Start();                
-            }));
             //AutoRefreshStatusLabel("Checking Db Status: Done");
 
         }
@@ -3287,9 +3306,12 @@ where g.GameID in({gamesStr})
 
             }
             AutoRefresh_StatusLabel(lblAutoRefreshStatus, "Done!");
-            refreshTimer.Start();
+            this.Invoke(new System.Action(() =>
+            {
+                refreshTimer.Start();
+            }));
         }
-        public async Task AutoRefresh_UpdateRecords(List<NBAdbToolboxSchedule.Game> games)
+        public async Task AutoRefresh_UpdateRecords(List<NBAdbToolboxSchedule.Game> games, string sender)
         {
             lblAutoRefreshStatus.ForeColor = ThemeColor;
             SeasonID = 2025;
@@ -3307,10 +3329,16 @@ where g.GameID in({gamesStr})
             }
             string records = boxUpdateSB.ToString();
             await CurrentDataInsert(records);
-            AutoRefresh_StatusLabel(lblAutoRefreshStatus, "Done!");
-            lblAutoRefreshStatus.Left = pnlLoad.Width - lblAutoRefreshStatus.Width;
-            lblAutoRefreshStatus.ForeColor = SuccessColor;
-            refreshTimer.Start();
+            if(sender == "AutoRefresh")
+            {
+                AutoRefresh_StatusLabel(lblAutoRefreshStatus, "Done!");
+                lblAutoRefreshStatus.Left = pnlLoad.Width - lblAutoRefreshStatus.Width;
+                lblAutoRefreshStatus.ForeColor = SuccessColor;
+                this.Invoke(new System.Action(() =>
+                {
+                    refreshTimer.Start();
+                }));
+            }
         }
 
 
@@ -5544,6 +5572,19 @@ where g.GameID in({gamesStr})
                 UpdateLoadingImage(imageIteration);
                 PopulateDb_4_AfterGame("Refresh");
             }
+            ChangeLabel(ThemeColor, lblSeasonStatusLoad, pnlLoad, new List<string> {
+            "Updating TeamBox W/L records", //Text
+            "Bold", //FontStyle
+            ((float)(screenFontSize * pnlLoad.Height * .075) / (96 / 12) * (72 / 12)).ToString(), //FontSize
+            ".", //Width
+            "true", //AutoSize
+            "0", //Left
+            ".", //Top
+            ThemeColor.ToString(), //Color
+            "true", //Visible
+            "." //Height
+            }); //Hitting endpoints and inserting
+            await AutoRefresh_UpdateRecords(scheduleGames, "Schedule");
             PopulateDb_9_AfterSeasonInserts(buildID, 1, 0, "Current Refresh", 1, 1);
             stopwatchFull.Stop();
             PopulateDb_10_Completion();
@@ -7010,6 +7051,8 @@ update Player set Name = 'Trey Jemison III' where PlayerID = 1641998;";
 
         public void RefreshDb_PreSelection()
         {
+            delayedStartTimer.Stop();
+            extraDelayedStartTimer.Stop();
             TotalGames = 0;
             TotalGamesCD = 0;
             iterator = 0;
@@ -7661,6 +7704,8 @@ update Player set Name = 'Trey Jemison III' where PlayerID = 1641998;";
                 }
             }
             #endregion
+            delayedStartTimer.Start();
+            extraDelayedStartTimer.Start();
 
         }
 
