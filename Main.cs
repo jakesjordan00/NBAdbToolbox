@@ -7449,6 +7449,26 @@ update Player set Name = 'Trey Jemison III' where PlayerID = 1641998;";
                     ConsolidatePlayerNames.ExecuteNonQuery();
                     Main.Close();
                 }
+                if(SeasonID == 2024)
+                {
+                    lblSeasonStatusLoad.Text = "Fixing a row in 22400061's PlayByPlay";
+                    Application.DoEvents();
+                    string fix22400061 = @"
+                        update PlayByPlay set Description = 'SUB out: L. Kornet', PlayerID = '1628436' 
+                        where SeasonID = 2024
+                        and GameID = 22400061 
+                        and ActionID = 416 
+                        and ActionNumber = 509 
+                        and Description = 'SUB out: A. Horford'
+                        ";
+                    using (SqlCommand fix22400061Cmd = new SqlCommand(fix22400061, Main))
+                    {
+                        fix22400061Cmd.CommandType = CommandType.Text;
+                        Main.Open();
+                        fix22400061Cmd.ExecuteNonQuery();
+                        Main.Close();
+                    }
+                }
                 if (current == 1) //Populates Label information for Games sourced from current data/endpoints. Labels are those values had the data been loaded via data file
                 {
                     if (SeasonID == 2023)
