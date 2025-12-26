@@ -1845,7 +1845,8 @@ namespace NBAdbToolbox
                 }
                 var popup = new PopulatePopup(dialog, seasons);
                 if (popup.ShowDialog() == DialogResult.OK)
-                {                    
+                {
+                    lblAutoRefreshStatus.Visible = false;
                     gamesMissing.Visible = false;
                     rowsMissing.Visible = false;
                     isPopulating = true;
@@ -2288,6 +2289,7 @@ namespace NBAdbToolbox
                 int pauseDurSec = (int)(pauseDur.Elapsed.TotalSeconds);
                 timeRemaining = pauseDurSec < timeRemaining ? timeRemaining - pauseDurSec : timeRemaining;
                 refreshTimer.Start();
+
             };
             #endregion
             //Panel Formatting
@@ -2860,7 +2862,7 @@ namespace NBAdbToolbox
             this.Shown += AfterLoad;
 
             delayedStartTimer = new System.Windows.Forms.Timer();
-            delayedStartTimer.Interval = 5000;
+            delayedStartTimer.Interval = 1500;
             delayedStartTimer.Tick += (s, e) =>
             {
                 refreshTimer.Stop();
