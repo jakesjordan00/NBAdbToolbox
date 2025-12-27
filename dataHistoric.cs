@@ -401,6 +401,7 @@ namespace NBAdbToolboxHistoric
         public string firstName { get; set; }
         public string familyName { get; set; }
         public string jerseyNum { get; set; }
+        public string nameI { get; set; }
     }
 
     public class PlayerStats

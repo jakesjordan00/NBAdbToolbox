@@ -2849,7 +2849,10 @@ namespace NBAdbToolbox
                     if (timeRemaining <= 0)
                     {
                         refreshTimer.Stop();
-                        await InitializeAsync("RefreshGamesInProgress");
+                        if (!isRefreshing)
+                        {
+                            await InitializeAsync("RefreshGamesInProgress");
+                        }
                         timeRemaining = (int)(settings.RefreshInterval);
                         //refreshTimer.Start();
                     }
@@ -11324,58 +11327,56 @@ order by HasVideo desc, ShotDistance desc";
             //Position (nullable)
             if (player.position != null && player.position != "")
             {
-                sqlBuilder.Append("'").Append(player.position).Append("')\n");
+                sqlBuilder.Append("'").Append(player.position).Append("', '");
             }
             else
             {
-                sqlBuilder.Append("null)\n");
+                sqlBuilder.Append("null, '");
             }
-        }
-        public void HistoricPlayerUpdate(NBAdbToolboxHistoric.Player player, string number)
-        {
-            //Add player to appropriate tracking list
-            playerList.Add((SeasonID, player.personId));
-
-
-            //Basic player information
-            sqlBuilder.Append("Insert into Player values(")
-                      .Append(SeasonID).Append(", ")
-                      .Append(player.personId).Append(", '")
-                      .Append(player.firstName.Replace("'", "''")).Append(" ")
+            sqlBuilder.Append(player.nameI.Replace("'", "''")).Append("', '")
                       .Append(player.familyName.Replace("'", "''")).Append("', '")
-                      .Append(number).Append("', ");
-
-            //Position (nullable)
-            if (player.position != null && player.position != "")
-            {
-                sqlBuilder.Append("'").Append(player.position).Append("')\n");
-            }
-            else
-            {
-                sqlBuilder.Append("null)\n");
-            }
+                      .Append(player.firstName.Replace("'", "''")).Append("')\n");
         }
         public void HistoricInactiveInsert(NBAdbToolboxHistoric.Inactive inactive)
         {
             playerList.Add((SeasonID, inactive.personId));
 
             //Inactive player has fewer columns
-            sqlBuilder.Append("Insert into Player(SeasonID, PlayerID, Name");
-
+            sqlBuilder.Append("Insert into Player(SeasonID, PlayerID, Name, NameInitial, NameLast, NameFirst");
             StringBuilder valuesSB = new StringBuilder();
-            valuesSB.Append(") values(")
-                    .Append(SeasonID).Append(", ")
-                    .Append(inactive.personId).Append(", '")
-                    .Append(inactive.firstName.Replace("'", "''")).Append(" ")
-                    .Append(inactive.familyName.Replace("'", "''")).Append("'");
+            try
+            {
+                string nameI = "";
+                if (string.IsNullOrWhiteSpace(inactive.nameI))
+                {
+                    nameI = inactive.firstName.Substring(0, 1) + ". " + inactive.familyName;
+                }
+                else
+                {
+                    nameI = inactive.nameI;
+                }
+                valuesSB.Append(") values(")
+                        .Append(SeasonID).Append(", ")
+                        .Append(inactive.personId).Append(", '")
+                        .Append(inactive.firstName.Replace("'", "''")).Append(" ")
+                        .Append(inactive.familyName.Replace("'", "''")).Append("', '")
+                        .Append(nameI.Replace("'", "''")).Append("', '")
+                        .Append(inactive.familyName.Replace("'", "''")).Append("', '")
+                        .Append(inactive.firstName.Replace("'", "''")).Append("'\n");
+        }
+            catch (NullReferenceException e)
+            {
+                var testEx = e.Data;
+                var test = inactive;
+
+            }
 
             if (!string.IsNullOrWhiteSpace(inactive.jerseyNum))
             {
                 sqlBuilder.Append(", Number");
                 valuesSB.Append(", '").Append(inactive.jerseyNum).Append("'");
             }
-
-            sqlBuilder.Append(valuesSB).Append(")\n");
+                sqlBuilder.Append(valuesSB).Append(")\n");
         }
 
         public void HistoricInactiveBoxInsert(int TeamID, int MatchupID, int InactiveID)
@@ -12739,12 +12740,16 @@ order by HasVideo desc, ShotDistance desc";
                         //Handle the position (which might be null)
                         if (player.position != null && player.position != "")
                         {
-                            sqlBuilder.Append("'").Append(player.position).Append("')\n");
+                            sqlBuilder.Append("'").Append(player.position).Append("', '");
                         }
                         else
                         {
-                            sqlBuilder.Append("null)\n");
+                            sqlBuilder.Append("null, '");
                         }
+
+                        sqlBuilder.Append(player.nameI.Replace("'", "''")).Append("', '")
+                                  .Append(player.familyName.Replace("'", "''")).Append("', '")
+                                  .Append(player.firstName.Replace("'", "''")).Append("')\n");
                         sqlBuilder.Append("end\n");
                     }
                 }
