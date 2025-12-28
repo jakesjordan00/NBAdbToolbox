@@ -54,6 +54,9 @@ PlayerID			int,
 Name				varchar(255),
 Number				varchar(3),
 Position			varchar(100),
+NameInitial			varchar(100),
+NameLast			varchar(100),
+NameFirst			varchar(100),
 Primary Key(SeasonID, PlayerID),
 Foreign Key (SeasonID) references Season(SeasonID))
 
@@ -1458,36 +1461,36 @@ having count(p.ActionID) < max(p.ActionID)
 
 create procedure PlayerNames
 as
-update Player set Name = 'Nene Hilario' where PlayerID = 2403;
-update Player set Name = 'P.J. Tucker' where PlayerID = 200782;
-update Player set Name = 'Enes Freedom' where PlayerID = 202683;
-update Player set Name = 'Jimmy Butler' where PlayerID = 202710;
-update Player set Name = 'Dennis Schroder' where PlayerID = 203471;
-update Player set Name = 'Reggie Bullock Jr.' where PlayerID = 203493;
-update Player set Name = 'Dante Exum' where PlayerID = 203957;
-update Player set Name = 'Dario Saric' where PlayerID = 203967;
-update Player set Name = 'Michael Frazier' where PlayerID = 1626187;
-update Player set Name = 'Jakob Poeltl' where PlayerID = 1627751;
-update Player set Name = 'OG Anunoby' where PlayerID = 1628384;
-update Player set Name = 'T.J. Leaf' where PlayerID = 1628388;
-update Player set Name = 'P.J. Dozier' where PlayerID = 1628408;
-update Player set Name = 'Frank Mason III' where PlayerID = 1628412;
-update Player set Name = 'Monte Morris' where PlayerID = 1628420;
-update Player set Name = 'Cameron Reynolds' where PlayerID = 1629244;
-update Player set Name = 'Cam Reddish' where PlayerID = 1629629;
-update Player set Name = 'Nic Claxton' where PlayerID = 1629651;
-update Player set Name = 'Marcos Louzada Silva' where PlayerID = 1629712;
-update Player set Name = 'Charlie Brown Jr.' where PlayerID = 1629718;
-update Player set Name = 'KJ Martin' where PlayerID = 1630231;
-update Player set Name = 'Vit Krejci' where PlayerID = 1630249;
-update Player set Name = 'Jeff Dowtin Jr.' where PlayerID = 1630288;
-update Player set Name = 'Orlando Robinson' where PlayerID = 1631115;
-update Player set Name = 'Moussa Diabate' where PlayerID = 1631217;
-update Player set Name = 'AJ Green' where PlayerID = 1631260;
-update Player set Name = 'Taze Moore' where PlayerID = 1631386;
-update Player set Name = 'Nate Williams' where PlayerID = 1631466;
-update Player set Name = 'Craig Porter Jr.' where PlayerID = 1641854;
-update Player set Name = 'Trey Jemison III' where PlayerID = 1641998;
+update Player set Name = 'Nene Hilario', NameFirst = 'Nene', NameLast = 'Hilario', NameInitial = 'N. Hilario' where PlayerID = 2403
+update Player set Name = 'P.J. Tucker', NameFirst = 'P.J.', NameLast = 'Tucker', NameInitial = 'P. Tucker' where PlayerID = 200782
+update Player set Name = 'Enes Freedom', NameFirst = 'Enes', NameLast = 'Freedom', NameInitial = 'E. Freedom' where PlayerID = 202683
+update Player set Name = 'Jimmy Butler', NameFirst = 'Jimmy', NameLast = 'Butler', NameInitial = 'J. Butler' where PlayerID = 202710
+update Player set Name = 'Dennis Schroder', NameFirst = 'Dennis', NameLast = 'Schroder', NameInitial = 'D. Schroder' where PlayerID = 203471
+update Player set Name = 'Reggie Bullock Jr.', NameFirst = 'Reggie', NameLast = 'Bullock Jr.', NameInitial = 'R. Bullock Jr.' where PlayerID = 203493
+update Player set Name = 'Dante Exum', NameFirst = 'Dante', NameLast = 'Exum', NameInitial = 'D. Exum' where PlayerID = 203957
+update Player set Name = 'Dario Saric', NameFirst = 'Dario', NameLast = 'Saric', NameInitial = 'D. Saric' where PlayerID = 203967
+update Player set Name = 'Michael Frazier', NameFirst = 'Michael', NameLast = 'Frazier', NameInitial = 'M. Frazier' where PlayerID = 1626187
+update Player set Name = 'Jakob Poeltl', NameFirst = 'Jakob', NameLast = 'Poeltl', NameInitial = 'J. Poeltl' where PlayerID = 1627751
+update Player set Name = 'OG Anunoby', NameFirst = 'OG', NameLast = 'Anunoby', NameInitial = 'O. Anunoby' where PlayerID = 1628384
+update Player set Name = 'T.J. Leaf', NameFirst = 'T.J.', NameLast = 'Leaf', NameInitial = 'T. Leaf' where PlayerID = 1628388
+update Player set Name = 'P.J. Dozier', NameFirst = 'P.J.', NameLast = 'Dozier', NameInitial = 'P. Dozier' where PlayerID = 1628408
+update Player set Name = 'Frank Mason III', NameFirst = 'Frank', NameLast = 'Mason III', NameInitial = 'F. Mason III' where PlayerID = 1628412
+update Player set Name = 'Monte Morris', NameFirst = 'Monte', NameLast = 'Morris', NameInitial = 'M. Morris' where PlayerID = 1628420
+update Player set Name = 'Cameron Reynolds', NameFirst = 'Cameron', NameLast = 'Reynolds', NameInitial = 'C. Reynolds' where PlayerID = 1629244
+update Player set Name = 'Cam Reddish', NameFirst = 'Cam', NameLast = 'Reddish', NameInitial = 'C. Reddish' where PlayerID = 1629629
+update Player set Name = 'Nic Claxton', NameFirst = 'Nic', NameLast = 'Claxton', NameInitial = 'N. Claxton' where PlayerID = 1629651
+update Player set Name = 'Marcos Louzada Silva', NameFirst = 'Marcos', NameLast = 'Louzada Silva', NameInitial = 'M. Louzada Silva' where PlayerID = 1629712
+update Player set Name = 'Charlie Brown Jr.', NameFirst = 'Charlie', NameLast = 'Brown Jr.', NameInitial = 'C. Brown Jr.' where PlayerID = 1629718
+update Player set Name = 'Jeff Dowtin Jr.', NameFirst = 'Jeff', NameLast = 'Dowtin Jr.', NameInitial = 'J. Dowtin Jr.' where PlayerID = 1630288
+update Player set Name = 'KJ Martin', NameFirst = 'KJ', NameLast = 'Martin', NameInitial = 'K. Martin' where PlayerID = 1630231
+update Player set Name = 'Vit Krejci', NameFirst = 'Vit', NameLast = 'Krejci', NameInitial = 'V. Krejci' where PlayerID = 1630249
+update Player set Name = 'Orlando Robinson', NameFirst = 'Orlando', NameLast = 'Robinson', NameInitial = 'O. Robinson' where PlayerID = 1631115
+update Player set Name = 'Moussa Diabate', NameFirst = 'Moussa', NameLast = 'Diabate', NameInitial = 'M. Diabate' where PlayerID = 1631217
+update Player set Name = 'AJ Green', NameFirst = 'AJ', NameLast = 'Green', NameInitial = 'A. Green' where PlayerID = 1631260
+update Player set Name = 'Taze Moore', NameFirst = 'Taze', NameLast = 'Moore', NameInitial = 'T. Moore' where PlayerID = 1631386
+update Player set Name = 'Nate Williams', NameFirst = 'Nate', NameLast = 'Williams', NameInitial = 'N. Williams' where PlayerID = 1631466
+update Player set Name = 'Craig Porter Jr.', NameFirst = 'Craig', NameLast = 'Porter Jr.', NameInitial = 'C. Porter Jr.' where PlayerID = 1641854
+update Player set Name = 'Trey Jemison III', NameFirst = 'Trey', NameLast = 'Jemison III', NameInitial = 'T. Jemison III' where PlayerID = 1641998
 ~~~
 
 create table Schedule(
